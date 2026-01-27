@@ -143,13 +143,13 @@ xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Debug cle
 
 ---
 
-## 🔄 Prompt 4: Configuration UI (Screens 3 & 4) - IN PROGRESS (~85% Complete)
+## ✅ Prompt 4: Configuration UI (Screens 3 & 4) - COMPLETE
 
 ### Architecture Update
 Based on user requirements, the app now follows a **single-app architecture with multi-instance helpers**:
 - Main `DockTile.app` has LSUIElement=false (shows configuration window)
-- Helper bundles (DockTile-Dev.app, etc.) have LSUIElement=true (dock-only)
-- Helpers symlink to main app binary and read config by bundle ID
+- Helper bundles have LSUIElement removed (shows in Dock as regular app)
+- Helpers use the same binary but are detected at startup via custom `main.swift`
 
 ### What Was Implemented
 
@@ -175,8 +175,8 @@ Based on user requirements, the app now follows a **single-app architecture with
 #### 2. Screen 3: Main Configuration Window (Phase 2) ✅ COMPLETE
 **Views/** (`DockTile/Views/`)
 - `DockTileConfigurationView.swift`: NavigationSplitView with sidebar + detail + drill-down overlay
-- `DockTileSidebarView.swift`: Configuration list with mini icons, context menu (duplicate/delete)
-- `DockTileDetailView.swift`: Icon preview (80×80pt), name field, layout picker, visibility toggle, items list
+- `DockTileSidebarView.swift`: Configuration list with mini icons, green dot for installed tiles
+- `DockTileDetailView.swift`: Icon preview, name field, layout picker, "Done" button, items list, delete section
 - `AppPickerView`: Sheet with NSOpenPanel for selecting .app bundles
 
 **Components/** (`DockTile/Components/`)
@@ -185,10 +185,11 @@ Based on user requirements, the app now follows a **single-app architecture with
 
 **Features:**
 - Toolbar with + button to create new configurations
-- Editable name field with auto-save
+- Editable name field
 - Layout picker: Grid (2×3) vs Horizontal (1×6) with icons
-- "Show in Dock" toggle to activate helper bundles
+- "Show Tile" toggle + "Done" button to install/update helper
 - Items list with add/remove functionality
+- Delete tile section with confirmation dialog
 - Empty state views with call-to-action buttons
 
 #### 3. Screen 4: Customise Tile Drill-down (Phase 3) ✅ COMPLETE
@@ -200,146 +201,123 @@ Based on user requirements, the app now follows a **single-app architecture with
 
 **Components/** (`DockTile/Components/`)
 - `ColourPickerGrid.swift`: 3-column adaptive grid with 9 color circles
-  - 56×56pt circles, 68×68pt selected state with white stroke + glow
-  - Checkmark on selected color
-  - Spring animation on selection
-- `SymbolPickerButton.swift`: Opens macOS Character Viewer (`NSApp.orderFrontCharacterPalette`)
-  - 56pt tall button showing current emoji (32pt font)
-  - Light grey background (#F5F5F7)
-  - Chevron right indicator
-
-**Design Specifications:**
-- Color palette: No colour + Red, Orange, Yellow, Green, Blue, Purple, Pink, Gray
-- All changes auto-save immediately via `ConfigurationManager.updateConfiguration()`
-
-#### 4. Core Updates ✅ COMPLETE
-**DockTileApp.swift**
-- Changed from `Settings { EmptyView() }` to `WindowGroup`
-- Added `@StateObject private var configManager = ConfigurationManager()`
-- Passes configManager to AppDelegate via `.onAppear`
-- Added `CommandGroup(replacing: .newItem)` for Cmd+N to create new DockTile
-
-**AppDelegate.swift**
-- Added `var configManager: ConfigurationManager?` property
-- Added `isHelperApp` computed property (checks if bundle ID starts with "com.docktile." but isn't "com.docktile")
-- Updated `applicationDidFinishLaunching()` to set `.accessory` for helpers, `.regular` for main app
-- Added `applicationDockMenu()` for right-click context menu
-  - "Configure..." option (opens main app or brings to front)
-  - Separator
-  - List of apps from current configuration
-- Added `@objc openConfigurator()` - launches main app from helpers
-- Added `@objc launchApp(_:)` - launches apps by bundle ID
-- Added `getCurrentConfiguration()` - finds config by bundle ID for helpers
-
-**Info.plist**
-- Changed `LSUIElement` from `<true/>` to `<false/>` (allows configuration window)
-
-#### 5. Medical White Aesthetic Maintained ✅
-- All UI uses Medical White color palette (#F5F5F7, #1D1D1F)
-- Liquid Glass materials with 0.5pt white strokes
-- Continuous corner radius (6pt/8pt/18pt/24pt/36pt depending on element)
-- Spring animations throughout (response: 0.3, damping: 0.7)
-- Hover effects with subtle scale transformations
-
-#### 6. Xcode Project Integration ✅ COMPLETE
-All 11 configuration files successfully added to Xcode project via `add_files_to_xcode.py`:
-- ✅ ConfigurationModels.swift
-- ✅ ConfigurationManager.swift
-- ✅ ColorExtensions.swift
-- ✅ DockTileConfigurationView.swift
-- ✅ DockTileSidebarView.swift
-- ✅ DockTileDetailView.swift
-- ✅ CustomiseTileView.swift
-- ✅ DockTileIconPreview.swift
-- ✅ ItemRowView.swift
-- ✅ ColourPickerGrid.swift
-- ✅ SymbolPickerButton.swift
-
-**Build Status**: ✅ SUCCESS (clean build with no errors)
-
-#### 7. Popover Positioning Fix ✅ COMPLETE
-**Problem**: Popover appeared 60 points above dock (too far from dock icon)
-**Solution**: Changed FloatingPanel.swift line 62 from `screenFrame.minY + 60` to `screenFrame.minY + 4`
-**Result**: Popover now appears 4 points above dock, matching design reference
-
-### What Remains (Phase 4 & 6)
-
-#### Phase 4: Icon Generation ✅ Written, ⏳ Not Integrated
-**File**: `DockTile/Utilities/IconGenerator.swift` (exists, not in Xcode project)
-
-**Implemented Features:**
-- `generateIcon(tintColor:symbol:size:)` - Creates NSImage with gradient background
-- `drawGradient(context:path:tintColor:rect:)` - Renders smooth color transitions
-- `drawSymbol(symbol:rect:fontSize:)` - Centers white emoji on gradient
-- `generateIcns(tintColor:symbol:outputURL:)` - Creates complete .icns with all resolutions (16-1024px)
-- `generatePreview(tintColor:symbol:size:)` - Quick preview for UI
-- IconGeneratorError enum for error handling
-- Proper macOS corner radius (22.5% of icon width)
-- Uses `iconutil` for .iconset → .icns conversion
-
-**Next Steps:**
-1. Add IconGenerator.swift to Xcode project
-2. Create Utilities/ group in Xcode navigator
-3. Test icon generation with sample tint colors
-4. Integrate with ConfigurationManager
-
-#### Phase 6: Helper Bundle Generation ✅ Written, ⏳ Not Executable
-**File**: `Scripts/generate_helper.sh` (exists, needs chmod +x)
-
-**Implemented Features:**
-- Takes 4 arguments: app_name, bundle_id, icon_path, output_dir
-- Finds main DockTile.app in /Applications or Xcode DerivedData
-- Copies app bundle structure
-- Updates Info.plist (bundle ID, name, LSUIElement=true)
-- Installs custom icon as AppIcon.icns
-- Creates symlink to main binary (code sharing)
-- Ad-hoc code signs helper bundle
-- Validates bundle structure
-
-**Next Steps:**
-1. `chmod +x Scripts/generate_helper.sh`
-2. Test with sample configuration
-3. Create HelperBundleGenerator.swift Swift wrapper
-4. Integrate with "Show in Dock" toggle
-
-#### LauncherView Update ⏳ Pending
-**File**: `DockTile/UI/LauncherView.swift` (currently uses placeholder data)
-
-**Required Changes:**
-- Remove hardcoded placeholder apps
-- Read app list from ConfigurationManager
-- Detect current bundle ID (helper vs main)
-- Support both Grid (2×3) and Horizontal (1×6) layouts
-- Implement actual app launching with NSWorkspace
-- Handle folder items and separators
+- `SymbolPickerButton.swift`: Opens macOS Character Viewer
 
 ---
 
-## 📊 Recent Session Summary (2026-01-26)
+## ✅ Prompt 5: Helper App Architecture - COMPLETE
+
+### Custom Entry Point Architecture
+
+#### main.swift (`DockTile/App/main.swift`) ✅ NEW
+Custom entry point that detects helper vs main app BEFORE any SwiftUI initialization:
+```swift
+if isHelperApp() {
+    // Pure AppKit path - no SwiftUI WindowGroup
+    let app = NSApplication.shared
+    let delegate = HelperAppDelegate()
+    app.delegate = delegate
+    app.run()
+} else {
+    // SwiftUI path for main app
+    DockTileApp.main()
+}
+```
+
+**Why this matters:**
+- SwiftUI's WindowGroup crashes helpers because they have no window
+- Pure AppKit avoids the crash entirely
+- Helpers use `HelperAppDelegate` instead of SwiftUI
+
+#### HelperAppDelegate.swift (`DockTile/App/HelperAppDelegate.swift`) ✅ NEW
+Pure AppKit delegate for helper apps:
+- No SwiftUI dependencies
+- Shows popover immediately on launch
+- Handles dock clicks via `applicationShouldHandleReopen`
+- Provides context menu via `applicationDockMenu`
+- Disables window restoration to prevent crash dialog
+
+#### HelperBundleManager.swift (`DockTile/Managers/HelperBundleManager.swift`) ✅ COMPLETE
+Swift-native helper bundle creation:
+- Creates helper bundles in `~/Library/Application Support/DockTile/`
+- Copies main app, updates Info.plist (bundle ID, name)
+- Generates custom icon via `IconGenerator`
+- Ad-hoc code signs the bundle
+- Adds to Dock automatically (manipulates `com.apple.dock.plist`)
+- Prevents duplicate tiles with `isInDock()` check
+- Removes from Dock on uninstall
+
+#### FloatingPanel.swift (`DockTile/UI/FloatingPanel.swift`) ✅ UPDATED
+NSPopover-based launcher:
+- Uses native macOS popover appearance
+- Positions above dock icon (calculates from mouse location)
+- Arrow points down to dock
+- Dismisses on click outside (transient behavior)
+
+#### LauncherView.swift (`DockTile/UI/LauncherView.swift`) ✅ UPDATED
+SwiftUI grid of apps:
+- Reads apps from passed configuration
+- No custom background (uses NSPopover native appearance)
+- Compact sizing (280x200 grid, 400x90 horizontal)
+- Launches apps via NSWorkspace
+- Hover effects with scale animation
+
+---
+
+## 📊 Recent Session Summary (2026-01-28)
 
 ### Issues Resolved
-1. ✅ **Popover Positioning**: Fixed FloatingPanel.swift (60pt → 4pt above dock)
-2. ✅ **ConfigurationManager Build Error**: Added 11 missing files to Xcode project
-3. ✅ **Clean Build**: All compilation errors resolved
+1. ✅ **Helper app crash**: Custom `main.swift` bypasses SwiftUI for helpers
+2. ✅ **Popover requires two clicks**: Show popover in `applicationDidFinishLaunching`
+3. ✅ **White background in popover**: Removed custom background, use NSPopover native
+4. ✅ **Duplicate tiles when editing**: Added `isInDock()` check before adding
+5. ✅ **Helper crash dialog**: Disabled window restoration (`NSQuitAlwaysKeepsWindows`)
 
-### New Code Written (Not Yet Integrated)
-1. **IconGenerator.swift** - Complete icon generation system (138 lines)
-2. **generate_helper.sh** - Helper bundle generation script (150 lines)
+### New Files Created
+1. **main.swift** - Custom entry point for helper detection
+2. **HelperAppDelegate.swift** - Pure AppKit delegate for helpers
+
+### Files Updated
+1. **DockTileApp.swift** - Removed `@main`, called from `main.swift`
+2. **HelperBundleManager.swift** - Added dock manipulation methods
+3. **FloatingPanel.swift** - NSPopover-based positioning
+4. **LauncherView.swift** - Native appearance, reads from config
 
 ### Current Build Status
 ```bash
-xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Debug clean build
+xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Debug build
 # Result: ✅ BUILD SUCCEEDED
 ```
 
 ---
 
-**Last Updated**: 2026-01-26, 18:45 PST
+## 🧪 Testing Checklist
+
+### Core Functionality
+- [x] Main app launches with configuration window
+- [x] Can create/edit/delete tile configurations
+- [x] Can customize icon (color + emoji)
+- [x] Can add/remove apps to tiles
+- [x] Clicking "Done" creates helper bundle
+- [x] Helper added to Dock automatically
+- [x] Helper shows custom icon
+- [x] Clicking helper shows popover with apps
+- [x] Clicking app in popover launches app
+- [x] Multiple helpers can coexist
+
+### Recent Fixes (Need Testing)
+- [ ] Helper app doesn't crash on reopen
+- [ ] No duplicate tiles when editing existing
+- [ ] Popover appears on first click (not second)
+
+---
+
+**Last Updated**: 2026-01-28
 **Build Status**: ✅ SUCCESS
-**Completion**: ~85% (Core UI complete, icon/helper generation pending integration)
+**Completion**: ~95% (Testing remaining fixes)
 **Swift Version**: 6.0
 **Platform**: macOS 15.0+
-**UI Framework**: SwiftUI + AppKit NSPanel hybrid
-**Architecture**: Single-app with multi-instance helpers
+**UI Framework**: SwiftUI + AppKit hybrid (custom main.swift)
+**Architecture**: Single binary with helper detection at startup
 
-**See Also**: `PROGRESS_UPDATE.md` for detailed continuation guide
+**See Also**: `PROGRESS_UPDATE.md` for detailed task list

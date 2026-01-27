@@ -67,6 +67,9 @@ final class HelperBundleManager {
         try codesignHelper(at: helperPath)
         print("   ✓ Code signed")
 
+        // 4. Add to Dock (without launching)
+        addToDock(at: helperPath)
+
         print("✅ Helper installed at: \(helperPath.path)")
     }
 
@@ -76,6 +79,9 @@ final class HelperBundleManager {
 
         let appName = sanitizeAppName(config.name)
         let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
+
+        // Remove from Dock first
+        removeFromDock(at: helperPath)
 
         if FileManager.default.fileExists(atPath: helperPath.path) {
             try FileManager.default.removeItem(at: helperPath)
@@ -177,6 +183,127 @@ final class HelperBundleManager {
         guard process.terminationStatus == 0 else {
             throw HelperBundleError.codesignFailed
         }
+    }
+
+    /// Check if app is already in Dock
+    func isInDock(at appPath: URL) -> Bool {
+        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
+
+        guard let dockPlist = NSDictionary(contentsOf: dockPlistPath),
+              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
+            return false
+        }
+
+        let appName = appPath.lastPathComponent
+        return persistentApps.contains { entry in
+            if let tileData = entry["tile-data"] as? [String: Any],
+               let fileData = tileData["file-data"] as? [String: Any],
+               let path = fileData["_CFURLString"] as? String {
+                // Check if path contains our app name
+                return path.contains(appName)
+            }
+            return false
+        }
+    }
+
+    /// Add app to Dock without launching it (only if not already present)
+    func addToDock(at appPath: URL) {
+        print("📌 Adding to Dock: \(appPath.lastPathComponent)")
+
+        // Check if already in Dock first
+        if isInDock(at: appPath) {
+            print("   ✓ Already in Dock - no action needed")
+            return
+        }
+
+        // Use defaults to add to com.apple.dock persistent-apps
+        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
+
+        guard let dockPlist = NSMutableDictionary(contentsOf: dockPlistPath),
+              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
+            print("   ⚠️ Could not read Dock plist")
+            return
+        }
+
+        // Create dock entry
+        let appPathString = appPath.path
+        let newEntry: [String: Any] = [
+            "tile-data": [
+                "file-data": [
+                    "_CFURLString": "file://\(appPathString)/",
+                    "_CFURLStringType": 15
+                ],
+                "file-label": appPath.deletingPathExtension().lastPathComponent,
+                "file-type": 41
+            ],
+            "tile-type": "file-tile"
+        ]
+
+        // Add to persistent apps
+        var updatedApps = persistentApps
+        updatedApps.append(newEntry)
+        dockPlist["persistent-apps"] = updatedApps
+
+        // Write back
+        if dockPlist.write(to: dockPlistPath, atomically: true) {
+            print("   ✓ Added to Dock plist")
+
+            // Restart Dock to apply changes
+            restartDock()
+        } else {
+            print("   ⚠️ Failed to write Dock plist")
+        }
+    }
+
+    /// Remove app from Dock
+    func removeFromDock(at appPath: URL) {
+        print("📌 Removing from Dock: \(appPath.lastPathComponent)")
+
+        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
+
+        guard let dockPlist = NSMutableDictionary(contentsOf: dockPlistPath),
+              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
+            print("   ⚠️ Could not read Dock plist")
+            return
+        }
+
+        // Filter out the app
+        let appName = appPath.lastPathComponent
+        let filteredApps = persistentApps.filter { entry in
+            if let tileData = entry["tile-data"] as? [String: Any],
+               let fileData = tileData["file-data"] as? [String: Any],
+               let path = fileData["_CFURLString"] as? String {
+                return !path.contains(appName)
+            }
+            return true
+        }
+
+        if filteredApps.count < persistentApps.count {
+            dockPlist["persistent-apps"] = filteredApps
+            if dockPlist.write(to: dockPlistPath, atomically: true) {
+                print("   ✓ Removed from Dock plist")
+                restartDock()
+            }
+        } else {
+            print("   ✓ Was not in Dock")
+        }
+    }
+
+    /// Restart Dock to apply plist changes
+    private func restartDock() {
+        print("   🔄 Restarting Dock...")
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
+        process.arguments = ["Dock"]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+
+        try? process.run()
+        process.waitUntilExit()
+        print("   ✓ Dock restarted")
     }
 
     // MARK: - Helpers

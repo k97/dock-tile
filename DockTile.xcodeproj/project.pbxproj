@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AAMAIN01 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAMAIN02; };
+		AAHELP01 /* HelperAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHELP02; };
 		AA0001 /* DockTileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002; };
 		AA0003 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0004; };
 		AA0005 /* GhostModeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0006; };
@@ -39,6 +41,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AAMAIN02 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		AAHELP02 /* HelperAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperAppDelegate.swift; sourceTree = "<group>"; };
 		AA0002 /* DockTileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileApp.swift; sourceTree = "<group>"; };
 		AA0004 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AA0006 /* GhostModeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostModeManager.swift; sourceTree = "<group>"; };
@@ -103,8 +107,10 @@
 		AA000C /* App */ = {
 			isa = PBXGroup;
 			children = (
+				AAMAIN02 /* main.swift */,
 				AA0002 /* DockTileApp.swift */,
 				AA0004 /* AppDelegate.swift */,
+				AAHELP02 /* HelperAppDelegate.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -284,8 +290,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AAMAIN01 /* main.swift in Sources */,
 				AA0001 /* DockTileApp.swift in Sources */,
 				AA0003 /* AppDelegate.swift in Sources */,
+				AAHELP01 /* HelperAppDelegate.swift in Sources */,
 				AA0005 /* GhostModeManager.swift in Sources */,
 				AA0020 /* FloatingPanel.swift in Sources */,
 				AA0022 /* LauncherView.swift in Sources */,

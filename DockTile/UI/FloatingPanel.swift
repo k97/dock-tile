@@ -61,18 +61,19 @@ final class FloatingPanel: NSObject {
             return NSWindow()
         }
 
-        let screenFrame = screen.visibleFrame
-
         // Get mouse location (where user clicked the dock icon)
         let mouseLocation = NSEvent.mouseLocation
 
-        // Position anchor window at the mouse click location
-        // This ensures popover appears above the clicked dock icon
+        // Dock height is typically ~70 points
+        // Position anchor just above the dock
+        let dockHeight: CGFloat = 70
+        let anchorY = screen.frame.minY + dockHeight
+
         let windowRect = NSRect(
             x: mouseLocation.x - 32,  // 64pt wide anchor centered on click
-            y: screenFrame.minY + 4,  // Very close to dock (just above it)
+            y: anchorY,
             width: 64,
-            height: 10  // Thin anchor for tight popover positioning
+            height: 1  // Minimal height - just an anchor point
         )
 
         let window = NSWindow(
@@ -84,7 +85,7 @@ final class FloatingPanel: NSObject {
 
         window.backgroundColor = .clear
         window.isOpaque = false
-        window.level = .floating
+        window.level = .popUpMenu
         window.ignoresMouseEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
@@ -110,10 +111,11 @@ final class FloatingPanel: NSObject {
         anchorWindow.orderFront(nil)
 
         // Show popover anchored to the window
+        // .maxY means the popover appears ABOVE the anchor, with arrow pointing DOWN
         popover.show(
             relativeTo: anchorView.bounds,
             of: anchorView,
-            preferredEdge: .minY  // Point arrow upward to dock
+            preferredEdge: .maxY
         )
 
         // Listen for dismissal notification from LauncherView

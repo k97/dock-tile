@@ -310,19 +310,8 @@ struct DockTileDetailView: View {
                 // Install or uninstall based on Show Tile toggle
                 if configToSave.isVisibleInDock {
                     try await HelperBundleManager.shared.installHelper(for: configToSave)
-
-                    // Launch the helper app to add it to the Dock
-                    let helperPath = HelperBundleManager.shared.helperPath(for: configToSave)
-                    NSWorkspace.shared.openApplication(
-                        at: helperPath,
-                        configuration: NSWorkspace.OpenConfiguration()
-                    ) { app, error in
-                        if let error = error {
-                            print("⚠️ Failed to launch helper: \(error.localizedDescription)")
-                        } else {
-                            print("✅ Helper launched and added to Dock: \(configToSave.name)")
-                        }
-                    }
+                    print("✅ Helper installed: \(configToSave.name)")
+                    print("   User can open it from: ~/Library/Application Support/DockTile/")
                 } else {
                     // If toggle is off, uninstall if previously installed
                     if HelperBundleManager.shared.helperExists(for: configToSave) {

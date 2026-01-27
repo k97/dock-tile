@@ -1,7 +1,7 @@
-# 🚀 Resume Development Here
+# Resume Development Here
 
-**Last Updated**: 2026-01-26, 18:45 PST
-**Current Status**: ~85% Complete, Build Successful ✅
+**Last Updated**: 2026-01-28
+**Current Status**: ~95% Complete, Helper App Architecture Working
 
 ---
 
@@ -11,123 +11,154 @@
 # Navigate to project
 cd /Users/karthik/Projects/dock-tile
 
-# Verify build status
+# Build the app
 xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Debug build
 
 # Run the app
 open ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Debug/DockTile.app
+
+# Reset app state (if needed)
+rm ~/Library/Preferences/com.docktile.configs.json
+rm -rf ~/Library/Application\ Support/DockTile/
 ```
 
 ---
 
-## 🎯 Next 3 Tasks (In Priority Order)
+## What's Working
 
-### 1. Add IconGenerator to Xcode Project (15 minutes)
+### Core Features (100% Complete)
+- Main app launches with configuration window (Screen 3)
+- Create/edit/delete tile configurations
+- Customise tile appearance (color + emoji) via drill-down (Screen 4)
+- Add/remove apps to tiles via file picker
+- JSON persistence to `~/Library/Preferences/com.docktile.configs.json`
+
+### Helper App Architecture (95% Complete)
+- Custom `main.swift` entry point - bypasses SwiftUI for helpers
+- `HelperAppDelegate.swift` - Pure AppKit delegate for helper apps
+- Helper bundles created in `~/Library/Application Support/DockTile/`
+- Helper apps added to Dock automatically (no manual pinning)
+- Popover opens immediately on first dock click
+- Native NSPopover appearance (no custom white background)
+- Duplicate tile prevention when editing
+
+### Recent Fixes Applied
+- **Helper crash fix**: Disabled window restoration (`NSQuitAlwaysKeepsWindows`)
+- **Duplicate tiles fix**: Added `isInDock()` check before adding
+- **Popover opens on first click**: Show popover in `applicationDidFinishLaunching`
+- **Native popover appearance**: Removed custom background from LauncherView
+
+---
+
+## Known Issues / Remaining Tasks
+
+### Testing Needed
+- [ ] Verify helper app crash is fixed (was showing "unexpectedly quit while reopening windows")
+- [ ] Verify duplicate tiles no longer appear when editing existing tiles
+- [ ] Test popover positioning on external monitors
+
+### Minor Polish (Optional)
+- [ ] Popover positioning refinement (currently uses fixed dock height of 70pt)
+- [ ] First launch experience / onboarding
+- [ ] Keyboard shortcuts (Cmd+N for new tile)
+
+---
+
+## Architecture Overview
+
+```
+User clicks dock icon -> Which app?
+                           |
+            +--------------+---------------+
+            |                              |
+    Main App (com.docktile.app)    Helper (com.docktile.{UUID})
+            |                              |
+    SwiftUI WindowGroup            Pure AppKit
+    DockTileApp.main()             HelperAppDelegate
+            |                              |
+    Configuration Window           NSPopover with apps
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `main.swift` | Entry point - detects helper vs main app |
+| `HelperAppDelegate.swift` | Pure AppKit for helper apps |
+| `DockTileApp.swift` | SwiftUI app for main app only |
+| `HelperBundleManager.swift` | Creates/installs helper bundles |
+| `FloatingPanel.swift` | NSPopover wrapper for dock popovers |
+| `LauncherView.swift` | SwiftUI grid of apps in popover |
+
+### Helper Bundle Location
+```
+~/Library/Application Support/DockTile/
+├── AI Tile.app
+├── Dev Tools.app
+└── ...
+```
+
+---
+
+## Debugging
+
+### View Console Logs
 ```bash
-# Option A: Try automatic addition
-python3 add_files_to_xcode.py
-
-# Option B: Manual addition in Xcode
-# 1. Open DockTile.xcodeproj
-# 2. Create "Utilities" group under DockTile/
-# 3. Add DockTile/Utilities/IconGenerator.swift to project
-# 4. Verify it appears in Build Phases > Compile Sources
-
-# Then test the build
-xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Debug clean build
+# Real-time logs for helper apps
+log stream --predicate 'processImagePath CONTAINS "DockTile"' --level debug
 ```
 
-**File Location**: `/Users/karthik/Projects/dock-tile/DockTile/Utilities/IconGenerator.swift`
-**Status**: Written, not yet added to Xcode project
+### Expected logs when helper launches:
+```
+Starting as helper app (pure AppKit)
+Helper app launching...
+   Bundle ID: com.docktile.XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+Loaded config: AI Tile with 4 apps
+Helper app ready
+Showing popover for helper tile
+```
 
-### 2. Make Helper Script Executable and Test (30 minutes)
+### Reset Everything
 ```bash
-# Make executable
-chmod +x Scripts/generate_helper.sh
+# Delete configurations
+rm ~/Library/Preferences/com.docktile.configs.json
 
-# Test with sample data
-./Scripts/generate_helper.sh "DockTile-Test" "com.docktile.test" "/path/to/icon.icns" "~/Desktop"
+# Delete helper apps
+rm -rf ~/Library/Application\ Support/DockTile/
 
-# Verify helper was created
-ls -la ~/Desktop/DockTile-Test.app
-
-# Test launching helper
-open ~/Desktop/DockTile-Test.app
+# Restart Dock to remove stale entries
+killall Dock
 ```
 
-**File Location**: `/Users/karthik/Projects/dock-tile/Scripts/generate_helper.sh`
-**Status**: Written, needs chmod +x
+---
 
-### 3. Update LauncherView to Use ConfigurationManager (1 hour)
-**File Location**: `/Users/karthik/Projects/dock-tile/DockTile/UI/LauncherView.swift`
+## Key Documents
 
-**Required Changes**:
-- Remove hardcoded placeholder apps
-- Add `@EnvironmentObject var configManager: ConfigurationManager`
-- Detect current bundle ID to load correct configuration
-- Read apps from `configManager.configuration(forBundleId:).appItems`
-- Implement actual app launching with `NSWorkspace.shared.open()`
+| Document | Purpose |
+|----------|---------|
+| `IMPLEMENTATION_STATUS.md` | Detailed implementation status |
+| `PROGRESS_UPDATE.md` | Comprehensive progress and remaining tasks |
+| `CLAUDE.md` | Project guidance for AI assistants |
+| `DockTile_Project_Spec.md` | Full specification (138k tokens) |
 
 ---
 
-## 📁 New Files Not Yet Integrated
+## Success Criteria
 
-1. **IconGenerator.swift** (138 lines)
-   - Path: `DockTile/Utilities/IconGenerator.swift`
-   - Purpose: Generate .icns files from tint colors + emoji
-   - Status: ✅ Written, ⏳ Not in Xcode
+The project is feature-complete when:
+- [x] User can create multiple DockTile configurations
+- [x] User can customize icon (color + emoji) per tile
+- [x] User can add/remove/reorder apps in each tile
+- [x] Clicking "Done" generates helper bundle and adds to Dock
+- [x] Each helper shows custom icon in Dock
+- [x] Clicking helper icon shows popover with configured apps
+- [x] Clicking app in popover launches that app
+- [x] Multiple helpers can coexist
+- [x] Popover appears immediately on first click
+- [ ] Helper apps don't crash on reopen (testing needed)
 
-2. **generate_helper.sh** (150 lines)
-   - Path: `Scripts/generate_helper.sh`
-   - Purpose: Create helper app bundles
-   - Status: ✅ Written, ⏳ Not executable
-
----
-
-## 🐛 Known Issues
-
-None! Build is clean. ✅
+**Current Progress**: ~95% complete
 
 ---
 
-## 📚 Key Documents to Reference
-
-- **PROGRESS_UPDATE.md** - Comprehensive session summary with all details
-- **IMPLEMENTATION_STATUS.md** - Updated implementation status
-- **CLAUDE.md** - Project guidance for AI assistants
-- **DockTile_Project_Spec.md** - Full specification (138k tokens)
-
----
-
-## 🧪 Testing Checklist (After Integration)
-
-- [ ] IconGenerator creates valid .icns files
-- [ ] generate_helper.sh creates working helper bundles
-- [ ] Helper apps launch independently
-- [ ] Multiple helpers coexist in Dock
-- [ ] Clicking helper shows correct popover
-- [ ] Clicking app in popover launches app
-- [ ] Popover appears <100ms after click
-- [ ] All animations are smooth
-
----
-
-## 💡 Remember
-
-**Architecture**: Single main app (DockTile.app) + multiple helper bundles (DockTile-Dev.app, etc.)
-- Main app: LSUIElement=false (shows config window)
-- Helpers: LSUIElement=true (dock-only, symlinked binary)
-- Each helper has unique bundle ID and custom icon
-
-**Design**: Medical White minimalism (Xiaomi/HOTO inspired)
-- Colors: #F5F5F7 (background), #1D1D1F (text)
-- Corner radius: 24pt continuous curve
-- Animations: Spring (response: 0.3, damping: 0.7)
-
-**Performance Target**: <100ms popover appearance ✅ Already achieved
-
----
-
-**Estimated Time to Completion**: 4-6 hours of focused work
-
-Good luck! 🚀
+**Next Priority**: Test the helper app crash fix and duplicate tile fix

@@ -27,8 +27,8 @@ struct LauncherView: View {
         static let strokeColor = Color.white.opacity(0.5)
 
         // Spacing
-        static let gridPadding: CGFloat = 24
-        static let itemSpacing: CGFloat = 16
+        static let gridPadding: CGFloat = 16
+        static let itemSpacing: CGFloat = 12
         static let cornerRadius: CGFloat = 24
 
         // Typography
@@ -61,9 +61,9 @@ struct LauncherView: View {
     private var frameSize: (width: CGFloat, height: CGFloat) {
         switch layoutMode {
         case .grid2x3:
-            return (360, 240)
+            return (280, 200)  // Compact grid
         case .horizontal1x6:
-            return (520, 120)
+            return (400, 90)   // Compact horizontal
         }
     }
 
@@ -71,29 +71,14 @@ struct LauncherView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Title area
-            headerView
-
-            // App grid
+            // App grid only - no header, popover handles chrome
             appGridView
                 .padding(DesignTokens.gridPadding)
         }
-        .background(
-            // Liquid Glass effect with beveled inner stroke
-            RoundedRectangle(cornerRadius: DesignTokens.cornerRadius, style: .continuous)
-                .fill(DesignTokens.background)
-                .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.cornerRadius, style: .continuous)
-                        .strokeBorder(DesignTokens.strokeColor, lineWidth: 0.5)
-                )
-        )
+        // No custom background - NSPopover provides native appearance
         .frame(width: frameSize.width, height: frameSize.height)
-        .scaleEffect(isVisible ? 1.0 : 0.9)
-        .opacity(isVisible ? 1.0 : 0.0)
         .onAppear {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                isVisible = true
-            }
+            isVisible = true
         }
     }
 
@@ -172,23 +157,17 @@ struct AppIconButton: View {
     @State private var isHovered = false
 
     var body: some View {
-        VStack(spacing: 8) {
-            // App icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(isHovered ? 0.4 : 0.2))
-                    .frame(width: 56, height: 56)
-
-                appIconView
-                    .frame(width: 48, height: 48)
-            }
-            .scaleEffect(isHovered ? 1.05 : 1.0)
-            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isHovered)
+        VStack(spacing: 6) {
+            // App icon - no background, just the icon
+            appIconView
+                .frame(width: 48, height: 48)
+                .scaleEffect(isHovered ? 1.1 : 1.0)
+                .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isHovered)
 
             // App name
             Text(app.name)
                 .font(.system(size: LauncherView.DesignTokens.appNameSize, weight: .regular, design: .default))
-                .foregroundColor(LauncherView.DesignTokens.textColor)
+                .foregroundColor(.primary)
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
