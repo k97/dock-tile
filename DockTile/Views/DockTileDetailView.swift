@@ -28,33 +28,39 @@ struct DockTileDetailView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header with title and Done button (fixed, doesn't scroll)
-            headerSection
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // Hero section: Icon + Grouped Controls
+                heroSection
 
-            Divider()
+                // Selected Apps table
+                appsTableSection
 
-            // Main content (scrollable)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Top row: Icon + Settings
-                    topSettingsSection
-
-                    Divider()
-
-                    // Selected Apps table
-                    appsTableSection
-
-                    Divider()
-
-                    // Delete section
-                    deleteSection
-                }
-                .padding(20)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                // Delete section
+                deleteSection
             }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(nsColor: .windowBackgroundColor))
+        // Toolbar with Done button (macOS Contacts style)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") {
+                    handleDone()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isProcessing)
+            }
+
+            if isProcessing {
+                ToolbarItem(placement: .automatic) {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+        }
         .sheet(isPresented: $showingFilePicker) {
             AppPickerView(onSelect: { appURL in
                 if let appItem = AppItem.from(appURL: appURL) {
@@ -93,98 +99,46 @@ struct DockTileDetailView: View {
         }
     }
 
-    // MARK: - Header Section
+    // MARK: - Hero Section (System Settings Style)
 
-    private var headerSection: some View {
-        HStack(alignment: .center) {
-            Text("Dock Tile Configurator")
-                .font(.headline)
-
-            Spacer()
-
-            if isProcessing {
-                ProgressView()
-                    .controlSize(.small)
-                    .padding(.trailing, 8)
-            }
-
-            Button("Done") {
-                handleDone()
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(isProcessing)
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, alignment: .center)
-        .background(Color(nsColor: .windowBackgroundColor))
-    }
-
-    // MARK: - Top Settings Section
-
-    private var topSettingsSection: some View {
-        HStack(alignment: .top, spacing: 24) {
-            // Icon preview with Customise button
+    private var heroSection: some View {
+        HStack(alignment: .top, spacing: 20) {
+            // Left column: Icon preview with Customise button
             VStack(spacing: 12) {
                 DockTileIconPreview(
                     tintColor: editedConfig.tintColor,
                     symbol: editedConfig.symbolEmoji,
-                    size: 80
+                    size: 96
                 )
 
                 Button(action: onCustomise) {
                     Text("Customise")
-                        .frame(width: 100)
                 }
                 .buttonStyle(.bordered)
+                .controlSize(.small)
             }
+            .padding(.top, 8)
 
-            // Settings fields
-            VStack(alignment: .leading, spacing: 16) {
-                // Tile Name
-                HStack {
-                    Text("Tile Name")
-                        .frame(width: 80, alignment: .leading)
+            // Right column: Native Inset Grouped Form
+            Form {
+                Section {
                     TextField("Tile Name", text: $editedConfig.name)
-                        .textFieldStyle(.roundedBorder)
-                }
 
-                // Show Tile toggle
-                HStack {
-                    Text("Show Tile")
-                        .frame(width: 80, alignment: .leading)
-                    Toggle("", isOn: $editedConfig.isVisibleInDock)
-                        .toggleStyle(.switch)
-                        .labelsHidden()
-                }
+                    Toggle("Show Tile", isOn: $editedConfig.isVisibleInDock)
 
-                // Show in App Switcher toggle (Cmd+Tab)
-                HStack {
-                    Text("App Switcher")
-                        .frame(width: 80, alignment: .leading)
-                    Toggle("", isOn: $editedConfig.showInAppSwitcher)
-                        .toggleStyle(.switch)
-                        .labelsHidden()
-                    Text("Show in ⌘Tab")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                // Layout picker
-                HStack {
-                    Text("Layout")
-                        .frame(width: 80, alignment: .leading)
-                    Picker("", selection: $editedConfig.layoutMode) {
+                    Picker("Layout", selection: $editedConfig.layoutMode) {
                         ForEach([LayoutMode.grid2x3, LayoutMode.horizontal1x6], id: \.self) { mode in
                             Text(mode.displayName).tag(mode)
                         }
                     }
-                    .pickerStyle(.menu)
-                    .frame(width: 120)
+
+                    Toggle("Show in App Switcher", isOn: $editedConfig.showInAppSwitcher)
                 }
             }
-
-            Spacer()
+            .formStyle(.grouped)
+            .scrollDisabled(true)
+            .scrollContentBackground(.hidden)
+            .frame(minHeight: 180)
         }
     }
 
