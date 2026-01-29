@@ -77,10 +77,15 @@ struct DockTileDetailView: View {
         }
         .onChange(of: configManager.configurations) { _, newConfigs in
             // Sync editedConfig when underlying configuration changes (e.g., dock visibility sync)
+            // NOTE: We intentionally do NOT sync isVisibleInDock here because:
+            // 1. User might be in the middle of editing and toggled "Show Tile" ON
+            // 2. Dock watcher might fire and think the tile should be OFF
+            // 3. This would reset the user's toggle before they can click "Done"
+            // The correct state will be set when user clicks "Done" and we install/uninstall
             if let updatedConfig = newConfigs.first(where: { $0.id == config.id }) {
-                // Only sync isVisibleInDock to avoid overwriting user's edits
-                if editedConfig.isVisibleInDock != updatedConfig.isVisibleInDock {
-                    editedConfig.isVisibleInDock = updatedConfig.isVisibleInDock
+                // Only sync showInAppSwitcher if it was changed externally
+                if editedConfig.showInAppSwitcher != updatedConfig.showInAppSwitcher {
+                    editedConfig.showInAppSwitcher = updatedConfig.showInAppSwitcher
                 }
             }
         }
@@ -149,13 +154,26 @@ struct DockTileDetailView: View {
                         .labelsHidden()
                 }
 
+                // Show in App Switcher toggle (Cmd+Tab)
+                HStack {
+                    Text("App Switcher")
+                        .frame(width: 80, alignment: .leading)
+                    Toggle("", isOn: $editedConfig.showInAppSwitcher)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                    Text("Show in ⌘Tab")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 // Layout picker
                 HStack {
                     Text("Layout")
                         .frame(width: 80, alignment: .leading)
                     Picker("", selection: $editedConfig.layoutMode) {
-                        Text("Grid").tag(LayoutMode.grid2x3)
-                        Text("Horizontal").tag(LayoutMode.horizontal1x6)
+                        ForEach([LayoutMode.grid2x3, LayoutMode.horizontal1x6], id: \.self) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
                     }
                     .pickerStyle(.menu)
                     .frame(width: 120)
@@ -273,8 +291,12 @@ struct DockTileDetailView: View {
                     layoutMode: editedConfig.layoutMode,
                     appItems: editedConfig.appItems,
                     isVisibleInDock: editedConfig.isVisibleInDock,
+                    showInAppSwitcher: editedConfig.showInAppSwitcher,
                     bundleIdentifier: config.bundleIdentifier  // Preserve original bundle ID
                 )
+
+                // Check if showInAppSwitcher changed (requires helper restart)
+                let appSwitcherChanged = config.showInAppSwitcher != editedConfig.showInAppSwitcher
 
                 // Save configuration changes first
                 configManager.updateConfiguration(configToSave)
@@ -290,6 +312,12 @@ struct DockTileDetailView: View {
                         try HelperBundleManager.shared.uninstallHelper(for: configToSave)
                         print("Tile removed from Dock: \(configToSave.name)")
                     }
+                }
+
+                // If only showInAppSwitcher changed but tile was already visible,
+                // we need to restart the helper to pick up the new activation policy
+                if appSwitcherChanged && config.isVisibleInDock && configToSave.isVisibleInDock {
+                    print("🔄 App Switcher setting changed - helper was restarted")
                 }
 
                 // Update local state to match saved config

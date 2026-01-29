@@ -18,6 +18,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
     private var popover: NSPopover?
     private var anchorWindow: NSWindow?
     private var dismissObserver: NSObjectProtocol?
+    private var clickOutsideMonitor: Any?
 
     /// Keep strong reference to hosting controller to prevent premature deallocation
     private var hostingController: NSHostingController<LauncherView>?
@@ -46,13 +47,8 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         // Keep strong reference to prevent deallocation
         self.hostingController = controller
 
-        // Calculate size based on layout mode
-        let size: NSSize
-        if configuration?.layoutMode == .horizontal1x6 {
-            size = NSSize(width: 520, height: 120)
-        } else {
-            size = NSSize(width: 360, height: 240)
-        }
+        // Calculate size based on layout mode and content
+        let size = calculatePopoverSize()
 
         controller.view.frame = NSRect(origin: .zero, size: size)
 
@@ -60,6 +56,29 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         popover.contentSize = size
 
         return popover
+    }
+
+    /// Calculate popover size based on layout mode and number of apps
+    private func calculatePopoverSize() -> NSSize {
+        let appCount = configuration?.appItems.count ?? 0
+
+        if configuration?.layoutMode == .horizontal1x6 {
+            // List view: fixed width, height based on content
+            // Title (30) + apps (28 each) + divider (12) + utility items (56) + padding (16)
+            let baseHeight: CGFloat = 114  // Title + divider + utilities + padding
+            let appsHeight = CGFloat(max(appCount, 1)) * 28
+            let totalHeight = min(baseHeight + appsHeight, 400)
+            return NSSize(width: 220, height: totalHeight)
+        } else {
+            // Stack view: width fixed at 340, height based on rows
+            guard appCount > 0 else {
+                return NSSize(width: 340, height: 180)
+            }
+            let rows = ceil(Double(appCount) / 3.0)
+            let contentHeight = rows * 100
+            let totalHeight = min(CGFloat(contentHeight) + 54, 400)
+            return NSSize(width: 340, height: totalHeight)
+        }
     }
 
     private func createAnchorWindow() -> NSWindow {
@@ -101,7 +120,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
 
     // MARK: - Show/Hide
 
-    func show(animated: Bool = true) {
+    func show(animated: Bool = true, withKeyboardFocus: Bool = false) {
         // If already visible, don't recreate
         if popover?.isShown == true {
             return
@@ -130,6 +149,11 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
             preferredEdge: .maxY
         )
 
+        // If keyboard focus requested (Cmd+Tab activation), notify the view
+        if withKeyboardFocus {
+            NotificationCenter.default.post(name: .enableKeyboardNavigation, object: nil)
+        }
+
         // Listen for dismissal notification from LauncherView
         dismissObserver = NotificationCenter.default.addObserver(
             forName: .dismissLauncher,
@@ -138,6 +162,26 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         ) { [weak self] _ in
             self?.hide(animated: true)
         }
+
+        // Add global click monitor to dismiss on click outside
+        clickOutsideMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self, let popover = self.popover, popover.isShown else { return }
+
+            // Check if click is outside the popover
+            if let popoverWindow = popover.contentViewController?.view.window {
+                let clickLocation = event.locationInWindow
+                let windowFrame = popoverWindow.frame
+
+                // Convert global click location to check against popover window
+                let globalClickLocation = NSEvent.mouseLocation
+
+                if !windowFrame.contains(globalClickLocation) {
+                    Task { @MainActor in
+                        self.hide(animated: true)
+                    }
+                }
+            }
+        }
     }
 
     func hide(animated: Bool = true) {
@@ -145,6 +189,12 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         if let observer = dismissObserver {
             NotificationCenter.default.removeObserver(observer)
             dismissObserver = nil
+        }
+
+        // Remove click outside monitor
+        if let monitor = clickOutsideMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickOutsideMonitor = nil
         }
 
         // Close popover (delegate will handle final cleanup)
@@ -158,6 +208,12 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         if let observer = dismissObserver {
             NotificationCenter.default.removeObserver(observer)
             dismissObserver = nil
+        }
+
+        // Remove click outside monitor
+        if let monitor = clickOutsideMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickOutsideMonitor = nil
         }
 
         // Release popover resources

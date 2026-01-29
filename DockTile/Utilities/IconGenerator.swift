@@ -113,46 +113,43 @@ struct IconGenerator {
         symbol: String,
         outputURL: URL
     ) throws {
-        // Standard macOS icon sizes for .icns
-        let sizes: [CGFloat] = [16, 32, 64, 128, 256, 512, 1024]
+        // Standard macOS icon sizes for .icns (base sizes)
+        // Each needs 1x and @2x versions
+        let baseSizes: [Int] = [16, 32, 128, 256, 512]
 
         // Create iconset directory
         let iconsetURL = outputURL.deletingPathExtension().appendingPathExtension("iconset")
         try? FileManager.default.removeItem(at: iconsetURL)
         try FileManager.default.createDirectory(at: iconsetURL, withIntermediateDirectories: true)
 
-        // Generate all sizes
-        for size in sizes {
+        // Generate all sizes (1x and @2x for each base size)
+        for baseSize in baseSizes {
+            // 1x version
             let image1x = generateIcon(
                 tintColor: tintColor,
                 symbol: symbol,
-                size: CGSize(width: size, height: size)
+                size: CGSize(width: baseSize, height: baseSize)
             )
+            let filename1x = "icon_\(baseSize)x\(baseSize).png"
+            try saveAsPNG(image: image1x, url: iconsetURL.appendingPathComponent(filename1x))
 
+            // @2x version (retina) - actual pixels are 2x the base size
             let image2x = generateIcon(
                 tintColor: tintColor,
                 symbol: symbol,
-                size: CGSize(width: size * 2, height: size * 2)
+                size: CGSize(width: baseSize * 2, height: baseSize * 2)
             )
-
-            // Save 1x
-            let filename1x = size == 16 || size == 32 || size == 128 || size == 256 || size == 512
-                ? "icon_\(Int(size))x\(Int(size)).png"
-                : "icon_\(Int(size/2))x\(Int(size/2))@2x.png"
-
-            try saveAsPNG(image: image1x, url: iconsetURL.appendingPathComponent(filename1x))
-
-            // Save 2x (retina)
-            if size <= 512 {
-                let filename2x = "icon_\(Int(size))x\(Int(size))@2x.png"
-                try saveAsPNG(image: image2x, url: iconsetURL.appendingPathComponent(filename2x))
-            }
+            let filename2x = "icon_\(baseSize)x\(baseSize)@2x.png"
+            try saveAsPNG(image: image2x, url: iconsetURL.appendingPathComponent(filename2x))
         }
 
         // Convert iconset to icns using iconutil
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
         process.arguments = ["-c", "icns", iconsetURL.path, "-o", outputURL.path]
+
+        let pipe = Pipe()
+        process.standardError = pipe
 
         try process.run()
         process.waitUntilExit()
@@ -161,6 +158,9 @@ struct IconGenerator {
         try? FileManager.default.removeItem(at: iconsetURL)
 
         guard process.terminationStatus == 0 else {
+            let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
+            let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
+            print("iconutil error: \(errorMessage)")
             throw IconGeneratorError.icnsConversionFailed
         }
     }

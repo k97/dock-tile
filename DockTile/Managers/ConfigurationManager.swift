@@ -198,6 +198,7 @@ final class ConfigurationManager: ObservableObject {
     }
 
     /// Load configurations from JSON file
+    /// Uses decodeIfPresent in DockTileConfiguration for backward compatibility
     private func loadConfigurations() {
         guard FileManager.default.fileExists(atPath: storageURL.path) else {
             print("📁 No existing configuration file found, starting fresh")
@@ -207,10 +208,6 @@ final class ConfigurationManager: ObservableObject {
         do {
             let data = try Data(contentsOf: storageURL)
             configurations = try decoder.decode([DockTileConfiguration].self, from: data)
-
-            // Don't auto-select - let app launch with empty state
-            // User will click "+" to create new tile or select existing one
-
             print("📂 Loaded \(configurations.count) configuration(s) from \(storageURL.lastPathComponent)")
         } catch {
             print("❌ Failed to load configurations: \(error.localizedDescription)")

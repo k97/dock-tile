@@ -3,6 +3,7 @@
 //  DockTile
 //
 //  Core data models for dock tile configurations
+//  Uses decodeIfPresent for backward compatibility when adding new fields
 //  Swift 6 - Strict Concurrency
 //
 
@@ -19,16 +20,20 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     var layoutMode: LayoutMode
     var appItems: [AppItem]
     var isVisibleInDock: Bool
+    var showInAppSwitcher: Bool  // v2: Show in Cmd+Tab app switcher
     var bundleIdentifier: String  // e.g., "com.docktile.dev"
+
+    // MARK: - Initialization
 
     init(
         id: UUID = UUID(),
-        name: String = "My DockTile",
-        tintColor: TintColor = .none,
-        symbolEmoji: String = "⭐",
-        layoutMode: LayoutMode = .grid2x3,
+        name: String = ConfigurationDefaults.name,
+        tintColor: TintColor = ConfigurationDefaults.tintColor,
+        symbolEmoji: String = ConfigurationDefaults.symbolEmoji,
+        layoutMode: LayoutMode = ConfigurationDefaults.layoutMode,
         appItems: [AppItem] = [],
-        isVisibleInDock: Bool = true,  // Default to visible
+        isVisibleInDock: Bool = ConfigurationDefaults.isVisibleInDock,
+        showInAppSwitcher: Bool = ConfigurationDefaults.showInAppSwitcher,
         bundleIdentifier: String? = nil
     ) {
         self.id = id
@@ -38,7 +43,45 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         self.layoutMode = layoutMode
         self.appItems = appItems
         self.isVisibleInDock = isVisibleInDock
+        self.showInAppSwitcher = showInAppSwitcher
         self.bundleIdentifier = bundleIdentifier ?? "com.docktile.\(id.uuidString)"
+    }
+
+    // MARK: - Custom Decoder (backward compatibility)
+
+    /// Decodes configuration with defaults for missing fields
+    /// See ConfigurationSchema.swift for version history
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        // Core fields (v1) - required
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        tintColor = try container.decode(TintColor.self, forKey: .tintColor)
+        symbolEmoji = try container.decode(String.self, forKey: .symbolEmoji)
+        layoutMode = try container.decode(LayoutMode.self, forKey: .layoutMode)
+        appItems = try container.decode([AppItem].self, forKey: .appItems)
+        isVisibleInDock = try container.decode(Bool.self, forKey: .isVisibleInDock)
+        bundleIdentifier = try container.decode(String.self, forKey: .bundleIdentifier)
+
+        // v2 fields - optional with defaults
+        showInAppSwitcher = try container.decodeIfPresent(Bool.self, forKey: .showInAppSwitcher)
+            ?? ConfigurationDefaults.showInAppSwitcher
+
+        // Future fields template:
+        // newField = try container.decodeIfPresent(Type.self, forKey: .newField)
+        //     ?? ConfigurationDefaults.newField
+    }
+
+    // MARK: - Coding Keys
+
+    private enum CodingKeys: String, CodingKey {
+        // v1 fields
+        case id, name, tintColor, symbolEmoji, layoutMode, appItems
+        case isVisibleInDock, bundleIdentifier
+        // v2 fields
+        case showInAppSwitcher
+        // Future fields: add new cases here
     }
 }
 
@@ -113,15 +156,15 @@ enum LayoutMode: String, Codable, Hashable {
 
     var displayName: String {
         switch self {
-        case .grid2x3: return "Grid (2×3)"
-        case .horizontal1x6: return "Horizontal (1×6)"
+        case .grid2x3: return "Grid"
+        case .horizontal1x6: return "List"
         }
     }
 
     var iconName: String {
         switch self {
         case .grid2x3: return "square.grid.2x2"
-        case .horizontal1x6: return "rectangle.grid.1x2"
+        case .horizontal1x6: return "list.bullet"
         }
     }
 }

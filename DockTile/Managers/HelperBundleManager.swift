@@ -60,10 +60,18 @@ final class HelperBundleManager {
 
         print("   isUpdate: \(isUpdate), wasRunning: \(wasRunning), wasInDock: \(wasInDock)")
 
-        // If helper is running, quit it first
+        // If helper is running, quit it first and wait for it to fully terminate
         if wasRunning {
             quitHelper(bundleId: config.bundleIdentifier)
-            try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+            // Wait for the app to fully terminate
+            var waitCount = 0
+            while isHelperRunning(bundleId: config.bundleIdentifier) && waitCount < 10 {
+                try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                waitCount += 1
+            }
+            // Extra delay to ensure clean termination
+            try await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+            print("   Helper terminated after \(waitCount) checks")
         }
 
         // If updating and name changed, clean up old helper bundle
@@ -260,9 +268,11 @@ final class HelperBundleManager {
         plist["CFBundleName"] = appName
         plist["CFBundleDisplayName"] = appName
 
-        // Keep LSUIElement false (or remove) so app shows in Dock
-        // User can right-click "Keep in Dock" to make it permanent
-        plist.removeValue(forKey: "LSUIElement")
+        // CRITICAL: Set LSUIElement = true so app doesn't appear in Cmd+Tab by default
+        // The app will still appear in Dock because we add it via Dock plist
+        // At launch, if showInAppSwitcher is true, we call setActivationPolicy(.regular)
+        // to make it visible in Cmd+Tab
+        plist["LSUIElement"] = true
 
         // Write back
         let nsDict = plist as NSDictionary

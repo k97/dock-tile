@@ -16,6 +16,9 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// Configuration manager - created once at launch
     private var configManager: ConfigurationManager?
 
+    /// Track if popover was shown due to app activation (Cmd+Tab)
+    private var showedPopoverOnActivation = false
+
     // MARK: - Runtime Detection
 
     /// Current bundle ID
@@ -25,20 +28,31 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Application Lifecycle
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        print("🚀 Helper app launching...")
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        print("🚀 Helper app will finish launching...")
         print("   Bundle ID: \(currentBundleId)")
 
-        // Disable window restoration - helpers don't have windows to restore
+        // Disable automatic window restoration before app finishes launching
         UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")
 
-        // Set up as regular app (shows in Dock)
-        NSApp.setActivationPolicy(.regular)
+        // CRITICAL: Set activation policy BEFORE app finishes launching
+        // This must happen early or macOS will ignore the policy change
+        let showInAppSwitcher = readShowInAppSwitcherFromDisk()
+        if showInAppSwitcher {
+            NSApp.setActivationPolicy(.regular)
+            print("   App Switcher: visible (regular)")
+        } else {
+            NSApp.setActivationPolicy(.accessory)
+            print("   App Switcher: hidden (accessory)")
+        }
+    }
 
-        // Create configuration manager
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        print("🚀 Helper app did finish launching...")
+
+        // Create configuration manager for runtime use
         configManager = ConfigurationManager()
 
-        // Pre-load and verify configuration
         if let config = getCurrentConfiguration() {
             print("✓ Loaded config: \(config.name) with \(config.appItems.count) apps")
         } else {
@@ -47,11 +61,6 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         print("✓ Helper app ready")
         // App is now running in Dock - popover will show when user clicks the icon
-    }
-
-    func applicationWillFinishLaunching(_ notification: Notification) {
-        // Disable automatic window restoration before app finishes launching
-        UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -63,10 +72,35 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         return false  // Stay running to respond to dock clicks
     }
 
+    /// Called when app becomes active (e.g., via Cmd+Tab)
+    func applicationDidBecomeActive(_ notification: Notification) {
+        // Only show popover on activation if showInAppSwitcher is enabled
+        guard let config = getCurrentConfiguration(), config.showInAppSwitcher else {
+            return
+        }
+
+        // Show popover when activated via Cmd+Tab (if not already visible)
+        if !floatingPanel.isVisible {
+            print("⌘Tab activated - showing popover with keyboard navigation")
+            showPopover(withKeyboardFocus: true)
+            showedPopoverOnActivation = true
+        }
+    }
+
+    /// Called when app loses focus
+    func applicationDidResignActive(_ notification: Notification) {
+        // Hide popover when app loses focus
+        if floatingPanel.isVisible && showedPopoverOnActivation {
+            hidePopover()
+            showedPopoverOnActivation = false
+        }
+    }
+
     // MARK: - Dock Icon Click Handler
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         print("🖱️ Helper dock icon clicked (hasVisibleWindows: \(flag))")
+        showedPopoverOnActivation = false  // This was a dock click, not Cmd+Tab
         togglePopover()
         return true
     }
@@ -77,12 +111,12 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         if floatingPanel.isVisible {
             hidePopover()
         } else {
-            showPopover()
+            showPopover(withKeyboardFocus: false)
         }
     }
 
-    private func showPopover() {
-        print("📍 Showing popover for helper tile")
+    private func showPopover(withKeyboardFocus: Bool) {
+        print("📍 Showing popover for helper tile (keyboard focus: \(withKeyboardFocus))")
 
         // Get configuration
         let config = getCurrentConfiguration()
@@ -93,7 +127,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         // Show popover
         print("   Calling floatingPanel.show()...")
-        floatingPanel.show(animated: true)
+        floatingPanel.show(animated: true, withKeyboardFocus: withKeyboardFocus)
         print("   Popover show complete")
     }
 
@@ -240,5 +274,39 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     private func getCurrentConfiguration() -> DockTileConfiguration? {
         guard let configManager = configManager else { return nil }
         return configManager.configuration(forBundleId: currentBundleId)
+    }
+
+    /// Read showInAppSwitcher directly from disk (for early initialization)
+    /// This is used before ConfigurationManager is created
+    private func readShowInAppSwitcherFromDisk() -> Bool {
+        let preferencesDir = FileManager.default.urls(
+            for: .libraryDirectory,
+            in: .userDomainMask
+        )[0].appendingPathComponent("Preferences")
+
+        let storageURL = preferencesDir.appendingPathComponent("com.docktile.configs.json")
+
+        guard FileManager.default.fileExists(atPath: storageURL.path),
+              let data = try? Data(contentsOf: storageURL) else {
+            print("   No config file found, defaulting to hidden")
+            return false
+        }
+
+        // Decode configurations and find ours by bundle ID
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        guard let configs = try? decoder.decode([DockTileConfiguration].self, from: data) else {
+            print("   Failed to decode configs, defaulting to hidden")
+            return false
+        }
+
+        if let config = configs.first(where: { $0.bundleIdentifier == currentBundleId }) {
+            print("   Found config '\(config.name)': showInAppSwitcher = \(config.showInAppSwitcher)")
+            return config.showInAppSwitcher
+        }
+
+        print("   Config not found for \(currentBundleId), defaulting to hidden")
+        return false
     }
 }

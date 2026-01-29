@@ -17,6 +17,7 @@
 		AADPW002 /* DockPlistWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADPW001; };
 		AA0020 /* FloatingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0021; };
 		AA0022 /* LauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0023; };
+		AANPV01 /* NativePopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AANPV02; };
 		AA09AE0F /* ConfigurationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFE26F; };
 		AA3FF186 /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC48362; };
 		AA28203D /* ColorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA90E3D3; };
@@ -28,7 +29,9 @@
 		AA291E3F /* ItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF32B63; };
 		AA597367 /* ColourPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8A2DA5; };
 		AA49ED64 /* SymbolPickerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA94D1EB; };
+		AACFS001 /* ConfigurationSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFS002; };
 		AA07E3F1 /* ConfigurationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0D6A16; };
+		AACFS003 /* ConfigurationSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFS004; };
 		AAB66A6F /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC89BB2; };
 		AA178F39 /* ColorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA70D235; };
 		AA6FB17C /* DockTileConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC653A9; };
@@ -51,6 +54,7 @@
 		AA0009 /* DockTile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DockTile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0021 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
 		AA0023 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
+		AANPV02 /* NativePopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePopoverViews.swift; sourceTree = "<group>"; };
 		AACFE26F /* ConfigurationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationModels.swift; sourceTree = "<group>"; };
 		AAC48362 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
 		AA90E3D3 /* ColorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtensions.swift; sourceTree = "<group>"; };
@@ -76,6 +80,8 @@
 		AAU00002 /* IconGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGenerator.swift; sourceTree = "<group>"; };
 		AAH00002 /* HelperBundleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperBundleManager.swift; sourceTree = "<group>"; };
 		AADPW001 /* DockPlistWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPlistWatcher.swift; sourceTree = "<group>"; };
+		AACFS002 /* ConfigurationSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationSchema.swift; sourceTree = "<group>"; };
+		AACFS004 /* ConfigurationSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationSchema.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,6 +136,7 @@
 			children = (
 				AA0021 /* FloatingPanel.swift */,
 				AA0023 /* LauncherView.swift */,
+				AANPV02 /* NativePopoverViews.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -163,8 +170,9 @@
 			isa = PBXGroup;
 			children = (
 				AACFE26F /* ConfigurationModels.swift */,
-			
-				AA0D6A16 /* ConfigurationModels.swift */,);
+				AACFS002 /* ConfigurationSchema.swift */,
+				AA0D6A16 /* ConfigurationModels.swift */,
+				AACFS004 /* ConfigurationSchema.swift */,);
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -299,6 +307,7 @@
 				AA0005 /* GhostModeManager.swift in Sources */,
 				AA0020 /* FloatingPanel.swift in Sources */,
 				AA0022 /* LauncherView.swift in Sources */,
+				AANPV01 /* NativePopoverViews.swift in Sources */,
 				AAU00001 /* IconGenerator.swift in Sources */,
 				AAH00001 /* HelperBundleManager.swift in Sources */,
 				AADPW002 /* DockPlistWatcher.swift in Sources */,
@@ -314,6 +323,7 @@
 				AA28203D /* ColorExtensions.swift in Sources */,
 				AA3FF186 /* ConfigurationManager.swift in Sources */,
 				AA09AE0F /* ConfigurationModels.swift in Sources */,
+				AACFS001 /* ConfigurationSchema.swift in Sources */,
 				AA5DE9E7 /* SymbolPickerButton.swift in Sources */,
 				AA96E8AB /* ColourPickerGrid.swift in Sources */,
 				AA8E2782 /* ItemRowView.swift in Sources */,
@@ -324,7 +334,8 @@
 				AA6FB17C /* DockTileConfigurationView.swift in Sources */,
 				AA178F39 /* ColorExtensions.swift in Sources */,
 				AAB66A6F /* ConfigurationManager.swift in Sources */,
-				AA07E3F1 /* ConfigurationModels.swift in Sources */,);
+				AA07E3F1 /* ConfigurationModels.swift in Sources */,
+				AACFS003 /* ConfigurationSchema.swift in Sources */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
