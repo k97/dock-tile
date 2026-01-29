@@ -46,7 +46,7 @@ struct DockTileSidebarView: View {
                 }
             }
         }
-        .navigationTitle("Tiles")
+        .navigationTitle("DockTile")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
@@ -57,7 +57,6 @@ struct DockTileSidebarView: View {
                 .help("Create new tile")
             }
         }
-        .frame(minWidth: 200)
     }
 }
 

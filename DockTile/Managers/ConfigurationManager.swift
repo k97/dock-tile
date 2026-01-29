@@ -14,13 +14,25 @@ final class ConfigurationManager: ObservableObject {
     // MARK: - Published State
 
     @Published var configurations: [DockTileConfiguration] = []
-    @Published var selectedConfigId: UUID?
+    @Published var selectedConfigId: UUID? {
+        didSet {
+            // Persist selection whenever it changes
+            if let id = selectedConfigId {
+                UserDefaults.standard.set(id.uuidString, forKey: lastSelectedConfigKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: lastSelectedConfigKey)
+            }
+        }
+    }
 
     // MARK: - Storage
 
     private let storageURL: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+
+    /// UserDefaults key for persisting last selected config
+    private let lastSelectedConfigKey = "lastSelectedConfigId"
 
     // MARK: - Dock Sync
 
@@ -49,11 +61,30 @@ final class ConfigurationManager: ObservableObject {
         print("   Storage: \(storageURL.path)")
         print("   Loaded \(configurations.count) configuration(s)")
 
+        // Restore last selected config (or auto-select first if configs exist)
+        restoreOrAutoSelectConfig()
+
         // Sync dock visibility on launch
         syncDockVisibility()
 
         // Start watching for Dock changes
         startDockWatcher()
+    }
+
+    /// Restore last selected config from UserDefaults, or auto-select first config if available
+    private func restoreOrAutoSelectConfig() {
+        // Try to restore last selected config
+        if let savedIdString = UserDefaults.standard.string(forKey: lastSelectedConfigKey),
+           let savedId = UUID(uuidString: savedIdString),
+           configurations.contains(where: { $0.id == savedId }) {
+            selectedConfigId = savedId
+            print("   ✓ Restored last selected config: \(savedIdString)")
+        }
+        // If no saved selection but configs exist, select the first one
+        else if !configurations.isEmpty {
+            selectedConfigId = configurations.first?.id
+            print("   ✓ Auto-selected first config")
+        }
     }
 
     // MARK: - CRUD Operations
@@ -112,9 +143,9 @@ final class ConfigurationManager: ObservableObject {
 
         configurations.remove(at: index)
 
-        // Clear selection if deleted (show empty state)
+        // If deleted config was selected, select another one (or nil if none left)
         if selectedConfigId == id {
-            selectedConfigId = nil
+            selectedConfigId = configurations.first?.id
         }
 
         saveConfigurations()
@@ -248,6 +279,32 @@ final class ConfigurationManager: ObservableObject {
     var selectedConfiguration: DockTileConfiguration? {
         guard let id = selectedConfigId else { return nil }
         return configuration(for: id)
+    }
+
+    /// Select a configuration by ID (used for deep linking from helpers)
+    /// Returns true if the config was found and selected
+    @discardableResult
+    func selectConfiguration(id: UUID) -> Bool {
+        guard configurations.contains(where: { $0.id == id }) else {
+            print("⚠️ Cannot select config - not found: \(id)")
+            return false
+        }
+        selectedConfigId = id
+        print("✓ Selected config via deep link: \(id)")
+        return true
+    }
+
+    /// Select a configuration by bundle identifier (used when helper requests configure)
+    /// Returns true if the config was found and selected
+    @discardableResult
+    func selectConfiguration(bundleId: String) -> Bool {
+        guard let config = configuration(forBundleId: bundleId) else {
+            print("⚠️ Cannot select config - bundle ID not found: \(bundleId)")
+            return false
+        }
+        selectedConfigId = config.id
+        print("✓ Selected config via bundle ID: \(bundleId)")
+        return true
     }
 
     // MARK: - Dock Visibility Sync

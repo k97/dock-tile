@@ -29,14 +29,14 @@ struct DockTileDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header with title and Done button
+            // Header with title and Done button (fixed, doesn't scroll)
             headerSection
 
             Divider()
 
-            // Main content
+            // Main content (scrollable)
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 24) {
                     // Top row: Icon + Settings
                     topSettingsSection
 
@@ -50,9 +50,11 @@ struct DockTileDetailView: View {
                     // Delete section
                     deleteSection
                 }
-                .padding(24)
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .sheet(isPresented: $showingFilePicker) {
             AppPickerView(onSelect: { appURL in
                 if let appItem = AppItem.from(appURL: appURL) {
@@ -94,7 +96,7 @@ struct DockTileDetailView: View {
     // MARK: - Header Section
 
     private var headerSection: some View {
-        HStack {
+        HStack(alignment: .center) {
             Text("Dock Tile Configurator")
                 .font(.headline)
 
@@ -112,8 +114,10 @@ struct DockTileDetailView: View {
             .buttonStyle(.borderedProminent)
             .disabled(isProcessing)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     // MARK: - Top Settings Section

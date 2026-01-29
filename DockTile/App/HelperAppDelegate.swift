@@ -186,10 +186,35 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openConfigurator() {
-        launchMainApp()
+        launchMainAppWithDeepLink()
     }
 
-    private func launchMainApp() {
+    /// Launch main app with deep link to select this helper's configuration
+    private func launchMainAppWithDeepLink() {
+        // Create deep link URL with this helper's bundle ID
+        // docktile://configure?bundleId=com.docktile.XXXXX
+        let deepLinkURL = URL(string: "docktile://configure?bundleId=\(currentBundleId)")!
+
+        print("🔗 Opening configurator with deep link: \(deepLinkURL)")
+
+        // Try to open via URL scheme first (works if main app is installed)
+        let workspace = NSWorkspace.shared
+
+        workspace.open(deepLinkURL, configuration: NSWorkspace.OpenConfiguration()) { _, error in
+            if let error = error {
+                print("⚠️ Deep link failed: \(error.localizedDescription)")
+                // Fallback to direct app launch
+                Task { @MainActor in
+                    self.launchMainAppDirectly()
+                }
+            } else {
+                print("✅ Opened configurator via deep link")
+            }
+        }
+    }
+
+    /// Fallback: Launch main app directly (without deep link)
+    private func launchMainAppDirectly() {
         let workspace = NSWorkspace.shared
 
         // Try standard locations

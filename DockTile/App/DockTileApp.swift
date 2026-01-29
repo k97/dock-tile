@@ -17,15 +17,20 @@ struct DockTileApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var configManager = ConfigurationManager()
 
+    // Fixed window dimensions (System Settings style)
+    private let windowWidth: CGFloat = 768
+    private let minWindowHeight: CGFloat = 500
+
     var body: some Scene {
         WindowGroup {
             DockTileConfigurationView()
                 .environmentObject(configManager)
-                .frame(minWidth: 1000, minHeight: 700)
                 .onAppear {
                     appDelegate.configManager = configManager
                 }
         }
+        .windowResizability(.contentSize)
+        .defaultSize(width: windowWidth, height: 600)
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("New DockTile") {

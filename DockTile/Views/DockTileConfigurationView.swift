@@ -12,10 +12,15 @@ struct DockTileConfigurationView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
     @State private var isDrilledDown = false
 
+    // Fixed window dimensions (System Settings style)
+    private let windowWidth: CGFloat = 768
+    private let minWindowHeight: CGFloat = 500
+
     var body: some View {
         NavigationSplitView {
             // Sidebar with configuration list
             DockTileSidebarView()
+                .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
             if let selectedConfig = configManager.selectedConfiguration {
                 ZStack {
@@ -41,13 +46,65 @@ struct DockTileConfigurationView: View {
                         .transition(.move(edge: .trailing))
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .animation(.easeInOut(duration: 0.3), value: isDrilledDown)
             } else {
                 // Empty state
                 EmptyConfigurationView()
             }
         }
-        .frame(minWidth: 1000, minHeight: 700)
+        .navigationSplitViewStyle(.balanced)
+        // Strict frame enforcement: fixed width, flexible height
+        .frame(
+            minWidth: windowWidth,
+            idealWidth: windowWidth,
+            maxWidth: windowWidth,
+            minHeight: minWindowHeight,
+            maxHeight: .infinity
+        )
+        .background(WindowAccessor())
+    }
+}
+
+// MARK: - Window Accessor (AppKit Bridge)
+
+/// NSViewRepresentable that configures the window at the AppKit level
+/// This is the "secret sauce" that prevents horizontal resize cursor
+private struct WindowAccessor: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            guard let window = view.window else { return }
+            configureWindow(window)
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        // Reconfigure on update in case window changed
+        DispatchQueue.main.async {
+            guard let window = nsView.window else { return }
+            configureWindow(window)
+        }
+    }
+
+    private func configureWindow(_ window: NSWindow) {
+        let fixedWidth: CGFloat = 768
+        let minHeight: CGFloat = 500
+
+        // Lock horizontal size, allow vertical resize
+        window.contentMinSize = NSSize(width: fixedWidth, height: minHeight)
+        window.contentMaxSize = NSSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude)
+
+        // Set current size if not already correct
+        var frame = window.frame
+        if frame.width != fixedWidth {
+            frame.size.width = fixedWidth
+            window.setFrame(frame, display: true, animate: false)
+        }
+
+        // Disable horizontal resize (keep vertical)
+        // styleMask already includes .resizable, but we constrain via min/max
     }
 }
 

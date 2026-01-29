@@ -10,12 +10,16 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var ghostModeManager = GhostModeManager.shared
     private var floatingPanel: FloatingPanel?
 
     // Configuration manager (set by DockTileApp on launch)
     var configManager: ConfigurationManager?
+
+    // Fixed window dimensions (System Settings style)
+    private let fixedWindowWidth: CGFloat = 768
+    private let minWindowHeight: CGFloat = 500
 
     // MARK: - Runtime Detection
 
@@ -77,6 +81,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Main app: Use regular mode to show dock icon
         NSApp.setActivationPolicy(.regular)
 
+        // Configure window sizing after a brief delay to ensure window exists
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [self] in
+            configureMainWindowSizing()
+        }
+
         // Check if first launch
         let hasLaunchedBefore = UserDefaults.standard.bool(forKey: "HasLaunchedBefore")
 
@@ -87,6 +96,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             print("✓ Main app ready - dock icon visible")
         }
+    }
+
+    /// Configure window size constraints at the AppKit level
+    private func configureMainWindowSizing() {
+        guard let window = NSApp.windows.first(where: { $0.contentViewController != nil }) else {
+            return
+        }
+
+        // Set ourselves as delegate for resize control
+        window.delegate = self
+
+        // Lock horizontal size, allow vertical resize
+        window.contentMinSize = NSSize(width: fixedWindowWidth, height: minWindowHeight)
+        window.contentMaxSize = NSSize(width: fixedWindowWidth, height: CGFloat.greatestFiniteMagnitude)
+
+        // Ensure current frame has correct width
+        var frame = window.frame
+        if frame.width != fixedWindowWidth {
+            frame.size.width = fixedWindowWidth
+            window.setFrame(frame, display: true, animate: false)
+        }
+
+        print("✓ Window sizing configured: \(fixedWindowWidth)x\(minWindowHeight)+")
+    }
+
+    // MARK: - NSWindowDelegate
+
+    func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+        // Enforce fixed width during resize
+        return NSSize(width: fixedWindowWidth, height: max(frameSize.height, minWindowHeight))
     }
 
     private func showConfigurationWindow() {
@@ -106,6 +145,58 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         print("👋 DockTile terminating...")
+    }
+
+    // MARK: - URL Handling (Deep Linking)
+
+    /// Handle URLs like: docktile://configure?bundleId=com.docktile.XXXXX
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard !isHelperApp else { return }  // Only main app handles URLs
+
+        for url in urls {
+            handleDeepLink(url)
+        }
+    }
+
+    private func handleDeepLink(_ url: URL) {
+        print("🔗 Handling deep link: \(url)")
+
+        guard url.scheme == "docktile" else {
+            print("   ⚠️ Unknown URL scheme: \(url.scheme ?? "nil")")
+            return
+        }
+
+        // Parse URL: docktile://configure?bundleId=XXX or docktile://configure?id=XXX
+        guard url.host == "configure" else {
+            print("   ⚠️ Unknown URL host: \(url.host ?? "nil")")
+            return
+        }
+
+        // Parse query parameters
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems else {
+            print("   ⚠️ No query parameters found")
+            return
+        }
+
+        // Try bundleId first (from helper context menu)
+        if let bundleId = queryItems.first(where: { $0.name == "bundleId" })?.value {
+            print("   📦 Selecting config by bundle ID: \(bundleId)")
+            configManager?.selectConfiguration(bundleId: bundleId)
+            showConfigurationWindow()
+            return
+        }
+
+        // Try config ID (UUID)
+        if let idString = queryItems.first(where: { $0.name == "id" })?.value,
+           let id = UUID(uuidString: idString) {
+            print("   🆔 Selecting config by ID: \(idString)")
+            configManager?.selectConfiguration(id: id)
+            showConfigurationWindow()
+            return
+        }
+
+        print("   ⚠️ No valid config identifier in URL")
     }
 
     /// Keep helper apps running even when all windows are closed
