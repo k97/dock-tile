@@ -157,26 +157,26 @@ struct AppIconButton: View {
     @State private var isHovered = false
 
     var body: some View {
-        VStack(spacing: 6) {
-            // App icon - no background, just the icon
-            appIconView
-                .frame(width: 48, height: 48)
-                .scaleEffect(isHovered ? 1.1 : 1.0)
-                .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isHovered)
+        Button(action: launchApp) {
+            VStack(spacing: 6) {
+                // App icon - no background, just the icon
+                appIconView
+                    .frame(width: 48, height: 48)
+                    .scaleEffect(isHovered ? 1.1 : 1.0)
+                    .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isHovered)
 
-            // App name
-            Text(app.name)
-                .font(.system(size: LauncherView.DesignTokens.appNameSize, weight: .regular, design: .default))
-                .foregroundColor(.primary)
-                .lineLimit(1)
+                // App name
+                Text(app.name)
+                    .font(.system(size: LauncherView.DesignTokens.appNameSize, weight: .regular, design: .default))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
+        .buttonStyle(.plain)
         .onHover { hovering in
             isHovered = hovering
-        }
-        .onTapGesture {
-            launchApp()
         }
     }
 

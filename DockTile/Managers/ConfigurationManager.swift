@@ -22,6 +22,10 @@ final class ConfigurationManager: ObservableObject {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
+    // MARK: - Dock Sync
+
+    private var dockWatcher: DockPlistWatcher?
+
     // MARK: - Initialization
 
     init() {
@@ -44,6 +48,12 @@ final class ConfigurationManager: ObservableObject {
         print("📦 ConfigurationManager initialized")
         print("   Storage: \(storageURL.path)")
         print("   Loaded \(configurations.count) configuration(s)")
+
+        // Sync dock visibility on launch
+        syncDockVisibility()
+
+        // Start watching for Dock changes
+        startDockWatcher()
     }
 
     // MARK: - CRUD Operations
@@ -241,5 +251,54 @@ final class ConfigurationManager: ObservableObject {
     var selectedConfiguration: DockTileConfiguration? {
         guard let id = selectedConfigId else { return nil }
         return configuration(for: id)
+    }
+
+    // MARK: - Dock Visibility Sync
+
+    /// Sync configuration visibility with actual Dock state
+    /// If a tile was removed from Dock, set isVisibleInDock to false
+    func syncDockVisibility() {
+        print("🔄 Syncing Dock visibility...")
+
+        var hasChanges = false
+
+        for index in configurations.indices {
+            let config = configurations[index]
+
+            // Only check configs that think they're visible
+            guard config.isVisibleInDock else { continue }
+
+            // Check if actually in Dock
+            let isActuallyInDock = HelperBundleManager.shared.findInDock(bundleId: config.bundleIdentifier) != nil
+
+            if !isActuallyInDock {
+                print("   ⚠️ '\(config.name)' was removed from Dock - updating visibility")
+                configurations[index].isVisibleInDock = false
+                hasChanges = true
+            }
+        }
+
+        if hasChanges {
+            saveConfigurations()
+            print("   ✓ Dock visibility synced")
+        } else {
+            print("   ✓ All tiles in sync")
+        }
+    }
+
+    // MARK: - Dock Watcher
+
+    private func startDockWatcher() {
+        dockWatcher = DockPlistWatcher()
+        dockWatcher?.onDockChanged = { [weak self] in
+            self?.syncDockVisibility()
+        }
+        dockWatcher?.startWatching()
+    }
+
+    /// Stop watching for Dock changes (call on app termination if needed)
+    func stopDockWatcher() {
+        dockWatcher?.stopWatching()
+        dockWatcher = nil
     }
 }

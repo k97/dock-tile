@@ -10,7 +10,10 @@ import AppKit
 
 @MainActor
 final class HelperAppDelegate: NSObject, NSApplicationDelegate {
-    private var floatingPanel: FloatingPanel?
+    /// Floating panel for the popover - created lazily and kept alive
+    private lazy var floatingPanel: FloatingPanel = FloatingPanel()
+
+    /// Configuration manager - created once at launch
     private var configManager: ConfigurationManager?
 
     // MARK: - Runtime Detection
@@ -43,11 +46,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         print("✓ Helper app ready")
-
-        // Show popover immediately on launch (user clicked dock icon to launch)
-        DispatchQueue.main.async { [weak self] in
-            self?.showPopover()
-        }
+        // App is now running in Dock - popover will show when user clicks the icon
     }
 
     func applicationWillFinishLaunching(_ notification: Notification) {
@@ -75,7 +74,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - UI Management
 
     private func togglePopover() {
-        if let panel = floatingPanel, panel.isVisible {
+        if floatingPanel.isVisible {
             hidePopover()
         } else {
             showPopover()
@@ -89,24 +88,18 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         let config = getCurrentConfiguration()
         print("   Configuration: \(config?.name ?? "nil") with \(config?.appItems.count ?? 0) apps")
 
-        // Create panel if not exists
-        if floatingPanel == nil {
-            print("   Creating new FloatingPanel...")
-            floatingPanel = FloatingPanel()
-        }
-
-        // Set configuration before showing
-        floatingPanel?.configuration = config
+        // Set configuration before showing (panel is lazily created)
+        floatingPanel.configuration = config
 
         // Show popover
         print("   Calling floatingPanel.show()...")
-        floatingPanel?.show(animated: true)
+        floatingPanel.show(animated: true)
         print("   Popover show complete")
     }
 
     private func hidePopover() {
         print("🚫 Hiding popover")
-        floatingPanel?.hide(animated: true)
+        floatingPanel.hide(animated: true)
     }
 
     // MARK: - Context Menu (Right-Click)

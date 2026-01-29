@@ -11,13 +11,16 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class FloatingPanel: NSObject {
+final class FloatingPanel: NSObject, NSPopoverDelegate {
 
     // MARK: - Properties
 
     private var popover: NSPopover?
     private var anchorWindow: NSWindow?
     private var dismissObserver: NSObjectProtocol?
+
+    /// Keep strong reference to hosting controller to prevent premature deallocation
+    private var hostingController: NSHostingController<LauncherView>?
 
     /// Configuration to display in the launcher
     var configuration: DockTileConfiguration?
@@ -34,10 +37,14 @@ final class FloatingPanel: NSObject {
         // Appearance configuration
         popover.behavior = .transient  // Closes when clicking outside
         popover.animates = true
+        popover.delegate = self
 
         // Set content view with configuration
         let launcherView = LauncherView(configuration: configuration)
-        let hostingController = NSHostingController(rootView: launcherView)
+        let controller = NSHostingController(rootView: launcherView)
+
+        // Keep strong reference to prevent deallocation
+        self.hostingController = controller
 
         // Calculate size based on layout mode
         let size: NSSize
@@ -47,9 +54,9 @@ final class FloatingPanel: NSObject {
             size = NSSize(width: 360, height: 240)
         }
 
-        hostingController.view.frame = NSRect(origin: .zero, size: size)
+        controller.view.frame = NSRect(origin: .zero, size: size)
 
-        popover.contentViewController = hostingController
+        popover.contentViewController = controller
         popover.contentSize = size
 
         return popover
@@ -95,8 +102,13 @@ final class FloatingPanel: NSObject {
     // MARK: - Show/Hide
 
     func show(animated: Bool = true) {
-        // Recreate popover and anchor window each time for fresh state
-        cleanup()
+        // If already visible, don't recreate
+        if popover?.isShown == true {
+            return
+        }
+
+        // Cleanup any stale state
+        cleanupPopover()
 
         popover = createPopover()
         anchorWindow = createAnchorWindow()
@@ -129,32 +141,55 @@ final class FloatingPanel: NSObject {
     }
 
     func hide(animated: Bool = true) {
-        cleanup()
+        // Remove notification observer first
+        if let observer = dismissObserver {
+            NotificationCenter.default.removeObserver(observer)
+            dismissObserver = nil
+        }
+
+        // Close popover (delegate will handle final cleanup)
+        popover?.close()
     }
 
     // MARK: - Cleanup
 
-    private func cleanup() {
+    private func cleanupPopover() {
         // Remove notification observer
         if let observer = dismissObserver {
             NotificationCenter.default.removeObserver(observer)
             dismissObserver = nil
         }
 
-        if let popover = popover {
-            popover.close()
-            self.popover = nil
-        }
+        // Release popover resources
+        popover?.close()
+        popover = nil
 
+        // Clean up anchor window
+        cleanupAnchorWindow()
+
+        // Release hosting controller
+        hostingController = nil
+    }
+
+    private func cleanupAnchorWindow() {
         if let anchorWindow = anchorWindow {
             anchorWindow.orderOut(nil)
-            anchorWindow.close()
             self.anchorWindow = nil
         }
     }
 
-    deinit {
-        // Cannot call MainActor cleanup from deinit
-        // Objects will be released automatically
+    // MARK: - NSPopoverDelegate
+
+    nonisolated func popoverDidClose(_ notification: Notification) {
+        // Called after the popover close animation completes
+        // Use MainActor.assumeIsolated for synchronous cleanup on main thread
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            MainActor.assumeIsolated {
+                self.popover = nil
+                self.cleanupAnchorWindow()
+                self.hostingController = nil
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@
 		AA0005 /* GhostModeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0006; };
 		AAU00001 /* IconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAU00002; };
 		AAH00001 /* HelperBundleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAH00002; };
+		AADPW002 /* DockPlistWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADPW001; };
 		AA0020 /* FloatingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0021; };
 		AA0022 /* LauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0023; };
 		AA09AE0F /* ConfigurationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFE26F; };
@@ -74,6 +75,7 @@
 		AAEF0770 /* SymbolPickerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPickerButton.swift; sourceTree = "<group>"; };
 		AAU00002 /* IconGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGenerator.swift; sourceTree = "<group>"; };
 		AAH00002 /* HelperBundleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperBundleManager.swift; sourceTree = "<group>"; };
+		AADPW001 /* DockPlistWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPlistWatcher.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -172,7 +174,7 @@
 			children = (
 				AAC48362 /* ConfigurationManager.swift */,
 				AAH00002 /* HelperBundleManager.swift */,
-
+				AADPW001 /* DockPlistWatcher.swift */,
 				AAC89BB2 /* ConfigurationManager.swift */,);
 			path = Managers;
 			sourceTree = "<group>";
@@ -299,6 +301,7 @@
 				AA0022 /* LauncherView.swift in Sources */,
 				AAU00001 /* IconGenerator.swift in Sources */,
 				AAH00001 /* HelperBundleManager.swift in Sources */,
+				AADPW002 /* DockPlistWatcher.swift in Sources */,
 
 				AA49ED64 /* SymbolPickerButton.swift in Sources */,
 				AA597367 /* ColourPickerGrid.swift in Sources */,

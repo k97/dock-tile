@@ -75,6 +75,15 @@ struct DockTileDetailView: View {
                 editedConfig = newConfig
             }
         }
+        .onChange(of: configManager.configurations) { _, newConfigs in
+            // Sync editedConfig when underlying configuration changes (e.g., dock visibility sync)
+            if let updatedConfig = newConfigs.first(where: { $0.id == config.id }) {
+                // Only sync isVisibleInDock to avoid overwriting user's edits
+                if editedConfig.isVisibleInDock != updatedConfig.isVisibleInDock {
+                    editedConfig.isVisibleInDock = updatedConfig.isVisibleInDock
+                }
+            }
+        }
     }
 
     // MARK: - Header Section
@@ -159,100 +168,63 @@ struct DockTileDetailView: View {
 
     // MARK: - Apps Table Section
 
+    @State private var selectedAppIDs: Set<AppItem.ID> = []
+
     private var appsTableSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Selected Apps")
-                    .font(.headline)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Selected Apps")
+                .font(.headline)
+                .padding(.bottom, 12)
 
-                Spacer()
+            // Native-style table container
+            VStack(spacing: 0) {
+                // Table with border
+                NativeAppsTableView(
+                    items: $editedConfig.appItems,
+                    selection: $selectedAppIDs
+                )
+                .frame(minHeight: 180, maxHeight: 240)
 
-                Text("Total Apps (\(editedConfig.appItems.count))")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-
-            // Table header
-            HStack {
-                Text("Item")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text("Kind")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .frame(width: 120, alignment: .leading)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-
-            // Table content
-            if editedConfig.appItems.isEmpty {
-                emptyAppsPlaceholder
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(editedConfig.appItems) { item in
-                        AppTableRow(item: item)
-
-                        if item.id != editedConfig.appItems.last?.id {
-                            Divider()
-                                .padding(.leading, 12)
-                        }
+                // Bottom toolbar with +/- buttons
+                HStack(spacing: 0) {
+                    Button(action: { showingFilePicker = true }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 12, weight: .regular))
+                            .frame(width: 24, height: 20)
                     }
+                    .buttonStyle(.borderless)
+
+                    Divider()
+                        .frame(height: 16)
+
+                    Button(action: removeSelectedApp) {
+                        Image(systemName: "minus")
+                            .font(.system(size: 12, weight: .regular))
+                            .frame(width: 24, height: 20)
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(selectedAppIDs.isEmpty && editedConfig.appItems.isEmpty)
+
+                    Spacer()
                 }
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color(nsColor: .controlBackgroundColor))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-                )
+                .padding(.horizontal, 4)
+                .padding(.vertical, 4)
+                .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
             }
-
-            // Add/Remove buttons
-            HStack(spacing: 4) {
-                Button(action: { showingFilePicker = true }) {
-                    Image(systemName: "plus")
-                }
-                .buttonStyle(.borderless)
-
-                Button(action: removeSelectedApp) {
-                    Image(systemName: "minus")
-                }
-                .buttonStyle(.borderless)
-                .disabled(editedConfig.appItems.isEmpty)
-
-                Spacer()
-            }
+            .background(Color(nsColor: .controlBackgroundColor))
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
+            )
 
             if let error = errorMessage {
                 Text(error)
                     .font(.caption)
                     .foregroundColor(.red)
+                    .padding(.top, 8)
             }
         }
-    }
-
-    private var emptyAppsPlaceholder: some View {
-        VStack(spacing: 8) {
-            Text("No apps added yet")
-                .foregroundColor(.secondary)
-            Text("Click + to add applications")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-        .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-        )
     }
 
     // MARK: - Delete Section
@@ -336,25 +308,72 @@ struct DockTileDetailView: View {
     }
 
     private func removeSelectedApp() {
-        // Remove last app (simple implementation)
-        if !editedConfig.appItems.isEmpty {
+        // Remove selected apps, or last app if none selected
+        if !selectedAppIDs.isEmpty {
+            editedConfig.appItems.removeAll { selectedAppIDs.contains($0.id) }
+            selectedAppIDs.removeAll()
+        } else if !editedConfig.appItems.isEmpty {
             editedConfig.appItems.removeLast()
         }
     }
 }
 
-// MARK: - App Table Row
+// MARK: - Native Apps Table View
 
-struct AppTableRow: View {
-    let item: AppItem
+struct NativeAppsTableView: View {
+    @Binding var items: [AppItem]
+    @Binding var selection: Set<AppItem.ID>
 
-    private var itemKind: String {
-        // Determine kind based on bundle identifier or name
+    var body: some View {
+        if items.isEmpty {
+            emptyState
+        } else {
+            Table(items, selection: $selection) {
+                TableColumn("Item") { item in
+                    HStack(spacing: 8) {
+                        AppIconView(item: item)
+                            .frame(width: 16, height: 16)
+
+                        Text(item.name)
+                            .lineLimit(1)
+                    }
+                }
+                .width(min: 150, ideal: 300)
+
+                TableColumn("Kind") { item in
+                    Text(itemKind(for: item))
+                        .foregroundStyle(.secondary)
+                }
+                .width(min: 80, ideal: 100)
+            }
+            .tableStyle(.inset(alternatesRowBackgrounds: true))
+            .scrollContentBackground(.hidden)
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Text("No apps added yet")
+                .foregroundStyle(.secondary)
+            Text("Click + to add applications")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func itemKind(for item: AppItem) -> String {
         if item.bundleIdentifier.contains("folder") || item.name.lowercased().contains("folder") {
             return "Folder"
         }
         return "Application"
     }
+}
+
+// MARK: - App Icon View
+
+struct AppIconView: View {
+    let item: AppItem
 
     private var appIcon: NSImage? {
         // Try to get from stored data
@@ -372,29 +391,14 @@ struct AppTableRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 8) {
-            // App icon
-            if let icon = appIcon {
-                Image(nsImage: icon)
-                    .resizable()
-                    .frame(width: 20, height: 20)
-            } else {
-                Image(systemName: "app")
-                    .frame(width: 20, height: 20)
-            }
-
-            // App name
-            Text(item.name)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            // Kind
-            Text(itemKind)
-                .foregroundColor(.secondary)
-                .frame(width: 120, alignment: .leading)
+        if let icon = appIcon {
+            Image(nsImage: icon)
+                .resizable()
+                .interpolation(.high)
+        } else {
+            Image(systemName: "app.fill")
+                .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 }
 

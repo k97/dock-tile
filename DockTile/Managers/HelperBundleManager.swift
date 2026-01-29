@@ -41,11 +41,36 @@ final class HelperBundleManager {
     // MARK: - Public API
 
     /// Install a helper bundle for the given configuration
+    /// If helper already exists (by bundle ID), updates it in place
     func installHelper(for config: DockTileConfiguration) async throws {
         print("🔧 Installing helper for: \(config.name)")
+        print("   Bundle ID: \(config.bundleIdentifier)")
 
         let appName = sanitizeAppName(config.name)
         let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
+
+        // Check if a helper with this bundle ID already exists (possibly with different name)
+        let existingHelperPath = findExistingHelper(bundleId: config.bundleIdentifier)
+        let isUpdate = existingHelperPath != nil
+        let wasRunning = isHelperRunning(bundleId: config.bundleIdentifier)
+
+        // Check if this bundle ID is already in the Dock (might be with different name)
+        let existingDockPath = findInDock(bundleId: config.bundleIdentifier)
+        let wasInDock = existingDockPath != nil
+
+        print("   isUpdate: \(isUpdate), wasRunning: \(wasRunning), wasInDock: \(wasInDock)")
+
+        // If helper is running, quit it first
+        if wasRunning {
+            quitHelper(bundleId: config.bundleIdentifier)
+            try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        }
+
+        // If updating and name changed, clean up old helper bundle
+        if let existingPath = existingHelperPath, existingPath != helperPath {
+            print("   Renaming helper from \(existingPath.lastPathComponent) to \(helperPath.lastPathComponent)")
+            try? FileManager.default.removeItem(at: existingPath)
+        }
 
         // 1. Generate helper bundle structure (copy main app)
         try generateHelperBundle(
@@ -67,39 +92,117 @@ final class HelperBundleManager {
         try codesignHelper(at: helperPath)
         print("   ✓ Code signed")
 
-        // 4. Add to Dock (without launching)
+        // 4. Handle Dock integration - use bundle ID to avoid duplicates
+        if wasInDock {
+            // Remove old dock entry (might have different path/name)
+            removeFromDock(bundleId: config.bundleIdentifier)
+        }
+
+        // Add to dock with new path
         addToDock(at: helperPath)
 
+        // Restart dock to apply changes
+        restartDock()
+
+        // 5. Launch the helper app so it's running and responsive
+        print("   Launching helper app...")
+        launchHelper(at: helperPath)
+
         print("✅ Helper installed at: \(helperPath.path)")
+    }
+
+    /// Find existing helper bundle by bundle identifier
+    private func findExistingHelper(bundleId: String) -> URL? {
+        guard let contents = try? FileManager.default.contentsOfDirectory(
+            at: helperDirectory,
+            includingPropertiesForKeys: nil
+        ) else { return nil }
+
+        for item in contents where item.pathExtension == "app" {
+            let infoPlistPath = item.appendingPathComponent("Contents/Info.plist")
+            if let plist = NSDictionary(contentsOf: infoPlistPath),
+               let existingBundleId = plist["CFBundleIdentifier"] as? String,
+               existingBundleId == bundleId {
+                return item
+            }
+        }
+        return nil
+    }
+
+    /// Check if helper with given bundle ID is currently running
+    private func isHelperRunning(bundleId: String) -> Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+        return runningApps.contains { $0.bundleIdentifier == bundleId }
+    }
+
+    /// Quit a running helper app
+    private func quitHelper(bundleId: String) {
+        let runningApps = NSWorkspace.shared.runningApplications
+        for app in runningApps where app.bundleIdentifier == bundleId {
+            print("   Quitting running helper: \(app.localizedName ?? bundleId)")
+            app.terminate()
+        }
+    }
+
+    /// Launch a helper app
+    private func launchHelper(at helperPath: URL) {
+        let config = NSWorkspace.OpenConfiguration()
+        config.activates = false  // Don't bring to foreground
+        config.addsToRecentItems = false
+
+        NSWorkspace.shared.openApplication(at: helperPath, configuration: config) { app, error in
+            if let error = error {
+                print("   ⚠️ Failed to launch helper: \(error.localizedDescription)")
+            } else {
+                print("   ✓ Helper launched: \(app?.localizedName ?? "unknown")")
+            }
+        }
     }
 
     /// Uninstall a helper bundle for the given configuration
     func uninstallHelper(for config: DockTileConfiguration) throws {
         print("🗑️ Uninstalling helper for: \(config.name)")
 
-        let appName = sanitizeAppName(config.name)
-        let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
+        // Find helper by bundle ID (handles renamed helpers)
+        let helperPath = findExistingHelper(bundleId: config.bundleIdentifier)
 
-        // Remove from Dock first
-        removeFromDock(at: helperPath)
+        // Quit if running
+        if isHelperRunning(bundleId: config.bundleIdentifier) {
+            quitHelper(bundleId: config.bundleIdentifier)
+            // Brief pause to let it quit
+            Thread.sleep(forTimeInterval: 0.3)
+        }
 
-        if FileManager.default.fileExists(atPath: helperPath.path) {
+        // Remove from Dock by bundle ID (works even if bundle is deleted)
+        // This modifies the plist but doesn't restart Dock yet
+        removeFromDockPlist(bundleId: config.bundleIdentifier)
+
+        // Delete the bundle if it exists
+        if let helperPath = helperPath {
             try FileManager.default.removeItem(at: helperPath)
             print("   ✓ Removed: \(helperPath.path)")
+        } else {
+            print("   ✓ No helper bundle found to delete")
         }
+
+        // Restart Dock after bundle is deleted to avoid "?" icon
+        restartDock()
 
         print("✅ Helper uninstalled for: \(config.name)")
     }
 
-    /// Check if a helper bundle exists for the given configuration
+    /// Check if a helper bundle exists for the given configuration (by bundle ID)
     func helperExists(for config: DockTileConfiguration) -> Bool {
-        let appName = sanitizeAppName(config.name)
-        let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
-        return FileManager.default.fileExists(atPath: helperPath.path)
+        return findExistingHelper(bundleId: config.bundleIdentifier) != nil
     }
 
-    /// Get the path to a helper bundle
+    /// Get the path to a helper bundle (finds by bundle ID, or returns expected path)
     func helperPath(for config: DockTileConfiguration) -> URL {
+        // First try to find existing helper by bundle ID
+        if let existingPath = findExistingHelper(bundleId: config.bundleIdentifier) {
+            return existingPath
+        }
+        // Otherwise return the expected path based on name
         let appName = sanitizeAppName(config.name)
         return helperDirectory.appendingPathComponent("\(appName).app")
     }
@@ -185,7 +288,7 @@ final class HelperBundleManager {
         }
     }
 
-    /// Check if app is already in Dock
+    /// Check if app is already in Dock (by path)
     func isInDock(at appPath: URL) -> Bool {
         let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
@@ -207,15 +310,154 @@ final class HelperBundleManager {
         }
     }
 
+    /// Check if app with given bundle ID is already in Dock (returns the dock entry path if found)
+    func findInDock(bundleId: String) -> URL? {
+        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
+
+        guard let dockPlist = NSDictionary(contentsOf: dockPlistPath),
+              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
+            return nil
+        }
+
+        for entry in persistentApps {
+            if let tileData = entry["tile-data"] as? [String: Any],
+               let fileData = tileData["file-data"] as? [String: Any],
+               let urlString = fileData["_CFURLString"] as? String,
+               let url = URL(string: urlString) {
+                // Get the actual file path from the URL
+                let appPath = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                let fullPath = "/" + appPath
+
+                // Check if this app has the bundle ID we're looking for
+                let infoPlistPath = URL(fileURLWithPath: fullPath)
+                    .appendingPathComponent("Contents/Info.plist")
+
+                if let plist = NSDictionary(contentsOf: infoPlistPath),
+                   let existingBundleId = plist["CFBundleIdentifier"] as? String,
+                   existingBundleId == bundleId {
+                    return URL(fileURLWithPath: fullPath)
+                }
+            }
+        }
+        return nil
+    }
+
+    /// Remove app from Dock by bundle ID (checks Info.plist of each app)
+    func removeFromDock(bundleId: String) {
+        print("📌 Removing from Dock by bundle ID: \(bundleId)")
+
+        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
+
+        guard let dockPlist = NSMutableDictionary(contentsOf: dockPlistPath),
+              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
+            print("   ⚠️ Could not read Dock plist")
+            return
+        }
+
+        // Filter out apps with matching bundle ID
+        let filteredApps = persistentApps.filter { entry in
+            guard let tileData = entry["tile-data"] as? [String: Any],
+                  let fileData = tileData["file-data"] as? [String: Any],
+                  let urlString = fileData["_CFURLString"] as? String,
+                  let url = URL(string: urlString) else {
+                return true  // Keep entries we can't parse
+            }
+
+            let appPath = "/" + url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let infoPlistPath = URL(fileURLWithPath: appPath)
+                .appendingPathComponent("Contents/Info.plist")
+
+            if let plist = NSDictionary(contentsOf: infoPlistPath),
+               let existingBundleId = plist["CFBundleIdentifier"] as? String,
+               existingBundleId == bundleId {
+                print("   Found and removing: \(appPath)")
+                return false  // Remove this entry
+            }
+            return true  // Keep this entry
+        }
+
+        if filteredApps.count < persistentApps.count {
+            dockPlist["persistent-apps"] = filteredApps
+            if dockPlist.write(to: dockPlistPath, atomically: true) {
+                print("   ✓ Removed from Dock plist")
+            }
+        } else {
+            print("   ✓ Bundle ID not found in Dock")
+        }
+    }
+
+    /// Remove app from Dock plist by path pattern (doesn't require bundle to exist)
+    /// Used during uninstall when bundle may be deleted before Dock restart
+    private func removeFromDockPlist(bundleId: String) {
+        print("📌 Removing from Dock plist: \(bundleId)")
+
+        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
+
+        guard let dockPlist = NSMutableDictionary(contentsOf: dockPlistPath),
+              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
+            print("   ⚠️ Could not read Dock plist")
+            return
+        }
+
+        // Filter out apps - check both by Info.plist (if exists) and by path pattern
+        let filteredApps = persistentApps.filter { entry in
+            guard let tileData = entry["tile-data"] as? [String: Any],
+                  let fileData = tileData["file-data"] as? [String: Any],
+                  let urlString = fileData["_CFURLString"] as? String,
+                  let url = URL(string: urlString) else {
+                return true  // Keep entries we can't parse
+            }
+
+            let appPath = "/" + url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let infoPlistPath = URL(fileURLWithPath: appPath)
+                .appendingPathComponent("Contents/Info.plist")
+
+            // Try to read bundle ID from Info.plist
+            if let plist = NSDictionary(contentsOf: infoPlistPath),
+               let existingBundleId = plist["CFBundleIdentifier"] as? String,
+               existingBundleId == bundleId {
+                print("   Found by bundle ID: \(appPath)")
+                return false  // Remove this entry
+            }
+
+            // Also check if path contains bundle ID pattern (for when bundle is already deleted)
+            // Our bundle IDs follow pattern: com.docktile.helper.XXXXXX
+            if appPath.contains("DockTile") {
+                // Check if Info.plist doesn't exist (bundle was deleted) - remove stale entry
+                if !FileManager.default.fileExists(atPath: infoPlistPath.path) {
+                    print("   Found stale entry (bundle deleted): \(appPath)")
+                    return false  // Remove this stale entry
+                }
+            }
+
+            return true  // Keep this entry
+        }
+
+        if filteredApps.count < persistentApps.count {
+            dockPlist["persistent-apps"] = filteredApps
+            if dockPlist.write(to: dockPlistPath, atomically: true) {
+                print("   ✓ Removed from Dock plist")
+            }
+        } else {
+            print("   ✓ Entry not found in Dock")
+        }
+    }
+
     /// Add app to Dock without launching it (only if not already present)
     func addToDock(at appPath: URL) {
         print("📌 Adding to Dock: \(appPath.lastPathComponent)")
+        print("   App path: \(appPath.path)")
 
         // Check if already in Dock first
         if isInDock(at: appPath) {
             print("   ✓ Already in Dock - no action needed")
             return
         }
+
+        print("   Not in Dock yet, adding...")
 
         // Use defaults to add to com.apple.dock persistent-apps
         let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
@@ -227,10 +469,21 @@ final class HelperBundleManager {
             return
         }
 
-        // Create dock entry
+        // Get bundle identifier from the app
+        let infoPlistPath = appPath.appendingPathComponent("Contents/Info.plist")
+        let bundleId = (NSDictionary(contentsOf: infoPlistPath)?["CFBundleIdentifier"] as? String) ?? ""
+
+        // Generate a unique GUID for the dock entry
+        let guid = Int(Date().timeIntervalSince1970 * 1000) % Int(Int32.max)
+
+        // Create dock entry with all required fields for persistence
+        // Key fields: dock-extra=0 tells Dock this is a user-pinned app (not just running)
         let appPathString = appPath.path
         let newEntry: [String: Any] = [
+            "GUID": guid,
             "tile-data": [
+                "bundle-identifier": bundleId,
+                "dock-extra": 0,  // Critical: 0 = user-pinned, 1 = system default
                 "file-data": [
                     "_CFURLString": "file://\(appPathString)/",
                     "_CFURLStringType": 15
@@ -246,18 +499,15 @@ final class HelperBundleManager {
         updatedApps.append(newEntry)
         dockPlist["persistent-apps"] = updatedApps
 
-        // Write back
+        // Write back (caller is responsible for restarting Dock)
         if dockPlist.write(to: dockPlistPath, atomically: true) {
-            print("   ✓ Added to Dock plist")
-
-            // Restart Dock to apply changes
-            restartDock()
+            print("   ✓ Added to Dock plist (GUID: \(guid), bundle: \(bundleId))")
         } else {
             print("   ⚠️ Failed to write Dock plist")
         }
     }
 
-    /// Remove app from Dock
+    /// Remove app from Dock (by path)
     func removeFromDock(at appPath: URL) {
         print("📌 Removing from Dock: \(appPath.lastPathComponent)")
 

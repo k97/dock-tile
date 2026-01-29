@@ -22,10 +22,19 @@ if isHelperApp() {
     // Helper app: Pure AppKit, no SwiftUI WindowGroup
     print("🚀 Starting as helper app (pure AppKit)")
 
-    let app = NSApplication.shared
-    let delegate = HelperAppDelegate()
-    app.delegate = delegate
-    app.run()
+    // Create autoreleasepool to manage memory properly
+    autoreleasepool {
+        let app = NSApplication.shared
+        // IMPORTANT: Store delegate in a variable that persists for the lifetime of run()
+        // NSApplication.delegate is a weak reference, so we must keep a strong reference
+        let delegate = HelperAppDelegate()
+        app.delegate = delegate
+
+        // Use withExtendedLifetime to ensure delegate isn't deallocated during run()
+        withExtendedLifetime(delegate) {
+            app.run()
+        }
+    }
 } else {
     // Main app: Use SwiftUI
     print("🚀 Starting as main app (SwiftUI)")
