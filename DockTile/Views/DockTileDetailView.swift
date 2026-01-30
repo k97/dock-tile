@@ -49,7 +49,7 @@ struct DockTileDetailView: View {
                 Button("Done") {
                     handleDone()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
                 .disabled(isProcessing)
             }
 
@@ -90,47 +90,121 @@ struct DockTileDetailView: View {
         }
     }
 
-    // MARK: - Hero Section (System Settings Style)
+    // MARK: - Hero Section (Figma Spec)
 
     private var heroSection: some View {
-        HStack(alignment: .top, spacing: 20) {
+        HStack(alignment: .center, spacing: 16) {
             // Left column: Icon preview with Customise button
-            VStack(spacing: 12) {
-                DockTileIconPreview(
-                    tintColor: editedConfig.tintColor,
-                    iconType: editedConfig.iconType,
-                    iconValue: editedConfig.iconValue,
-                    size: 96
+            VStack(alignment: .center, spacing: 12) {
+                // Icon container: 118×118pt with cornerRadius(24)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [editedConfig.tintColor.colorTop, editedConfig.tintColor.colorBottom],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+
+                    // Beveled glass effect (inner stroke)
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5)
+
+                    // Icon content
+                    iconContent
+                }
+                .frame(width: 118, height: 118)
+                .shadow(
+                    color: Color.black.opacity(0.2),
+                    radius: 8,
+                    x: 0,
+                    y: 4
                 )
 
-                Button(action: onCustomise) {
-                    Text("Customise")
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
+                SubtleButton(title: "Customise", width: 118, action: onCustomise)
             }
-            .padding(.top, 8)
 
-            // Right column: Native Inset Grouped Form
-            Form {
-                Section {
-                    TextField("Tile Name", text: $editedConfig.name)
+            // Right column: Custom Form Group
+            VStack(spacing: 0) {
+                // Row 1: Tile Name
+                formRow(isLast: false) {
+                    Text("Tile Name")
+                    Spacer()
+                    TextField("", text: $editedConfig.name)
+                        .textFieldStyle(.plain)
+                        .multilineTextAlignment(.trailing)
+                }
 
-                    Toggle("Show Tile", isOn: $editedConfig.isVisibleInDock)
+                // Row 2: Show Tile
+                formRow(isLast: false) {
+                    Text("Show Tile")
+                    Spacer()
+                    Toggle("", isOn: $editedConfig.isVisibleInDock)
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                }
 
-                    Picker("Layout", selection: $editedConfig.layoutMode) {
+                // Row 3: Layout
+                formRow(isLast: false) {
+                    Text("Layout")
+                    Spacer()
+                    Picker("", selection: $editedConfig.layoutMode) {
                         ForEach([LayoutMode.grid2x3, LayoutMode.horizontal1x6], id: \.self) { mode in
                             Text(mode.displayName).tag(mode)
                         }
                     }
+                    .labelsHidden()
+                }
 
-                    Toggle("Show in App Switcher", isOn: $editedConfig.showInAppSwitcher)
+                // Row 4: Show in App Switcher (last row, no separator)
+                formRow(isLast: true) {
+                    Text("Show in App Switcher")
+                    Spacer()
+                    Toggle("", isOn: $editedConfig.showInAppSwitcher)
+                        .labelsHidden()
+                        .toggleStyle(.switch)
                 }
             }
-            .formStyle(.grouped)
-            .scrollDisabled(true)
-            .scrollContentBackground(.hidden)
-            .frame(minHeight: 180)
+            .padding(.horizontal, 10)
+            .background(FormGroupBackground())
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    // MARK: - Form Row Helper
+
+    @ViewBuilder
+    private func formRow<Content: View>(isLast: Bool, @ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 16) {
+                content()
+            }
+            .frame(height: 40)
+
+            if !isLast {
+                Rectangle()
+                    .fill(Color(nsColor: .quinaryLabel))
+                    .frame(height: 1)
+            }
+        }
+    }
+
+    // MARK: - Icon Content
+
+    @ViewBuilder
+    private var iconContent: some View {
+        switch editedConfig.iconType {
+        case .sfSymbol:
+            Image(systemName: editedConfig.iconValue)
+                .font(.system(size: 38, weight: .medium))
+                .foregroundColor(.white)
+                .shadow(color: Color.black.opacity(0.2), radius: 1, x: 0, y: 1)
+
+        case .emoji:
+            Text(editedConfig.iconValue)
+                .font(.system(size: 38))
         }
     }
 
@@ -146,14 +220,18 @@ struct DockTileDetailView: View {
 
             // Native-style table container
             VStack(spacing: 0) {
-                // Table with border
+                // Table content (grows naturally with items)
                 NativeAppsTableView(
                     items: $editedConfig.appItems,
                     selection: $selectedAppIDs
                 )
-                .frame(minHeight: 180, maxHeight: 240)
 
-                // Bottom toolbar with +/- buttons
+                // Separator between table and toolbar
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(height: 1)
+
+                // Bottom toolbar with +/- buttons (same bg as header/even rows)
                 HStack(spacing: 0) {
                     Button(action: addItem) {
                         Image(systemName: "plus")
@@ -177,14 +255,9 @@ struct DockTileDetailView: View {
                 }
                 .padding(.horizontal, 4)
                 .padding(.vertical, 4)
-                .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+                .background(Color(nsColor: NSColor.alternatingContentBackgroundColors[1]))
             }
-            .background(Color(nsColor: .controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
-            )
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             if let error = errorMessage {
                 Text(error)
@@ -198,30 +271,33 @@ struct DockTileDetailView: View {
     // MARK: - Delete Section
 
     private var deleteSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Delete Tile Instance")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Remove from Dock")
+                        .font(.system(size: 13))
+                        .foregroundColor(.primary)
 
-                Text("This will permanently delete the tile and removed from the dock")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    Text("This removes the tile shortcut. Your apps or folders will not be deleted.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                SubtleButton(
+                    title: "Remove",
+                    textColor: .red,
+                    action: { showDeleteConfirmation = true }
+                )
             }
-
-            Spacer()
-
-            Button("Delete") {
-                showDeleteConfirmation = true
-            }
-            .buttonStyle(.bordered)
-            .tint(.red)
+            .frame(height: 42)
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.red.opacity(0.05))
-        )
+        .padding(.horizontal, 10)
+        .padding(.vertical, 0)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(FormGroupBackground())
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     // MARK: - Actions
@@ -344,30 +420,81 @@ struct NativeAppsTableView: View {
     @Binding var items: [AppItem]
     @Binding var selection: Set<AppItem.ID>
 
-    var body: some View {
-        if items.isEmpty {
-            emptyState
-        } else {
-            Table(items, selection: $selection) {
-                TableColumn("Item") { item in
-                    HStack(spacing: 8) {
-                        AppIconView(item: item)
-                            .frame(width: 16, height: 16)
+    private let rowHeight: CGFloat = 28
 
-                        Text(item.name)
-                            .lineLimit(1)
+    // Table row colors - using quaternarySystemFill for odd rows (matches form group)
+    private var oddRowColor: Color {
+        Color(nsColor: .quaternarySystemFill)
+    }
+
+    private var evenRowColor: Color {
+        Color(nsColor: NSColor.alternatingContentBackgroundColors[1])
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header row - uses same color as even rows (slightly darker)
+            HStack(spacing: 0) {
+                Text("Item")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Text("Kind")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 100, alignment: .leading)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(evenRowColor)
+
+            Rectangle()
+                .fill(Color(nsColor: .separatorColor))
+                .frame(height: 1)
+
+            if items.isEmpty {
+                emptyState
+            } else {
+                // Item rows - grows naturally with content
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    VStack(spacing: 0) {
+                        HStack(spacing: 0) {
+                            // Item column
+                            HStack(spacing: 8) {
+                                AppIconView(item: item)
+                                    .frame(width: 16, height: 16)
+
+                                Text(item.name)
+                                    .lineLimit(1)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                            // Kind column
+                            Text(itemKind(for: item))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 100, alignment: .leading)
+                        }
+                        .padding(.horizontal, 10)
+                        .frame(height: rowHeight)
+                        .background(
+                            selection.contains(item.id)
+                                ? Color.accentColor.opacity(0.2)
+                                : (index % 2 == 0 ? oddRowColor : evenRowColor)
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selection.contains(item.id) {
+                                selection.remove(item.id)
+                            } else {
+                                selection = [item.id]
+                            }
+                        }
                     }
                 }
-                .width(min: 150, ideal: 300)
-
-                TableColumn("Kind") { item in
-                    Text(itemKind(for: item))
-                        .foregroundStyle(.secondary)
-                }
-                .width(min: 80, ideal: 100)
             }
-            .tableStyle(.inset(alternatesRowBackgrounds: true))
-            .scrollContentBackground(.hidden)
         }
     }
 
@@ -379,7 +506,9 @@ struct NativeAppsTableView: View {
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .frame(height: 80)
+        .background(oddRowColor)
     }
 
     private func itemKind(for item: AppItem) -> String {
@@ -421,6 +550,48 @@ struct AppIconView: View {
             Image(systemName: item.isFolder ? "folder.fill" : "app.fill")
                 .foregroundStyle(.secondary)
         }
+    }
+}
+
+// MARK: - Subtle Button Component
+
+/// A reusable button with subtle 5% black background overlay
+/// Used for secondary actions like "Customise" and "Remove"
+private struct SubtleButton: View {
+    let title: String
+    var textColor: Color = .primary
+    var width: CGFloat? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 12))
+                .multilineTextAlignment(.center)
+                .foregroundColor(textColor)
+        }
+        .buttonStyle(.plain)
+        .frame(width: width, height: 24)
+        .frame(maxWidth: width == nil ? nil : .none)
+        .padding(.horizontal, width == nil ? 12 : 0)
+        .background(Color.black.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+}
+
+// MARK: - Form Group Background (NSViewRepresentable for reliable AppKit color)
+
+private struct FormGroupBackground: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        // Using quaternarySystemFill for opaque quaternary fill (matches Figma FillsOpaqueQuaternary)
+        view.layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        nsView.layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
     }
 }
 

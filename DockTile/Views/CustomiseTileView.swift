@@ -88,18 +88,17 @@ struct CustomiseTileView: View {
             // Colour Section
             colourSection
 
-            Divider()
-                .padding(.horizontal, 16)
+            // Separator (matches form group style)
+            Rectangle()
+                .fill(Color(nsColor: .quinaryLabel))
+                .frame(height: 1)
 
             // Tile Icon Section
             tileIconSection
         }
-        .background(ControlBackgroundView())
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
-        )
+        .padding(.horizontal, 10)
+        .background(FormGroupBackgroundView())
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     // MARK: - Colour Section
@@ -115,8 +114,7 @@ struct CustomiseTileView: View {
             // Colour picker strip (right-aligned)
             colourPickerStrip
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .frame(height: 40)
     }
 
     private var colourPickerStrip: some View {
@@ -248,7 +246,6 @@ struct CustomiseTileView: View {
             }
             .frame(height: 320)
         }
-        .padding(.horizontal, 16)
         .padding(.vertical, 12)
     }
 }
@@ -300,6 +297,20 @@ private struct ControlBackgroundView: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSView, context: Context) {
         nsView.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+    }
+}
+
+/// Form group background using quaternarySystemFill (matches detail view form groups)
+private struct FormGroupBackgroundView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        nsView.layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
     }
 }
 

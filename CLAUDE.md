@@ -258,9 +258,13 @@ private struct QuaternaryFillView: NSViewRepresentable {
 |---------|---------|----------|
 | Window background | `.windowBackgroundColor` | - |
 | Card/control background | `.controlBackgroundColor` | - |
+| Form group background | `.quaternarySystemFill` | - |
+| Form row separators | `.quinaryLabel` | - |
 | Studio canvas/preview area | - | `.underWindowBackground` |
 | Separator lines | `.separatorColor` | - |
 | Secondary labels | `.secondaryLabelColor` | - |
+| Table even rows | `.alternatingContentBackgroundColors[1]` | - |
+| Subtle button background | `Color.black.opacity(0.05)` | - |
 
 ## Data Flow
 
@@ -351,6 +355,41 @@ private struct QuaternaryFillView: NSViewRepresentable {
 - **Backward Compatibility**: `symbolEmoji` field kept for migration
 - **IconGenerator**: Updated to handle both SF Symbols (rendered as white on gradient) and emojis
 
+### Form Group Styling System (2026-01)
+- **Design**: Unified form group styling matching Figma specs across all views
+- **Background**: `NSColor.quaternarySystemFill` via `NSViewRepresentable` (Figma's `FillsOpaqueQuaternary`)
+- **Separators**: `NSColor.quinaryLabel` for 1pt dividers between rows
+- **Layout**: `cornerRadius(12)`, `.padding(.horizontal, 10)`, row height 40pt
+- **Components**:
+  - `FormGroupBackground` in DockTileDetailView
+  - `FormGroupBackgroundView` in CustomiseTileView
+  - `formRow()` helper for consistent row layout with separators
+
+### SubtleButton Component (2026-01)
+- **Purpose**: Reusable secondary action button with subtle background
+- **Styling**: 12pt font, 24pt height, 5% black opacity background, 6pt corner radius
+- **Usage**:
+  ```swift
+  SubtleButton(title: "Customise", width: 118, action: onCustomise)
+  SubtleButton(title: "Remove", textColor: .red, action: { ... })
+  ```
+- **Location**: `DockTileDetailView.swift` (private struct)
+
+### Detail View Hero Section Redesign (2026-01)
+- **Icon Container**: 118×118pt with cornerRadius(24), gradient fill, beveled glass stroke
+- **Form Group**: Custom rows with 40pt height, quinaryLabel separators
+- **Buttons**: Done uses `.bordered` style (Liquid Glass secondary), Customise/Remove use SubtleButton
+
+### Delete Section Redesign (2026-01)
+- **Text**: "Remove from Dock" with subtitle explaining action
+- **Layout**: Form group style with 42pt height
+- **Button**: SubtleButton with red text color
+
+### Table View Styling (2026-01)
+- **Background**: `quaternarySystemFill` for odd rows, `alternatingContentBackgroundColors[1]` for even rows
+- **Layout**: Custom `NativeAppsTableView` using VStack + ForEach for natural content growth
+- **Header/Footer**: Uses even row color for visual consistency
+
 ## Performance Targets
 
 1. Popover appears in <100ms (measured from click event to window visible)
@@ -391,23 +430,37 @@ DockTileConfigurationView (Main Window)
 │   │
 │   └── Detail Area (ZStack for drill-down)
 │       ├── DockTileDetailView (Screen 3)
-│       │   ├── heroSection
-│       │   │   ├── DockTileIconPreview (96×96pt)
-│       │   │   ├── Customise button → drills to CustomiseTileView
-│       │   │   └── Form (Name, Show Tile, Layout, App Switcher)
-│       │   ├── appsTableSection (NativeAppsTableView)
-│       │   └── deleteSection
+│       │   ├── Toolbar
+│       │   │   └── Done button (.bordered style - Liquid Glass secondary)
+│       │   ├── heroSection (HStack)
+│       │   │   ├── Left column (VStack)
+│       │   │   │   ├── Icon container (118×118pt, cornerRadius 24)
+│       │   │   │   └── SubtleButton "Customise" (width: 118)
+│       │   │   └── Right column: Form Group (FormGroupBackground)
+│       │   │       ├── formRow: Tile Name
+│       │   │       ├── formRow: Show Tile (Toggle)
+│       │   │       ├── formRow: Layout (Picker)
+│       │   │       └── formRow: Show in App Switcher (Toggle)
+│       │   ├── appsTableSection
+│       │   │   └── NativeAppsTableView (VStack + ForEach)
+│       │   │       ├── Header row (evenRowColor)
+│       │   │       ├── Item rows (alternating odd/even colors)
+│       │   │       └── Footer toolbar (+/- buttons)
+│       │   └── deleteSection (FormGroupBackground)
+│       │       ├── Text: "Remove from Dock" + subtitle
+│       │       └── SubtleButton "Remove" (textColor: .red)
 │       │
 │       └── CustomiseTileView (Screen 4 - drill-down)
 │           ├── studioCanvas (QuaternaryFillView background)
 │           │   ├── DockTileIconPreview (160×160pt)
 │           │   ├── IconGridOverlay
 │           │   └── Tile name
-│           └── inspectorCard (ControlBackgroundView background)
+│           └── inspectorCard (FormGroupBackgroundView)
 │               ├── colourSection (preset swatches + custom picker)
+│               ├── Separator (quinaryLabel)
 │               └── tileIconSection
 │                   ├── segmentedPicker (Symbol/Emoji tabs)
-│                   └── ScrollView
+│                   └── ScrollView (height: 320)
 │                       ├── SymbolPickerGrid (when .symbol)
 │                       └── EmojiPickerGrid (when .emoji)
 ```
