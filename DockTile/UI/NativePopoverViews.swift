@@ -304,7 +304,13 @@ struct StackPopoverView: View {
 
     private func launchApp(_ app: AppItem) {
         let workspace = NSWorkspace.shared
-        if let appURL = workspace.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+
+        if app.isFolder, let folderPath = app.folderPath {
+            // Open folder in Finder
+            let folderURL = URL(fileURLWithPath: folderPath)
+            workspace.open(folderURL)
+        } else if let appURL = workspace.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+            // Launch application
             let config = NSWorkspace.OpenConfiguration()
             workspace.openApplication(at: appURL, configuration: config) { _, _ in }
         }
@@ -362,12 +368,17 @@ struct StackAppItem: View {
             return nsImage
         }
 
+        // For folders, get icon from folder path
+        if app.isFolder, let folderPath = app.folderPath {
+            return NSWorkspace.shared.icon(forFile: folderPath)
+        }
+
         // Get from bundle identifier (this returns clean icon without alias arrow)
         if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
             return NSWorkspace.shared.icon(forFile: appURL.path)
         }
 
-        // Try common paths
+        // Try common paths for apps
         let searchPaths = [
             "/Applications/\(app.name).app",
             "/System/Applications/\(app.name).app",
@@ -519,7 +530,13 @@ struct ListPopoverView: View {
 
     private func launchApp(_ app: AppItem) {
         let workspace = NSWorkspace.shared
-        if let appURL = workspace.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+
+        if app.isFolder, let folderPath = app.folderPath {
+            // Open folder in Finder
+            let folderURL = URL(fileURLWithPath: folderPath)
+            workspace.open(folderURL)
+        } else if let appURL = workspace.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+            // Launch application
             let config = NSWorkspace.OpenConfiguration()
             workspace.openApplication(at: appURL, configuration: config) { _, _ in }
         }
@@ -591,6 +608,11 @@ struct ListAppRow: View {
         if let iconData = app.iconData,
            let nsImage = NSImage(data: iconData) {
             return nsImage
+        }
+
+        // For folders, get icon from folder path
+        if app.isFolder, let folderPath = app.folderPath {
+            return NSWorkspace.shared.icon(forFile: folderPath)
         }
 
         if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {

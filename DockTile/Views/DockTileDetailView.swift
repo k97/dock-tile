@@ -133,13 +133,13 @@ struct DockTileDetailView: View {
         }
     }
 
-    // MARK: - Apps Table Section
+    // MARK: - Items Table Section
 
     @State private var selectedAppIDs: Set<AppItem.ID> = []
 
     private var appsTableSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Selected Apps")
+            Text("Selected Items")
                 .font(.headline)
                 .padding(.bottom, 12)
 
@@ -154,7 +154,7 @@ struct DockTileDetailView: View {
 
                 // Bottom toolbar with +/- buttons
                 HStack(spacing: 0) {
-                    Button(action: addApp) {
+                    Button(action: addItem) {
                         Image(systemName: "plus")
                             .font(.system(size: 12, weight: .regular))
                             .frame(width: 24, height: 20)
@@ -294,18 +294,42 @@ struct DockTileDetailView: View {
         }
     }
 
-    private func addApp() {
+    private func addItem() {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
+        panel.canChooseDirectories = true
         panel.canChooseFiles = true
-        panel.allowedContentTypes = [.application]
+        panel.allowedContentTypes = [.application, .folder]
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         panel.treatsFilePackagesAsDirectories = false
+        panel.prompt = "Add"
+        panel.message = "Select an application or folder to add"
 
         if panel.runModal() == .OK, let url = panel.url {
-            if let appItem = AppItem.from(appURL: url) {
-                editedConfig.appItems.append(appItem)
+            var isDirectory: ObjCBool = false
+            FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+
+            if isDirectory.boolValue && !url.pathExtension.lowercased().contains("app") {
+                // It's a folder (not an .app bundle)
+                let folderPath = url.path
+                if editedConfig.appItems.contains(where: { $0.folderPath == folderPath }) {
+                    NSSound.beep()
+                    return
+                }
+                if let folderItem = AppItem.from(folderURL: url) {
+                    editedConfig.appItems.append(folderItem)
+                }
+            } else {
+                // It's an application
+                if let bundle = Bundle(url: url),
+                   let bundleId = bundle.bundleIdentifier,
+                   editedConfig.appItems.contains(where: { $0.bundleIdentifier == bundleId }) {
+                    NSSound.beep()
+                    return
+                }
+                if let appItem = AppItem.from(appURL: url) {
+                    editedConfig.appItems.append(appItem)
+                }
             }
         }
     }
@@ -346,9 +370,9 @@ struct NativeAppsTableView: View {
 
     private var emptyState: some View {
         VStack(spacing: 8) {
-            Text("No apps added yet")
+            Text("No items added yet")
                 .foregroundStyle(.secondary)
-            Text("Click + to add applications")
+            Text("Click + to add applications or folders")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
@@ -356,10 +380,7 @@ struct NativeAppsTableView: View {
     }
 
     private func itemKind(for item: AppItem) -> String {
-        if item.bundleIdentifier.contains("folder") || item.name.lowercased().contains("folder") {
-            return "Folder"
-        }
-        return "Application"
+        item.isFolder ? "Folder" : "Application"
     }
 }
 
@@ -373,6 +394,11 @@ struct AppIconView: View {
         if let iconData = item.iconData,
            let image = NSImage(data: iconData) {
             return image
+        }
+
+        // For folders, get icon from folder path
+        if item.isFolder, let folderPath = item.folderPath {
+            return NSWorkspace.shared.icon(forFile: folderPath)
         }
 
         // Try to get from bundle identifier
@@ -389,7 +415,7 @@ struct AppIconView: View {
                 .resizable()
                 .interpolation(.high)
         } else {
-            Image(systemName: "app.fill")
+            Image(systemName: item.isFolder ? "folder.fill" : "app.fill")
                 .foregroundStyle(.secondary)
         }
     }

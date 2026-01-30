@@ -176,17 +176,43 @@ struct AppItem: Identifiable, Codable, Hashable {
     var bundleIdentifier: String
     var name: String
     var iconData: Data?  // Serialized NSImage as PNG/TIFF data
+    var isFolder: Bool  // v2: Distinguishes folders from applications
+    var folderPath: String?  // v2: Path to folder (only set when isFolder is true)
 
     init(
         id: UUID = UUID(),
         bundleIdentifier: String,
         name: String,
-        iconData: Data? = nil
+        iconData: Data? = nil,
+        isFolder: Bool = false,
+        folderPath: String? = nil
     ) {
         self.id = id
         self.bundleIdentifier = bundleIdentifier
         self.name = name
         self.iconData = iconData
+        self.isFolder = isFolder
+        self.folderPath = folderPath
+    }
+
+    // MARK: - Custom Decoder (backward compatibility)
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = try container.decode(UUID.self, forKey: .id)
+        bundleIdentifier = try container.decode(String.self, forKey: .bundleIdentifier)
+        name = try container.decode(String.self, forKey: .name)
+        iconData = try container.decodeIfPresent(Data.self, forKey: .iconData)
+
+        // v2 fields - optional with defaults
+        isFolder = try container.decodeIfPresent(Bool.self, forKey: .isFolder) ?? false
+        folderPath = try container.decodeIfPresent(String.self, forKey: .folderPath)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, bundleIdentifier, name, iconData
+        case isFolder, folderPath
     }
 
     /// Create AppItem from .app bundle URL
@@ -210,7 +236,27 @@ struct AppItem: Identifiable, Codable, Hashable {
         return AppItem(
             bundleIdentifier: bundleId,
             name: appName,
-            iconData: iconData
+            iconData: iconData,
+            isFolder: false,
+            folderPath: nil
+        )
+    }
+
+    /// Create AppItem from folder URL
+    static func from(folderURL: URL) -> AppItem? {
+        let folderName = folderURL.lastPathComponent
+        let folderPath = folderURL.path
+
+        // Get folder icon from system
+        let icon = NSWorkspace.shared.icon(forFile: folderPath)
+        let iconData = icon.tiffRepresentation
+
+        return AppItem(
+            bundleIdentifier: "folder.\(folderPath.hashValue)",  // Unique identifier for folder
+            name: folderName,
+            iconData: iconData,
+            isFolder: true,
+            folderPath: folderPath
         )
     }
 }
