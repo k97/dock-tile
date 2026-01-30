@@ -82,7 +82,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
     }
 
     private func createAnchorWindow() -> NSWindow {
-        // Create an invisible anchor window positioned at dock icon location
+        // Create an invisible anchor window positioned just above the Dock
         guard let screen = NSScreen.main else {
             return NSWindow()
         }
@@ -90,16 +90,15 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         // Get mouse location (where user clicked the dock icon)
         let mouseLocation = NSEvent.mouseLocation
 
-        // Dock height is typically ~70 points
-        // Position anchor just above the dock
+        // Position anchor just above the Dock (~70pt from bottom)
         let dockHeight: CGFloat = 70
         let anchorY = screen.frame.minY + dockHeight
 
         let windowRect = NSRect(
-            x: mouseLocation.x - 32,  // 64pt wide anchor centered on click
+            x: mouseLocation.x - 32,
             y: anchorY,
             width: 64,
-            height: 1  // Minimal height - just an anchor point
+            height: 1
         )
 
         let window = NSWindow(
@@ -129,8 +128,12 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         // Cleanup any stale state
         cleanupPopover()
 
+        // Create popover and anchor window
         popover = createPopover()
         anchorWindow = createAnchorWindow()
+
+        // Activate app
+        NSApp.activate(ignoringOtherApps: true)
 
         guard let popover = popover,
               let anchorWindow = anchorWindow,
@@ -141,8 +144,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         // Make anchor window visible (but transparent)
         anchorWindow.orderFront(nil)
 
-        // Show popover anchored to the window
-        // .maxY means the popover appears ABOVE the anchor, with arrow pointing DOWN
+        // Show popover above the anchor, with arrow pointing down to Dock
         popover.show(
             relativeTo: anchorView.bounds,
             of: anchorView,

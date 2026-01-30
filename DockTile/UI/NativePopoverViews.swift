@@ -75,43 +75,86 @@ final class KeyboardCaptureView: NSView {
     }
 }
 
-// MARK: - Visual Effect View (NSVisualEffectView Wrapper)
+// MARK: - Visual Effect View (NSVisualEffectView Wrapper for Liquid Glass)
 
+/// NSViewRepresentable wrapper for NSVisualEffectView
+/// Configured for the macOS "Liquid Glass" aesthetic with proper vibrancy
 struct VisualEffectView: NSViewRepresentable {
     let material: NSVisualEffectView.Material
     let blendingMode: NSVisualEffectView.BlendingMode
     let state: NSVisualEffectView.State
+    let isEmphasized: Bool
 
+    /// Creates a Liquid Glass visual effect view
+    /// - Parameters:
+    ///   - material: The material type (.popover or .menu for maximum translucency)
+    ///   - blendingMode: Must be .behindWindow for Dock/wallpaper bleed-through
+    ///   - state: Must be .active to maintain vibrancy when clicking away
+    ///   - isEmphasized: Whether the view should appear emphasized (brighter)
     init(
         material: NSVisualEffectView.Material = .popover,
         blendingMode: NSVisualEffectView.BlendingMode = .behindWindow,
-        state: NSVisualEffectView.State = .active
+        state: NSVisualEffectView.State = .active,
+        isEmphasized: Bool = false
     ) {
         self.material = material
         self.blendingMode = blendingMode
         self.state = state
+        self.isEmphasized = isEmphasized
     }
 
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = blendingMode
-        view.state = state
-        view.wantsLayer = true
+        configureView(view)
         return view
     }
 
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = material
-        nsView.blendingMode = blendingMode
-        nsView.state = state
+        configureView(nsView)
+    }
+
+    private func configureView(_ view: NSVisualEffectView) {
+        view.material = material
+        view.blendingMode = blendingMode
+        // CRITICAL: state must be .active to maintain "liquid" effect when app loses focus
+        // Otherwise it turns flat gray
+        view.state = state
+        view.isEmphasized = isEmphasized
+        view.wantsLayer = true
+        // Ensure the view doesn't add its own shadow (let NSPopover handle it)
+        view.shadow = nil
+    }
+}
+
+/// Convenience initializer for common Liquid Glass configurations
+extension VisualEffectView {
+    /// Standard Liquid Glass popover background
+    static var liquidGlass: VisualEffectView {
+        VisualEffectView(
+            material: .popover,
+            blendingMode: .behindWindow,
+            state: .active
+        )
+    }
+
+    /// Menu-style Liquid Glass (slightly more translucent)
+    static var liquidGlassMenu: VisualEffectView {
+        VisualEffectView(
+            material: .menu,
+            blendingMode: .behindWindow,
+            state: .active
+        )
     }
 }
 
 // MARK: - Stack (Grid) Popover View
 
 /// Native macOS Dock folder "Stack" view with large icons in a grid
-/// Matches the native Dock folder popover appearance
+/// Matches the native Applications Dock folder popover:
+/// - Fixed/anchored title at top (doesn't scroll)
+/// - Vertically scrolling grid below
+/// - Scrollbar only appears in grid area
+/// - Liquid Glass effect across entire background
 struct StackPopoverView: View {
     let configuration: DockTileConfiguration?
     let onLaunch: () -> Void
@@ -136,20 +179,28 @@ struct StackPopoverView: View {
 
     private let columnCount = 3
 
+    // Layout constants
+    private let headerHeight: CGFloat = 36
+    private let popoverWidth: CGFloat = 340
+    private let gridTopPadding: CGFloat = 16
+    private let gridBottomPadding: CGFloat = 16
+    private let gridHorizontalPadding: CGFloat = 16
+
     var body: some View {
         VStack(spacing: 0) {
-            // Title bar
+            // MARK: Anchored Header (Fixed - doesn't scroll)
             Text(tileName)
-                .font(.system(size: 13, weight: .medium))
+                .font(.subheadline)
+                .fontWeight(.medium)
                 .foregroundStyle(.primary)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(height: headerHeight)
 
-            // App grid
+            // MARK: Scrollable Grid Content
             if apps.isEmpty {
                 emptyStateView
             } else {
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: true) {
                     LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in
                             StackAppItem(
@@ -162,13 +213,16 @@ struct StackPopoverView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.top, gridTopPadding)
+                    .padding(.bottom, gridBottomPadding)
+                    .padding(.horizontal, gridHorizontalPadding)
                 }
             }
         }
-        .frame(width: calculateWidth(), height: calculateHeight())
-        .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
+        .frame(width: popoverWidth, height: calculateHeight())
+        // LIQUID GLASS: Single translucent surface for header + grid
+        .background(Color.clear)
+        .background(VisualEffectView.liquidGlass)
         .onReceive(NotificationCenter.default.publisher(for: .enableKeyboardNavigation)) { _ in
             keyboardNavigationEnabled = true
             selectedIndex = apps.isEmpty ? nil : 0
@@ -196,15 +250,17 @@ struct StackPopoverView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func calculateWidth() -> CGFloat {
-        return 340
-    }
-
     private func calculateHeight() -> CGFloat {
         guard !apps.isEmpty else { return 180 }
-        let rows = ceil(Double(apps.count) / 3.0)
-        let contentHeight = rows * 100
-        return min(CGFloat(contentHeight) + 54, 400)
+
+        // Calculate grid content height
+        let rows = ceil(Double(apps.count) / Double(columnCount))
+        let itemHeight: CGFloat = 100  // Approximate height per grid item
+        let gridContentHeight = CGFloat(rows) * itemHeight + gridTopPadding + gridBottomPadding
+
+        // Total = header + grid content, capped at max
+        let totalHeight = headerHeight + gridContentHeight
+        return min(totalHeight, 400)
     }
 
     // MARK: - Keyboard Navigation
@@ -259,7 +315,7 @@ struct StackPopoverView: View {
 
 struct StackAppItem: View {
     let app: AppItem
-    let isSelected: Bool
+    let isSelected: Bool  // Keyboard navigation selection only
     let onLaunch: () -> Void
 
     var body: some View {
@@ -269,6 +325,7 @@ struct StackAppItem: View {
                 .frame(width: 64, height: 64)
 
             // App name - truncated with ellipsis
+            // Use hierarchical style for vibrancy optimization
             Text(app.name)
                 .font(.system(size: 11, weight: .regular))
                 .foregroundStyle(.primary)
@@ -278,9 +335,9 @@ struct StackAppItem: View {
         }
         .padding(6)
         .background(
-            // Selection highlight - matches Launchpad style (subtle light background)
+            // Keyboard selection only - no hover effect for grid view
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(isSelected ? Color.white.opacity(0.2) : Color.clear)
+                .fill(isSelected ? Color(nsColor: .selectedContentBackgroundColor) : Color.clear)
         )
         .contentShape(Rectangle())
     }
@@ -350,6 +407,7 @@ struct ListPopoverView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Title header (like native folder name)
+            // Use hierarchical style for vibrancy
             if !tileName.isEmpty {
                 Text(tileName)
                     .font(.system(size: 13, weight: .semibold))
@@ -377,7 +435,7 @@ struct ListPopoverView: View {
                 }
             }
 
-            // Separator
+            // Separator - use hierarchical opacity for vibrancy
             Divider()
                 .padding(.vertical, 4)
 
@@ -398,7 +456,9 @@ struct ListPopoverView: View {
         }
         .padding(.vertical, 8)
         .frame(width: 220)
-        .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
+        // LIQUID GLASS: Transparent SwiftUI background to allow NSVisualEffectView through
+        .background(Color.clear)
+        .background(VisualEffectView.liquidGlassMenu)
         .onReceive(NotificationCenter.default.publisher(for: .enableKeyboardNavigation)) { _ in
             keyboardNavigationEnabled = true
             selectedIndex = apps.isEmpty ? nil : 0
@@ -492,7 +552,7 @@ struct ListAppRow: View {
             appIconView
                 .frame(width: 16, height: 16)
 
-            // App name
+            // App name - white text on selection for contrast (works in light & dark mode)
             Text(app.name)
                 .font(.system(size: 13))
                 .foregroundStyle(isHighlighted ? .white : .primary)
@@ -503,8 +563,10 @@ struct ListAppRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
         .background(
+            // LIQUID GLASS: Use system selectedContentBackgroundColor for vibrant selection
+            // This maintains the glassy look even when selected
             RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .fill(isHighlighted ? Color.accentColor : Color.clear)
+                .fill(isHighlighted ? Color(nsColor: .selectedContentBackgroundColor) : Color.clear)
         )
         .contentShape(Rectangle())
         .onHover { hovering in
@@ -567,26 +629,27 @@ struct ListMenuRow: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(isHovered ? .white : .primary)
                     .frame(width: 16)
 
                 Text(title)
                     .font(.system(size: 13))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(isHovered ? .white : .primary)
 
                 Spacer()
 
                 if hasSubmenu {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(isHovered ? .white.opacity(0.7) : .secondary)
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 4)
             .background(
+                // LIQUID GLASS: Use system selectedContentBackgroundColor for vibrant hover
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(isHovered ? Color.accentColor : Color.clear)
+                    .fill(isHovered ? Color(nsColor: .selectedContentBackgroundColor) : Color.clear)
             )
             .contentShape(Rectangle())
         }

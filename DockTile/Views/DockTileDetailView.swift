@@ -16,7 +16,6 @@ struct DockTileDetailView: View {
     let onCustomise: () -> Void
 
     @State private var editedConfig: DockTileConfiguration
-    @State private var showingFilePicker = false
     @State private var isProcessing = false
     @State private var errorMessage: String?
     @State private var showDeleteConfirmation = false
@@ -60,14 +59,6 @@ struct DockTileDetailView: View {
                         .controlSize(.small)
                 }
             }
-        }
-        .sheet(isPresented: $showingFilePicker) {
-            AppPickerView(onSelect: { appURL in
-                if let appItem = AppItem.from(appURL: appURL) {
-                    editedConfig.appItems.append(appItem)
-                }
-                showingFilePicker = false
-            })
         }
         .alert("Delete Tile", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -163,7 +154,7 @@ struct DockTileDetailView: View {
 
                 // Bottom toolbar with +/- buttons
                 HStack(spacing: 0) {
-                    Button(action: { showingFilePicker = true }) {
+                    Button(action: addApp) {
                         Image(systemName: "plus")
                             .font(.system(size: 12, weight: .regular))
                             .frame(width: 24, height: 20)
@@ -302,6 +293,22 @@ struct DockTileDetailView: View {
             editedConfig.appItems.removeLast()
         }
     }
+
+    private func addApp() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = [.application]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.treatsFilePackagesAsDirectories = false
+
+        if panel.runModal() == .OK, let url = panel.url {
+            if let appItem = AppItem.from(appURL: url) {
+                editedConfig.appItems.append(appItem)
+            }
+        }
+    }
 }
 
 // MARK: - Native Apps Table View
@@ -385,47 +392,6 @@ struct AppIconView: View {
             Image(systemName: "app.fill")
                 .foregroundStyle(.secondary)
         }
-    }
-}
-
-// MARK: - App Picker View
-
-struct AppPickerView: View {
-    let onSelect: (URL) -> Void
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("Select an Application")
-                .font(.title2)
-
-            Button("Browse...") {
-                selectApp()
-            }
-            .controlSize(.large)
-
-            Button("Cancel") {
-                dismiss()
-            }
-        }
-        .padding(40)
-        .frame(width: 400, height: 200)
-    }
-
-    private func selectApp() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false  // Only allow .app bundles
-        panel.canChooseFiles = true
-        panel.allowedContentTypes = [.application]
-        panel.directoryURL = URL(fileURLWithPath: "/Applications")
-        panel.treatsFilePackagesAsDirectories = false  // Treat .app as single item
-
-        if panel.runModal() == .OK, let url = panel.url {
-            onSelect(url)
-        }
-
-        dismiss()
     }
 }
 
