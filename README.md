@@ -1,4 +1,4 @@
-# DockTile
+# Dock Tile
 
 A native macOS utility that lets you create custom Dock tiles to organise and launch your favourite apps with a single click.
 
