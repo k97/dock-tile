@@ -63,7 +63,6 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         }
     }
 
-
     // MARK: - Popover Management
 
     private func createPopover() -> NSPopover {

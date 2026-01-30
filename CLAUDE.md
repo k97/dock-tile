@@ -66,16 +66,12 @@ DockTile/
 │   └── CustomiseTileView.swift          # Icon customization (color + emoji picker)
 ├── Components/
 │   ├── DockTileIconPreview.swift   # Icon preview with gradient background
-│   ├── ColourPickerGrid.swift      # Color selection grid (legacy)
 │   ├── SymbolPickerGrid.swift      # SF Symbol picker with categories
 │   ├── EmojiPickerGrid.swift       # Emoji picker with categories
 │   ├── IconGridOverlay.swift       # Apple icon guide grid overlay
-│   ├── SymbolPickerButton.swift    # Emoji picker popover (legacy)
 │   └── ItemRowView.swift           # Row view for app items
 ├── Utilities/
 │   └── IconGenerator.swift         # Generates .icns files from tint color + emoji
-├── Core/
-│   └── GhostModeManager.swift      # (Legacy) Ghost mode utilities
 ├── Extensions/
 │   └── ColorExtensions.swift       # Color hex initialization
 └── Resources/
@@ -140,7 +136,7 @@ This approach handles 95% of schema changes. Old configs missing new fields will
 | iconValue | String | "star.fill" | SF Symbol name or emoji character |
 | layoutMode | LayoutMode | .grid2x3 | Stack (grid) or List |
 | appItems | [AppItem] | [] | Apps in the tile |
-| isVisibleInDock | Bool | false | Show helper in Dock |
+| isVisibleInDock | Bool | true | Show helper in Dock (enabled by default) |
 | showInAppSwitcher | Bool | false | (v2) Show in Cmd+Tab |
 | bundleIdentifier | String | Generated | Helper bundle ID |
 
@@ -179,12 +175,28 @@ The `showInAppSwitcher` toggle controls whether a tile appears in Cmd+Tab:
 
 ### NSPopover Implementation
 
-`FloatingPanel.swift` manages the Dock-style popover:
-- Creates invisible anchor window at Dock icon position
-- Uses NSPopover with `.maxY` edge (arrow points down)
+`FloatingPanel.swift` manages the Dock-style popover with dynamic Dock-anchored positioning:
+
+**Dock Position Detection:**
+- Compares `NSScreen.main.frame` vs `visibleFrame` to detect Dock position (bottom/left/right)
+- The side with the largest gap between frame and visibleFrame indicates Dock location
+
+**Hard Edge Anchoring (visibleFrame boundary):**
+- **Bottom Dock**: Anchor Y = `visibleFrame.minY`, mouse used only for X-axis
+- **Left Dock**: Anchor X = `visibleFrame.minX`, mouse used only for Y-axis
+- **Right Dock**: Anchor X = `visibleFrame.maxX`, mouse used only for Y-axis
+- This ensures popover always anchors flush to the Dock edge, regardless of click depth
+
+**Preferred Edge Selection:**
+- Bottom Dock: `.minY` (arrow points down toward Dock)
+- Left Dock: `.minX` (arrow points left toward Dock)
+- Right Dock: `.maxX` (arrow points right toward Dock)
+
+**Additional Features:**
 - `NSVisualEffectView` with `.popover` material for native vibrancy
 - Keyboard navigation via `KeyboardCaptureView` (custom NSView)
 - Dismisses on click outside or Escape key
+- Safeguard fallback if `visibleFrame` unavailable
 
 ### Icon Generation
 
@@ -295,6 +307,20 @@ private struct QuaternaryFillView: NSViewRepresentable {
 ```
 
 ## Recent Changes
+
+### Popover Positioning Fix (2026-01)
+- **Problem**: Popover would "float" mid-air if user clicked near the top of the Dock icon
+- **Root cause**: Anchor window position used mouse Y coordinate, which varied based on click location
+- **Fix**: Implemented "hard edge" anchoring using `visibleFrame` boundary:
+  - Anchor strictly to `visibleFrame.minY/minX/maxX` depending on Dock position
+  - Mouse coordinate only used for the axis parallel to the Dock
+  - Removed `getDockThickness()` in favor of direct `visibleFrame` usage
+- **Result**: Popover now always appears flush against the Dock edge, matching native Applications folder behavior
+
+### Default Visibility Change (2026-01)
+- **Change**: New tiles now have `isVisibleInDock = true` by default
+- **Reason**: Better UX - clicking "Done" immediately installs the tile to Dock
+- **Location**: `ConfigurationDefaults.isVisibleInDock` in `ConfigurationSchema.swift`
 
 ### App Switcher Toggle Fix (2026-01)
 - **Problem**: Toggle had no effect - tiles always appeared in Cmd+Tab

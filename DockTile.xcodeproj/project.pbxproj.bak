@@ -11,6 +11,7 @@
 		AAHELP01 /* HelperAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHELP02; };
 		AA0001 /* DockTileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002; };
 		AA0003 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0004; };
+		AA0005 /* GhostModeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0006; };
 		AAU00001 /* IconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAU00002; };
 		AAH00001 /* HelperBundleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAH00002; };
 		AADPW002 /* DockPlistWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADPW001; };
@@ -26,6 +27,8 @@
 		AA7EF687 /* CustomiseTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC45935; };
 		AA0E9A37 /* DockTileIconPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA547156; };
 		AA291E3F /* ItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF32B63; };
+		AA597367 /* ColourPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8A2DA5; };
+		AA49ED64 /* SymbolPickerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA94D1EB; };
 		AACFS001 /* ConfigurationSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFS002; };
 		AA07E3F1 /* ConfigurationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0D6A16; };
 		AACFS003 /* ConfigurationSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFS004; };
@@ -37,6 +40,8 @@
 		AAD53BEB /* CustomiseTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA9143C9; };
 		AAE6C802 /* DockTileIconPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC2BA1B; };
 		AA8E2782 /* ItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2CAE1C; };
+		AA96E8AB /* ColourPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA285A0; };
+		AA5DE9E7 /* SymbolPickerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEF0770; };
 		AAIGOV02 /* IconGridOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAIGOV01; };
 		AASPGV02 /* SymbolPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASPGV01; };
 		AAEPGV02 /* EmojiPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEPGV01; };
@@ -47,6 +52,7 @@
 		AAHELP02 /* HelperAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperAppDelegate.swift; sourceTree = "<group>"; };
 		AA0002 /* DockTileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileApp.swift; sourceTree = "<group>"; };
 		AA0004 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AA0006 /* GhostModeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostModeManager.swift; sourceTree = "<group>"; };
 		AA0008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA0009 /* DockTile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DockTile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0021 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
@@ -61,6 +67,8 @@
 		AAC45935 /* CustomiseTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomiseTileView.swift; sourceTree = "<group>"; };
 		AA547156 /* DockTileIconPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileIconPreview.swift; sourceTree = "<group>"; };
 		AAF32B63 /* ItemRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemRowView.swift; sourceTree = "<group>"; };
+		AA8A2DA5 /* ColourPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColourPickerGrid.swift; sourceTree = "<group>"; };
+		AA94D1EB /* SymbolPickerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPickerButton.swift; sourceTree = "<group>"; };
 		AA0D6A16 /* ConfigurationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationModels.swift; sourceTree = "<group>"; };
 		AAC89BB2 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
 		AA70D235 /* ColorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtensions.swift; sourceTree = "<group>"; };
@@ -70,6 +78,8 @@
 		AA9143C9 /* CustomiseTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomiseTileView.swift; sourceTree = "<group>"; };
 		AAC2BA1B /* DockTileIconPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileIconPreview.swift; sourceTree = "<group>"; };
 		AA2CAE1C /* ItemRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemRowView.swift; sourceTree = "<group>"; };
+		AAA285A0 /* ColourPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColourPickerGrid.swift; sourceTree = "<group>"; };
+		AAEF0770 /* SymbolPickerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPickerButton.swift; sourceTree = "<group>"; };
 		AAU00002 /* IconGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGenerator.swift; sourceTree = "<group>"; };
 		AAH00002 /* HelperBundleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperBundleManager.swift; sourceTree = "<group>"; };
 		AADPW001 /* DockPlistWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPlistWatcher.swift; sourceTree = "<group>"; };
@@ -122,6 +132,7 @@
 		AA000D /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				AA0006 /* GhostModeManager.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -214,7 +225,11 @@
 			children = (
 				AA547156 /* DockTileIconPreview.swift */,
 				AAF32B63 /* ItemRowView.swift */,
+				AA8A2DA5 /* ColourPickerGrid.swift */,
+				AA94D1EB /* SymbolPickerButton.swift */,
 
+				AAEF0770 /* SymbolPickerButton.swift */,
+				AAA285A0 /* ColourPickerGrid.swift */,
 				AA2CAE1C /* ItemRowView.swift */,
 				AAC2BA1B /* DockTileIconPreview.swift */,
 				AAIGOV01 /* IconGridOverlay.swift */,
@@ -299,6 +314,7 @@
 				AA0001 /* DockTileApp.swift in Sources */,
 				AA0003 /* AppDelegate.swift in Sources */,
 				AAHELP01 /* HelperAppDelegate.swift in Sources */,
+				AA0005 /* GhostModeManager.swift in Sources */,
 				AA0020 /* FloatingPanel.swift in Sources */,
 				AA0022 /* LauncherView.swift in Sources */,
 				AANPV01 /* NativePopoverViews.swift in Sources */,
@@ -306,6 +322,8 @@
 				AAH00001 /* HelperBundleManager.swift in Sources */,
 				AADPW002 /* DockPlistWatcher.swift in Sources */,
 
+				AA49ED64 /* SymbolPickerButton.swift in Sources */,
+				AA597367 /* ColourPickerGrid.swift in Sources */,
 				AA291E3F /* ItemRowView.swift in Sources */,
 				AA0E9A37 /* DockTileIconPreview.swift in Sources */,
 				AA7EF687 /* CustomiseTileView.swift in Sources */,
@@ -316,6 +334,8 @@
 				AA3FF186 /* ConfigurationManager.swift in Sources */,
 				AA09AE0F /* ConfigurationModels.swift in Sources */,
 				AACFS001 /* ConfigurationSchema.swift in Sources */,
+				AA5DE9E7 /* SymbolPickerButton.swift in Sources */,
+				AA96E8AB /* ColourPickerGrid.swift in Sources */,
 				AA8E2782 /* ItemRowView.swift in Sources */,
 				AAE6C802 /* DockTileIconPreview.swift in Sources */,
 				AAD53BEB /* CustomiseTileView.swift in Sources */,

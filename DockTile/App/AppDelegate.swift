@@ -11,7 +11,6 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
-    private var ghostModeManager = GhostModeManager.shared
     private var floatingPanel: FloatingPanel?
 
     // Configuration manager (set by DockTileApp on launch)
@@ -261,13 +260,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func hidePopover() {
         print("🚫 Hiding popover")
         floatingPanel?.hide(animated: true)
-    }
-
-    // MARK: - Ghost Mode Testing
-
-    /// Expose toggle for testing (can be called from menu or keyboard shortcut later)
-    func toggleGhostMode() {
-        ghostModeManager.toggleGhostMode()
     }
 
     // MARK: - Context Menu (Right-Click)
