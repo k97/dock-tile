@@ -10,6 +10,14 @@
 import AppKit
 import SwiftUI
 
+// MARK: - Dock Position Detection
+
+enum DockPosition {
+    case bottom
+    case left
+    case right
+}
+
 @MainActor
 final class FloatingPanel: NSObject, NSPopoverDelegate {
 
@@ -29,6 +37,32 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
     var isVisible: Bool {
         return popover?.isShown ?? false
     }
+
+    // MARK: - Dock Detection
+
+    /// Detect the Dock's position by comparing screen frame vs visible frame
+    private func detectDockPosition() -> DockPosition {
+        guard let screen = NSScreen.main else { return .bottom }
+
+        let frame = screen.frame
+        let visible = screen.visibleFrame
+
+        // Calculate the difference on each edge
+        let bottomGap = visible.minY - frame.minY
+        let leftGap = visible.minX - frame.minX
+        let rightGap = frame.maxX - visible.maxX
+
+        // The Dock is on the side with the largest gap (excluding menu bar)
+        // Menu bar is always at top, so we ignore top gap
+        if leftGap > bottomGap && leftGap > rightGap {
+            return .left
+        } else if rightGap > bottomGap && rightGap > leftGap {
+            return .right
+        } else {
+            return .bottom
+        }
+    }
+
 
     // MARK: - Popover Management
 
@@ -60,7 +94,14 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
 
     /// Calculate popover size based on layout mode and number of apps
     private func calculatePopoverSize() -> NSSize {
+        guard let screen = NSScreen.main else {
+            return NSSize(width: 340, height: 180)
+        }
+
         let appCount = configuration?.appItems.count ?? 0
+
+        // Constrain max width to 80% of visible frame for ultra-wide/small displays
+        let maxWidth = screen.visibleFrame.width * 0.8
 
         if configuration?.layoutMode == .horizontal1x6 {
             // List view: fixed width, height based on content
@@ -68,38 +109,80 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
             let baseHeight: CGFloat = 114  // Title + divider + utilities + padding
             let appsHeight = CGFloat(max(appCount, 1)) * 28
             let totalHeight = min(baseHeight + appsHeight, 400)
-            return NSSize(width: 220, height: totalHeight)
+            let width = min(220, maxWidth)
+            return NSSize(width: width, height: totalHeight)
         } else {
             // Stack view: width fixed at 340, height based on rows
             guard appCount > 0 else {
-                return NSSize(width: 340, height: 180)
+                let width = min(340, maxWidth)
+                return NSSize(width: width, height: 180)
             }
             let rows = ceil(Double(appCount) / 3.0)
             let contentHeight = rows * 100
             let totalHeight = min(CGFloat(contentHeight) + 54, 400)
-            return NSSize(width: 340, height: totalHeight)
+            let width = min(340, maxWidth)
+            return NSSize(width: width, height: totalHeight)
         }
     }
 
-    private func createAnchorWindow() -> NSWindow {
-        // Create an invisible anchor window positioned just above the Dock
+    /// Create anchor window and determine the preferred edge for popover
+    /// Uses the "hard edge" rule: anchors strictly to visibleFrame boundary,
+    /// ignoring mouse depth into the Dock area
+    private func createAnchorWindowAndEdge() -> (window: NSWindow, edge: NSRectEdge) {
+        // Safe guard: fall back to screen bounds if visibleFrame unavailable
         guard let screen = NSScreen.main else {
-            return NSWindow()
+            let fallbackWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
+                styleMask: .borderless,
+                backing: .buffered,
+                defer: false
+            )
+            fallbackWindow.backgroundColor = .clear
+            fallbackWindow.isOpaque = false
+            return (fallbackWindow, .minY)
         }
 
-        // Get mouse location (where user clicked the dock icon)
+        let visibleFrame = screen.visibleFrame
         let mouseLocation = NSEvent.mouseLocation
+        let dockPosition = detectDockPosition()
 
-        // Position anchor just above the Dock (~70pt from bottom)
-        let dockHeight: CGFloat = 70
-        let anchorY = screen.frame.minY + dockHeight
+        let windowRect: NSRect
+        let preferredEdge: NSRectEdge
 
-        let windowRect = NSRect(
-            x: mouseLocation.x - 32,
-            y: anchorY,
-            width: 64,
-            height: 1
-        )
+        switch dockPosition {
+        case .bottom:
+            // Hard edge rule: anchor Y is exactly at visibleFrame.minY (top of Dock)
+            // Use mouse only for X-axis positioning
+            windowRect = NSRect(
+                x: mouseLocation.x,
+                y: visibleFrame.minY,
+                width: 1,
+                height: 1
+            )
+            preferredEdge = .minY  // Arrow points down toward Dock
+
+        case .left:
+            // Hard edge rule: anchor X is exactly at visibleFrame.minX (right edge of Dock)
+            // Use mouse only for Y-axis positioning
+            windowRect = NSRect(
+                x: visibleFrame.minX,
+                y: mouseLocation.y,
+                width: 1,
+                height: 1
+            )
+            preferredEdge = .minX  // Arrow points left toward Dock
+
+        case .right:
+            // Hard edge rule: anchor X is exactly at visibleFrame.maxX (left edge of Dock)
+            // Use mouse only for Y-axis positioning
+            windowRect = NSRect(
+                x: visibleFrame.maxX,
+                y: mouseLocation.y,
+                width: 1,
+                height: 1
+            )
+            preferredEdge = .maxX  // Arrow points right toward Dock
+        }
 
         let window = NSWindow(
             contentRect: windowRect,
@@ -114,7 +197,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         window.ignoresMouseEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        return window
+        return (window, preferredEdge)
     }
 
     // MARK: - Show/Hide
@@ -128,9 +211,10 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         // Cleanup any stale state
         cleanupPopover()
 
-        // Create popover and anchor window
+        // Create popover and anchor window with appropriate edge
         popover = createPopover()
-        anchorWindow = createAnchorWindow()
+        let (window, preferredEdge) = createAnchorWindowAndEdge()
+        anchorWindow = window
 
         // Activate app
         NSApp.activate(ignoringOtherApps: true)
@@ -144,11 +228,11 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         // Make anchor window visible (but transparent)
         anchorWindow.orderFront(nil)
 
-        // Show popover above the anchor, with arrow pointing down to Dock
+        // Show popover with arrow pointing toward the Dock
         popover.show(
             relativeTo: anchorView.bounds,
             of: anchorView,
-            preferredEdge: .maxY
+            preferredEdge: preferredEdge
         )
 
         // If keyboard focus requested (Cmd+Tab activation), notify the view
@@ -171,7 +255,6 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
 
             // Check if click is outside the popover
             if let popoverWindow = popover.contentViewController?.view.window {
-                let clickLocation = event.locationInWindow
                 let windowFrame = popoverWindow.frame
 
                 // Convert global click location to check against popover window

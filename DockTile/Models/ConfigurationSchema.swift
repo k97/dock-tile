@@ -25,6 +25,6 @@ enum ConfigurationDefaults {
     static let iconValue = "star.fill"
 
     // Visibility
-    static let isVisibleInDock = false  // User must explicitly enable
+    static let isVisibleInDock = true  // Show in Dock by default
     static let showInAppSwitcher = false  // Hidden from Cmd+Tab by default
 }
