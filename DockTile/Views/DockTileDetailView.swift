@@ -98,7 +98,8 @@ struct DockTileDetailView: View {
             VStack(spacing: 12) {
                 DockTileIconPreview(
                     tintColor: editedConfig.tintColor,
-                    symbol: editedConfig.symbolEmoji,
+                    iconType: editedConfig.iconType,
+                    iconValue: editedConfig.iconValue,
                     size: 96
                 )
 
@@ -237,6 +238,8 @@ struct DockTileDetailView: View {
                     name: editedConfig.name,
                     tintColor: editedConfig.tintColor,
                     symbolEmoji: editedConfig.symbolEmoji,
+                    iconType: editedConfig.iconType,
+                    iconValue: editedConfig.iconValue,
                     layoutMode: editedConfig.layoutMode,
                     appItems: editedConfig.appItems,
                     isVisibleInDock: editedConfig.isVisibleInDock,

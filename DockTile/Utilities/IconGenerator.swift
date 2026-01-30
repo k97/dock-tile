@@ -2,7 +2,8 @@
 //  IconGenerator.swift
 //  DockTile
 //
-//  Generate app icons (.icns) from tint color + symbol emoji
+//  Generate app icons (.icns) from tint color + symbol (SF Symbol or emoji)
+//  Supports both SF Symbols and emojis for icon generation
 //  Swift 6 - Strict Concurrency
 //
 
@@ -14,10 +15,11 @@ struct IconGenerator {
 
     // MARK: - Icon Generation
 
-    /// Generate an icon image with gradient background and symbol
+    /// Generate an icon image with gradient background and symbol/emoji
     static func generateIcon(
         tintColor: TintColor,
-        symbol: String,
+        iconType: IconType,
+        iconValue: String,
         size: CGSize
     ) -> NSImage {
         let image = NSImage(size: size)
@@ -40,12 +42,31 @@ struct IconGenerator {
         // Draw gradient background
         drawGradient(context: context, path: path, tintColor: tintColor, rect: rect)
 
-        // Draw symbol emoji
-        drawSymbol(symbol: symbol, rect: rect, fontSize: size.width * 0.5)
+        // Draw icon (SF Symbol or emoji)
+        switch iconType {
+        case .sfSymbol:
+            drawSFSymbol(symbolName: iconValue, rect: rect, fontSize: size.width * 0.45)
+        case .emoji:
+            drawEmoji(emoji: iconValue, rect: rect, fontSize: size.width * 0.5)
+        }
 
         image.unlockFocus()
 
         return image
+    }
+
+    /// Legacy method for backward compatibility (assumes emoji)
+    static func generateIcon(
+        tintColor: TintColor,
+        symbol: String,
+        size: CGSize
+    ) -> NSImage {
+        return generateIcon(
+            tintColor: tintColor,
+            iconType: .emoji,
+            iconValue: symbol,
+            size: size
+        )
     }
 
     // MARK: - Gradient Drawing
@@ -86,18 +107,60 @@ struct IconGenerator {
         )
     }
 
-    // MARK: - Symbol Drawing
+    // MARK: - SF Symbol Drawing
 
-    private static func drawSymbol(symbol: String, rect: CGRect, fontSize: CGFloat) {
+    private static func drawSFSymbol(symbolName: String, rect: CGRect, fontSize: CGFloat) {
+        // Create SF Symbol configuration
+        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .medium)
+
+        // Get the SF Symbol image
+        guard let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+            .withSymbolConfiguration(config) else {
+            // Fallback to a default symbol if the requested one doesn't exist
+            drawFallbackSymbol(rect: rect, fontSize: fontSize)
+            return
+        }
+
+        // Calculate centered position
+        let symbolSize = symbolImage.size
+        let x = (rect.width - symbolSize.width) / 2
+        let y = (rect.height - symbolSize.height) / 2
+        let drawRect = CGRect(x: x, y: y, width: symbolSize.width, height: symbolSize.height)
+
+        // Draw with white color
+        let tintedImage = symbolImage.tinted(with: .white)
+        tintedImage.draw(in: drawRect)
+    }
+
+    private static func drawFallbackSymbol(rect: CGRect, fontSize: CGFloat) {
+        // Draw a star as fallback
+        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .medium)
+        guard let fallbackImage = NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil)?
+            .withSymbolConfiguration(config) else {
+            return
+        }
+
+        let symbolSize = fallbackImage.size
+        let x = (rect.width - symbolSize.width) / 2
+        let y = (rect.height - symbolSize.height) / 2
+        let drawRect = CGRect(x: x, y: y, width: symbolSize.width, height: symbolSize.height)
+
+        let tintedImage = fallbackImage.tinted(with: .white)
+        tintedImage.draw(in: drawRect)
+    }
+
+    // MARK: - Emoji Drawing
+
+    private static func drawEmoji(emoji: String, rect: CGRect, fontSize: CGFloat) {
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: fontSize),
             .foregroundColor: NSColor.white
         ]
 
-        let attributedString = NSAttributedString(string: symbol, attributes: attributes)
+        let attributedString = NSAttributedString(string: emoji, attributes: attributes)
         let stringSize = attributedString.size()
 
-        // Center the symbol
+        // Center the emoji
         let x = (rect.width - stringSize.width) / 2
         let y = (rect.height - stringSize.height) / 2
         let drawPoint = CGPoint(x: x, y: y)
@@ -110,7 +173,8 @@ struct IconGenerator {
     /// Generate a complete .icns file with all standard resolutions
     static func generateIcns(
         tintColor: TintColor,
-        symbol: String,
+        iconType: IconType,
+        iconValue: String,
         outputURL: URL
     ) throws {
         // Standard macOS icon sizes for .icns (base sizes)
@@ -127,7 +191,8 @@ struct IconGenerator {
             // 1x version
             let image1x = generateIcon(
                 tintColor: tintColor,
-                symbol: symbol,
+                iconType: iconType,
+                iconValue: iconValue,
                 size: CGSize(width: baseSize, height: baseSize)
             )
             let filename1x = "icon_\(baseSize)x\(baseSize).png"
@@ -136,7 +201,8 @@ struct IconGenerator {
             // @2x version (retina) - actual pixels are 2x the base size
             let image2x = generateIcon(
                 tintColor: tintColor,
-                symbol: symbol,
+                iconType: iconType,
+                iconValue: iconValue,
                 size: CGSize(width: baseSize * 2, height: baseSize * 2)
             )
             let filename2x = "icon_\(baseSize)x\(baseSize)@2x.png"
@@ -165,6 +231,20 @@ struct IconGenerator {
         }
     }
 
+    /// Legacy method for backward compatibility
+    static func generateIcns(
+        tintColor: TintColor,
+        symbol: String,
+        outputURL: URL
+    ) throws {
+        try generateIcns(
+            tintColor: tintColor,
+            iconType: .emoji,
+            iconValue: symbol,
+            outputURL: outputURL
+        )
+    }
+
     // MARK: - PNG Export
 
     private static func saveAsPNG(image: NSImage, url: URL) throws {
@@ -187,14 +267,47 @@ struct IconGenerator {
     /// Generate a preview image for UI display (faster, single size)
     static func generatePreview(
         tintColor: TintColor,
+        iconType: IconType,
+        iconValue: String,
+        size: CGFloat = 80
+    ) -> NSImage {
+        return generateIcon(
+            tintColor: tintColor,
+            iconType: iconType,
+            iconValue: iconValue,
+            size: CGSize(width: size, height: size)
+        )
+    }
+
+    /// Legacy method for backward compatibility
+    static func generatePreview(
+        tintColor: TintColor,
         symbol: String,
         size: CGFloat = 80
     ) -> NSImage {
         return generateIcon(
             tintColor: tintColor,
-            symbol: symbol,
+            iconType: .emoji,
+            iconValue: symbol,
             size: CGSize(width: size, height: size)
         )
+    }
+}
+
+// MARK: - NSImage Extension for Tinting
+
+extension NSImage {
+    func tinted(with color: NSColor) -> NSImage {
+        let image = self.copy() as! NSImage
+        image.lockFocus()
+
+        color.set()
+
+        let imageRect = NSRect(origin: .zero, size: image.size)
+        imageRect.fill(using: .sourceAtop)
+
+        image.unlockFocus()
+        return image
     }
 }
 

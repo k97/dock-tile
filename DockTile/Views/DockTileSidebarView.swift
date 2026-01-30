@@ -68,23 +68,7 @@ struct ConfigurationRow: View {
     var body: some View {
         HStack(spacing: 12) {
             // Mini icon preview (24×24pt)
-            Text(config.symbolEmoji)
-                .font(.system(size: 14))
-                .frame(width: 24, height: 24)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [config.tintColor.colorTop, config.tintColor.colorBottom],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.3), lineWidth: 0.5)
-                )
+            MiniIconPreview(config: config)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(config.name)
@@ -107,6 +91,50 @@ struct ConfigurationRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Mini Icon Preview
+
+private struct MiniIconPreview: View {
+    let config: DockTileConfiguration
+    private let size: CGFloat = 24
+    private let cornerRadius: CGFloat = 6
+
+    var body: some View {
+        ZStack {
+            // Gradient background
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [config.tintColor.colorTop, config.tintColor.colorBottom],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            // Glass effect border
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.3), lineWidth: 0.5)
+
+            // Icon content (SF Symbol or Emoji)
+            iconContent
+        }
+        .frame(width: size, height: size)
+    }
+
+    @ViewBuilder
+    private var iconContent: some View {
+        switch config.iconType {
+        case .sfSymbol:
+            Image(systemName: config.iconValue)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white)
+
+        case .emoji:
+            Text(config.iconValue)
+                .font(.system(size: 14))
+        }
     }
 }
 

@@ -2,7 +2,8 @@
 //  ColourPickerGrid.swift
 //  DockTile
 //
-//  Color picker grid with 9 options (none + 8 tints)
+//  Color picker grid with 8 preset color options
+//  Legacy component - CustomiseTileView now uses inline color strip
 //  Swift 6 - Strict Concurrency
 //
 
@@ -24,7 +25,7 @@ struct ColourPickerGrid: View {
             ],
             spacing: spacing
         ) {
-            ForEach(TintColor.allCases, id: \.self) { color in
+            ForEach(TintColor.allPresets, id: \.self) { color in
                 ColorCircle(
                     color: color,
                     isSelected: selectedColor == color,
@@ -97,7 +98,7 @@ struct ColorCircle: View {
         ColourPickerGrid(selectedColor: .constant(.blue))
             .padding()
 
-        ColourPickerGrid(selectedColor: .constant(.none))
+        ColourPickerGrid(selectedColor: .constant(.gray))
             .padding()
     }
     .frame(width: 400)

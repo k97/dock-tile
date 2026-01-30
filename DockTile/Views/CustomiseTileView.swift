@@ -2,7 +2,8 @@
 //  CustomiseTileView.swift
 //  DockTile
 //
-//  Screen 4: Customise Tile drill-down view with color and symbol pickers
+//  Studio Canvas design for tile customization
+//  Full-width preview header with unified scrolling inspector
 //  Swift 6 - Strict Concurrency
 //
 
@@ -15,63 +16,36 @@ struct CustomiseTileView: View {
     let onBack: () -> Void
 
     @State private var editedConfig: DockTileConfiguration
+    @State private var selectedIconTab: IconPickerTab = .symbol
+    @State private var customColor: Color = .blue
 
     init(config: DockTileConfiguration, onBack: @escaping () -> Void) {
         self.config = config
         self.onBack = onBack
         self._editedConfig = State(initialValue: config)
+        // Initialize selected tab based on current icon type
+        self._selectedIconTab = State(initialValue: config.iconType == .sfSymbol ? .symbol : .emoji)
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header with back button
-            headerView
+            // Studio Canvas - Full-width header area with vibrancy
+            studioCanvas
 
-            Divider()
+            // Inspector Card
+            inspectorCard
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
 
-            // Main content
-            ScrollView {
-                VStack(spacing: 32) {
-                    // Large icon preview (160×160pt)
-                    DockTileIconPreview.large(
-                        tintColor: editedConfig.tintColor,
-                        symbol: editedConfig.symbolEmoji
-                    )
-                    .padding(.top, 32)
-
-                    // Name (read-only)
-                    Text(editedConfig.name)
-                        .font(.title3)
-                        .fontWeight(.medium)
-
-                    Divider()
-                        .padding(.horizontal, 24)
-
-                    // Colour section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("COLOUR")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        ColourPickerGrid(
-                            selectedColor: $editedConfig.tintColor
-                        )
-                    }
-                    .padding(.horizontal, 24)
-
-                    // Symbol section
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("SYMBOL")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        SymbolPickerButton(
-                            symbol: $editedConfig.symbolEmoji
-                        )
-                    }
-                    .padding(.horizontal, 24)
-
-                    Spacer(minLength: 40)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(WindowBackgroundView())
+        .navigationTitle("Customise Tile")
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(action: onBack) {
+                    Label("Back", systemImage: "chevron.left")
                 }
             }
         }
@@ -80,38 +54,384 @@ struct CustomiseTileView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Studio Canvas (Hero Section)
 
-    private var headerView: some View {
-        HStack {
-            Button(action: onBack) {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("Back")
-                        .font(.system(size: 14))
-                }
-                .foregroundColor(.accentColor)
+    private var studioCanvas: some View {
+        VStack(spacing: 16) {
+            // Icon preview with grid overlay - large scale
+            ZStack {
+                DockTileIconPreview(
+                    tintColor: editedConfig.tintColor,
+                    iconType: editedConfig.iconType,
+                    iconValue: editedConfig.iconValue,
+                    size: 160
+                )
+
+                // Apple icon guide grid overlay
+                IconGridOverlay(size: 160)
             }
-            .buttonStyle(.plain)
 
-            Spacer()
-
-            Text("Customise Tile")
+            // Tile name anchored below preview
+            Text(editedConfig.name)
                 .font(.headline)
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .background(QuaternaryFillView())
+    }
+
+    // MARK: - Inspector Card
+
+    private var inspectorCard: some View {
+        VStack(spacing: 0) {
+            // Colour Section
+            colourSection
+
+            Divider()
+                .padding(.horizontal, 16)
+
+            // Tile Icon Section
+            tileIconSection
+        }
+        .background(ControlBackgroundView())
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color(NSColor.separatorColor), lineWidth: 0.5)
+        )
+    }
+
+    // MARK: - Colour Section
+
+    private var colourSection: some View {
+        HStack {
+            Text("Colour")
+                .font(.body)
+                .foregroundColor(.primary)
 
             Spacer()
 
-            // Balance layout with invisible back button
-            HStack(spacing: 4) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 14, weight: .semibold))
-                Text("Back")
-                    .font(.system(size: 14))
-            }
-            .opacity(0)
+            // Colour picker strip (right-aligned)
+            colourPickerStrip
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    private var colourPickerStrip: some View {
+        HStack(spacing: 8) {
+            // Preset colors
+            ForEach(TintColor.PresetColor.allCases, id: \.self) { preset in
+                ColorSwatchButton(
+                    color: preset.colorBottom,
+                    isSelected: isPresetSelected(preset),
+                    size: 28
+                ) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        editedConfig.tintColor = .preset(preset)
+                    }
+                }
+            }
+
+            // Custom color picker styled as "+" button
+            CustomColorPickerButton(
+                selectedColor: $customColor,
+                isSelected: isCustomColorSelected,
+                size: 28
+            ) { newColor in
+                let hexString = newColor.toHexString()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    editedConfig.tintColor = .custom(hexString)
+                }
+            }
+        }
+    }
+
+    private var isCustomColorSelected: Bool {
+        if case .custom = editedConfig.tintColor {
+            return true
+        }
+        return false
+    }
+
+    private func isPresetSelected(_ preset: TintColor.PresetColor) -> Bool {
+        if case .preset(let currentPreset) = editedConfig.tintColor {
+            return currentPreset == preset
+        }
+        return false
+    }
+
+    // MARK: - Segmented Picker
+
+    @ViewBuilder
+    private var segmentedPicker: some View {
+        if #available(macOS 26.0, *) {
+            Picker("", selection: $selectedIconTab) {
+                Text("Symbol").tag(IconPickerTab.symbol)
+                Text("Emoji").tag(IconPickerTab.emoji)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .buttonSizing(.flexible)
+        } else {
+            Picker("", selection: $selectedIconTab) {
+                Text("Symbol").tag(IconPickerTab.symbol)
+                Text("Emoji").tag(IconPickerTab.emoji)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    // MARK: - Tile Icon Section
+
+    private var tileIconSection: some View {
+        VStack(spacing: 12) {
+            Text("Tile Icon")
+                .font(.body)
+                .foregroundColor(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Segmented control for Symbol/Emoji - full width
+            // Note: Switching tabs only changes the picker view, NOT the iconType
+            // iconType only changes when user explicitly selects a new icon
+            segmentedPicker
+
+            // Icon grid with fixed height and internal scrolling
+            ScrollView(.vertical, showsIndicators: false) {
+                Group {
+                    switch selectedIconTab {
+                    case .symbol:
+                        SymbolPickerGrid(
+                            selectedSymbol: Binding(
+                                get: {
+                                    // Only show selection if current icon is an SF Symbol
+                                    editedConfig.iconType == .sfSymbol ? editedConfig.iconValue : ""
+                                },
+                                set: { newValue in
+                                    editedConfig.iconType = .sfSymbol
+                                    editedConfig.iconValue = newValue
+                                    editedConfig.symbolEmoji = newValue  // Keep legacy field in sync
+                                }
+                            ),
+                            onSelect: { symbol in
+                                editedConfig.iconType = .sfSymbol
+                                editedConfig.iconValue = symbol
+                                editedConfig.symbolEmoji = symbol
+                            }
+                        )
+
+                    case .emoji:
+                        EmojiPickerGrid(
+                            selectedEmoji: Binding(
+                                get: {
+                                    // Only show selection if current icon is an emoji
+                                    editedConfig.iconType == .emoji ? editedConfig.iconValue : ""
+                                },
+                                set: { newValue in
+                                    editedConfig.iconType = .emoji
+                                    editedConfig.iconValue = newValue
+                                    editedConfig.symbolEmoji = newValue  // Keep legacy field in sync
+                                }
+                            ),
+                            onSelect: { emoji in
+                                editedConfig.iconType = .emoji
+                                editedConfig.iconValue = emoji
+                                editedConfig.symbolEmoji = emoji
+                            }
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .frame(height: 320)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+}
+
+// MARK: - Icon Picker Tab
+
+private enum IconPickerTab {
+    case symbol
+    case emoji
+}
+
+// MARK: - Native Background Views (AppKit Bridged)
+
+/// Window background color using NSViewRepresentable
+private struct WindowBackgroundView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        nsView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+    }
+}
+
+/// Quaternary system fill for Studio Canvas - semi-transparent gray with vibrancy
+private struct QuaternaryFillView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .underWindowBackground
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+}
+
+/// Control background color for inspector card
+private struct ControlBackgroundView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        nsView.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+    }
+}
+
+// MARK: - Color Swatch Button
+
+private struct ColorSwatchButton: View {
+    let color: Color
+    let isSelected: Bool
+    let size: CGFloat
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: size, height: size)
+
+                if isSelected {
+                    Circle()
+                        .strokeBorder(Color.white, lineWidth: 2)
+                        .frame(width: size - 4, height: size - 4)
+
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Custom Color Picker Button
+
+private struct CustomColorPickerButton: View {
+    @Binding var selectedColor: Color
+    let isSelected: Bool
+    let size: CGFloat
+    let onColorChange: (Color) -> Void
+
+    var body: some View {
+        Button {
+            openColorPanel()
+        } label: {
+            ZStack {
+                // Background circle with rainbow gradient border
+                Circle()
+                    .fill(
+                        AngularGradient(
+                            gradient: Gradient(colors: [
+                                .red, .yellow, .green, .cyan, .blue, .purple, .red
+                            ]),
+                            center: .center
+                        )
+                    )
+                    .frame(width: size, height: size)
+
+                // Inner circle (white or selected color)
+                Circle()
+                    .fill(isSelected ? selectedColor : Color.white)
+                    .frame(width: size - 6, height: size - 6)
+
+                // Plus icon when not selected, checkmark when selected
+                if !isSelected {
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.gray)
+                } else {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
+                }
+            }
+            .frame(width: size, height: size)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func openColorPanel() {
+        let panel = NSColorPanel.shared
+        panel.showsAlpha = false
+        panel.color = NSColor(selectedColor)
+        panel.setTarget(nil)
+        panel.setAction(nil)
+
+        // Use a delegate to capture color changes
+        let delegate = ColorPanelDelegate(onColorChange: { nsColor in
+            let newColor = Color(nsColor: nsColor)
+            selectedColor = newColor
+            onColorChange(newColor)
+        })
+
+        // Store delegate to keep it alive
+        objc_setAssociatedObject(panel, &ColorPanelDelegate.associatedKey, delegate, .OBJC_ASSOCIATION_RETAIN)
+
+        panel.setTarget(delegate)
+        panel.setAction(#selector(ColorPanelDelegate.colorChanged(_:)))
+        panel.orderFront(nil)
+    }
+}
+
+// MARK: - Color Panel Delegate
+
+private class ColorPanelDelegate: NSObject {
+    nonisolated(unsafe) static var associatedKey: UInt8 = 0
+    let onColorChange: (NSColor) -> Void
+
+    init(onColorChange: @escaping (NSColor) -> Void) {
+        self.onColorChange = onColorChange
+    }
+
+    @objc func colorChanged(_ sender: NSColorPanel) {
+        onColorChange(sender.color)
+    }
+}
+
+// MARK: - Color Extension for Hex Conversion
+
+extension Color {
+    func toHexString() -> String {
+        let nsColor = NSColor(self)
+        guard let rgbColor = nsColor.usingColorSpace(.deviceRGB) else {
+            return "#007AFF"  // Default to blue
+        }
+
+        let red = Int(rgbColor.redComponent * 255)
+        let green = Int(rgbColor.greenComponent * 255)
+        let blue = Int(rgbColor.blueComponent * 255)
+
+        return String(format: "#%02X%02X%02X", red, green, blue)
     }
 }
 
@@ -119,9 +439,14 @@ struct CustomiseTileView: View {
 
 #Preview {
     CustomiseTileView(
-        config: DockTileConfiguration(name: "Dev", tintColor: .blue, symbolEmoji: "💻"),
+        config: DockTileConfiguration(
+            name: "AI Tile",
+            tintColor: .blue,
+            iconType: .sfSymbol,
+            iconValue: "sparkles"
+        ),
         onBack: {}
     )
     .environmentObject(ConfigurationManager())
-    .frame(width: 760, height: 700)
+    .frame(width: 500, height: 700)
 }

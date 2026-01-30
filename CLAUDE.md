@@ -66,8 +66,11 @@ DockTile/
 │   └── CustomiseTileView.swift          # Icon customization (color + emoji picker)
 ├── Components/
 │   ├── DockTileIconPreview.swift   # Icon preview with gradient background
-│   ├── ColourPickerGrid.swift      # Color selection grid
-│   ├── SymbolPickerButton.swift    # Emoji picker popover
+│   ├── ColourPickerGrid.swift      # Color selection grid (legacy)
+│   ├── SymbolPickerGrid.swift      # SF Symbol picker with categories
+│   ├── EmojiPickerGrid.swift       # Emoji picker with categories
+│   ├── IconGridOverlay.swift       # Apple icon guide grid overlay
+│   ├── SymbolPickerButton.swift    # Emoji picker popover (legacy)
 │   └── ItemRowView.swift           # Row view for app items
 ├── Utilities/
 │   └── IconGenerator.swift         # Generates .icns files from tint color + emoji
@@ -131,8 +134,10 @@ This approach handles 95% of schema changes. Old configs missing new fields will
 |-------|------|---------|-------|
 | id | UUID | Generated | Unique identifier |
 | name | String | "My DockTile" | Display name |
-| tintColor | TintColor | .blue | Icon background gradient color |
-| symbolEmoji | String | "⭐" | Icon center emoji |
+| tintColor | TintColor | .blue | Icon background gradient color (preset or custom hex) |
+| symbolEmoji | String | "⭐" | Legacy field for icon (deprecated) |
+| iconType | IconType | .sfSymbol | Type of icon: .sfSymbol or .emoji |
+| iconValue | String | "star.fill" | SF Symbol name or emoji character |
 | layoutMode | LayoutMode | .grid2x3 | Stack (grid) or List |
 | appItems | [AppItem] | [] | Apps in the tile |
 | isVisibleInDock | Bool | false | Show helper in Dock |
@@ -196,6 +201,55 @@ The `showInAppSwitcher` toggle controls whether a tile appears in Cmd+Tab:
 - Syncs `isVisibleInDock` state in configuration
 - Uses `DispatchSource.makeFileSystemObjectSource` for efficient watching
 
+### Native macOS Color Patterns
+
+SwiftUI's `Color(nsColor:)` initializer doesn't reliably bridge AppKit colors. Use `NSViewRepresentable` instead:
+
+```swift
+// ❌ Unreliable - may not render correctly
+.background(Color(nsColor: .windowBackgroundColor))
+
+// ✅ Reliable - uses AppKit layer directly
+private struct WindowBackgroundView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {
+        nsView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+    }
+}
+
+// Usage
+.background(WindowBackgroundView())
+```
+
+For vibrancy effects, use `NSVisualEffectView`:
+
+```swift
+private struct QuaternaryFillView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .underWindowBackground
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+}
+```
+
+**Common Native Colors:**
+| Purpose | NSColor | Material |
+|---------|---------|----------|
+| Window background | `.windowBackgroundColor` | - |
+| Card/control background | `.controlBackgroundColor` | - |
+| Studio canvas/preview area | - | `.underWindowBackground` |
+| Separator lines | `.separatorColor` | - |
+| Secondary labels | `.secondaryLabelColor` | - |
+
 ## Data Flow
 
 ```
@@ -252,6 +306,25 @@ The `showInAppSwitcher` toggle controls whether a tile appears in Cmd+Tab:
 - **Root cause**: Iconset filenames were incorrect
 - **Fix**: Use standard macOS iconset naming: `icon_NxN.png` and `icon_NxN@2x.png`
 
+### CustomiseTileView Redesign (2026-01)
+- **Design**: "Studio Canvas" layout with hero preview header and inspector card
+- **Features**:
+  - Large 160×160pt icon preview with Apple icon guide grid overlay
+  - Color picker strip with 8 preset colors + custom color picker (NSColorPanel)
+  - Segmented control for SF Symbol / Emoji tabs
+  - Categorized symbol and emoji grids with scrolling
+- **Native Colors** (AppKit bridged via NSViewRepresentable):
+  - Studio Canvas: `NSVisualEffectView` with `.underWindowBackground` material
+  - Inspector Card: `NSColor.controlBackgroundColor` via layer
+  - Window Background: `NSColor.windowBackgroundColor` via layer
+- **macOS 26 Support**: Uses `.buttonSizing(.flexible)` for full-width segmented control with fallback for earlier versions
+
+### Icon Type System (2026-01)
+- **Added**: `IconType` enum (`.sfSymbol`, `.emoji`) and `iconValue` field
+- **Purpose**: Separate SF Symbols from emojis for proper rendering
+- **Backward Compatibility**: `symbolEmoji` field kept for migration
+- **IconGenerator**: Updated to handle both SF Symbols (rendered as white on gradient) and emojis
+
 ## Performance Targets
 
 1. Popover appears in <100ms (measured from click event to window visible)
@@ -279,6 +352,39 @@ cat "/Users/karthik/Library/Application Support/DockTile/My DockTile.app/Content
 
 ### Force reinstall helper
 Toggle "Show Tile" off and back on, then click "Done"
+
+## UI Component Hierarchy
+
+```
+DockTileConfigurationView (Main Window)
+├── NavigationSplitView
+│   ├── DockTileSidebarView (Sidebar)
+│   │   ├── ConfigurationRow (per tile)
+│   │   │   └── MiniIconPreview (24×24pt)
+│   │   └── Add/Delete buttons
+│   │
+│   └── Detail Area (ZStack for drill-down)
+│       ├── DockTileDetailView (Screen 3)
+│       │   ├── heroSection
+│       │   │   ├── DockTileIconPreview (96×96pt)
+│       │   │   ├── Customise button → drills to CustomiseTileView
+│       │   │   └── Form (Name, Show Tile, Layout, App Switcher)
+│       │   ├── appsTableSection (NativeAppsTableView)
+│       │   └── deleteSection
+│       │
+│       └── CustomiseTileView (Screen 4 - drill-down)
+│           ├── studioCanvas (QuaternaryFillView background)
+│           │   ├── DockTileIconPreview (160×160pt)
+│           │   ├── IconGridOverlay
+│           │   └── Tile name
+│           └── inspectorCard (ControlBackgroundView background)
+│               ├── colourSection (preset swatches + custom picker)
+│               └── tileIconSection
+│                   ├── segmentedPicker (Symbol/Emoji tabs)
+│                   └── ScrollView
+│                       ├── SymbolPickerGrid (when .symbol)
+│                       └── EmojiPickerGrid (when .emoji)
+```
 
 ## Reference Documents
 

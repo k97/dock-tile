@@ -16,7 +16,9 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     let id: UUID
     var name: String
     var tintColor: TintColor
-    var symbolEmoji: String
+    var symbolEmoji: String  // Legacy: kept for backward compatibility
+    var iconType: IconType  // v3: Distinguishes between SF Symbol and Emoji
+    var iconValue: String  // v3: The actual symbol name or emoji character
     var layoutMode: LayoutMode
     var appItems: [AppItem]
     var isVisibleInDock: Bool
@@ -30,6 +32,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         name: String = ConfigurationDefaults.name,
         tintColor: TintColor = ConfigurationDefaults.tintColor,
         symbolEmoji: String = ConfigurationDefaults.symbolEmoji,
+        iconType: IconType = ConfigurationDefaults.iconType,
+        iconValue: String = ConfigurationDefaults.iconValue,
         layoutMode: LayoutMode = ConfigurationDefaults.layoutMode,
         appItems: [AppItem] = [],
         isVisibleInDock: Bool = ConfigurationDefaults.isVisibleInDock,
@@ -40,6 +44,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         self.name = name
         self.tintColor = tintColor
         self.symbolEmoji = symbolEmoji
+        self.iconType = iconType
+        self.iconValue = iconValue
         self.layoutMode = layoutMode
         self.appItems = appItems
         self.isVisibleInDock = isVisibleInDock
@@ -68,9 +74,12 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         showInAppSwitcher = try container.decodeIfPresent(Bool.self, forKey: .showInAppSwitcher)
             ?? ConfigurationDefaults.showInAppSwitcher
 
-        // Future fields template:
-        // newField = try container.decodeIfPresent(Type.self, forKey: .newField)
-        //     ?? ConfigurationDefaults.newField
+        // v3 fields - icon type and value
+        iconType = try container.decodeIfPresent(IconType.self, forKey: .iconType)
+            ?? ConfigurationDefaults.iconType
+        // If iconValue not present, migrate from symbolEmoji
+        iconValue = try container.decodeIfPresent(String.self, forKey: .iconValue)
+            ?? symbolEmoji
     }
 
     // MARK: - Coding Keys
@@ -81,70 +90,190 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         case isVisibleInDock, bundleIdentifier
         // v2 fields
         case showInAppSwitcher
-        // Future fields: add new cases here
+        // v3 fields
+        case iconType, iconValue
     }
+}
+
+// MARK: - Icon Type
+
+/// Distinguishes between SF Symbols and Emojis for icon display
+enum IconType: String, Codable, Hashable {
+    case sfSymbol = "sfSymbol"
+    case emoji = "emoji"
 }
 
 // MARK: - Tint Color
 
-enum TintColor: String, CaseIterable, Codable, Hashable {
-    case none = "none"
-    case red = "red"
-    case orange = "orange"
-    case yellow = "yellow"
-    case green = "green"
-    case blue = "blue"
-    case purple = "purple"
-    case pink = "pink"
-    case gray = "gray"
+/// Represents a tile's background color - either a preset or custom hex color
+enum TintColor: Hashable, Codable {
+    case preset(PresetColor)
+    case custom(String)  // Hex string like "#FF5733"
 
-    var displayName: String {
-        switch self {
-        case .none: return "No Colour"
-        case .red: return "Red"
-        case .orange: return "Orange"
-        case .yellow: return "Yellow"
-        case .green: return "Green"
-        case .blue: return "Blue"
-        case .purple: return "Purple"
-        case .pink: return "Pink"
-        case .gray: return "Gray"
+    // MARK: - Preset Colors
+
+    enum PresetColor: String, CaseIterable, Codable, Hashable {
+        case red = "red"
+        case orange = "orange"
+        case yellow = "yellow"
+        case green = "green"
+        case blue = "blue"
+        case purple = "purple"
+        case pink = "pink"
+        case gray = "gray"
+
+        var displayName: String {
+            switch self {
+            case .red: return "Red"
+            case .orange: return "Orange"
+            case .yellow: return "Yellow"
+            case .green: return "Green"
+            case .blue: return "Blue"
+            case .purple: return "Purple"
+            case .pink: return "Pink"
+            case .gray: return "Gray"
+            }
+        }
+
+        /// Primary color for icon background gradient (top) - lighter shade
+        var colorTop: Color {
+            switch self {
+            case .red: return Color(hex: "#FF6B6B")
+            case .orange: return Color(hex: "#FFA94D")
+            case .yellow: return Color(hex: "#FFD93D")
+            case .green: return Color(hex: "#6BCF7F")
+            case .blue: return Color(hex: "#4DABF7")
+            case .purple: return Color(hex: "#B197FC")
+            case .pink: return Color(hex: "#FF6B9D")
+            case .gray: return Color(hex: "#ADB5BD")
+            }
+        }
+
+        /// Secondary color for icon background gradient (bottom) - darker/saturated shade
+        var colorBottom: Color {
+            switch self {
+            case .red: return Color(hex: "#FF3B30")
+            case .orange: return Color(hex: "#FF9500")
+            case .yellow: return Color(hex: "#FFCC00")
+            case .green: return Color(hex: "#34C759")
+            case .blue: return Color(hex: "#007AFF")
+            case .purple: return Color(hex: "#AF52DE")
+            case .pink: return Color(hex: "#FF2D55")
+            case .gray: return Color(hex: "#8E8E93")
+            }
+        }
+
+        /// Primary SwiftUI Color (uses bottom/saturated color)
+        var color: Color {
+            return colorBottom
         }
     }
+
+    // MARK: - Color Properties
 
     /// Primary color for icon background gradient (top)
     var colorTop: Color {
         switch self {
-        case .none: return Color(hex: "#F5F5F7")
-        case .red: return Color(hex: "#FF6B6B")
-        case .orange: return Color(hex: "#FFA94D")
-        case .yellow: return Color(hex: "#FFD93D")
-        case .green: return Color(hex: "#6BCF7F")
-        case .blue: return Color(hex: "#4DABF7")
-        case .purple: return Color(hex: "#B197FC")
-        case .pink: return Color(hex: "#FF6B9D")
-        case .gray: return Color(hex: "#ADB5BD")
+        case .preset(let preset):
+            return preset.colorTop
+        case .custom(let hex):
+            // For custom colors, create a lighter version for top
+            let baseColor = Color(hex: hex)
+            return baseColor.opacity(0.8)
         }
     }
 
     /// Secondary color for icon background gradient (bottom)
     var colorBottom: Color {
         switch self {
-        case .none: return Color(hex: "#E5E5E7")
-        case .red: return Color(hex: "#FF3B30")
-        case .orange: return Color(hex: "#FF9500")
-        case .yellow: return Color(hex: "#FFCC00")
-        case .green: return Color(hex: "#34C759")
-        case .blue: return Color(hex: "#007AFF")
-        case .purple: return Color(hex: "#AF52DE")
-        case .pink: return Color(hex: "#FF2D55")
-        case .gray: return Color(hex: "#8E8E93")
+        case .preset(let preset):
+            return preset.colorBottom
+        case .custom(let hex):
+            return Color(hex: hex)
         }
     }
 
-    /// SwiftUI Color for UI elements (picker, etc.)
+    /// SwiftUI Color for UI elements
     var color: Color {
         return colorBottom
+    }
+
+    var displayName: String {
+        switch self {
+        case .preset(let preset):
+            return preset.displayName
+        case .custom(let hex):
+            return "Custom (\(hex))"
+        }
+    }
+
+    // MARK: - Convenience Static Properties (backward compatibility)
+
+    static let red = TintColor.preset(.red)
+    static let orange = TintColor.preset(.orange)
+    static let yellow = TintColor.preset(.yellow)
+    static let green = TintColor.preset(.green)
+    static let blue = TintColor.preset(.blue)
+    static let purple = TintColor.preset(.purple)
+    static let pink = TintColor.preset(.pink)
+    static let gray = TintColor.preset(.gray)
+
+    /// All preset colors for iteration
+    static var allPresets: [TintColor] {
+        PresetColor.allCases.map { .preset($0) }
+    }
+
+    // MARK: - Codable
+
+    enum CodingKeys: String, CodingKey {
+        case type
+        case value
+    }
+
+    init(from decoder: Decoder) throws {
+        // First try decoding as the new format
+        if let container = try? decoder.container(keyedBy: CodingKeys.self) {
+            let type = try container.decode(String.self, forKey: .type)
+            let value = try container.decode(String.self, forKey: .value)
+
+            if type == "preset", let preset = PresetColor(rawValue: value) {
+                self = .preset(preset)
+                return
+            } else if type == "custom" {
+                self = .custom(value)
+                return
+            }
+        }
+
+        // Fall back to legacy string format for backward compatibility
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+
+        // Handle legacy "none" value - default to blue
+        if rawValue == "none" {
+            self = .preset(.blue)
+            return
+        }
+
+        if let preset = PresetColor(rawValue: rawValue) {
+            self = .preset(preset)
+        } else {
+            // Assume it's a custom hex color
+            self = .custom(rawValue)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        switch self {
+        case .preset(let preset):
+            try container.encode("preset", forKey: .type)
+            try container.encode(preset.rawValue, forKey: .value)
+        case .custom(let hex):
+            try container.encode("custom", forKey: .type)
+            try container.encode(hex, forKey: .value)
+        }
     }
 }
 

@@ -47,6 +47,7 @@ struct DockTileConfigurationView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .background(Color(nsColor: .windowBackgroundColor))
                 .animation(.easeInOut(duration: 0.3), value: isDrilledDown)
             } else {
                 // Empty state

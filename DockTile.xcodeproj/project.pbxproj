@@ -42,6 +42,9 @@
 		AA8E2782 /* ItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2CAE1C; };
 		AA96E8AB /* ColourPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA285A0; };
 		AA5DE9E7 /* SymbolPickerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEF0770; };
+		AAIGOV02 /* IconGridOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAIGOV01; };
+		AASPGV02 /* SymbolPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASPGV01; };
+		AAEPGV02 /* EmojiPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEPGV01; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -82,6 +85,9 @@
 		AADPW001 /* DockPlistWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPlistWatcher.swift; sourceTree = "<group>"; };
 		AACFS002 /* ConfigurationSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationSchema.swift; sourceTree = "<group>"; };
 		AACFS004 /* ConfigurationSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationSchema.swift; sourceTree = "<group>"; };
+		AAIGOV01 /* IconGridOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGridOverlay.swift; sourceTree = "<group>"; };
+		AASPGV01 /* SymbolPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPickerGrid.swift; sourceTree = "<group>"; };
+		AAEPGV01 /* EmojiPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerGrid.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,7 +231,11 @@
 				AAEF0770 /* SymbolPickerButton.swift */,
 				AAA285A0 /* ColourPickerGrid.swift */,
 				AA2CAE1C /* ItemRowView.swift */,
-				AAC2BA1B /* DockTileIconPreview.swift */,);
+				AAC2BA1B /* DockTileIconPreview.swift */,
+				AAIGOV01 /* IconGridOverlay.swift */,
+				AASPGV01 /* SymbolPickerGrid.swift */,
+				AAEPGV01 /* EmojiPickerGrid.swift */,
+			);
 			path = Components;
 			sourceTree = "<group>";
 		};
@@ -335,7 +345,11 @@
 				AA178F39 /* ColorExtensions.swift in Sources */,
 				AAB66A6F /* ConfigurationManager.swift in Sources */,
 				AA07E3F1 /* ConfigurationModels.swift in Sources */,
-				AACFS003 /* ConfigurationSchema.swift in Sources */,);
+				AACFS003 /* ConfigurationSchema.swift in Sources */,
+				AAIGOV02 /* IconGridOverlay.swift in Sources */,
+				AASPGV02 /* SymbolPickerGrid.swift in Sources */,
+				AAEPGV02 /* EmojiPickerGrid.swift in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */

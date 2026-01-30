@@ -91,7 +91,8 @@ final class HelperBundleManager {
         let iconDestPath = helperPath.appendingPathComponent("Contents/Resources/AppIcon.icns")
         try IconGenerator.generateIcns(
             tintColor: config.tintColor,
-            symbol: config.symbolEmoji,
+            iconType: config.iconType,
+            iconValue: config.iconValue,
             outputURL: iconDestPath
         )
         print("   ✓ Generated icon")

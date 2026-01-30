@@ -16,9 +16,13 @@ import Foundation
 enum ConfigurationDefaults {
     // Core properties
     static let name = "My DockTile"
-    static let tintColor: TintColor = .none
-    static let symbolEmoji = "⭐"
+    static let tintColor: TintColor = .blue
+    static let symbolEmoji = "⭐"  // Legacy field
     static let layoutMode: LayoutMode = .grid2x3
+
+    // v3: Icon type and value
+    static let iconType: IconType = .sfSymbol
+    static let iconValue = "star.fill"
 
     // Visibility
     static let isVisibleInDock = false  // User must explicitly enable
