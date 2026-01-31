@@ -4,6 +4,7 @@
 //
 //  Generate app icons (.icns) from tint color + symbol (SF Symbol or emoji)
 //  Supports both SF Symbols and emojis for icon generation
+//  Uses macOS Tahoe-style continuous corners (superellipse/squircle)
 //  Swift 6 - Strict Concurrency
 //
 
@@ -29,9 +30,22 @@ struct IconGenerator {
         return ratio
     }
 
+    // MARK: - Squircle Path Generation
+
+    /// Create a continuous corner (superellipse/squircle) path matching SwiftUI's .continuous style
+    /// This matches Apple's Tahoe icon design guidelines
+    private static func createSquirclePath(in rect: CGRect, cornerRadius: CGFloat) -> CGPath {
+        // Use SwiftUI's RoundedRectangle with .continuous style to get the exact path
+        // We create a SwiftUI shape and extract the CGPath
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        let path = shape.path(in: rect)
+        return path.cgPath
+    }
+
     // MARK: - Icon Generation
 
     /// Generate an icon image with gradient background and symbol/emoji
+    /// Uses Tahoe-style continuous corners (squircle) and beveled glass effect
     static func generateIcon(
         tintColor: TintColor,
         iconType: IconType,
@@ -50,14 +64,18 @@ struct IconGenerator {
         }
 
         // Calculate corner radius based on size (proportional to icon size)
-        let cornerRadius = size.width * 0.225  // 22.5% of width (standard macOS icon rounding)
+        // 22.5% matches SwiftUI's DockTileIconPreview cornerRadius calculation
+        let cornerRadius = size.width * 0.225
 
-        // Create rounded rect path
+        // Create squircle path (continuous corners matching Tahoe guidelines)
         let rect = CGRect(origin: .zero, size: size)
-        let path = NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius)
+        let squirclePath = createSquirclePath(in: rect, cornerRadius: cornerRadius)
 
         // Draw gradient background
-        drawGradient(context: context, path: path, tintColor: tintColor, rect: rect)
+        drawGradient(context: context, path: squirclePath, tintColor: tintColor, rect: rect)
+
+        // Draw beveled glass effect (inner stroke) - matches DockTileIconPreview
+        drawBeveledStroke(context: context, path: squirclePath, size: size)
 
         // Calculate font size based on icon scale
         let fontSize = size.width * iconRatio(for: iconScale, iconType: iconType)
@@ -94,12 +112,16 @@ struct IconGenerator {
 
     private static func drawGradient(
         context: CGContext,
-        path: NSBezierPath,
+        path: CGPath,
         tintColor: TintColor,
         rect: CGRect
     ) {
-        // Clip to rounded rect
-        path.addClip()
+        // Save context state before clipping
+        context.saveGState()
+
+        // Clip to squircle path
+        context.addPath(path)
+        context.clip()
 
         // Get gradient colors
         let topColor = NSColor(tintColor.colorTop)
@@ -114,7 +136,10 @@ struct IconGenerator {
             colorsSpace: colorSpace,
             colors: colors,
             locations: locations
-        ) else { return }
+        ) else {
+            context.restoreGState()
+            return
+        }
 
         // Draw gradient from top to bottom
         let startPoint = CGPoint(x: rect.midX, y: rect.maxY)
@@ -126,6 +151,35 @@ struct IconGenerator {
             end: endPoint,
             options: []
         )
+
+        // Restore context state (removes clip)
+        context.restoreGState()
+    }
+
+    // MARK: - Beveled Glass Effect
+
+    /// Draw the beveled glass inner stroke effect matching DockTileIconPreview
+    /// White stroke at 50% opacity, 0.5pt line width (scaled proportionally)
+    private static func drawBeveledStroke(
+        context: CGContext,
+        path: CGPath,
+        size: CGSize
+    ) {
+        context.saveGState()
+
+        // Scale line width proportionally (0.5pt at 160pt = ~0.3% of size)
+        // Minimum 0.5pt for small icons to remain visible
+        let lineWidth = max(0.5, size.width * 0.003125)
+
+        // Set stroke properties
+        context.addPath(path)
+        context.setStrokeColor(NSColor.white.withAlphaComponent(0.5).cgColor)
+        context.setLineWidth(lineWidth)
+
+        // Stroke the path
+        context.strokePath()
+
+        context.restoreGState()
     }
 
     // MARK: - SF Symbol Drawing

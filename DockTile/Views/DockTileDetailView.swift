@@ -125,6 +125,8 @@ struct DockTileDetailView: View {
             VStack(alignment: .center, spacing: 12) {
                 // Icon container: 118×118pt with cornerRadius(24)
                 // Tappable to open customise view
+                // NOTE: No drop shadow - matches IconGenerator output exactly
+                // The Dock adds shadows dynamically to all icons
                 ZStack {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(
@@ -143,12 +145,6 @@ struct DockTileDetailView: View {
                     iconContent
                 }
                 .frame(width: 118, height: 118)
-                .shadow(
-                    color: Color.black.opacity(0.2),
-                    radius: 8,
-                    x: 0,
-                    y: 4
-                )
                 .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .onHover { hovering in
                     if hovering {
@@ -253,10 +249,10 @@ struct DockTileDetailView: View {
     private var iconContent: some View {
         switch editedConfig.iconType {
         case .sfSymbol:
+            // White SF Symbol - no text shadow (matches IconGenerator and native icons)
             Image(systemName: editedConfig.iconValue)
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundColor(.white)
-                .shadow(color: Color.black.opacity(0.2), radius: 1, x: 0, y: 1)
 
         case .emoji:
             Text(editedConfig.iconValue)

@@ -4,6 +4,7 @@
 //
 //  Icon preview component with gradient background and symbol/emoji
 //  Supports SF Symbols and Emojis with multiple sizes
+//  Matches IconGenerator output exactly (no system effects like shadows)
 //  Swift 6 - Strict Concurrency
 //
 
@@ -57,17 +58,9 @@ struct DockTileIconPreview: View {
         return size * ratio
     }
 
-    private var shadowRadius: CGFloat {
-        size * 0.075  // 6pt for 80pt, 12pt for 160pt
-    }
-
-    private var shadowOffset: CGFloat {
-        size * 0.0375  // 3pt for 80pt, 6pt for 160pt
-    }
-
     var body: some View {
         ZStack {
-            // Gradient background
+            // Gradient background with squircle shape
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(
                     LinearGradient(
@@ -85,22 +78,19 @@ struct DockTileIconPreview: View {
             iconContent
         }
         .frame(width: size, height: size)
-        .shadow(
-            color: Color.black.opacity(0.2),
-            radius: shadowRadius,
-            x: 0,
-            y: shadowOffset
-        )
+        // NOTE: No drop shadow here - the Dock adds shadows dynamically
+        // This preview shows exactly what the icon file looks like
     }
 
     @ViewBuilder
     private var iconContent: some View {
         switch iconType {
         case .sfSymbol:
+            // White SF Symbol without text shadow (matches IconGenerator)
             Image(systemName: iconValue)
                 .font(.system(size: symbolSize, weight: .medium))
                 .foregroundColor(.white)
-                .shadow(color: Color.black.opacity(0.2), radius: 1, x: 0, y: 1)
+            // NOTE: No text shadow - native macOS icons don't have baked-in text shadows
 
         case .emoji:
             Text(iconValue)

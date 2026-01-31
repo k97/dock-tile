@@ -199,13 +199,36 @@ The `showInAppSwitcher` toggle controls whether a tile appears in Cmd+Tab:
 - Dismisses on click outside or Escape key
 - Safeguard fallback if `visibleFrame` unavailable
 
-### Icon Generation
+### Icon Generation (Tahoe Native Design)
 
-`IconGenerator.swift` creates macOS `.icns` files:
-- Generates gradient background from `TintColor`
-- Draws emoji symbol centered on gradient
+`IconGenerator.swift` creates macOS `.icns` files following Tahoe design guidelines:
+
+**Shape & Background:**
+- Uses true continuous corners (squircle) via SwiftUI's `RoundedRectangle(.continuous)` path extraction
+- Corner radius = 22.5% of icon width (matches native macOS icons)
+- Linear gradient from `TintColor.colorTop` to `TintColor.colorBottom`
+
+**Beveled Glass Effect:**
+- White inner stroke at 50% opacity
+- Line width scales proportionally (0.5pt at 160pt, minimum 0.5pt for visibility)
+
+**Icon Content:**
+- SF Symbols: Rendered in white with `.medium` weight, no text shadow
+- Emojis: Rendered using system font at calculated size
+- Size controlled by `iconScale` (10-20 range, default 14)
+
+**What's NOT Baked In (Dock Adds Dynamically):**
+- Drop shadow
+- Hover/press effects
+- Reflection
+
+**Output:**
 - Creates iconset with all required sizes (16, 32, 128, 256, 512 @ 1x and 2x)
 - Uses `iconutil` to convert iconset to `.icns`
+
+**Preview Consistency:**
+- `DockTileIconPreview` uses identical rendering (same shape, gradient, stroke)
+- No shadows in preview = what you see is what the icon file contains
 
 ### Dock Plist Watcher
 
@@ -444,6 +467,30 @@ private struct QuaternaryFillView: NSViewRepresentable {
   - SubtleButton components ("Customise", "Remove")
 - **Implementation**: `.onHover` with `NSCursor.pointingHand.push()/pop()`
 
+### Native Icon Design (Tahoe Guidelines) (2026-01)
+- **Goal**: Preview shows exactly what the icon file looks like; Dock adds shadows dynamically
+- **IconGenerator Updates**:
+  - Uses true continuous corners (squircle) via SwiftUI's `RoundedRectangle(.continuous)` path extraction
+  - Added beveled glass effect (white 50% opacity inner stroke, 0.5pt scaled proportionally)
+  - Removed: Drop shadow (Dock adds this), text shadow on SF Symbols
+- **DockTileIconPreview Updates**:
+  - Removed `.shadow()` modifier - preview now matches icon file exactly
+  - Removed text shadow from SF Symbols
+  - Kept: Gradient fill, beveled inner stroke, squircle shape
+- **DockTileDetailView Updates**:
+  - Hero section icon preview no longer has drop shadow
+  - Icon content (SF Symbols) no longer has text shadow
+- **Design Rationale**:
+  - Native macOS icons don't have baked-in shadows - the Dock adds these dynamically
+  - Baking shadows would cause "doubled" shadow effect when icon is in Dock
+  - Inner stroke (beveled glass) is a Tahoe design element that should be baked in
+
+### CFBundleIconFile Fix (2026-01)
+- **Problem**: Custom icons not showing in Dock - tiles displayed default macOS app icon
+- **Root Cause**: `CFBundleIconFile` key was missing from helper bundle's Info.plist
+- **Fix**: Added `plist["CFBundleIconFile"] = "AppIcon"` in `updateInfoPlist()` in HelperBundleManager.swift
+- **Result**: macOS now correctly loads the generated AppIcon.icns from Contents/Resources/
+
 ## Performance Targets
 
 1. Popover appears in <100ms (measured from click event to window visible)
@@ -522,22 +569,15 @@ DockTileConfigurationView (Main Window)
 │                       └── EmojiPickerGrid (when .emoji)
 ```
 
-## Reference Documents
-
-- **Full Specification**: `DockTile_Project_Spec.md` (comprehensive design document)
-- This file is authoritative for all architectural and design decisions
-
----
-
 ## Release Roadmap (v1.0)
 
 ### Phase 1: UI Polish
 
 | # | Task | Status | Priority | Notes |
 |---|------|--------|----------|-------|
-| 1 | **Sidebar Cleanup** | ✅ Done | High | Already Apple Notes style - clean List with icon + name, status dot |
-| 2 | **Icon Preview → Dock Icon** | ✅ Done | High | IconGenerator and DockTileIconPreview use matching rendering (95% consistent) |
-| 3 | **Main App Icon** | ⚠️ Partial | High | Build settings configured but Assets.xcassets missing - uses default icon |
+| 1 | **Sidebar Cleanup** | ✅ Done | High | Apple Notes style - clean List with icon + name |
+| 2 | **Icon Preview → Dock Icon** | ✅ Done | High | Squircle shape, beveled glass stroke, Tahoe-native design |
+| 3 | **Main App Icon** | ⚠️ Partial | High | Build settings configured but Assets.xcassets needs custom icon |
 
 ### Phase 2: Distribution
 
@@ -564,20 +604,6 @@ DockTileConfigurationView (Main Window)
 ---
 
 ### Task Details
-
-#### 1. Sidebar Cleanup (Apple Notes Style)
-**Goal**: Create a lightweight, clean sidebar like Apple Notes
-- Remove green "active" dot indicator
-- Simplify row layout (icon + name only, minimal chrome)
-- Use native `.sidebar` list style
-- Consider removing app count subtitle
-- Lighter visual weight overall
-
-#### 2. Icon Preview → Dock Icon
-**Goal**: Ensure the icon you see in the customization view is exactly what appears in the Dock
-- `IconGenerator.swift` already generates `.icns` files
-- Verify the rendering matches `DockTileIconPreview` exactly
-- Both should use same gradient, corner radius, and symbol rendering
 
 #### 3. Main App Icon
 **Goal**: Create a memorable app icon for DockTile.app itself
@@ -693,21 +719,18 @@ xcrun stapler staple DockTile.dmg
 
 ---
 
-### Implementation Order (Recommended)
+### Implementation Order (Remaining)
 
 ```
-Week 1: UI Polish
-├── Task 1: Sidebar cleanup
-├── Task 2: Icon rendering consistency
+Phase 1: UI Polish (remaining)
 └── Task 3: Main app icon
 
-Week 2: Distribution Setup
+Phase 2: Distribution Setup
 ├── Task 4: GitHub Actions pipeline
 ├── Task 5: DMG installer
 └── Task 6: Code signing (requires Apple Developer account)
 
-Week 3: Polish & Launch
-├── Task 7: Onboarding (if time permits)
-├── Task 8: Final App Store assessment
-└── Task 9-10: Distribution & marketing decisions
+Phase 3-4: Polish & Launch
+├── Task 7: Onboarding (optional)
+└── Task 9-10: Distribution & marketing
 ```

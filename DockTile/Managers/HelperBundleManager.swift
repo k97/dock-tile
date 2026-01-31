@@ -294,6 +294,10 @@ final class HelperBundleManager {
         plist["CFBundleName"] = appName
         plist["CFBundleDisplayName"] = appName
 
+        // CRITICAL: Set CFBundleIconFile so macOS uses our generated icon
+        // The icon file is placed at Contents/Resources/AppIcon.icns
+        plist["CFBundleIconFile"] = "AppIcon"
+
         // CRITICAL: Set LSUIElement = true so app doesn't appear in Cmd+Tab by default
         // The app will still appear in Dock because we add it via Dock plist
         // At launch, if showInAppSwitcher is true, we call setActivationPolicy(.regular)
