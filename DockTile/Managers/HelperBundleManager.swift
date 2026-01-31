@@ -60,18 +60,32 @@ final class HelperBundleManager {
 
         print("   isUpdate: \(isUpdate), wasRunning: \(wasRunning), wasInDock: \(wasInDock)")
 
-        // If helper is running, quit it first and wait for it to fully terminate
+        // CRITICAL: Remove from Dock FIRST to prevent auto-relaunch during update
+        // The Dock can relaunch persistent apps when it restarts, which causes stale process issues
+        if wasInDock {
+            print("   Removing from Dock before update (prevents auto-relaunch)")
+            removeFromDock(bundleId: config.bundleIdentifier)
+        }
+
+        // If helper is running, force quit it and wait for it to fully terminate
         if wasRunning {
             quitHelper(bundleId: config.bundleIdentifier)
             // Wait for the app to fully terminate
             var waitCount = 0
-            while isHelperRunning(bundleId: config.bundleIdentifier) && waitCount < 10 {
+            while isHelperRunning(bundleId: config.bundleIdentifier) && waitCount < 20 {
                 try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
                 waitCount += 1
             }
-            // Extra delay to ensure clean termination
-            try await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
-            print("   Helper terminated after \(waitCount) checks")
+
+            // Verify termination
+            if isHelperRunning(bundleId: config.bundleIdentifier) {
+                print("   ⚠️ Helper still running after 2 seconds, proceeding anyway")
+            } else {
+                print("   Helper terminated after \(waitCount) checks")
+            }
+
+            // Extra delay to ensure clean termination and file handle release
+            try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
         }
 
         // If updating and name changed, clean up old helper bundle
@@ -93,6 +107,7 @@ final class HelperBundleManager {
             tintColor: config.tintColor,
             iconType: config.iconType,
             iconValue: config.iconValue,
+            iconScale: config.iconScale,
             outputURL: iconDestPath
         )
         print("   ✓ Generated icon")
@@ -101,21 +116,23 @@ final class HelperBundleManager {
         try codesignHelper(at: helperPath)
         print("   ✓ Code signed")
 
-        // 4. Handle Dock integration - use bundle ID to avoid duplicates
-        if wasInDock {
-            // Remove old dock entry (might have different path/name)
-            removeFromDock(bundleId: config.bundleIdentifier)
-        }
-
-        // Add to dock with new path
+        // 4. Add to Dock (we already removed it earlier if it was there)
         addToDock(at: helperPath)
 
-        // Restart dock to apply changes
+        // 5. Restart Dock to apply changes and launch the helper
+        // The helper will be launched by Dock since it's now a persistent app
         restartDock()
 
-        // 5. Launch the helper app so it's running and responsive
-        print("   Launching helper app...")
-        launchHelper(at: helperPath)
+        // 6. Wait a moment for Dock to stabilize, then ensure helper is running
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+
+        // Check if Dock auto-launched it, if not launch manually
+        if !isHelperRunning(bundleId: config.bundleIdentifier) {
+            print("   Launching helper app...")
+            launchHelper(at: helperPath)
+        } else {
+            print("   ✓ Helper auto-launched by Dock")
+        }
 
         print("✅ Helper installed at: \(helperPath.path)")
     }
@@ -144,12 +161,14 @@ final class HelperBundleManager {
         return runningApps.contains { $0.bundleIdentifier == bundleId }
     }
 
-    /// Quit a running helper app
+    /// Quit a running helper app forcefully
     private func quitHelper(bundleId: String) {
         let runningApps = NSWorkspace.shared.runningApplications
         for app in runningApps where app.bundleIdentifier == bundleId {
-            print("   Quitting running helper: \(app.localizedName ?? bundleId)")
-            app.terminate()
+            print("   Force quitting running helper: \(app.localizedName ?? bundleId)")
+            // Use forceTerminate() to ensure the app exits immediately
+            // This is necessary because terminate() can be ignored by the app
+            app.forceTerminate()
         }
     }
 
@@ -169,7 +188,10 @@ final class HelperBundleManager {
     }
 
     /// Uninstall a helper bundle for the given configuration
-    func uninstallHelper(for config: DockTileConfiguration) throws {
+    /// - Parameters:
+    ///   - config: The configuration to uninstall
+    ///   - shouldRestartDock: Whether to restart the Dock after uninstalling (default: true)
+    func uninstallHelper(for config: DockTileConfiguration, restartDock shouldRestartDock: Bool = true) throws {
         print("🗑️ Uninstalling helper for: \(config.name)")
 
         // Find helper by bundle ID (handles renamed helpers)
@@ -182,9 +204,10 @@ final class HelperBundleManager {
             Thread.sleep(forTimeInterval: 0.3)
         }
 
-        // Remove from Dock by bundle ID (works even if bundle is deleted)
-        // This modifies the plist but doesn't restart Dock yet
-        removeFromDockPlist(bundleId: config.bundleIdentifier)
+        // Remove from Dock plist if it was in the Dock
+        if shouldRestartDock {
+            removeFromDockPlist(bundleId: config.bundleIdentifier)
+        }
 
         // Delete the bundle if it exists
         if let helperPath = helperPath {
@@ -195,7 +218,9 @@ final class HelperBundleManager {
         }
 
         // Restart Dock after bundle is deleted to avoid "?" icon
-        restartDock()
+        if shouldRestartDock {
+            restartDock()
+        }
 
         print("✅ Helper uninstalled for: \(config.name)")
     }

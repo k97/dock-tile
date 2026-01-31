@@ -162,15 +162,16 @@ final class ConfigurationManager: ObservableObject {
 
         let config = configurations[index]
 
-        // Delete helper bundle if it exists
-        if config.isVisibleInDock {
-            Task {
-                do {
-                    try HelperBundleManager.shared.uninstallHelper(for: config)
-                    print("🗑️ Removed helper bundle for: \(config.name)")
-                } catch {
-                    print("⚠️ Failed to remove helper bundle: \(error.localizedDescription)")
-                }
+        // Always clean up helper bundle, but only restart Dock if tile was visible
+        Task {
+            do {
+                try HelperBundleManager.shared.uninstallHelper(
+                    for: config,
+                    restartDock: config.isVisibleInDock
+                )
+                print("🗑️ Removed helper bundle for: \(config.name)")
+            } catch {
+                print("⚠️ Failed to remove helper bundle: \(error.localizedDescription)")
             }
         }
 

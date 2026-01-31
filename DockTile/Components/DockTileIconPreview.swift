@@ -13,6 +13,7 @@ struct DockTileIconPreview: View {
     let tintColor: TintColor
     let iconType: IconType
     let iconValue: String
+    let iconScale: Int  // 10-20 range, default 14
     let size: CGFloat
 
     // Legacy initializer for backward compatibility
@@ -20,14 +21,25 @@ struct DockTileIconPreview: View {
         self.tintColor = tintColor
         self.iconType = .emoji
         self.iconValue = symbol
+        self.iconScale = ConfigurationDefaults.iconScale
         self.size = size
     }
 
-    // New initializer with explicit icon type
+    // New initializer with explicit icon type (legacy without scale)
     init(tintColor: TintColor, iconType: IconType, iconValue: String, size: CGFloat) {
         self.tintColor = tintColor
         self.iconType = iconType
         self.iconValue = iconValue
+        self.iconScale = ConfigurationDefaults.iconScale
+        self.size = size
+    }
+
+    // Full initializer with icon scale
+    init(tintColor: TintColor, iconType: IconType, iconValue: String, iconScale: Int, size: CGFloat) {
+        self.tintColor = tintColor
+        self.iconType = iconType
+        self.iconValue = iconValue
+        self.iconScale = iconScale
         self.size = size
     }
 
@@ -36,7 +48,13 @@ struct DockTileIconPreview: View {
     }
 
     private var symbolSize: CGFloat {
-        size * 0.45  // Almost touching middle (50%) guide circle
+        // Base ratio: maps iconScale 10-20 to approximately 0.30-0.65
+        let baseRatio = 0.30 + (CGFloat(iconScale - 10) * 0.035)
+
+        // Emoji gets +5% offset for visual weight
+        let ratio = iconType == .emoji ? baseRatio + 0.05 : baseRatio
+
+        return size * ratio
     }
 
     private var shadowRadius: CGFloat {
@@ -120,6 +138,7 @@ extension DockTileIconPreview {
             tintColor: config.tintColor,
             iconType: config.iconType,
             iconValue: config.iconValue,
+            iconScale: config.iconScale,
             size: size
         )
     }

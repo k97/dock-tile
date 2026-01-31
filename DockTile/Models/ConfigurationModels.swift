@@ -19,6 +19,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     var symbolEmoji: String  // Legacy: kept for backward compatibility
     var iconType: IconType  // v3: Distinguishes between SF Symbol and Emoji
     var iconValue: String  // v3: The actual symbol name or emoji character
+    var iconScale: Int  // v4: Icon size scale (10-20 range, affects symbol/emoji size)
     var layoutMode: LayoutMode
     var appItems: [AppItem]
     var isVisibleInDock: Bool
@@ -34,6 +35,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         symbolEmoji: String = ConfigurationDefaults.symbolEmoji,
         iconType: IconType = ConfigurationDefaults.iconType,
         iconValue: String = ConfigurationDefaults.iconValue,
+        iconScale: Int = ConfigurationDefaults.iconScale,
         layoutMode: LayoutMode = ConfigurationDefaults.layoutMode,
         appItems: [AppItem] = [],
         isVisibleInDock: Bool = ConfigurationDefaults.isVisibleInDock,
@@ -46,6 +48,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         self.symbolEmoji = symbolEmoji
         self.iconType = iconType
         self.iconValue = iconValue
+        self.iconScale = iconScale
         self.layoutMode = layoutMode
         self.appItems = appItems
         self.isVisibleInDock = isVisibleInDock
@@ -80,6 +83,10 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         // If iconValue not present, migrate from symbolEmoji
         iconValue = try container.decodeIfPresent(String.self, forKey: .iconValue)
             ?? symbolEmoji
+
+        // v4 fields - icon scale
+        iconScale = try container.decodeIfPresent(Int.self, forKey: .iconScale)
+            ?? ConfigurationDefaults.iconScale
     }
 
     // MARK: - Coding Keys
@@ -92,6 +99,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         case showInAppSwitcher
         // v3 fields
         case iconType, iconValue
+        // v4 fields
+        case iconScale
     }
 }
 

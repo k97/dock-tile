@@ -8,20 +8,59 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct IconGridOverlay: View {
     let size: CGFloat
-    let lineColor: Color
+    let backgroundColor: TintColor?  // Optional: for adaptive color based on luminance
     let lineWidth: CGFloat
 
+    /// Fixed line color (legacy initializer)
     init(
         size: CGFloat,
         lineColor: Color = Color(hex: "#5DB3F9").opacity(0.6),
         lineWidth: CGFloat = 1
     ) {
         self.size = size
-        self.lineColor = lineColor
+        self.backgroundColor = nil
         self.lineWidth = lineWidth
+        self._fixedLineColor = lineColor
+    }
+
+    /// Adaptive line color based on background luminance
+    init(
+        size: CGFloat,
+        backgroundColor: TintColor,
+        lineWidth: CGFloat = 1
+    ) {
+        self.size = size
+        self.backgroundColor = backgroundColor
+        self.lineWidth = lineWidth
+        self._fixedLineColor = nil
+    }
+
+    // Store fixed color for legacy initializer
+    private let _fixedLineColor: Color?
+
+    private var lineColor: Color {
+        // If fixed color provided (legacy), use it
+        if let fixed = _fixedLineColor {
+            return fixed
+        }
+
+        // Calculate adaptive color based on background luminance
+        guard let bgColor = backgroundColor else {
+            return Color(hex: "#5DB3F9").opacity(0.6)  // Default blue
+        }
+
+        let luminance = bgColor.colorBottom.luminance
+        // Light backgrounds (yellow, etc.): darker overlay
+        // Dark backgrounds (blue, purple): lighter overlay
+        if luminance > 0.5 {
+            return Color.black.opacity(0.25)
+        } else {
+            return Color.white.opacity(0.35)
+        }
     }
 
     private var cornerRadius: CGFloat {
@@ -120,11 +159,24 @@ struct IconGridOverlay: View {
     }
 }
 
+// MARK: - Color Luminance Extension
+
+extension Color {
+    /// Calculate perceived luminance using standard formula
+    /// Returns 0.0 (dark) to 1.0 (light)
+    var luminance: CGFloat {
+        let nsColor = NSColor(self)
+        guard let rgb = nsColor.usingColorSpace(.deviceRGB) else { return 0.5 }
+        // Standard luminance formula: 0.299R + 0.587G + 0.114B
+        return 0.299 * rgb.redComponent + 0.587 * rgb.greenComponent + 0.114 * rgb.blueComponent
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
     VStack(spacing: 40) {
-        // Show overlay on colored background
+        // Show adaptive overlay on dark background (blue)
         ZStack {
             RoundedRectangle(cornerRadius: 36, style: .continuous)
                 .fill(
@@ -139,13 +191,26 @@ struct IconGridOverlay: View {
             Text("✨")
                 .font(.system(size: 64))
 
-            IconGridOverlay(size: 160)
+            IconGridOverlay(size: 160, backgroundColor: .blue)
         }
 
-        // Show overlay alone
-        IconGridOverlay(size: 160, lineColor: .blue.opacity(0.5))
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
+        // Show adaptive overlay on light background (yellow)
+        ZStack {
+            RoundedRectangle(cornerRadius: 36, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "#FFD93D"), Color(hex: "#FFCC00")],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 160, height: 160)
+
+            Text("⭐")
+                .font(.system(size: 64))
+
+            IconGridOverlay(size: 160, backgroundColor: .yellow)
+        }
     }
     .padding(60)
     .background(Color(NSColor.windowBackgroundColor))

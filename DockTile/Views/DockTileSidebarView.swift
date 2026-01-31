@@ -88,6 +88,13 @@ private struct MiniIconPreview: View {
     private let size: CGFloat = 24
     private let cornerRadius: CGFloat = 6
 
+    /// Calculate icon size from scale value (same formula as DockTileIconPreview)
+    private var iconSize: CGFloat {
+        let baseRatio = 0.30 + (CGFloat(config.iconScale - 10) * 0.035)
+        let ratio = config.iconType == .emoji ? baseRatio + 0.05 : baseRatio
+        return size * ratio
+    }
+
     var body: some View {
         ZStack {
             // Gradient background
@@ -115,12 +122,12 @@ private struct MiniIconPreview: View {
         switch config.iconType {
         case .sfSymbol:
             Image(systemName: config.iconValue)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: iconSize, weight: .medium))
                 .foregroundColor(.white)
 
         case .emoji:
             Text(config.iconValue)
-                .font(.system(size: 14))
+                .font(.system(size: iconSize))
         }
     }
 }

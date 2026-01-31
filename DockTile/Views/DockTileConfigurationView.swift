@@ -26,23 +26,28 @@ struct DockTileConfigurationView: View {
                 ZStack {
                     if !isDrilledDown {
                         // Detail view (Screen 3)
+                        // IMPORTANT: Use .id() to force view recreation when config changes
+                        // Without this, SwiftUI may reuse the view and editedConfig gets stale
                         DockTileDetailView(
                             config: selectedConfig,
                             onCustomise: {
                                 isDrilledDown = true
                             }
                         )
+                        .id(selectedConfig.id)
                         .transition(.move(edge: .leading))
                     }
 
                     if isDrilledDown {
                         // Drill-down view (Screen 4)
+                        // IMPORTANT: Use .id() to force view recreation when config changes
                         CustomiseTileView(
                             config: selectedConfig,
                             onBack: {
                                 isDrilledDown = false
                             }
                         )
+                        .id(selectedConfig.id)
                         .transition(.move(edge: .trailing))
                     }
                 }
@@ -63,7 +68,7 @@ struct DockTileConfigurationView: View {
             minHeight: minWindowHeight,
             maxHeight: .infinity
         )
-        .background(WindowAccessor())
+        .background(WindowAccessor(isCustomising: isDrilledDown))
     }
 }
 
@@ -72,40 +77,58 @@ struct DockTileConfigurationView: View {
 /// NSViewRepresentable that configures the window at the AppKit level
 /// This is the "secret sauce" that prevents horizontal resize cursor
 private struct WindowAccessor: NSViewRepresentable {
+    let isCustomising: Bool
+
+    private let fixedWidth: CGFloat = 768
+    private let defaultMinHeight: CGFloat = 500
+    private let customiseMinHeight: CGFloat = 700
+
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
         DispatchQueue.main.async {
             guard let window = view.window else { return }
-            configureWindow(window)
+            configureWindow(window, animated: false)
         }
         return view
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
-        // Reconfigure on update in case window changed
+        // Reconfigure on update in case window changed or isCustomising toggled
         DispatchQueue.main.async {
             guard let window = nsView.window else { return }
-            configureWindow(window)
+            configureWindow(window, animated: true)
         }
     }
 
-    private func configureWindow(_ window: NSWindow) {
-        let fixedWidth: CGFloat = 768
-        let minHeight: CGFloat = 500
+    private func configureWindow(_ window: NSWindow, animated: Bool) {
+        let minHeight = isCustomising ? customiseMinHeight : defaultMinHeight
 
         // Lock horizontal size, allow vertical resize
         window.contentMinSize = NSSize(width: fixedWidth, height: minHeight)
         window.contentMaxSize = NSSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude)
 
-        // Set current size if not already correct
+        // Set current size if needed
         var frame = window.frame
+        var needsResize = false
+
+        // Fix width if incorrect
         if frame.width != fixedWidth {
             frame.size.width = fixedWidth
-            window.setFrame(frame, display: true, animate: false)
+            needsResize = true
         }
 
-        // Disable horizontal resize (keep vertical)
-        // styleMask already includes .resizable, but we constrain via min/max
+        // Grow window height if below minimum for current mode
+        if frame.height < minHeight {
+            let heightDelta = minHeight - frame.height
+            frame.size.height = minHeight
+            // Grow upward (keep bottom edge fixed)
+            frame.origin.y -= heightDelta
+            needsResize = true
+        }
+
+        if needsResize {
+            window.setFrame(frame, display: true, animate: animated)
+        }
     }
 }
 

@@ -124,16 +124,17 @@ newFeature = try container.decodeIfPresent(Bool.self, forKey: .newFeature)
 
 This approach handles 95% of schema changes. Old configs missing new fields will use defaults automatically.
 
-### Current Configuration Fields (v2)
+### Current Configuration Fields (v4)
 
 | Field | Type | Default | Notes |
 |-------|------|---------|-------|
 | id | UUID | Generated | Unique identifier |
-| name | String | "My DockTile" | Display name |
-| tintColor | TintColor | .blue | Icon background gradient color (preset or custom hex) |
+| name | String | "New Tile" | Display name |
+| tintColor | TintColor | .gray | Icon background gradient color (preset or custom hex) |
 | symbolEmoji | String | "⭐" | Legacy field for icon (deprecated) |
 | iconType | IconType | .sfSymbol | Type of icon: .sfSymbol or .emoji |
 | iconValue | String | "star.fill" | SF Symbol name or emoji character |
+| iconScale | Int | 14 | (v4) Icon size scale (10-20 range) |
 | layoutMode | LayoutMode | .grid2x3 | Stack (grid) or List |
 | appItems | [AppItem] | [] | Apps in the tile |
 | isVisibleInDock | Bool | true | Show helper in Dock (enabled by default) |
@@ -404,6 +405,45 @@ private struct QuaternaryFillView: NSViewRepresentable {
 - **Layout**: Custom `NativeAppsTableView` using VStack + ForEach for natural content growth
 - **Header/Footer**: Uses even row color for visual consistency
 
+### Icon Scale Feature (2026-01)
+- **Added**: `iconScale` field to `DockTileConfiguration` (v4 schema)
+- **Range**: 10-20, default 14
+- **Formula**: Base ratio = 0.30 + ((iconScale - 10) * 0.035), emoji gets +5% offset
+- **UI**: Stepper control in CustomiseTileView inspector card
+- **Adaptive Guide Overlay**: Guide circles adjust color based on background luminance (darker for light backgrounds, lighter for dark)
+
+### Search in Symbol/Emoji Pickers (2026-01)
+- **Added**: Search field above the picker grids in CustomiseTileView
+- **Symbol Search**: Filters by symbol name (e.g., "star", "folder")
+- **Emoji Search**: Filters by emoji keywords from lookup table
+- **Shared State**: Single `searchText` binding passed to both pickers
+
+### SwiftUI View Identity Fix (2026-01)
+- **Problem**: Editing one tile config was corrupting all tiles (stale `@State` in reused views)
+- **Root Cause**: SwiftUI view reuse - when switching tiles, `@State editedConfig` wasn't reinitializing
+- **Fix**: Added `.id(selectedConfig.id)` to both `DockTileDetailView` and `CustomiseTileView` in parent
+- **Result**: Views are now recreated when switching tiles, ensuring fresh state
+
+### Helper Bundle Stale Process Fix (2026-01)
+- **Problem**: After clicking "Add to Dock", helper showed old configuration data
+- **Root Cause**: Old helper process was still running (macOS process caching + soft terminate failure)
+- **Fixes**:
+  - Changed `app.terminate()` to `app.forceTerminate()` for immediate process kill
+  - Remove from Dock FIRST before quitting/regenerating (prevents Dock auto-relaunch race)
+  - Increased wait timeout and added verification logging
+  - Post-Dock restart check to ensure fresh process is running
+
+### Icon Preview Tap to Customise (2026-01)
+- **Added**: Tap gesture on 118×118 icon preview in DockTileDetailView
+- **Action**: Triggers `onCustomise()` to navigate to CustomiseTileView
+- **UX**: Same behavior as clicking the "Customise" button below
+
+### Pointer Cursor on Interactive Elements (2026-01)
+- **Added**: Pointing hand cursor on hover for:
+  - Icon preview in DockTileDetailView (118×118)
+  - SubtleButton components ("Customise", "Remove")
+- **Implementation**: `.onHover` with `NSCursor.pointingHand.push()/pop()`
+
 ## Performance Targets
 
 1. Popover appears in <100ms (measured from click event to window visible)
@@ -448,8 +488,8 @@ DockTileConfigurationView (Main Window)
 │       │   │   └── Done button (.bordered style - Liquid Glass secondary)
 │       │   ├── heroSection (HStack)
 │       │   │   ├── Left column (VStack)
-│       │   │   │   ├── Icon container (118×118pt, cornerRadius 24)
-│       │   │   │   └── SubtleButton "Customise" (width: 118)
+│       │   │   │   ├── Icon container (118×118pt, cornerRadius 24, tappable → customise)
+│       │   │   │   └── SubtleButton "Customise" (width: 118, pointer cursor)
 │       │   │   └── Right column: Form Group (FormGroupBackground)
 │       │   │       ├── formRow: Tile Name
 │       │   │       ├── formRow: Show Tile (Toggle)
@@ -462,18 +502,21 @@ DockTileConfigurationView (Main Window)
 │       │   │       └── Footer toolbar (+/- buttons)
 │       │   └── deleteSection (FormGroupBackground)
 │       │       ├── Text: "Remove from Dock" + subtitle
-│       │       └── SubtleButton "Remove" (textColor: .red)
+│       │       └── SubtleButton "Remove" (textColor: .red, pointer cursor)
 │       │
 │       └── CustomiseTileView (Screen 4 - drill-down)
 │           ├── studioCanvas (QuaternaryFillView background)
 │           │   ├── DockTileIconPreview (160×160pt)
-│           │   ├── IconGridOverlay
+│           │   ├── IconGridOverlay (adaptive color based on luminance)
 │           │   └── Tile name
 │           └── inspectorCard (FormGroupBackgroundView)
 │               ├── colourSection (preset swatches + custom picker)
 │               ├── Separator (quinaryLabel)
+│               ├── tileIconSizeSection (Stepper 10-20)
+│               ├── Separator (quinaryLabel)
 │               └── tileIconSection
 │                   ├── segmentedPicker (Symbol/Emoji tabs)
+│                   ├── SearchField (filters symbols/emojis)
 │                   └── ScrollView (height: 320)
 │                       ├── SymbolPickerGrid (when .symbol)
 │                       └── EmojiPickerGrid (when .emoji)

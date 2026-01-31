@@ -24,6 +24,9 @@ enum ConfigurationDefaults {
     static let iconType: IconType = .sfSymbol
     static let iconValue = "star.fill"
 
+    // v4: Icon scale (10-20 range, affects symbol/emoji size relative to icon bounds)
+    static let iconScale = 14
+
     // Visibility
     static let isVisibleInDock = true  // Show in Dock by default
     static let showInAppSwitcher = false  // Hidden from Cmd+Tab by default

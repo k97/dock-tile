@@ -72,29 +72,16 @@ struct DockTileDetailView: View {
         } message: {
             Text("This will permanently delete the tile and remove it from the dock.")
         }
-        .onChange(of: config.id) { _, newId in
-            // Sync editedConfig when switching to a different configuration
-            if let newConfig = configManager.configuration(for: newId) {
-                hasAppearedOnce = false  // Reset so we don't trigger on initial sync
-                editedConfig = newConfig
-                tileName = newConfig.name  // Sync the separate text field state
-                // Re-enable after a short delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    hasAppearedOnce = true
-                }
-            }
-        }
+        // NOTE: .onChange(of: config.id) removed - parent view uses .id(selectedConfig.id)
+        // to force complete view recreation when switching configs, making sync unnecessary
         .onChange(of: editedConfig) { _, _ in
             // Mark as edited immediately when any field changes (enables + button)
             // Skip the initial load to avoid immediately marking new tiles as edited
             guard hasAppearedOnce else { return }
             configManager.markSelectedConfigAsEdited()
         }
-        // Mark as edited when typing (for + button), but don't sync to editedConfig yet
-        .onChange(of: tileName) { _, _ in
-            guard hasAppearedOnce else { return }
-            configManager.markSelectedConfigAsEdited()
-        }
+        // NOTE: tileName onChange removed - tileName now syncs to editedConfig.name
+        // on every keystroke (see TextField onChange), which triggers this onChange
         // Debounced auto-save using task(id:) - cancels previous task when editedConfig changes
         .task(id: editedConfig) {
             guard hasAppearedOnce else { return }
@@ -102,21 +89,11 @@ struct DockTileDetailView: View {
             // Wait 300ms before saving (debounce)
             try? await Task.sleep(nanoseconds: 300_000_000)
 
-            // Save the edited config to persist changes (draft mode)
-            let configToSave = DockTileConfiguration(
-                id: config.id,
-                name: editedConfig.name,
-                tintColor: editedConfig.tintColor,
-                symbolEmoji: editedConfig.symbolEmoji,
-                iconType: editedConfig.iconType,
-                iconValue: editedConfig.iconValue,
-                layoutMode: editedConfig.layoutMode,
-                appItems: editedConfig.appItems,
-                isVisibleInDock: editedConfig.isVisibleInDock,
-                showInAppSwitcher: editedConfig.showInAppSwitcher,
-                bundleIdentifier: config.bundleIdentifier
-            )
-            configManager.updateConfiguration(configToSave)
+            // Save editedConfig directly - it already has the correct ID and bundleIdentifier
+            // NOTE: We must NOT use config.id or config.bundleIdentifier here because
+            // when switching between tiles, `config` may be stale while `editedConfig`
+            // has already been updated by the .onChange(of: config.id) handler
+            configManager.updateConfiguration(editedConfig)
         }
         .onAppear {
             // Delay setting hasAppearedOnce to skip initial onChange triggers
@@ -131,7 +108,7 @@ struct DockTileDetailView: View {
             // 2. Dock watcher might fire and think the tile should be OFF
             // 3. This would reset the user's toggle before they can click "Done"
             // The correct state will be set when user clicks "Done" and we install/uninstall
-            if let updatedConfig = newConfigs.first(where: { $0.id == config.id }) {
+            if let updatedConfig = newConfigs.first(where: { $0.id == editedConfig.id }) {
                 // Only sync showInAppSwitcher if it was changed externally
                 if editedConfig.showInAppSwitcher != updatedConfig.showInAppSwitcher {
                     editedConfig.showInAppSwitcher = updatedConfig.showInAppSwitcher
@@ -147,6 +124,7 @@ struct DockTileDetailView: View {
             // Left column: Icon preview with Customise button
             VStack(alignment: .center, spacing: 12) {
                 // Icon container: 118×118pt with cornerRadius(24)
+                // Tappable to open customise view
                 ZStack {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(
@@ -171,6 +149,17 @@ struct DockTileDetailView: View {
                     x: 0,
                     y: 4
                 )
+                .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .onHover { hovering in
+                    if hovering {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+                .onTapGesture {
+                    onCustomise()
+                }
 
                 SubtleButton(title: "Customise", width: 118, action: onCustomise)
             }
@@ -185,16 +174,12 @@ struct DockTileDetailView: View {
                         .textFieldStyle(.plain)
                         .multilineTextAlignment(.trailing)
                         .focused($isNameFieldFocused)
-                        .onSubmit {
-                            // Sync to editedConfig on Enter key
-                            if editedConfig.name != tileName {
-                                editedConfig.name = tileName
-                            }
-                        }
-                        .onChange(of: isNameFieldFocused) { _, isFocused in
-                            // Sync to editedConfig when field loses focus
-                            if !isFocused && editedConfig.name != tileName {
-                                editedConfig.name = tileName
+                        .onChange(of: tileName) { _, newName in
+                            // Sync to editedConfig on every keystroke
+                            // This triggers the debounced auto-save and updates sidebar
+                            guard hasAppearedOnce else { return }
+                            if editedConfig.name != newName {
+                                editedConfig.name = newName
                             }
                         }
                 }
@@ -256,18 +241,26 @@ struct DockTileDetailView: View {
 
     // MARK: - Icon Content
 
+    /// Calculate icon size from scale value (same formula as DockTileIconPreview)
+    private var iconSize: CGFloat {
+        let containerSize: CGFloat = 118
+        let baseRatio = 0.30 + (CGFloat(editedConfig.iconScale - 10) * 0.035)
+        let ratio = editedConfig.iconType == .emoji ? baseRatio + 0.05 : baseRatio
+        return containerSize * ratio
+    }
+
     @ViewBuilder
     private var iconContent: some View {
         switch editedConfig.iconType {
         case .sfSymbol:
             Image(systemName: editedConfig.iconValue)
-                .font(.system(size: 38, weight: .medium))
+                .font(.system(size: iconSize, weight: .medium))
                 .foregroundColor(.white)
                 .shadow(color: Color.black.opacity(0.2), radius: 1, x: 0, y: 1)
 
         case .emoji:
             Text(editedConfig.iconValue)
-                .font(.system(size: 38))
+                .font(.system(size: iconSize))
         }
     }
 
@@ -371,24 +364,14 @@ struct DockTileDetailView: View {
 
         Task {
             do {
-                // Create config with original ID but edited values
-                // Use tileName directly in case there's a pending debounce sync
-                let configToSave = DockTileConfiguration(
-                    id: config.id,  // Preserve original ID
-                    name: tileName,  // Use tileName directly for immediate save
-                    tintColor: editedConfig.tintColor,
-                    symbolEmoji: editedConfig.symbolEmoji,
-                    iconType: editedConfig.iconType,
-                    iconValue: editedConfig.iconValue,
-                    layoutMode: editedConfig.layoutMode,
-                    appItems: editedConfig.appItems,
-                    isVisibleInDock: editedConfig.isVisibleInDock,
-                    showInAppSwitcher: editedConfig.showInAppSwitcher,
-                    bundleIdentifier: config.bundleIdentifier  // Preserve original bundle ID
-                )
+                // editedConfig.name is already synced with tileName on every keystroke
+                let configToSave = editedConfig
 
                 // Check if showInAppSwitcher changed (requires helper restart)
-                let appSwitcherChanged = config.showInAppSwitcher != editedConfig.showInAppSwitcher
+                // Compare against the stored config in manager, not the stale `config` property
+                let originalConfig = configManager.configuration(for: editedConfig.id)
+                let appSwitcherChanged = originalConfig?.showInAppSwitcher != configToSave.showInAppSwitcher
+                let wasVisibleInDock = originalConfig?.isVisibleInDock ?? false
 
                 // Save configuration changes first
                 configManager.updateConfiguration(configToSave)
@@ -408,7 +391,7 @@ struct DockTileDetailView: View {
 
                 // If only showInAppSwitcher changed but tile was already visible,
                 // we need to restart the helper to pick up the new activation policy
-                if appSwitcherChanged && config.isVisibleInDock && configToSave.isVisibleInDock {
+                if appSwitcherChanged && wasVisibleInDock && configToSave.isVisibleInDock {
                     print("🔄 App Switcher setting changed - helper was restarted")
                 }
 
@@ -425,7 +408,8 @@ struct DockTileDetailView: View {
 
     private func deleteTile() {
         // Delete will handle uninstalling helper if needed
-        configManager.deleteConfiguration(config.id)
+        // Use editedConfig.id to ensure we delete the correct tile
+        configManager.deleteConfiguration(editedConfig.id)
     }
 
     private func removeSelectedApp() {
@@ -641,6 +625,13 @@ private struct SubtleButton: View {
         .padding(.horizontal, width == nil ? 12 : 0)
         .background(Color.black.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .onHover { hovering in
+            if hovering {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
     }
 }
 

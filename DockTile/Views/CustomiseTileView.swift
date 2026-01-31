@@ -18,6 +18,7 @@ struct CustomiseTileView: View {
     @State private var editedConfig: DockTileConfiguration
     @State private var selectedIconTab: IconPickerTab = .symbol
     @State private var customColor: Color = .blue
+    @State private var searchText: String = ""
 
     init(config: DockTileConfiguration, onBack: @escaping () -> Void) {
         self.config = config
@@ -64,18 +65,19 @@ struct CustomiseTileView: View {
     // MARK: - Studio Canvas (Hero Section)
 
     private var studioCanvas: some View {
-        VStack(spacing: 16) {
-            // Icon preview with grid overlay - large scale
+        VStack(spacing: 12) {
+            // Icon preview with grid overlay
             ZStack {
                 DockTileIconPreview(
                     tintColor: editedConfig.tintColor,
                     iconType: editedConfig.iconType,
                     iconValue: editedConfig.iconValue,
-                    size: 160
+                    iconScale: editedConfig.iconScale,
+                    size: 120
                 )
 
-                // Apple icon guide grid overlay
-                IconGridOverlay(size: 160)
+                // Apple icon guide grid overlay (adaptive color based on background)
+                IconGridOverlay(size: 120, backgroundColor: editedConfig.tintColor)
             }
 
             // Tile name anchored below preview
@@ -84,8 +86,9 @@ struct CustomiseTileView: View {
                 .foregroundColor(.primary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-        .background(QuaternaryFillView())
+        .padding(.vertical, 24)
+        .padding(.top, 28) // Extra padding to account for toolbar area
+        .background(QuaternaryFillView().ignoresSafeArea(edges: .top))
     }
 
     // MARK: - Inspector Card
@@ -96,6 +99,14 @@ struct CustomiseTileView: View {
             colourSection
 
             // Separator (matches form group style)
+            Rectangle()
+                .fill(Color(nsColor: .quinaryLabel))
+                .frame(height: 1)
+
+            // Tile Icon Size Section (moved above Tile Icon)
+            tileIconSizeSection
+
+            // Separator
             Rectangle()
                 .fill(Color(nsColor: .quinaryLabel))
                 .frame(height: 1)
@@ -190,6 +201,25 @@ struct CustomiseTileView: View {
         }
     }
 
+    // MARK: - Tile Icon Size Section
+
+    private var tileIconSizeSection: some View {
+        HStack {
+            Text("Tile Icon Size")
+                .font(.body)
+                .foregroundColor(.primary)
+
+            Spacer()
+
+            Stepper(value: $editedConfig.iconScale, in: 10...20) {
+                Text("\(editedConfig.iconScale)")
+                    .monospacedDigit()
+                    .frame(width: 24, alignment: .trailing)
+            }
+        }
+        .frame(height: 40)
+    }
+
     // MARK: - Tile Icon Section
 
     private var tileIconSection: some View {
@@ -203,6 +233,9 @@ struct CustomiseTileView: View {
             // Note: Switching tabs only changes the picker view, NOT the iconType
             // iconType only changes when user explicitly selects a new icon
             segmentedPicker
+
+            // Search field - sticky (outside ScrollView)
+            iconSearchField
 
             // Icon grid with fixed height and internal scrolling
             ScrollView(.vertical, showsIndicators: false) {
@@ -221,6 +254,7 @@ struct CustomiseTileView: View {
                                     editedConfig.symbolEmoji = newValue  // Keep legacy field in sync
                                 }
                             ),
+                            searchText: $searchText,
                             onSelect: { symbol in
                                 editedConfig.iconType = .sfSymbol
                                 editedConfig.iconValue = symbol
@@ -241,6 +275,7 @@ struct CustomiseTileView: View {
                                     editedConfig.symbolEmoji = newValue  // Keep legacy field in sync
                                 }
                             ),
+                            searchText: $searchText,
                             onSelect: { emoji in
                                 editedConfig.iconType = .emoji
                                 editedConfig.iconValue = emoji
@@ -251,9 +286,43 @@ struct CustomiseTileView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .frame(height: 320)
+            .frame(height: 280)
         }
         .padding(.vertical, 12)
+        .onChange(of: selectedIconTab) { _, _ in
+            // Clear search when switching tabs
+            searchText = ""
+        }
+    }
+
+    // MARK: - Icon Search Field
+
+    private var iconSearchField: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+
+            TextField(
+                selectedIconTab == .symbol ? "Search symbols" : "Search emojis",
+                text: $searchText
+            )
+            .textFieldStyle(.plain)
+            .font(.system(size: 13))
+
+            if !searchText.isEmpty {
+                Button(action: { searchText = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color(nsColor: .quaternarySystemFill))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 }
 

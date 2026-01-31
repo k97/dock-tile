@@ -13,6 +13,22 @@ import SwiftUI
 @MainActor
 struct IconGenerator {
 
+    // MARK: - Icon Scale Helper
+
+    /// Calculate icon ratio from scale value (10-20 range)
+    /// - Parameter iconScale: Scale value (10-20), default 14
+    /// - Parameter iconType: Type of icon (SF Symbol or Emoji)
+    /// - Returns: Ratio to multiply by icon size (0.30-0.70 range)
+    private static func iconRatio(for iconScale: Int, iconType: IconType) -> CGFloat {
+        // Base ratio: maps iconScale 10-20 to approximately 0.30-0.65
+        let baseRatio = 0.30 + (CGFloat(iconScale - 10) * 0.035)
+
+        // Emoji gets +5% offset for visual weight
+        let ratio = iconType == .emoji ? baseRatio + 0.05 : baseRatio
+
+        return ratio
+    }
+
     // MARK: - Icon Generation
 
     /// Generate an icon image with gradient background and symbol/emoji
@@ -20,6 +36,7 @@ struct IconGenerator {
         tintColor: TintColor,
         iconType: IconType,
         iconValue: String,
+        iconScale: Int = ConfigurationDefaults.iconScale,
         size: CGSize
     ) -> NSImage {
         let image = NSImage(size: size)
@@ -42,12 +59,15 @@ struct IconGenerator {
         // Draw gradient background
         drawGradient(context: context, path: path, tintColor: tintColor, rect: rect)
 
+        // Calculate font size based on icon scale
+        let fontSize = size.width * iconRatio(for: iconScale, iconType: iconType)
+
         // Draw icon (SF Symbol or emoji)
         switch iconType {
         case .sfSymbol:
-            drawSFSymbol(symbolName: iconValue, rect: rect, fontSize: size.width * 0.45)
+            drawSFSymbol(symbolName: iconValue, rect: rect, fontSize: fontSize)
         case .emoji:
-            drawEmoji(emoji: iconValue, rect: rect, fontSize: size.width * 0.5)
+            drawEmoji(emoji: iconValue, rect: rect, fontSize: fontSize)
         }
 
         image.unlockFocus()
@@ -65,6 +85,7 @@ struct IconGenerator {
             tintColor: tintColor,
             iconType: .emoji,
             iconValue: symbol,
+            iconScale: ConfigurationDefaults.iconScale,
             size: size
         )
     }
@@ -175,6 +196,7 @@ struct IconGenerator {
         tintColor: TintColor,
         iconType: IconType,
         iconValue: String,
+        iconScale: Int = ConfigurationDefaults.iconScale,
         outputURL: URL
     ) throws {
         // Standard macOS icon sizes for .icns (base sizes)
@@ -193,6 +215,7 @@ struct IconGenerator {
                 tintColor: tintColor,
                 iconType: iconType,
                 iconValue: iconValue,
+                iconScale: iconScale,
                 size: CGSize(width: baseSize, height: baseSize)
             )
             let filename1x = "icon_\(baseSize)x\(baseSize).png"
@@ -203,6 +226,7 @@ struct IconGenerator {
                 tintColor: tintColor,
                 iconType: iconType,
                 iconValue: iconValue,
+                iconScale: iconScale,
                 size: CGSize(width: baseSize * 2, height: baseSize * 2)
             )
             let filename2x = "icon_\(baseSize)x\(baseSize)@2x.png"
@@ -241,6 +265,7 @@ struct IconGenerator {
             tintColor: tintColor,
             iconType: .emoji,
             iconValue: symbol,
+            iconScale: ConfigurationDefaults.iconScale,
             outputURL: outputURL
         )
     }
@@ -269,12 +294,14 @@ struct IconGenerator {
         tintColor: TintColor,
         iconType: IconType,
         iconValue: String,
+        iconScale: Int = ConfigurationDefaults.iconScale,
         size: CGFloat = 80
     ) -> NSImage {
         return generateIcon(
             tintColor: tintColor,
             iconType: iconType,
             iconValue: iconValue,
+            iconScale: iconScale,
             size: CGSize(width: size, height: size)
         )
     }
@@ -289,6 +316,7 @@ struct IconGenerator {
             tintColor: tintColor,
             iconType: .emoji,
             iconValue: symbol,
+            iconScale: ConfigurationDefaults.iconScale,
             size: CGSize(width: size, height: size)
         )
     }

@@ -10,29 +10,45 @@ import SwiftUI
 
 struct SymbolPickerGrid: View {
     @Binding var selectedSymbol: String
+    @Binding var searchText: String
     let onSelect: (String) -> Void
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
     private let symbolSize: CGFloat = 24
 
+    /// Filter symbols based on search text
+    private func filteredSymbols(for category: SymbolCategory) -> [String] {
+        guard !searchText.isEmpty else { return category.symbols }
+        let query = searchText.lowercased()
+        return category.symbols.filter { $0.lowercased().contains(query) }
+    }
+
+    /// Check if category has any matching symbols
+    private func categoryHasMatches(_ category: SymbolCategory) -> Bool {
+        !filteredSymbols(for: category).isEmpty
+    }
+
     var body: some View {
+        // Symbol grid only - search field is managed by parent
         LazyVStack(alignment: .leading, spacing: 16) {
             ForEach(SymbolCategory.allCases, id: \.self) { category in
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(category.displayName)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
+                if categoryHasMatches(category) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(category.displayName)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
 
-                    LazyVGrid(columns: columns, spacing: 8) {
-                        ForEach(category.symbols, id: \.self) { symbol in
-                            SymbolButton(
-                                symbolName: symbol,
-                                isSelected: selectedSymbol == symbol,
-                                size: symbolSize
-                            ) {
-                                selectedSymbol = symbol
-                                onSelect(symbol)
+                        LazyVGrid(columns: columns, spacing: 8) {
+                            ForEach(filteredSymbols(for: category), id: \.self) { symbol in
+                                SymbolButton(
+                                    symbolName: symbol,
+                                    isSelected: selectedSymbol == symbol,
+                                    size: symbolSize
+                                ) {
+                                    selectedSymbol = symbol
+                                    onSelect(symbol)
+                                }
                             }
                         }
                     }
@@ -306,6 +322,7 @@ enum SymbolCategory: CaseIterable {
     ScrollView {
         SymbolPickerGrid(
             selectedSymbol: .constant("star.fill"),
+            searchText: .constant(""),
             onSelect: { _ in }
         )
         .padding()
