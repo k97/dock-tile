@@ -49,8 +49,15 @@ struct CustomiseTileView: View {
                 }
             }
         }
-        .onChange(of: editedConfig) { _, newValue in
-            configManager.updateConfiguration(newValue)
+        .onChange(of: editedConfig) { _, _ in
+            // Mark as edited immediately (enables + button)
+            configManager.markSelectedConfigAsEdited()
+        }
+        // Debounced auto-save using task(id:) - cancels previous task when editedConfig changes
+        .task(id: editedConfig) {
+            // Wait 300ms before saving (debounce)
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            configManager.updateConfiguration(editedConfig)
         }
     }
 

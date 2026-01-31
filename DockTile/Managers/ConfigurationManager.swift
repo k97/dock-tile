@@ -14,11 +14,26 @@ final class ConfigurationManager: ObservableObject {
     // MARK: - Published State
 
     @Published var configurations: [DockTileConfiguration] = []
+
+    /// Tracks whether the currently selected tile has been edited since creation/last save
+    /// Used to disable the + button until user engages with the new tile
+    @Published var selectedConfigHasBeenEdited: Bool = true
+
+    /// Internal flag to prevent didSet from overriding selectedConfigHasBeenEdited during creation
+    private var isCreatingNewConfig: Bool = false
+
     @Published var selectedConfigId: UUID? {
         didSet {
             // Persist selection whenever it changes
             if let id = selectedConfigId {
                 UserDefaults.standard.set(id.uuidString, forKey: lastSelectedConfigKey)
+
+                // When switching to an existing config, mark it as "edited" (i.e., not a fresh new tile)
+                // This enables the + button for existing tiles
+                // Skip this when creating a new config (isCreatingNewConfig flag is set)
+                if oldValue != id && !isCreatingNewConfig {
+                    selectedConfigHasBeenEdited = true
+                }
             } else {
                 UserDefaults.standard.removeObject(forKey: lastSelectedConfigKey)
             }
@@ -93,17 +108,26 @@ final class ConfigurationManager: ObservableObject {
     @discardableResult
     func createConfiguration() -> DockTileConfiguration {
         let config = DockTileConfiguration(
-            name: generateUniqueName(base: "My DockTile"),
-            tintColor: .blue,
-            symbolEmoji: "⭐"
+            name: generateUniqueName(base: ConfigurationDefaults.name),
+            tintColor: ConfigurationDefaults.tintColor,
+            symbolEmoji: ConfigurationDefaults.symbolEmoji,
+            iconType: ConfigurationDefaults.iconType,
+            iconValue: ConfigurationDefaults.iconValue
         )
 
         configurations.append(config)
+
+        // Mark as not yet edited - disables + button until user makes changes
+        // Use flag to prevent selectedConfigId's didSet from overriding this
+        isCreatingNewConfig = true
+        selectedConfigHasBeenEdited = false
         selectedConfigId = config.id
+        isCreatingNewConfig = false
 
         saveConfigurations()
 
         print("✅ Created configuration: \(config.name) [\(config.id)]")
+        print("   selectedConfigHasBeenEdited = \(selectedConfigHasBeenEdited) (should be false)")
         return config
     }
 
@@ -118,6 +142,15 @@ final class ConfigurationManager: ObservableObject {
         saveConfigurations()
 
         print("💾 Updated configuration: \(config.name) [\(config.id)]")
+    }
+
+    /// Mark the currently selected config as edited (enables + button)
+    /// Called by detail view when user makes any change
+    func markSelectedConfigAsEdited() {
+        if !selectedConfigHasBeenEdited {
+            selectedConfigHasBeenEdited = true
+            print("✏️ Selected config marked as edited")
+        }
     }
 
     /// Delete a configuration by ID

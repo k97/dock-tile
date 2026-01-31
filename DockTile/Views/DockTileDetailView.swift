@@ -16,14 +16,18 @@ struct DockTileDetailView: View {
     let onCustomise: () -> Void
 
     @State private var editedConfig: DockTileConfiguration
+    @State private var tileName: String  // Separate state for TextField to avoid struct churn
     @State private var isProcessing = false
     @State private var errorMessage: String?
     @State private var showDeleteConfirmation = false
+    @State private var hasAppearedOnce = false  // Track if view has fully loaded
+    @FocusState private var isNameFieldFocused: Bool  // Track focus for commit-on-blur
 
     init(config: DockTileConfiguration, onCustomise: @escaping () -> Void) {
         self.config = config
         self.onCustomise = onCustomise
         self._editedConfig = State(initialValue: config)
+        self._tileName = State(initialValue: config.name)
     }
 
     var body: some View {
@@ -43,11 +47,11 @@ struct DockTileDetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(nsColor: .windowBackgroundColor))
-        // Toolbar with Done button (macOS Contacts style)
+        // Toolbar with Add to Dock button
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") {
-                    handleDone()
+                Button("Add to Dock") {
+                    handleAddToDock()
                 }
                 .buttonStyle(.bordered)
                 .disabled(isProcessing)
@@ -71,7 +75,53 @@ struct DockTileDetailView: View {
         .onChange(of: config.id) { _, newId in
             // Sync editedConfig when switching to a different configuration
             if let newConfig = configManager.configuration(for: newId) {
+                hasAppearedOnce = false  // Reset so we don't trigger on initial sync
                 editedConfig = newConfig
+                tileName = newConfig.name  // Sync the separate text field state
+                // Re-enable after a short delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    hasAppearedOnce = true
+                }
+            }
+        }
+        .onChange(of: editedConfig) { _, _ in
+            // Mark as edited immediately when any field changes (enables + button)
+            // Skip the initial load to avoid immediately marking new tiles as edited
+            guard hasAppearedOnce else { return }
+            configManager.markSelectedConfigAsEdited()
+        }
+        // Mark as edited when typing (for + button), but don't sync to editedConfig yet
+        .onChange(of: tileName) { _, _ in
+            guard hasAppearedOnce else { return }
+            configManager.markSelectedConfigAsEdited()
+        }
+        // Debounced auto-save using task(id:) - cancels previous task when editedConfig changes
+        .task(id: editedConfig) {
+            guard hasAppearedOnce else { return }
+
+            // Wait 300ms before saving (debounce)
+            try? await Task.sleep(nanoseconds: 300_000_000)
+
+            // Save the edited config to persist changes (draft mode)
+            let configToSave = DockTileConfiguration(
+                id: config.id,
+                name: editedConfig.name,
+                tintColor: editedConfig.tintColor,
+                symbolEmoji: editedConfig.symbolEmoji,
+                iconType: editedConfig.iconType,
+                iconValue: editedConfig.iconValue,
+                layoutMode: editedConfig.layoutMode,
+                appItems: editedConfig.appItems,
+                isVisibleInDock: editedConfig.isVisibleInDock,
+                showInAppSwitcher: editedConfig.showInAppSwitcher,
+                bundleIdentifier: config.bundleIdentifier
+            )
+            configManager.updateConfiguration(configToSave)
+        }
+        .onAppear {
+            // Delay setting hasAppearedOnce to skip initial onChange triggers
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                hasAppearedOnce = true
             }
         }
         .onChange(of: configManager.configurations) { _, newConfigs in
@@ -131,9 +181,22 @@ struct DockTileDetailView: View {
                 formRow(isLast: false) {
                     Text("Tile Name")
                     Spacer()
-                    TextField("", text: $editedConfig.name)
+                    TextField("", text: $tileName)
                         .textFieldStyle(.plain)
                         .multilineTextAlignment(.trailing)
+                        .focused($isNameFieldFocused)
+                        .onSubmit {
+                            // Sync to editedConfig on Enter key
+                            if editedConfig.name != tileName {
+                                editedConfig.name = tileName
+                            }
+                        }
+                        .onChange(of: isNameFieldFocused) { _, isFocused in
+                            // Sync to editedConfig when field loses focus
+                            if !isFocused && editedConfig.name != tileName {
+                                editedConfig.name = tileName
+                            }
+                        }
                 }
 
                 // Row 2: Show Tile
@@ -278,7 +341,7 @@ struct DockTileDetailView: View {
                         .font(.system(size: 13))
                         .foregroundColor(.primary)
 
-                    Text("This removes the tile shortcut. Your apps or folders will not be deleted.")
+                    Text("This removes the tile only, and your apps or folders stay intact")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                 }
@@ -302,16 +365,17 @@ struct DockTileDetailView: View {
 
     // MARK: - Actions
 
-    private func handleDone() {
+    private func handleAddToDock() {
         isProcessing = true
         errorMessage = nil
 
         Task {
             do {
                 // Create config with original ID but edited values
+                // Use tileName directly in case there's a pending debounce sync
                 let configToSave = DockTileConfiguration(
                     id: config.id,  // Preserve original ID
-                    name: editedConfig.name,
+                    name: tileName,  // Use tileName directly for immediate save
                     tintColor: editedConfig.tintColor,
                     symbolEmoji: editedConfig.symbolEmoji,
                     iconType: editedConfig.iconType,
@@ -350,6 +414,7 @@ struct DockTileDetailView: View {
 
                 // Update local state to match saved config
                 editedConfig = configToSave
+                tileName = configToSave.name
             } catch {
                 errorMessage = error.localizedDescription
                 print("Done action failed: \(error)")

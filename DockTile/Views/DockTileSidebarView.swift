@@ -54,7 +54,10 @@ struct DockTileSidebarView: View {
                 }) {
                     Image(systemName: "plus")
                 }
-                .help("Create new tile")
+                .disabled(!configManager.selectedConfigHasBeenEdited)
+                .help(configManager.selectedConfigHasBeenEdited
+                    ? "Create new tile"
+                    : "Edit current tile before creating another")
             }
         }
     }
@@ -70,25 +73,9 @@ struct ConfigurationRow: View {
             // Mini icon preview (24×24pt)
             MiniIconPreview(config: config)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(config.name)
-                    .font(.system(size: 13))
-                    .lineLimit(1)
-
-                if config.isVisibleInDock {
-                    Text("\(config.appItems.count) apps")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            Spacer()
-
-            if config.isVisibleInDock {
-                Circle()
-                    .fill(Color.green)
-                    .frame(width: 6, height: 6)
-            }
+            Text(config.name)
+                .font(.system(size: 13))
+                .lineLimit(1)
         }
         .padding(.vertical, 4)
     }

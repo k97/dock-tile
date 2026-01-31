@@ -15,8 +15,8 @@ import Foundation
 /// `decodeIfPresent` in DockTileConfiguration's init(from:) decoder
 enum ConfigurationDefaults {
     // Core properties
-    static let name = "My DockTile"
-    static let tintColor: TintColor = .blue
+    static let name = "New Tile"
+    static let tintColor: TintColor = .gray
     static let symbolEmoji = "⭐"  // Legacy field
     static let layoutMode: LayoutMode = .grid2x3
 

@@ -37,6 +37,7 @@ struct DockTileApp: App {
                     configManager.createConfiguration()
                 }
                 .keyboardShortcut("n", modifiers: .command)
+                .disabled(!configManager.selectedConfigHasBeenEdited)
             }
         }
     }

@@ -312,6 +312,20 @@ private struct QuaternaryFillView: NSViewRepresentable {
 
 ## Recent Changes
 
+### Auto-Save Draft Mode & Add Button Control (2026-01)
+- **Auto-Save**: All edits in DockTileDetailView and CustomiseTileView now save immediately as drafts
+  - Changes persist to `com.docktile.configs.json` on every edit
+  - "Add to Dock" button only handles installing/uninstalling the helper bundle to the Dock
+  - Tiles remain as drafts until user explicitly adds them to Dock
+- **Add Button Disable**: Apple Notes-style prevention of empty tile spam
+  - `+` button in sidebar is disabled until user makes any change to the new tile
+  - `selectedConfigHasBeenEdited` flag tracks if the current tile has been modified
+  - `isCreatingNewConfig` flag prevents race condition in `selectedConfigId` didSet
+  - `hasAppearedOnce` flag in detail view prevents `.onChange` from triggering on initial load
+- **Button Rename**: "Done" button renamed to "Add to Dock" for clarity
+- **Default Values**: New tiles use gray color and "New Tile" as default name
+- **Sidebar Cleanup**: Removed app count subtitle and status dots for cleaner appearance
+
 ### Popover Positioning Fix (2026-01)
 - **Problem**: Popover would "float" mid-air if user clicked near the top of the Dock icon
 - **Root cause**: Anchor window position used mouse Y coordinate, which varied based on click location
@@ -469,3 +483,188 @@ DockTileConfigurationView (Main Window)
 
 - **Full Specification**: `DockTile_Project_Spec.md` (comprehensive design document)
 - This file is authoritative for all architectural and design decisions
+
+---
+
+## Release Roadmap (v1.0)
+
+### Phase 1: UI Polish
+
+| # | Task | Status | Priority | Notes |
+|---|------|--------|----------|-------|
+| 1 | **Sidebar Cleanup** | ✅ Done | High | Already Apple Notes style - clean List with icon + name, status dot |
+| 2 | **Icon Preview → Dock Icon** | ✅ Done | High | IconGenerator and DockTileIconPreview use matching rendering (95% consistent) |
+| 3 | **Main App Icon** | ⚠️ Partial | High | Build settings configured but Assets.xcassets missing - uses default icon |
+
+### Phase 2: Distribution
+
+| # | Task | Status | Priority | Notes |
+|---|------|--------|----------|-------|
+| 4 | **Build Pipeline (CI/CD)** | 🔲 Pending | High | No .github/workflows, no Fastlane, no build scripts |
+| 5 | **DMG Installer** | 🔲 Pending | High | No DMG scripts exist yet |
+| 6 | **Code Signing & Notarization** | 🔲 Pending | High | No entitlements file, no signing scripts |
+
+### Phase 3: User Experience
+
+| # | Task | Status | Priority | Notes |
+|---|------|--------|----------|-------|
+| 7 | **Onboarding Screen** | 🔲 Pending | Medium | Welcome flow explaining the app (optional but nice) |
+
+### Phase 4: App Store & Marketing
+
+| # | Task | Status | Priority | Notes |
+|---|------|--------|----------|-------|
+| 8 | **App Store Review** | ✅ Assessed | Medium | Not viable - sandbox restrictions block helper bundle creation |
+| 9 | **Alternative Distribution** | 🔲 Pending | Low | Direct download recommended; SetApp as secondary |
+| 10 | **ProductHunt Launch** | 🔲 Pending | Low | Marketing page and launch strategy |
+
+---
+
+### Task Details
+
+#### 1. Sidebar Cleanup (Apple Notes Style)
+**Goal**: Create a lightweight, clean sidebar like Apple Notes
+- Remove green "active" dot indicator
+- Simplify row layout (icon + name only, minimal chrome)
+- Use native `.sidebar` list style
+- Consider removing app count subtitle
+- Lighter visual weight overall
+
+#### 2. Icon Preview → Dock Icon
+**Goal**: Ensure the icon you see in the customization view is exactly what appears in the Dock
+- `IconGenerator.swift` already generates `.icns` files
+- Verify the rendering matches `DockTileIconPreview` exactly
+- Both should use same gradient, corner radius, and symbol rendering
+
+#### 3. Main App Icon
+**Goal**: Create a memorable app icon for DockTile.app itself
+- Should convey "dock" + "customization" concept
+- Options: Multiple colored tiles, dock with star, stacked tiles
+- Use the same design language as tile icons (gradients, rounded corners)
+- Generate all required sizes for macOS (16, 32, 128, 256, 512 @ 1x and 2x)
+
+#### 4. Build Pipeline (GitHub Actions)
+**Goal**: Automated builds producing signed DMG files
+```yaml
+# Suggested workflow:
+# 1. Trigger: Push to main or tag creation
+# 2. Build: xcodebuild archive
+# 3. Sign: codesign with Developer ID certificate
+# 4. Notarize: xcrun notarytool
+# 5. Package: create-dmg or dmgbuild
+# 6. Release: Upload to GitHub Releases
+```
+
+**Requirements**:
+- Apple Developer ID Application certificate (for signing)
+- Apple Developer ID Installer certificate (for pkg, if needed)
+- App-specific password for notarization
+- GitHub secrets for credentials
+
+#### 5. DMG Installer (SF Symbols Style)
+**Goal**: Beautiful installer experience
+- Background image showing app icon and Applications folder
+- Arrow indicating drag-to-install
+- Properly sized window (600×400 typical)
+- Tools: `create-dmg` (npm) or `dmgbuild` (Python)
+
+Example with create-dmg:
+```bash
+create-dmg \
+  --volname "DockTile" \
+  --volicon "DockTile.icns" \
+  --background "installer-bg.png" \
+  --window-pos 200 120 \
+  --window-size 600 400 \
+  --icon-size 100 \
+  --icon "DockTile.app" 150 185 \
+  --hide-extension "DockTile.app" \
+  --app-drop-link 450 185 \
+  "DockTile.dmg" \
+  "build/"
+```
+
+#### 6. Code Signing & Notarization
+**Requirements for distribution outside App Store**:
+- Developer ID Application certificate
+- Hardened Runtime enabled
+- Notarization with Apple
+
+```bash
+# Sign
+codesign --deep --force --verify --verbose \
+  --sign "Developer ID Application: Your Name (TEAM_ID)" \
+  --options runtime \
+  DockTile.app
+
+# Notarize
+xcrun notarytool submit DockTile.dmg \
+  --apple-id "your@email.com" \
+  --team-id "TEAM_ID" \
+  --password "@keychain:AC_PASSWORD" \
+  --wait
+
+# Staple
+xcrun stapler staple DockTile.dmg
+```
+
+#### 7. Onboarding Screen (Optional)
+**Goal**: Welcome new users and explain the concept
+- Page 1: "Create custom Dock tiles"
+- Page 2: "Add your favorite apps"
+- Page 3: "Click to launch"
+- Use SwiftUI `TabView` with `.tabViewStyle(.page)`
+
+#### 8. App Store Review
+**Potential Issues**:
+1. **Sandbox**: App Store apps must be sandboxed
+   - ❌ Writing to `~/Library/Application Support/` may be restricted
+   - ❌ Modifying Dock plist requires permissions
+   - ❌ Launching other apps may be restricted
+2. **Private APIs**: None used currently (good)
+3. **Entitlements needed**:
+   - `com.apple.security.app-sandbox`
+   - `com.apple.security.files.user-selected.read-write`
+   - `com.apple.security.automation.apple-events` (for Dock restart)
+
+**Verdict**: App Store distribution is **unlikely** due to:
+- Creating and installing helper bundles
+- Modifying system Dock preferences
+- Apps like this typically distributed via direct download
+
+#### 9. Alternative Distribution Options
+| Option | Pros | Cons |
+|--------|------|------|
+| **Direct Download** | Full control, no fees | Need to handle payments, hosting |
+| **SetApp** | Subscription model, good exposure | Revenue share, approval process |
+| **Gumroad** | Easy payments, good for indie | 5-10% fees |
+| **Paddle** | Professional, handles taxes | Integration work |
+
+#### 10. ProductHunt Launch
+**Preparation**:
+- Create compelling tagline
+- Record demo GIF/video
+- Prepare screenshots
+- Write description highlighting use cases
+- Schedule for Tuesday-Thursday (best days)
+
+---
+
+### Implementation Order (Recommended)
+
+```
+Week 1: UI Polish
+├── Task 1: Sidebar cleanup
+├── Task 2: Icon rendering consistency
+└── Task 3: Main app icon
+
+Week 2: Distribution Setup
+├── Task 4: GitHub Actions pipeline
+├── Task 5: DMG installer
+└── Task 6: Code signing (requires Apple Developer account)
+
+Week 3: Polish & Launch
+├── Task 7: Onboarding (if time permits)
+├── Task 8: Final App Store assessment
+└── Task 9-10: Distribution & marketing decisions
+```
