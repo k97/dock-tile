@@ -116,7 +116,11 @@ final class HelperBundleManager {
         try codesignHelper(at: helperPath)
         print("   ✓ Code signed")
 
-        // 4. Add to Dock (we already removed it earlier if it was there)
+        // 4. Touch the bundle to invalidate icon cache and re-register with Launch Services
+        touchBundle(at: helperPath)
+        print("   ✓ Refreshed icon cache")
+
+        // 5. Add to Dock (we already removed it earlier if it was there)
         addToDock(at: helperPath)
 
         // 5. Restart Dock to apply changes and launch the helper
@@ -241,6 +245,27 @@ final class HelperBundleManager {
         return helperDirectory.appendingPathComponent("\(appName).app")
     }
 
+    /// Remove tile from Dock only (without deleting bundle)
+    /// Use this when user toggles "Show Tile" OFF - removes from Dock but keeps bundle
+    func removeFromDock(for config: DockTileConfiguration) throws {
+        print("🗑️ Removing from Dock only: \(config.name)")
+        print("   Bundle ID: \(config.bundleIdentifier)")
+
+        // Quit helper if running
+        if isHelperRunning(bundleId: config.bundleIdentifier) {
+            quitHelper(bundleId: config.bundleIdentifier)
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        // Remove from Dock plist (works even if bundle doesn't exist)
+        removeFromDockPlist(bundleId: config.bundleIdentifier)
+
+        // Restart Dock to apply changes
+        restartDock()
+
+        print("✅ Removed from Dock: \(config.name)")
+    }
+
     // MARK: - Bundle Generation (Pure Swift)
 
     private func generateHelperBundle(
@@ -326,6 +351,29 @@ final class HelperBundleManager {
         guard process.terminationStatus == 0 else {
             throw HelperBundleError.codesignFailed
         }
+    }
+
+    /// Touch bundle to invalidate icon cache and re-register with Launch Services
+    /// This forces macOS to reload the icon from the .icns file
+    private func touchBundle(at helperPath: URL) {
+        // Touch the app bundle to update modification date
+        let touchProcess = Process()
+        touchProcess.executableURL = URL(fileURLWithPath: "/usr/bin/touch")
+        touchProcess.arguments = [helperPath.path]
+        touchProcess.standardOutput = FileHandle.nullDevice
+        touchProcess.standardError = FileHandle.nullDevice
+        try? touchProcess.run()
+        touchProcess.waitUntilExit()
+
+        // Re-register with Launch Services to refresh icon cache
+        let lsregisterPath = "/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister"
+        let lsProcess = Process()
+        lsProcess.executableURL = URL(fileURLWithPath: lsregisterPath)
+        lsProcess.arguments = ["-f", "-R", helperPath.path]
+        lsProcess.standardOutput = FileHandle.nullDevice
+        lsProcess.standardError = FileHandle.nullDevice
+        try? lsProcess.run()
+        lsProcess.waitUntilExit()
     }
 
     /// Check if app is already in Dock (by path)

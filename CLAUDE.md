@@ -491,6 +491,49 @@ private struct QuaternaryFillView: NSViewRepresentable {
 - **Fix**: Added `plist["CFBundleIconFile"] = "AppIcon"` in `updateInfoPlist()` in HelperBundleManager.swift
 - **Result**: macOS now correctly loads the generated AppIcon.icns from Contents/Resources/
 
+### Dynamic Action Button & Dock Removal Fix (2026-01)
+- **Problem 1**: Toggle "Show Tile" OFF + click button → tile still in Dock
+- **Problem 2**: Manual remove from Dock → Toggle ON → tile not added back
+- **Root Cause**:
+  - `uninstallHelper` only called if `helperExists()` returned true
+  - Dock plist removal depended on bundle file existing
+- **Fixes**:
+  - Added `isCurrentlyInDock` state to track actual Dock presence
+  - Dynamic button text based on state:
+    - "Add to Dock" - toggle ON, not in Dock
+    - "Update" - toggle ON, already in Dock
+    - "Remove from Dock" - toggle OFF, in Dock
+    - "Done" - toggle OFF, not in Dock
+  - New `removeFromDock(for:)` method that removes from Dock plist without requiring bundle
+  - `updateDockState()` called on appear and toggle change
+- **Location**: `DockTileDetailView.swift`, `HelperBundleManager.swift`
+
+### Icon Properties Sync Fix (2026-01)
+- **Problem**: Icon scale changes in CustomiseTileView not reflected when adding to Dock
+- **Root Cause**: `DockTileDetailView.editedConfig` wasn't syncing icon-related properties from `configManager`
+- **Fix**: Extended `.onChange(of: configManager.configurations)` handler to sync:
+  - `iconType`, `iconValue`, `iconScale`, `tintColor`, `symbolEmoji`
+- **Result**: Changes made in CustomiseTileView now correctly apply when clicking "Add to Dock"
+
+### Icon Cache Refresh (2026-01)
+- **Problem**: macOS Dock showing stale cached icons after regeneration
+- **Fix**: Added `touchBundle(at:)` method in `HelperBundleManager`:
+  - Touches bundle to update modification date
+  - Re-registers with Launch Services via `lsregister -f -R`
+- **Called**: After code signing, before adding to Dock
+- **Manual Cache Clear** (if needed):
+  ```bash
+  rm -rf /var/folders/*/*/com.apple.iconservices*
+  killall Dock
+  killall Finder
+  ```
+
+### Sidebar Icon Preview Unified (2026-01)
+- **Change**: Replaced custom `MiniIconPreview` with `DockTileIconPreview.fromConfig(config, size: 24)`
+- **Benefit**: Sidebar now uses the same icon rendering as all other previews
+- **Behavior**: Icon scales proportionally based on `iconScale` setting within 24×24pt container
+- **Location**: `DockTileSidebarView.swift`
+
 ## Performance Targets
 
 1. Popover appears in <100ms (measured from click event to window visible)
@@ -517,7 +560,26 @@ cat "/Users/karthik/Library/Application Support/DockTile/My DockTile.app/Content
 ```
 
 ### Force reinstall helper
-Toggle "Show Tile" off and back on, then click "Done"
+Toggle "Show Tile" off and back on, then click the action button
+
+### Clear icon cache (if Dock shows stale icons)
+```bash
+# Clear macOS icon services cache
+rm -rf /var/folders/*/*/com.apple.iconservices*
+
+# Restart Dock and Finder
+killall Dock
+killall Finder
+```
+
+### Verify generated icon
+```bash
+# Extract iconset from helper bundle
+iconutil -c iconset "$HOME/Library/Application Support/DockTile/[TileName].app/Contents/Resources/AppIcon.icns" -o /tmp/icon_check.iconset
+
+# Open to inspect
+open /tmp/icon_check.iconset/icon_512x512.png
+```
 
 ## UI Component Hierarchy
 
@@ -532,7 +594,7 @@ DockTileConfigurationView (Main Window)
 │   └── Detail Area (ZStack for drill-down)
 │       ├── DockTileDetailView (Screen 3)
 │       │   ├── Toolbar
-│       │   │   └── Done button (.bordered style - Liquid Glass secondary)
+│       │   │   └── Dynamic action button (.bordered style - text varies: Add/Update/Remove/Done)
 │       │   ├── heroSection (HStack)
 │       │   │   ├── Left column (VStack)
 │       │   │   │   ├── Icon container (118×118pt, cornerRadius 24, tappable → customise)

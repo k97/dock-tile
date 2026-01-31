@@ -21,7 +21,19 @@ struct DockTileDetailView: View {
     @State private var errorMessage: String?
     @State private var showDeleteConfirmation = false
     @State private var hasAppearedOnce = false  // Track if view has fully loaded
+    @State private var isCurrentlyInDock = false  // Track actual Dock state
     @FocusState private var isNameFieldFocused: Bool  // Track focus for commit-on-blur
+
+    /// Dynamic button text based on toggle state and actual Dock presence
+    private var actionButtonText: String {
+        if editedConfig.isVisibleInDock {
+            // User wants tile in Dock
+            return isCurrentlyInDock ? "Update" : "Add to Dock"
+        } else {
+            // User wants tile removed from Dock
+            return isCurrentlyInDock ? "Remove from Dock" : "Done"
+        }
+    }
 
     init(config: DockTileConfiguration, onCustomise: @escaping () -> Void) {
         self.config = config
@@ -47,11 +59,11 @@ struct DockTileDetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(nsColor: .windowBackgroundColor))
-        // Toolbar with Add to Dock button
+        // Toolbar with dynamic action button
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Add to Dock") {
-                    handleAddToDock()
+                Button(actionButtonText) {
+                    handleDockAction()
                 }
                 .buttonStyle(.bordered)
                 .disabled(isProcessing)
@@ -96,20 +108,43 @@ struct DockTileDetailView: View {
             configManager.updateConfiguration(editedConfig)
         }
         .onAppear {
+            // Check actual Dock state on appear
+            updateDockState()
+
             // Delay setting hasAppearedOnce to skip initial onChange triggers
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 hasAppearedOnce = true
             }
         }
+        .onChange(of: editedConfig.isVisibleInDock) { _, _ in
+            // Update button text when toggle changes
+            updateDockState()
+        }
         .onChange(of: configManager.configurations) { _, newConfigs in
-            // Sync editedConfig when underlying configuration changes (e.g., dock visibility sync)
+            // Sync editedConfig when underlying configuration changes (e.g., from CustomiseTileView)
             // NOTE: We intentionally do NOT sync isVisibleInDock here because:
             // 1. User might be in the middle of editing and toggled "Show Tile" ON
             // 2. Dock watcher might fire and think the tile should be OFF
             // 3. This would reset the user's toggle before they can click "Done"
             // The correct state will be set when user clicks "Done" and we install/uninstall
             if let updatedConfig = newConfigs.first(where: { $0.id == editedConfig.id }) {
-                // Only sync showInAppSwitcher if it was changed externally
+                // Sync icon-related properties (may be changed in CustomiseTileView)
+                if editedConfig.iconType != updatedConfig.iconType {
+                    editedConfig.iconType = updatedConfig.iconType
+                }
+                if editedConfig.iconValue != updatedConfig.iconValue {
+                    editedConfig.iconValue = updatedConfig.iconValue
+                }
+                if editedConfig.iconScale != updatedConfig.iconScale {
+                    editedConfig.iconScale = updatedConfig.iconScale
+                }
+                if editedConfig.tintColor != updatedConfig.tintColor {
+                    editedConfig.tintColor = updatedConfig.tintColor
+                }
+                if editedConfig.symbolEmoji != updatedConfig.symbolEmoji {
+                    editedConfig.symbolEmoji = updatedConfig.symbolEmoji
+                }
+                // Sync showInAppSwitcher if it was changed externally
                 if editedConfig.showInAppSwitcher != updatedConfig.showInAppSwitcher {
                     editedConfig.showInAppSwitcher = updatedConfig.showInAppSwitcher
                 }
@@ -354,7 +389,12 @@ struct DockTileDetailView: View {
 
     // MARK: - Actions
 
-    private func handleAddToDock() {
+    /// Check if tile is currently in Dock and update state
+    private func updateDockState() {
+        isCurrentlyInDock = HelperBundleManager.shared.findInDock(bundleId: editedConfig.bundleIdentifier) != nil
+    }
+
+    private func handleDockAction() {
         isProcessing = true
         errorMessage = nil
 
@@ -367,36 +407,39 @@ struct DockTileDetailView: View {
                 // Compare against the stored config in manager, not the stale `config` property
                 let originalConfig = configManager.configuration(for: editedConfig.id)
                 let appSwitcherChanged = originalConfig?.showInAppSwitcher != configToSave.showInAppSwitcher
-                let wasVisibleInDock = originalConfig?.isVisibleInDock ?? false
 
                 // Save configuration changes first
                 configManager.updateConfiguration(configToSave)
 
                 // Install or uninstall based on Show Tile toggle
                 if configToSave.isVisibleInDock {
+                    // User wants tile in Dock - install/update
                     try await HelperBundleManager.shared.installHelper(for: configToSave)
                     print("✅ Helper installed: \(configToSave.name)")
                     print("   User can open it from: ~/Library/Application Support/DockTile/")
                 } else {
-                    // If toggle is off, uninstall if previously installed
-                    if HelperBundleManager.shared.helperExists(for: configToSave) {
-                        try HelperBundleManager.shared.uninstallHelper(for: configToSave)
-                        print("Tile removed from Dock: \(configToSave.name)")
-                    }
+                    // User wants tile removed - always try to remove from Dock
+                    // Remove from Dock plist regardless of whether bundle exists
+                    print("🗑️ Removing tile from Dock: \(configToSave.name)")
+                    try HelperBundleManager.shared.removeFromDock(for: configToSave)
+                    print("✅ Tile removed from Dock: \(configToSave.name)")
                 }
 
                 // If only showInAppSwitcher changed but tile was already visible,
                 // we need to restart the helper to pick up the new activation policy
-                if appSwitcherChanged && wasVisibleInDock && configToSave.isVisibleInDock {
+                if appSwitcherChanged && isCurrentlyInDock && configToSave.isVisibleInDock {
                     print("🔄 App Switcher setting changed - helper was restarted")
                 }
 
                 // Update local state to match saved config
                 editedConfig = configToSave
                 tileName = configToSave.name
+
+                // Refresh dock state after action
+                updateDockState()
             } catch {
                 errorMessage = error.localizedDescription
-                print("Done action failed: \(error)")
+                print("Dock action failed: \(error)")
             }
             isProcessing = false
         }

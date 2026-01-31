@@ -70,65 +70,14 @@ struct ConfigurationRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Mini icon preview (24×24pt)
-            MiniIconPreview(config: config)
+            // Mini icon preview (24×24pt) - uses same component as other previews
+            DockTileIconPreview.fromConfig(config, size: 24)
 
             Text(config.name)
                 .font(.system(size: 13))
                 .lineLimit(1)
         }
         .padding(.vertical, 4)
-    }
-}
-
-// MARK: - Mini Icon Preview
-
-private struct MiniIconPreview: View {
-    let config: DockTileConfiguration
-    private let size: CGFloat = 24
-    private let cornerRadius: CGFloat = 6
-
-    /// Calculate icon size from scale value (same formula as DockTileIconPreview)
-    private var iconSize: CGFloat {
-        let baseRatio = 0.30 + (CGFloat(config.iconScale - 10) * 0.035)
-        let ratio = config.iconType == .emoji ? baseRatio + 0.05 : baseRatio
-        return size * ratio
-    }
-
-    var body: some View {
-        ZStack {
-            // Gradient background
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [config.tintColor.colorTop, config.tintColor.colorBottom],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-
-            // Glass effect border
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.3), lineWidth: 0.5)
-
-            // Icon content (SF Symbol or Emoji)
-            iconContent
-        }
-        .frame(width: size, height: size)
-    }
-
-    @ViewBuilder
-    private var iconContent: some View {
-        switch config.iconType {
-        case .sfSymbol:
-            Image(systemName: config.iconValue)
-                .font(.system(size: iconSize, weight: .medium))
-                .foregroundColor(.white)
-
-        case .emoji:
-            Text(config.iconValue)
-                .font(.system(size: iconSize))
-        }
     }
 }
 
