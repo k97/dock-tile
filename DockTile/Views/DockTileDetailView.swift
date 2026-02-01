@@ -9,6 +9,7 @@
 
 import SwiftUI
 import AppKit
+import Carbon.HIToolbox  // For kVK_Escape key code
 
 struct DockTileDetailView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
@@ -217,9 +218,8 @@ struct DockTileDetailView: View {
                     Text("Layout")
                     Spacer()
                     Picker("", selection: $editedConfig.layoutMode) {
-                        ForEach([LayoutMode.grid2x3, LayoutMode.horizontal1x6], id: \.self) { mode in
-                            Text(mode.displayName).tag(mode)
-                        }
+                        Text("Grid").tag(LayoutMode.grid)
+                        Text("List").tag(LayoutMode.list)
                     }
                     .labelsHidden()
                 }
@@ -299,7 +299,7 @@ struct DockTileDetailView: View {
                             .frame(width: 24, height: 20)
                     }
                     .buttonStyle(.borderless)
-                    .disabled(selectedAppIDs.isEmpty && editedConfig.appItems.isEmpty)
+                    .disabled(selectedAppIDs.isEmpty)
 
                     Spacer()
                 }
@@ -364,29 +364,35 @@ struct DockTileDetailView: View {
         Task {
             do {
                 // editedConfig.name is already synced with tileName on every keystroke
-                let configToSave = editedConfig
+                var configToSave = editedConfig
 
                 // Check if showInAppSwitcher changed (requires helper restart)
                 // Compare against the stored config in manager, not the stale `config` property
                 let originalConfig = configManager.configuration(for: editedConfig.id)
                 let appSwitcherChanged = originalConfig?.showInAppSwitcher != configToSave.showInAppSwitcher
 
-                // Save configuration changes first
-                configManager.updateConfiguration(configToSave)
-
                 // Install or uninstall based on Show Tile toggle
                 if configToSave.isVisibleInDock {
                     // User wants tile in Dock - install/update
+                    // Clear lastDockIndex after successful install (position is now live in Dock)
                     try await HelperBundleManager.shared.installHelper(for: configToSave)
+                    configToSave.lastDockIndex = nil  // Clear saved position
                     print("✅ Helper installed: \(configToSave.name)")
                     print("   User can open it from: ~/Library/Application Support/DockTile/")
                 } else {
-                    // User wants tile removed - always try to remove from Dock
+                    // User wants tile removed - save position before removal
                     // Remove from Dock plist regardless of whether bundle exists
                     print("🗑️ Removing tile from Dock: \(configToSave.name)")
-                    try await HelperBundleManager.shared.removeFromDock(for: configToSave)
+                    let savedPosition = try await HelperBundleManager.shared.removeFromDock(for: configToSave)
+                    if let position = savedPosition {
+                        configToSave.lastDockIndex = position
+                        print("   📍 Saved Dock position: \(position) for later restoration")
+                    }
                     print("✅ Tile removed from Dock: \(configToSave.name)")
                 }
+
+                // Save configuration changes (including lastDockIndex)
+                configManager.updateConfiguration(configToSave)
 
                 // If only showInAppSwitcher changed but tile was already visible,
                 // we need to restart the helper to pick up the new activation policy
@@ -415,13 +421,10 @@ struct DockTileDetailView: View {
     }
 
     private func removeSelectedApp() {
-        // Remove selected apps, or last app if none selected
-        if !selectedAppIDs.isEmpty {
-            editedConfig.appItems.removeAll { selectedAppIDs.contains($0.id) }
-            selectedAppIDs.removeAll()
-        } else if !editedConfig.appItems.isEmpty {
-            editedConfig.appItems.removeLast()
-        }
+        // Remove all selected apps
+        guard !selectedAppIDs.isEmpty else { return }
+        editedConfig.appItems.removeAll { selectedAppIDs.contains($0.id) }
+        selectedAppIDs.removeAll()
     }
 
     private func addItem() {
@@ -473,6 +476,15 @@ struct NativeAppsTableView: View {
 
     private let rowHeight: CGFloat = 28
 
+    // Track last clicked index for Shift+Click range selection
+    @State private var lastClickedIndex: Int? = nil
+
+    // Track the item being dragged for reordering
+    @State private var draggedItem: AppItem? = nil
+
+    // Event monitor for Escape key (to clear multi-selection)
+    @State private var eventMonitor: Any? = nil
+
     // Table row colors - using quaternarySystemFill for odd rows (matches form group)
     private var oddRowColor: Color {
         Color(nsColor: .quaternarySystemFill)
@@ -513,6 +525,19 @@ struct NativeAppsTableView: View {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     VStack(spacing: 0) {
                         HStack(spacing: 0) {
+                            // Drag handle (grip lines)
+                            Image(systemName: "line.3.horizontal")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.tertiary)
+                                .frame(width: 16)
+                                .onHover { hovering in
+                                    if hovering {
+                                        NSCursor.openHand.push()
+                                    } else {
+                                        NSCursor.pop()
+                                    }
+                                }
+
                             // Item column
                             HStack(spacing: 8) {
                                 AppIconView(item: item)
@@ -537,15 +562,81 @@ struct NativeAppsTableView: View {
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            if selection.contains(item.id) {
-                                selection.remove(item.id)
-                            } else {
-                                selection = [item.id]
-                            }
+                            handleRowTap(index: index, item: item)
                         }
+                        // Drag and drop for reordering
+                        .onDrag {
+                            draggedItem = item
+                            return NSItemProvider(object: item.id.uuidString as NSString)
+                        }
+                        .onDrop(of: [.text], delegate: AppItemDropDelegate(
+                            item: item,
+                            items: $items,
+                            draggedItem: $draggedItem
+                        ))
                     }
                 }
             }
+        }
+        // Set up Escape key monitor to clear multi-selection
+        .onAppear {
+            setupEscapeKeyMonitor()
+        }
+        .onDisappear {
+            removeEscapeKeyMonitor()
+        }
+    }
+
+    // MARK: - Escape Key Monitor (NSEvent Local Monitor)
+
+    private func setupEscapeKeyMonitor() {
+        // Only set up if not already monitoring
+        guard eventMonitor == nil else { return }
+
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if Int(event.keyCode) == kVK_Escape && selection.count > 1 {
+                // Clear selection when Escape pressed with multiple items selected
+                DispatchQueue.main.async {
+                    selection.removeAll()
+                }
+                return nil  // Consume the event (prevents system beep)
+            }
+            return event  // Pass through other key events
+        }
+    }
+
+    private func removeEscapeKeyMonitor() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+    }
+
+    // MARK: - Row Tap Handler (Multi-select)
+
+    private func handleRowTap(index: Int, item: AppItem) {
+        let modifiers = NSEvent.modifierFlags
+
+        if modifiers.contains(.command) {
+            // Cmd+Click: Toggle individual selection
+            if selection.contains(item.id) {
+                selection.remove(item.id)
+            } else {
+                selection.insert(item.id)
+            }
+            lastClickedIndex = index
+        } else if modifiers.contains(.shift), let lastIndex = lastClickedIndex {
+            // Shift+Click: Range selection from last clicked to current
+            let range = min(lastIndex, index)...max(lastIndex, index)
+            for i in range {
+                if i < items.count {
+                    selection.insert(items[i].id)
+                }
+            }
+        } else {
+            // Regular click: Single selection (replaces previous selection)
+            selection = [item.id]
+            lastClickedIndex = index
         }
     }
 
@@ -564,6 +655,36 @@ struct NativeAppsTableView: View {
 
     private func itemKind(for item: AppItem) -> String {
         item.isFolder ? "Folder" : "Application"
+    }
+}
+
+// MARK: - Drop Delegate for Reordering
+
+struct AppItemDropDelegate: DropDelegate {
+    let item: AppItem
+    @Binding var items: [AppItem]
+    @Binding var draggedItem: AppItem?
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedItem = nil
+        return true
+    }
+
+    func dropEntered(info: DropInfo) {
+        guard let draggedItem = draggedItem,
+              draggedItem.id != item.id,
+              let fromIndex = items.firstIndex(where: { $0.id == draggedItem.id }),
+              let toIndex = items.firstIndex(where: { $0.id == item.id }) else {
+            return
+        }
+
+        withAnimation(.easeInOut(duration: 0.2)) {
+            items.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        return DropProposal(operation: .move)
     }
 }
 

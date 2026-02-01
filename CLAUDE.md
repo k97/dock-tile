@@ -130,7 +130,7 @@ newFeature = try container.decodeIfPresent(Bool.self, forKey: .newFeature)
 
 This approach handles 95% of schema changes. Old configs missing new fields will use defaults automatically.
 
-### Current Configuration Fields (v4)
+### Current Configuration Fields (v5)
 
 | Field | Type | Default | Notes |
 |-------|------|---------|-------|
@@ -141,11 +141,12 @@ This approach handles 95% of schema changes. Old configs missing new fields will
 | iconType | IconType | .sfSymbol | Type of icon: .sfSymbol or .emoji |
 | iconValue | String | "star.fill" | SF Symbol name or emoji character |
 | iconScale | Int | 14 | (v4) Icon size scale (10-20 range) |
-| layoutMode | LayoutMode | .grid2x3 | Stack (grid) or List |
+| layoutMode | LayoutMode | .grid | Stack (grid) or List |
 | appItems | [AppItem] | [] | Apps in the tile |
 | isVisibleInDock | Bool | true | Show helper in Dock (enabled by default) |
 | showInAppSwitcher | Bool | false | (v2) Show in Cmd+Tab |
 | bundleIdentifier | String | Generated | Helper bundle ID |
+| lastDockIndex | Int? | nil | (v5) Saved Dock position for show/hide restoration |
 
 ## Key Implementation Details
 
@@ -383,6 +384,52 @@ private struct QuaternaryFillView: NSViewRepresentable {
 ```
 
 ## Recent Changes
+
+### Dock Position Preservation for Show/Hide Toggle (2026-02)
+- **Problem**: When user toggles "Show Tile" OFF then back ON, the tile would appear at the end of the Dock instead of its original position
+- **Root Cause**: `removeFromDock(for:)` was not saving the Dock position before removal. When the user re-enabled the tile, `installHelper` couldn't restore the position because it was lost.
+- **Fix**: Added `lastDockIndex` field (v5) to `DockTileConfiguration` to persist Dock position:
+  - When hiding: `removeFromDock(for:)` saves the current Dock index and returns it
+  - `DockTileDetailView` saves the returned position to `config.lastDockIndex`
+  - When showing: `installHelper` uses `config.lastDockIndex` if not currently in Dock
+  - After successful install: `lastDockIndex` is cleared (position is now live in Dock)
+- **Files Modified**:
+  - `ConfigurationModels.swift` - Added `lastDockIndex: Int?` field (v5)
+  - `HelperBundleManager.swift` - `removeFromDock(for:)` now returns saved position; `installHelper` uses `config.lastDockIndex` as fallback
+  - `DockTileDetailView.swift` - `handleDockAction()` saves/clears `lastDockIndex`
+- **Result**: Tiles maintain their Dock position across show/hide toggles
+
+### Phase 1b Features Complete (2026-02)
+
+**1b.1: Drag to Reorder Apps**
+- Added drag handle (grip lines icon) to each row in `NativeAppsTableView`
+- Implemented `onDrag`/`onDrop` with custom `AppItemDropDelegate`
+- Order persists to config via existing auto-save mechanism
+- Popover displays apps in saved order
+
+**1b.2: Multi-select & Remove Apps**
+- **Cmd+Click**: Toggle individual row selection (non-contiguous)
+- **Shift+Click**: Range selection from last clicked to current row
+- **Escape key**: Clears multi-selection (when 2+ items selected)
+  - Implemented via `NSEvent.addLocalMonitorForEvents` with `kVK_Escape` from `Carbon.HIToolbox`
+- **"-" button**: Disabled when `selectedAppIDs.isEmpty`
+- Files: `DockTileDetailView.swift` - `NativeAppsTableView`, `AppItemDropDelegate`
+
+**1b.3: Dynamic Grid Popover Width**
+- Simplified `LayoutMode` enum: removed `.grid2x3`, `.grid3x3`, `.grid4x4`, `.horizontal1x6`
+- Now only `.grid` (dynamic) and `.list` (menu-style)
+- Backward compatibility decoder maps old values to new enum
+- Dynamic column calculation in `StackPopoverView`:
+  | App Count | Columns |
+  |-----------|---------|
+  | 1-4       | 2       |
+  | 5-6       | 3       |
+  | 7-8       | 4       |
+  | 9-10      | 5       |
+  | 11-12     | 6       |
+  | 13+       | 7 (max) |
+- Popover width calculated dynamically: `(itemWidth × cols) + (spacing × (cols-1)) + (padding × 2)`
+- Files: `ConfigurationModels.swift`, `NativePopoverViews.swift`, `FloatingPanel.swift`, `LauncherView.swift`, `DockTileDetailView.swift`
 
 ### Main App Icon via Icon Composer (2026-02)
 - **Tool**: Apple's Icon Composer for macOS Tahoe icons with appearance variants
@@ -739,6 +786,16 @@ CFPreferencesAppSynchronize("com.apple.dock" as CFString)
 - **Behavior**: Icon scales proportionally based on `iconScale` setting within 24×24pt container
 - **Location**: `DockTileSidebarView.swift`
 
+## Known Issues / TODO
+
+### Missing "Configure..." Context Menu (Regression)
+- **Problem**: Right-clicking on a helper tile's Dock icon should show a context menu with "Configure..." option that opens the main DockTile app with that tile selected in detail view
+- **Expected Behavior**:
+  - Right-click on helper tile in Dock → Context menu appears with app list + "Configure..." option
+  - Clicking "Configure..." → Opens main DockTile.app and selects the corresponding tile
+- **Status**: Lost during recent refactoring - needs investigation and fix
+- **Location**: Likely in `HelperAppDelegate.swift` (context menu setup)
+
 ## Performance Targets
 
 1. Popover appears in <100ms (measured from click event to window visible)
@@ -845,6 +902,14 @@ DockTileConfigurationView (Main Window)
 | 1 | **Sidebar Cleanup** | ✅ Done | High | Apple Notes style - clean List with icon + name |
 | 2 | **Icon Preview → Dock Icon** | ✅ Done | High | Squircle shape, beveled glass stroke, Tahoe-native design |
 | 3 | **Main App Icon** | ✅ Done | High | Icon Composer with light/dark/tinted variants via AppIcon.icon |
+
+### Phase 1b: Feature Enhancements
+
+| # | Task | Status | Priority | Notes |
+|---|------|--------|----------|-------|
+| 1b.1 | **Drag to Reorder Apps** | ✅ Done | High | Drag rows in Selected Items table to reorder; order persists to config and popover |
+| 1b.2 | **Multi-select & Remove Apps** | ✅ Done | High | Cmd+Click for toggle, Shift+Click for range; Escape clears; "-" removes all selected |
+| 1b.3 | **Dynamic Grid Popover Width** | ✅ Done | High | Grid columns auto-adjust: 2 cols (1-4 apps) → 7 cols max (13+ apps) |
 
 ### Phase 2: Distribution
 
@@ -980,6 +1045,169 @@ Screen 1: Welcome + How It Works
 **Assets Needed**:
 - Welcome illustration (optional, can use SF Symbols)
 
+#### 1b.1 Drag to Reorder Apps
+**Goal**: Allow users to drag rows in the Selected Items table to reorder apps
+
+**Behavior**:
+- User can drag rows up/down to reorder apps in `NativeAppsTableView`
+- New order persists to config JSON on save (via existing auto-save mechanism)
+- Popover displays apps in the saved order (reads from `appItems` array)
+
+**Implementation**:
+```swift
+// In NativeAppsTableView:
+// 1. Add .onMove modifier to ForEach
+ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+    // ... row content
+}
+.onMove { from, to in
+    items.move(fromOffsets: from, toOffset: to)
+}
+
+// 2. Add drag indicator (grip lines) to each row
+// 3. May need to wrap in List for native drag support, or use custom drag gesture
+```
+
+**Files to Modify**:
+- `DockTileDetailView.swift` - `NativeAppsTableView` struct
+
+**Considerations**:
+- SwiftUI's `.onMove` works best with `List`, but current impl uses `VStack + ForEach`
+- Option A: Convert to `List` with custom styling to match current design
+- Option B: Use `DragGesture` with manual reordering logic
+- Option C: Use `onDrag`/`onDrop` modifiers for more control
+
+---
+
+#### 1b.2 Multi-select & Remove Apps
+**Goal**: Allow selecting multiple apps and removing them at once
+
+**Behavior**:
+- **Cmd+Click**: Toggle individual row selection (non-contiguous)
+- **Shift+Click**: Range selection (from last selected to clicked row)
+- **"-" button**: Removes all selected apps at once
+- **"-" button disabled** when no apps are selected
+
+**Implementation**:
+```swift
+// In NativeAppsTableView:
+// 1. Track last clicked index for Shift+Click range selection
+@State private var lastClickedIndex: Int? = nil
+
+// 2. Update onTapGesture to handle modifiers
+.onTapGesture {
+    // Check for modifier keys using NSEvent
+    let modifiers = NSEvent.modifierFlags
+
+    if modifiers.contains(.command) {
+        // Cmd+Click: Toggle selection
+        if selection.contains(item.id) {
+            selection.remove(item.id)
+        } else {
+            selection.insert(item.id)
+        }
+        lastClickedIndex = index
+    } else if modifiers.contains(.shift), let lastIndex = lastClickedIndex {
+        // Shift+Click: Range selection
+        let range = min(lastIndex, index)...max(lastIndex, index)
+        for i in range {
+            selection.insert(items[i].id)
+        }
+    } else {
+        // Regular click: Single selection
+        selection = [item.id]
+        lastClickedIndex = index
+    }
+}
+
+// 3. In DockTileDetailView, update "-" button:
+Button(action: removeSelectedApp) { ... }
+    .disabled(selectedAppIDs.isEmpty)  // Changed from: selectedAppIDs.isEmpty && editedConfig.appItems.isEmpty
+```
+
+**Files to Modify**:
+- `DockTileDetailView.swift` - `NativeAppsTableView` and `-` button logic
+
+---
+
+#### 1b.3 Dynamic Grid Popover Width
+**Goal**: Auto-adjust grid columns based on app count
+
+**Column Rules**:
+| App Count | Columns |
+|-----------|---------|
+| 1-4 apps  | 2 cols  |
+| 5-6 apps  | 3 cols  |
+| 7-8 apps  | 4 cols  |
+| 9-10 apps | 5 cols  |
+| 11-12 apps| 6 cols  |
+| 13+ apps  | 7 cols (max) |
+
+**Breaking Changes**:
+- Remove fixed grid options (`.grid2x3`, etc.) from `LayoutMode`
+- Simplify `LayoutMode` to just `.grid` and `.list`
+- Backward compatibility: Old configs with `.grid2x3`, `.horizontal1x6` migrate to `.grid`/`.list`
+
+**Implementation**:
+```swift
+// 1. Update LayoutMode enum in ConfigurationModels.swift:
+enum LayoutMode: String, Codable, Hashable {
+    case grid = "grid"      // Dynamic grid (replaces grid2x3, grid3x3, etc.)
+    case list = "list"      // List view (replaces horizontal1x6)
+
+    // Backward compatibility decoder
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+
+        switch rawValue {
+        case "grid", "grid2x3", "grid3x3", "grid4x4":
+            self = .grid
+        case "list", "horizontal1x6":
+            self = .list
+        default:
+            self = .grid
+        }
+    }
+}
+
+// 2. Update StackPopoverView in NativePopoverViews.swift:
+private var columnCount: Int {
+    let count = apps.count
+    switch count {
+    case 0...4: return 2
+    case 5...6: return 3
+    case 7...8: return 4
+    case 9...10: return 5
+    case 11...12: return 6
+    default: return 7  // 13+ apps
+    }
+}
+
+private var columns: [GridItem] {
+    Array(repeating: GridItem(.fixed(100), spacing: 8), count: columnCount)
+}
+
+private var popoverWidth: CGFloat {
+    // Calculate based on column count: (100 * cols) + (8 * (cols-1)) + (16 * 2 padding)
+    CGFloat(100 * columnCount + 8 * (columnCount - 1) + 32)
+}
+
+// 3. Update Layout picker in DockTileDetailView.swift:
+Picker("", selection: $editedConfig.layoutMode) {
+    Text("Grid").tag(LayoutMode.grid)
+    Text("List").tag(LayoutMode.list)
+}
+```
+
+**Files to Modify**:
+- `ConfigurationModels.swift` - `LayoutMode` enum
+- `ConfigurationSchema.swift` - Default layout mode
+- `NativePopoverViews.swift` - `StackPopoverView` dynamic columns
+- `DockTileDetailView.swift` - Layout picker options
+
+---
+
 #### 8. App Store Review
 **Potential Issues**:
 1. **Sandbox**: App Store apps must be sandboxed
@@ -1018,8 +1246,16 @@ Screen 1: Welcome + How It Works
 ### Implementation Order (Remaining)
 
 ```
-Phase 1: UI Polish (remaining)
-└── Task 3: Main app icon
+Phase 1b: Feature Enhancements ✅ COMPLETE
+├── Task 1b.1: Drag to Reorder Apps ✅
+├── Task 1b.2: Multi-select & Remove Apps ✅ (includes Escape key to clear)
+└── Task 1b.3: Dynamic Grid Popover Width ✅
+
+Bug Fixes (CURRENT)
+└── Fix: "Configure..." context menu missing from helper tile right-click
+    ├── Should show context menu with app list + "Configure..." option
+    ├── "Configure..." should open main DockTile.app with tile selected
+    └── Location: HelperAppDelegate.swift
 
 Phase 2: Distribution Setup
 ├── Task 4: GitHub Actions pipeline

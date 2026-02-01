@@ -74,9 +74,16 @@ final class HelperBundleManager {
         let wasInDock = existingDockPath != nil
 
         // Save the original Dock position before removal (for updates)
-        let originalDockIndex = wasInDock ? findDockIndex(bundleId: config.bundleIdentifier) : nil
+        // If currently in Dock, use live position; otherwise fall back to saved lastDockIndex
+        let originalDockIndex: Int?
+        if wasInDock {
+            originalDockIndex = findDockIndex(bundleId: config.bundleIdentifier)
+        } else {
+            // Use saved position from config (set when tile was hidden)
+            originalDockIndex = config.lastDockIndex
+        }
 
-        print("   isUpdate: \(isUpdate), wasRunning: \(wasRunning), wasInDock: \(wasInDock), originalIndex: \(originalDockIndex ?? -1)")
+        print("   isUpdate: \(isUpdate), wasRunning: \(wasRunning), wasInDock: \(wasInDock), originalIndex: \(originalDockIndex ?? -1), savedLastDockIndex: \(config.lastDockIndex ?? -1)")
 
         // CRITICAL: Remove from Dock FIRST to prevent auto-relaunch during update
         // The Dock can relaunch persistent apps when it restarts, which causes stale process issues
@@ -349,17 +356,19 @@ final class HelperBundleManager {
 
     /// Remove tile from Dock only (without deleting bundle)
     /// Use this when user toggles "Show Tile" OFF - removes from Dock but keeps bundle
-    func removeFromDock(for config: DockTileConfiguration) async throws {
+    /// Returns the Dock index before removal (for position restoration later)
+    @discardableResult
+    func removeFromDock(for config: DockTileConfiguration) async throws -> Int? {
         // Prevent double-removal if this bundle is already being removed
         guard !removingBundleIds.contains(config.bundleIdentifier) else {
             print("⚠️ Skipping remove - already in progress for: \(config.name)")
-            return
+            return nil
         }
 
         // Also prevent removal while installation is in progress
         guard !installingBundleIds.contains(config.bundleIdentifier) else {
             print("⚠️ Skipping remove - installation in progress for: \(config.name)")
-            return
+            return nil
         }
 
         removingBundleIds.insert(config.bundleIdentifier)
@@ -367,6 +376,12 @@ final class HelperBundleManager {
 
         print("🗑️ Removing from Dock only: \(config.name)")
         print("   Bundle ID: \(config.bundleIdentifier)")
+
+        // CRITICAL: Save Dock position BEFORE removal for later restoration
+        let savedDockIndex = findDockIndex(bundleId: config.bundleIdentifier)
+        if let index = savedDockIndex {
+            print("   📍 Saving Dock position: \(index)")
+        }
 
         // Quit helper if running
         if isHelperRunning(bundleId: config.bundleIdentifier) {
@@ -406,6 +421,7 @@ final class HelperBundleManager {
         }
 
         print("✅ Removed from Dock: \(config.name)")
+        return savedDockIndex
     }
 
     // MARK: - Bundle Generation (Pure Swift)

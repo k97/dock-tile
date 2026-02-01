@@ -46,7 +46,7 @@ struct LauncherView: View {
     // MARK: - Computed Properties
 
     private var layoutMode: LayoutMode {
-        configuration?.layoutMode ?? .grid2x3
+        configuration?.layoutMode ?? .grid
     }
 
     // MARK: - Body
@@ -54,12 +54,12 @@ struct LauncherView: View {
     var body: some View {
         // Route to the appropriate native popover view based on layout mode
         switch layoutMode {
-        case .grid2x3:
+        case .grid:
             StackPopoverView(
                 configuration: configuration,
                 onLaunch: dismissLauncher
             )
-        case .horizontal1x6:
+        case .list:
             ListPopoverView(
                 configuration: configuration,
                 onLaunch: dismissLauncher
@@ -76,12 +76,12 @@ struct LauncherView: View {
 
 // MARK: - Previews
 
-#Preview("Stack Layout") {
+#Preview("Grid Layout") {
     LauncherView(configuration: DockTileConfiguration(
         name: "mac-ai-shortcuts",
         tintColor: .blue,
         symbolEmoji: "🤖",
-        layoutMode: .grid2x3,
+        layoutMode: .grid,
         appItems: [
             AppItem(bundleIdentifier: "com.google.gemini", name: "Google Gemini"),
             AppItem(bundleIdentifier: "com.google.notebooklm", name: "NotebookLM"),
@@ -96,7 +96,7 @@ struct LauncherView: View {
         name: "mac-ai-shortcuts",
         tintColor: .blue,
         symbolEmoji: "🤖",
-        layoutMode: .horizontal1x6,
+        layoutMode: .list,
         appItems: [
             AppItem(bundleIdentifier: "com.google.gemini", name: "Google Gemini"),
             AppItem(bundleIdentifier: "com.google.notebooklm", name: "NotebookLM"),

@@ -102,7 +102,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         // Constrain max width to 80% of visible frame for ultra-wide/small displays
         let maxWidth = screen.visibleFrame.width * 0.8
 
-        if configuration?.layoutMode == .horizontal1x6 {
+        if configuration?.layoutMode == .list {
             // List view: fixed width, height based on content
             // Title (30) + apps (28 each) + divider (12) + utility items (56) + padding (16)
             let baseHeight: CGFloat = 114  // Title + divider + utilities + padding
@@ -111,15 +111,35 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
             let width = min(220, maxWidth)
             return NSSize(width: width, height: totalHeight)
         } else {
-            // Stack view: width fixed at 340, height based on rows
+            // Grid view: dynamic width based on column count
             guard appCount > 0 else {
-                let width = min(340, maxWidth)
+                let width = min(232, maxWidth)  // 2 cols minimum (100*2 + 8 + 16*2)
                 return NSSize(width: width, height: 180)
             }
-            let rows = ceil(Double(appCount) / 3.0)
-            let contentHeight = rows * 100
-            let totalHeight = min(CGFloat(contentHeight) + 54, 400)
-            let width = min(340, maxWidth)
+
+            // Dynamic column count: 1-4 apps: 2 cols, 5-6: 3 cols, 7-8: 4 cols, etc.
+            let columnCount: Int
+            switch appCount {
+            case 0...4: columnCount = 2
+            case 5...6: columnCount = 3
+            case 7...8: columnCount = 4
+            case 9...10: columnCount = 5
+            case 11...12: columnCount = 6
+            default: columnCount = 7  // 13+ apps
+            }
+
+            // Calculate dynamic width: (itemWidth * cols) + (spacing * (cols-1)) + (padding * 2)
+            let itemWidth: CGFloat = 100   // 64 icon + padding + text width
+            let itemSpacing: CGFloat = 8
+            let horizontalPadding: CGFloat = 16
+            let dynamicWidth = CGFloat(columnCount) * itemWidth + CGFloat(columnCount - 1) * itemSpacing + horizontalPadding * 2
+
+            let rows = ceil(Double(appCount) / Double(columnCount))
+            let itemHeight: CGFloat = 100  // 64 icon + 6 spacing + text + padding
+            let rowSpacing: CGFloat = 12
+            let contentHeight = rows * Double(itemHeight) + Double(max(0, Int(rows) - 1)) * Double(rowSpacing)
+            let totalHeight = min(CGFloat(contentHeight) + 68, 500)  // 68 = header + padding
+            let width = min(dynamicWidth, maxWidth)
             return NSSize(width: width, height: totalHeight)
         }
     }

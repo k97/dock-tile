@@ -174,21 +174,40 @@ struct StackPopoverView: View {
         configuration?.name ?? "DockTile"
     }
 
-    // Grid configuration: 3 columns (like native Dock folders)
-    private let columns = [
-        GridItem(.fixed(100), spacing: 8),
-        GridItem(.fixed(100), spacing: 8),
-        GridItem(.fixed(100), spacing: 8)
-    ]
+    // MARK: - Dynamic Grid Configuration
 
-    private let columnCount = 3
+    /// Dynamic column count based on number of apps
+    /// 1-4 apps: 2 cols, 5-6: 3 cols, 7-8: 4 cols, 9-10: 5 cols, 11-12: 6 cols, 13+: 7 cols
+    private var columnCount: Int {
+        let count = apps.count
+        switch count {
+        case 0...4: return 2
+        case 5...6: return 3
+        case 7...8: return 4
+        case 9...10: return 5
+        case 11...12: return 6
+        default: return 7  // 13+ apps - max 7 columns
+        }
+    }
+
+    /// Dynamic grid columns based on app count
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.fixed(itemWidth), spacing: itemSpacing), count: columnCount)
+    }
+
+    /// Dynamic popover width based on column count
+    private var popoverWidth: CGFloat {
+        // Width = (itemWidth * cols) + (spacing * (cols-1)) + (horizontal padding * 2)
+        CGFloat(itemWidth) * CGFloat(columnCount) + itemSpacing * CGFloat(columnCount - 1) + gridHorizontalPadding * 2
+    }
 
     // Layout constants
     private let headerHeight: CGFloat = 36
-    private let popoverWidth: CGFloat = 340
     private let gridTopPadding: CGFloat = 16
     private let gridBottomPadding: CGFloat = 16
     private let gridHorizontalPadding: CGFloat = 16
+    private let itemWidth: CGFloat = 100     // Width per grid item (64 icon + padding + text width)
+    private let itemSpacing: CGFloat = 8     // Spacing between items
 
     var body: some View {
         VStack(spacing: 0) {
@@ -260,14 +279,15 @@ struct StackPopoverView: View {
     private func calculateHeight() -> CGFloat {
         guard !apps.isEmpty else { return 180 }
 
-        // Calculate grid content height
+        // Calculate grid content height based on dynamic column count
         let rows = ceil(Double(apps.count) / Double(columnCount))
-        let itemHeight: CGFloat = 100  // Approximate height per grid item
-        let gridContentHeight = CGFloat(rows) * itemHeight + gridTopPadding + gridBottomPadding
+        let itemHeight: CGFloat = 100  // Height per grid item (64 icon + 6 spacing + text + padding)
+        let rowSpacing: CGFloat = 12   // Spacing between rows
+        let gridContentHeight = CGFloat(rows) * itemHeight + CGFloat(max(0, Int(rows) - 1)) * rowSpacing + gridTopPadding + gridBottomPadding
 
         // Total = header + grid content, capped at max
         let totalHeight = headerHeight + gridContentHeight
-        return min(totalHeight, 400)
+        return min(totalHeight, 500)
     }
 
     // MARK: - Keyboard Navigation

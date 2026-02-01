@@ -25,6 +25,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     var isVisibleInDock: Bool
     var showInAppSwitcher: Bool  // v2: Show in Cmd+Tab app switcher
     var bundleIdentifier: String  // e.g., "com.docktile.dev"
+    var lastDockIndex: Int?  // v5: Saved Dock position for show/hide restoration
 
     // MARK: - Initialization
 
@@ -40,7 +41,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         appItems: [AppItem] = [],
         isVisibleInDock: Bool = ConfigurationDefaults.isVisibleInDock,
         showInAppSwitcher: Bool = ConfigurationDefaults.showInAppSwitcher,
-        bundleIdentifier: String? = nil
+        bundleIdentifier: String? = nil,
+        lastDockIndex: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -54,6 +56,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         self.isVisibleInDock = isVisibleInDock
         self.showInAppSwitcher = showInAppSwitcher
         self.bundleIdentifier = bundleIdentifier ?? "com.docktile.\(id.uuidString)"
+        self.lastDockIndex = lastDockIndex
     }
 
     // MARK: - Custom Decoder (backward compatibility)
@@ -87,6 +90,9 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         // v4 fields - icon scale
         iconScale = try container.decodeIfPresent(Int.self, forKey: .iconScale)
             ?? ConfigurationDefaults.iconScale
+
+        // v5 fields - last Dock position
+        lastDockIndex = try container.decodeIfPresent(Int.self, forKey: .lastDockIndex)
     }
 
     // MARK: - Coding Keys
@@ -101,6 +107,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         case iconType, iconValue
         // v4 fields
         case iconScale
+        // v5 fields
+        case lastDockIndex
     }
 }
 
@@ -289,22 +297,46 @@ enum TintColor: Hashable, Codable {
 
 // MARK: - Layout Mode
 
-enum LayoutMode: String, Codable, Hashable {
-    case grid2x3 = "grid2x3"
-    case horizontal1x6 = "horizontal1x6"
+enum LayoutMode: String, Hashable {
+    case grid = "grid"      // Dynamic grid (auto-adjusts columns based on app count)
+    case list = "list"      // Vertical list view
 
     var displayName: String {
         switch self {
-        case .grid2x3: return "Grid"
-        case .horizontal1x6: return "List"
+        case .grid: return "Grid"
+        case .list: return "List"
         }
     }
 
     var iconName: String {
         switch self {
-        case .grid2x3: return "square.grid.2x2"
-        case .horizontal1x6: return "list.bullet"
+        case .grid: return "square.grid.2x2"
+        case .list: return "list.bullet"
         }
+    }
+}
+
+// MARK: - LayoutMode Codable (Backward Compatibility)
+
+extension LayoutMode: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+
+        // Map old values to new simplified enum
+        switch rawValue {
+        case "grid", "grid2x3", "grid3x3", "grid4x4":
+            self = .grid
+        case "list", "horizontal1x6":
+            self = .list
+        default:
+            self = .grid  // Default to grid for unknown values
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.rawValue)
     }
 }
 

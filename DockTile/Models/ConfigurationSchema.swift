@@ -18,7 +18,7 @@ enum ConfigurationDefaults {
     static let name = "New Tile"
     static let tintColor: TintColor = .gray
     static let symbolEmoji = "⭐"  // Legacy field
-    static let layoutMode: LayoutMode = .grid2x3
+    static let layoutMode: LayoutMode = .grid
 
     // v3: Icon type and value
     static let iconType: IconType = .sfSymbol
