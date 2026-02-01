@@ -424,7 +424,11 @@ CFPreferencesAppSynchronize("com.apple.dock" as CFString)
   - **Icon and widget style** (Default/Dark/Clear/Tinted) - controls icon rendering
 - **New File**: `IconStyleManager.swift` - Observes icon style changes via `AppleIconAppearanceTheme` UserDefaults key
 - **IconStyle enum**: `.defaultStyle`, `.dark`, `.clear`, `.tinted`
-- **Known values**: `RegularDark` = Dark style, key not set = Default style
+- **Known UserDefaults values** (`AppleIconAppearanceTheme` key):
+  - `nil` (not set) = Default (colorful)
+  - `"RegularDark"` = Dark
+  - `"ClearAutomatic"` = Clear
+  - `"TintedAutomatic"` = Tinted
 - **Architecture**: Single `IconStyleManager.shared` as source of truth with `@ObservedObject` pattern
 - **Polling**: 2-second poll timer (reliable fallback since distributed notifications are unreliable)
 - **Updates**:
@@ -440,6 +444,17 @@ CFPreferencesAppSynchronize("com.apple.dock" as CFString)
   - Apps WITHOUT `Assets.car` (e.g., Ollama): Load `.icns` directly to avoid unwanted dark tinting
 - **View Re-render Pattern**: Reference `iconStyleManager.currentStyle` in view body with `let _ =` to trigger re-renders
 - **Documentation**: See `ICON_STYLE_ARCHITECTURE.md` for full details
+- **Implementation Status** (All 4 styles fully supported):
+  | Style | Icon Generated | Switching | Visual Design |
+  |-------|---------------|-----------|---------------|
+  | Default | ✅ `AppIcon-default.icns` | ✅ Works | Colorful gradient background, white symbol |
+  | Dark | ✅ `AppIcon-dark.icns` | ✅ Works | Dark gray (#2C2C2E → #1C1C1E), tint-colored symbol |
+  | Clear | ✅ `AppIcon-clear.icns` | ✅ Works | Light gray (#F0F0F2 → #E0E0E4), dark gray symbol (#6E6E73) |
+  | Tinted | ✅ `AppIcon-tinted.icns` | ✅ Works | Medium gray (#8E8E93 → #636366), white symbol |
+- **Apple HIG Compliance**: Clear and Tinted use **grayscale only** (no user color). macOS applies system tinting on top, ensuring icons blend with other Dock icons.
+- **Icon Generation**: All 4 variants generated upfront during `installHelper()` (~200-400ms total)
+- **Icon Switching**: Instant file copy when system icon style changes (no regeneration needed)
+- **Backward Compatibility**: `switchIcon()` has fallback chain for old bundles missing new icon files
 
 ### Auto-Save Draft Mode & Add Button Control (2026-01)
 - **Auto-Save**: All edits in DockTileDetailView and CustomiseTileView now save immediately as drafts
@@ -759,6 +774,7 @@ DockTileConfigurationView (Main Window)
 | # | Task | Status | Priority | Notes |
 |---|------|--------|----------|-------|
 | 7 | **Onboarding Flow** | 🔲 Pending | Medium | Bartender/Alcove/Klack-style onboarding (no permissions needed - CFPreferences approach) |
+| 7b | **Clear/Tinted Mode Hint** | 🔲 Deferred | Low | Show subtitle in CustomiseTileView colour section explaining "Dock applies system tint" when in Clear/Tinted mode. Needs careful layout to not break inspector card. |
 
 ### Phase 4: App Store & Marketing
 

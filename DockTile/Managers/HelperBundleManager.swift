@@ -116,14 +116,14 @@ final class HelperBundleManager {
             helperPath: helperPath
         )
 
-        // 2. Generate icons for different icon styles (Default/Dark/Clear/Tinted)
+        // 2. Generate icons for ALL icon styles (Default/Dark/Clear/Tinted)
         // NOTE: macOS Tahoe has TWO independent settings:
         //       - "Appearance" (Light/Dark) - controls window chrome
         //       - "Icon and widget style" (Default/Dark/Clear/Tinted) - controls icons
-        // We generate icons for each icon style
+        // We generate icons for each icon style upfront so switching is instant
         let resourcesPath = helperPath.appendingPathComponent("Contents/Resources")
 
-        // Generate default style icon (colorful gradient background)
+        // Generate default style icon (colorful gradient background, white symbol)
         let defaultIconPath = resourcesPath.appendingPathComponent("AppIcon-default.icns")
         try IconGenerator.generateIcns(
             tintColor: config.tintColor,
@@ -147,9 +147,33 @@ final class HelperBundleManager {
         )
         print("   ✓ Generated dark style icon")
 
+        // Generate clear style icon (semi-transparent gray background, tint-colored symbol)
+        let clearIconPath = resourcesPath.appendingPathComponent("AppIcon-clear.icns")
+        try IconGenerator.generateIcns(
+            tintColor: config.tintColor,
+            iconType: config.iconType,
+            iconValue: config.iconValue,
+            iconScale: config.iconScale,
+            outputURL: clearIconPath,
+            iconStyle: .clear
+        )
+        print("   ✓ Generated clear style icon")
+
+        // Generate tinted style icon (muted gradient background, white symbol)
+        let tintedIconPath = resourcesPath.appendingPathComponent("AppIcon-tinted.icns")
+        try IconGenerator.generateIcns(
+            tintColor: config.tintColor,
+            iconType: config.iconType,
+            iconValue: config.iconValue,
+            iconScale: config.iconScale,
+            outputURL: tintedIconPath,
+            iconStyle: .tinted
+        )
+        print("   ✓ Generated tinted style icon")
+
         // Copy appropriate icon to AppIcon.icns based on current icon style
         let currentStyle = IconStyle.current
-        let sourceIconPath = currentStyle == .dark ? darkIconPath : defaultIconPath
+        let sourceIconPath = iconPath(for: currentStyle, in: resourcesPath)
         let iconDestPath = resourcesPath.appendingPathComponent("AppIcon.icns")
         try? FileManager.default.removeItem(at: iconDestPath)
         try FileManager.default.copyItem(at: sourceIconPath, to: iconDestPath)
@@ -516,6 +540,33 @@ final class HelperBundleManager {
         lsProcess.waitUntilExit()
     }
 
+    // MARK: - Icon Path Helpers
+
+    /// Get the icon filename for a given icon style
+    /// - Parameter style: The icon style
+    /// - Returns: The filename (e.g., "AppIcon-dark.icns")
+    private static func iconFilename(for style: IconStyle) -> String {
+        switch style {
+        case .defaultStyle:
+            return "AppIcon-default.icns"
+        case .dark:
+            return "AppIcon-dark.icns"
+        case .clear:
+            return "AppIcon-clear.icns"
+        case .tinted:
+            return "AppIcon-tinted.icns"
+        }
+    }
+
+    /// Get the full path to an icon for a given style
+    /// - Parameters:
+    ///   - style: The icon style
+    ///   - resourcesPath: The Resources folder path
+    /// - Returns: Full URL to the icon file
+    private func iconPath(for style: IconStyle, in resourcesPath: URL) -> URL {
+        return resourcesPath.appendingPathComponent(Self.iconFilename(for: style))
+    }
+
     // MARK: - Dynamic Icon Switching (for Helper Apps)
 
     /// Switch the active icon to match the current icon style
@@ -528,31 +579,30 @@ final class HelperBundleManager {
     static func switchIcon(for bundlePath: URL, to iconStyle: IconStyle) -> Bool {
         let resourcesPath = bundlePath.appendingPathComponent("Contents/Resources")
 
-        // Map icon style to icon file
-        // For now, default/clear/tinted all use the "default" colorful icon
-        // Dark uses the dark icon
-        let sourceIconName: String
-        switch iconStyle {
-        case .dark:
-            sourceIconName = "AppIcon-dark.icns"
-        case .defaultStyle, .clear, .tinted:
-            sourceIconName = "AppIcon-default.icns"
-        }
-
+        // Get the icon file for this style
+        let sourceIconName = iconFilename(for: iconStyle)
         let sourceIconPath = resourcesPath.appendingPathComponent(sourceIconName)
         let destIconPath = resourcesPath.appendingPathComponent("AppIcon.icns")
 
-        // Check if source icon exists - fallback to AppIcon-light.icns for backward compatibility
+        // Check if source icon exists - fallback chain for backward compatibility
         var actualSourcePath = sourceIconPath
         if !FileManager.default.fileExists(atPath: sourceIconPath.path) {
-            // Try fallback to old naming (AppIcon-light.icns)
-            let fallbackPath = resourcesPath.appendingPathComponent("AppIcon-light.icns")
-            if FileManager.default.fileExists(atPath: fallbackPath.path) {
-                actualSourcePath = fallbackPath
-                print("[HelperBundleManager] Using fallback icon: AppIcon-light.icns")
-            } else {
-                print("[HelperBundleManager] Source icon not found: \(sourceIconPath.path)")
-                return false
+            // Fallback 1: Try default icon (for old bundles without clear/tinted)
+            let defaultPath = resourcesPath.appendingPathComponent("AppIcon-default.icns")
+            if FileManager.default.fileExists(atPath: defaultPath.path) {
+                actualSourcePath = defaultPath
+                print("[HelperBundleManager] Fallback to AppIcon-default.icns for \(iconStyle.rawValue)")
+            }
+            // Fallback 2: Try old naming (AppIcon-light.icns) for very old bundles
+            else {
+                let lightPath = resourcesPath.appendingPathComponent("AppIcon-light.icns")
+                if FileManager.default.fileExists(atPath: lightPath.path) {
+                    actualSourcePath = lightPath
+                    print("[HelperBundleManager] Fallback to AppIcon-light.icns")
+                } else {
+                    print("[HelperBundleManager] Source icon not found: \(sourceIconPath.path)")
+                    return false
+                }
             }
         }
 

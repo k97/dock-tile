@@ -40,20 +40,28 @@ enum IconStyle: String, CaseIterable, Sendable {
     }
 
     /// Convert from UserDefaults value to IconStyle
+    /// Known macOS Tahoe values (as of 2026-02):
+    /// - nil or not set = Default (colorful)
+    /// - "RegularDark" = Dark
+    /// - "ClearAutomatic" = Clear
+    /// - "TintedAutomatic" = Tinted
     static func from(preferencesValue: String?) -> IconStyle {
         guard let value = preferencesValue else {
             return .defaultStyle // Key not set = Default
         }
 
         switch value {
-        case "RegularDark":
+        // Dark style
+        case "RegularDark", "Dark":
             return .dark
-        case "RegularClear", "Clear":  // Guessing possible values
+        // Clear style (semi-transparent gray)
+        case "ClearAutomatic", "Clear", "RegularClear":
             return .clear
-        case "RegularTinted", "Tinted":  // Guessing possible values
+        // Tinted style (wallpaper-derived colors)
+        case "TintedAutomatic", "Tinted", "RegularTinted":
             return .tinted
         default:
-            // Log unknown values for debugging
+            // Log unknown values for debugging - helps discover new values
             print("[IconStyleManager] Unknown AppleIconAppearanceTheme value: \(value)")
             return .defaultStyle
         }
@@ -180,10 +188,13 @@ extension TintColor {
     /// Returns colors appropriate for the given icon style
     /// - Parameter style: The icon style to generate colors for
     /// - Returns: A tuple of (background top, background bottom, foreground) colors
+    ///
+    /// NOTE: Clear and Tinted use GRAYSCALE colors (no user tint color).
+    /// This follows Apple HIG - macOS applies system tinting on top of grayscale icons.
     func colors(for style: IconStyle) -> (backgroundTop: Color, backgroundBottom: Color, foreground: Color) {
         switch style {
         case .defaultStyle:
-            // Default: gradient background, white foreground
+            // Default: colorful gradient background, white foreground
             return (colorTop, colorBottom, .white)
 
         case .dark:
@@ -193,38 +204,51 @@ extension TintColor {
             return (darkTop, darkBottom, color)
 
         case .clear:
-            // Clear: semi-transparent gray background, hierarchical tinting
-            let clearTop = Color(hex: "#E8E8ED").opacity(0.8)
-            let clearBottom = Color(hex: "#D8D8DD").opacity(0.8)
-            return (clearTop, clearBottom, color.opacity(0.7))
+            // Clear: light gray background, dark gray symbol
+            // NO user color - macOS applies system tinting
+            let clearTop = Color(hex: "#F0F0F2")
+            let clearBottom = Color(hex: "#E0E0E4")
+            let clearForeground = Color(hex: "#6E6E73")  // Dark gray symbol
+            return (clearTop, clearBottom, clearForeground)
 
         case .tinted:
-            // Tinted: wallpaper-derived colors (placeholder)
-            let tintedTop = colorTop.opacity(0.6)
-            let tintedBottom = colorBottom.opacity(0.6)
+            // Tinted: medium gray gradient, white/light symbol
+            // NO user color - macOS applies wallpaper-derived tinting
+            let tintedTop = Color(hex: "#8E8E93")
+            let tintedBottom = Color(hex: "#636366")
             return (tintedTop, tintedBottom, .white)
         }
     }
 
     /// Returns NSColors appropriate for the given icon style (for IconGenerator)
+    ///
+    /// NOTE: Clear and Tinted use GRAYSCALE colors (no user tint color).
+    /// This follows Apple HIG - macOS applies system tinting on top of grayscale icons.
     func nsColors(for style: IconStyle) -> (backgroundTop: NSColor, backgroundBottom: NSColor, foreground: NSColor) {
         switch style {
         case .defaultStyle:
+            // Default: colorful gradient, white symbol
             return (nsColorTop, nsColorBottom, .white)
 
         case .dark:
+            // Dark: dark gray background, tint-colored symbol
             let darkTop = NSColor(red: 0.173, green: 0.173, blue: 0.180, alpha: 1.0)  // #2C2C2E
             let darkBottom = NSColor(red: 0.110, green: 0.110, blue: 0.118, alpha: 1.0)  // #1C1C1E
             return (darkTop, darkBottom, nsColor)
 
         case .clear:
-            let clearTop = NSColor(red: 0.91, green: 0.91, blue: 0.93, alpha: 0.8)
-            let clearBottom = NSColor(red: 0.85, green: 0.85, blue: 0.87, alpha: 0.8)
-            return (clearTop, clearBottom, nsColor.withAlphaComponent(0.7))
+            // Clear: light gray background, dark gray symbol
+            // NO user color - macOS applies system tinting
+            let clearTop = NSColor(red: 0.941, green: 0.941, blue: 0.949, alpha: 1.0)  // #F0F0F2
+            let clearBottom = NSColor(red: 0.878, green: 0.878, blue: 0.894, alpha: 1.0)  // #E0E0E4
+            let clearForeground = NSColor(red: 0.431, green: 0.431, blue: 0.451, alpha: 1.0)  // #6E6E73
+            return (clearTop, clearBottom, clearForeground)
 
         case .tinted:
-            let tintedTop = nsColorTop.withAlphaComponent(0.6)
-            let tintedBottom = nsColorBottom.withAlphaComponent(0.6)
+            // Tinted: medium gray gradient, white symbol
+            // NO user color - macOS applies wallpaper-derived tinting
+            let tintedTop = NSColor(red: 0.557, green: 0.557, blue: 0.576, alpha: 1.0)  // #8E8E93
+            let tintedBottom = NSColor(red: 0.388, green: 0.388, blue: 0.400, alpha: 1.0)  // #636366
             return (tintedTop, tintedBottom, .white)
         }
     }
