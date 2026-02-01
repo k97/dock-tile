@@ -29,6 +29,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>15.0</string>
 	<key>LSUIElement</key>

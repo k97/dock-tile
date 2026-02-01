@@ -76,7 +76,12 @@ DockTile/
 ├── Extensions/
 │   └── ColorExtensions.swift       # Color hex initialization
 └── Resources/
-    ├── Assets.xcassets             # App icon and assets
+    ├── AppIcon.icon/               # Main app icon (Icon Composer format)
+    │   ├── icon.json               # Icon configuration with layers
+    │   ├── icon-light.png          # Light mode variant
+    │   ├── icon-dark.png           # Dark mode variant
+    │   └── icon-tinted.png         # Tinted mode variant
+    ├── Assets.xcassets             # Other assets (compiled includes AppIcon)
     └── Info.plist                  # App configuration
 ```
 
@@ -148,12 +153,14 @@ This approach handles 95% of schema changes. Old configs missing new fields will
 
 1. **Creation** (`HelperBundleManager.installHelper`):
    - Copies main DockTile.app as template
+   - **Removes `Assets.car`** to prevent main app icon from overriding custom icons
    - Updates Info.plist with unique bundle ID and name
    - Sets `LSUIElement = true` (hides from Cmd+Tab by default)
-   - Generates custom `.icns` icon via `IconGenerator`
+   - Generates custom `.icns` icon via `IconGenerator` (all 4 style variants)
    - Code signs with ad-hoc signature
-   - Adds to Dock plist and restarts Dock
-   - Launches helper app
+   - Saves original Dock position (if updating existing tile)
+   - Adds to Dock plist at original position (or end if new)
+   - Restarts Dock and launches helper app
 
 2. **Runtime** (`HelperAppDelegate`):
    - Reads `showInAppSwitcher` from config in `applicationWillFinishLaunching`
@@ -376,6 +383,84 @@ private struct QuaternaryFillView: NSViewRepresentable {
 ```
 
 ## Recent Changes
+
+### Main App Icon via Icon Composer (2026-02)
+- **Tool**: Apple's Icon Composer for macOS Tahoe icons with appearance variants
+- **Location**: `DockTile/Resources/AppIcon.icon/` folder containing:
+  - `icon.json` - Icon configuration with layers and appearance mapping
+  - `icon-light.png` - Light mode variant (1024×1024)
+  - `icon-dark.png` - Dark mode variant (1024×1024)
+  - `icon-tinted.png` - Tinted mode variant (1024×1024)
+- **Xcode Integration**:
+  - Added `AppIcon.icon` to project.pbxproj as `folder.icon` type
+  - Added `CFBundleIconName = "AppIcon"` to Info.plist
+  - Xcode compiles to `Assets.car` + `AppIcon.icns` during build
+- **Two Separate Icon Systems**:
+  - **Main app**: Icon Composer → Assets.car (appearance-aware, compiled by Xcode)
+  - **Helper tiles**: IconGenerator.swift → custom .icns files (generated at runtime)
+- **Cache Clearing** (if icon doesn't update):
+  ```bash
+  killall iconservicesd && killall Dock
+  /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f -R /path/to/DockTile.app
+  ```
+
+### Helper Bundle Assets.car Removal Fix (2026-02)
+- **Problem**: Newly created helper tiles showed the main DockTile app icon instead of their custom configured icon
+- **Root Cause**: When helper bundles are created by copying the main app, `Assets.car` is included. macOS prioritizes asset catalogs over `CFBundleIconFile`, so the main app's icon was displayed.
+- **Fix**: In `HelperBundleManager.swift`, after copying the bundle, remove `Assets.car`:
+  ```swift
+  // Remove Assets.car to prevent macOS from using the main app's icons
+  let assetsCarPath = helperPath.appendingPathComponent("Contents/Resources/Assets.car")
+  try? FileManager.default.removeItem(at: assetsCarPath)
+  ```
+- **macOS Icon Priority** (highest to lowest):
+  1. `Assets.car` (asset catalog)
+  2. `CFBundleIconFile` pointing to `.icns`
+- **Result**: Helper tiles now correctly display their custom generated icons
+
+### Custom Color Gradient Fill Fix (2026-02)
+- **Problem**: Custom colors from the color picker (not presets) showed a visible gap/stroke around icon edges
+- **Root Cause**: Custom color top gradient used `opacity(0.8)` / `withAlphaComponent(0.8)`, creating semi-transparent colors. CoreGraphics gradient rendering doesn't fully fill the clipped path with semi-transparent colors.
+- **Why Presets Worked**: Preset colors have two distinct fully-opaque hex values (`colorTop` and `colorBottom`)
+- **Fix**: Created `lighterShade(by:)` method that increases brightness instead of using opacity:
+  ```swift
+  // In ColorExtensions.swift and AppearanceManager.swift
+  func lighterShade(by amount: CGFloat) -> Color/NSColor {
+      // Convert to HSB, increase brightness, decrease saturation slightly
+      let newBrightness = min(1.0, brightness + amount)
+      let newSaturation = max(0.0, saturation - (amount * 0.3))
+      // Return new fully-opaque color
+  }
+  ```
+- **Files Modified**:
+  - `ColorExtensions.swift` - Added `lighterShade(by:)` to SwiftUI Color
+  - `AppearanceManager.swift` - Added `lighterShade(by:)` to NSColor, updated `nsColorTop`
+  - `ConfigurationModels.swift` - Updated `colorTop` computed property for custom colors
+
+### Dock Position Preservation on Update (2026-02)
+- **Problem**: When updating an existing tile already in the Dock, it would move to the end instead of staying in its original position
+- **Root Cause**: `addToDock()` always appended to the end of the `persistent-apps` array
+- **Fix**: Save the original Dock index before removal, then insert at that index when re-adding:
+  ```swift
+  // In HelperBundleManager.swift
+
+  // New method to find current Dock position
+  func findDockIndex(bundleId: String) -> Int? {
+      // Iterate persistent-apps, find matching bundle-identifier, return index
+  }
+
+  // Updated addToDock with optional index parameter
+  func addToDock(at appPath: URL, atIndex: Int? = nil) {
+      // If index provided and valid, insert at that position
+      // Otherwise append to end
+  }
+
+  // In installHelper:
+  let originalDockIndex = wasInDock ? findDockIndex(bundleId: config.bundleIdentifier) : nil
+  // ... remove, regenerate, re-sign ...
+  addToDock(at: helperPath, atIndex: originalDockIndex)
+  ```
+- **Result**: Tiles maintain their Dock position when updated
 
 ### CFPreferences API for Dock Integration (2026-02)
 - **Problem**: Toggling "Show Tile" OFF then back ON didn't reliably add the tile back to Dock (required 2-3 attempts)
@@ -759,7 +844,7 @@ DockTileConfigurationView (Main Window)
 |---|------|--------|----------|-------|
 | 1 | **Sidebar Cleanup** | ✅ Done | High | Apple Notes style - clean List with icon + name |
 | 2 | **Icon Preview → Dock Icon** | ✅ Done | High | Squircle shape, beveled glass stroke, Tahoe-native design |
-| 3 | **Main App Icon** | ⚠️ Partial | High | Build settings configured but Assets.xcassets needs custom icon |
+| 3 | **Main App Icon** | ✅ Done | High | Icon Composer with light/dark/tinted variants via AppIcon.icon |
 
 ### Phase 2: Distribution
 

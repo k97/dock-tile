@@ -146,7 +146,9 @@ extension TintColor {
             return NSColor(colorTop)
         case .custom(let hex):
             if let color = NSColor(hex: hex) {
-                return color.withAlphaComponent(0.8)
+                // Create a lighter shade by increasing brightness (not using opacity)
+                // Using opacity causes the gradient to not fill the entire background
+                return color.lighterShade(by: 0.15)
             }
             return NSColor.systemGray
         }
@@ -168,9 +170,39 @@ extension TintColor {
     }
 }
 
-// MARK: - NSColor Hex Initializer
+// MARK: - NSColor Extensions
 
 extension NSColor {
+    /// Create a lighter shade of the color by increasing brightness
+    /// - Parameter amount: How much to lighten (0.0-1.0), e.g., 0.15 = 15% lighter
+    /// - Returns: A lighter version of the color with full opacity
+    func lighterShade(by amount: CGFloat) -> NSColor {
+        // Convert to HSB color space
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        // Try to get HSB components
+        if let hsbColor = self.usingColorSpace(.deviceRGB) {
+            hsbColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+
+            // Increase brightness, decrease saturation slightly for a "lighter" feel
+            let newBrightness = min(1.0, brightness + amount)
+            let newSaturation = max(0.0, saturation - (amount * 0.3))  // Slightly less saturated
+
+            return NSColor(
+                hue: hue,
+                saturation: newSaturation,
+                brightness: newBrightness,
+                alpha: 1.0  // Always full opacity
+            )
+        }
+
+        // Fallback: return original color if conversion fails
+        return self
+    }
+
     convenience init?(hex: String) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")

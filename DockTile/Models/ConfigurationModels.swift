@@ -186,9 +186,10 @@ enum TintColor: Hashable, Codable {
         case .preset(let preset):
             return preset.colorTop
         case .custom(let hex):
-            // For custom colors, create a lighter version for top
+            // For custom colors, create a lighter shade for the top gradient
+            // Using a lighter shade (not opacity) ensures the gradient fills completely
             let baseColor = Color(hex: hex)
-            return baseColor.opacity(0.8)
+            return baseColor.lighterShade(by: 0.15)
         }
     }
 

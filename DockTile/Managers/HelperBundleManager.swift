@@ -73,7 +73,10 @@ final class HelperBundleManager {
         let existingDockPath = findInDock(bundleId: config.bundleIdentifier)
         let wasInDock = existingDockPath != nil
 
-        print("   isUpdate: \(isUpdate), wasRunning: \(wasRunning), wasInDock: \(wasInDock)")
+        // Save the original Dock position before removal (for updates)
+        let originalDockIndex = wasInDock ? findDockIndex(bundleId: config.bundleIdentifier) : nil
+
+        print("   isUpdate: \(isUpdate), wasRunning: \(wasRunning), wasInDock: \(wasInDock), originalIndex: \(originalDockIndex ?? -1)")
 
         // CRITICAL: Remove from Dock FIRST to prevent auto-relaunch during update
         // The Dock can relaunch persistent apps when it restarts, which causes stale process issues
@@ -188,7 +191,8 @@ final class HelperBundleManager {
         print("   ✓ Refreshed icon cache")
 
         // 5. Add to Dock (we already removed it earlier if it was there)
-        addToDock(at: helperPath)
+        // If this is an update, restore the original position; otherwise append to end
+        addToDock(at: helperPath, atIndex: originalDockIndex)
 
         // 6. Restart Dock to apply changes
         restartDock()
@@ -437,9 +441,17 @@ final class HelperBundleManager {
         )
         print("   ✓ Updated Info.plist")
 
-        // Remove existing icon (will be replaced with generated one)
+        // Remove existing icon files (will be replaced with generated ones)
         let existingIconPath = helperPath.appendingPathComponent("Contents/Resources/AppIcon.icns")
         try? FileManager.default.removeItem(at: existingIconPath)
+
+        // CRITICAL: Remove Assets.car to prevent macOS from using the main app's icons
+        // macOS icon priority: Assets.car (asset catalog) > CFBundleIconFile (.icns)
+        // Without removing this, helper tiles would show the main DockTile app icon
+        // instead of their custom generated icons
+        let assetsCarPath = helperPath.appendingPathComponent("Contents/Resources/Assets.car")
+        try? FileManager.default.removeItem(at: assetsCarPath)
+        print("   ✓ Removed main app icon assets (Assets.car)")
 
         // Note: We keep the full binary copy (no symlink) because codesign
         // requires the main executable to be a regular file, not a symlink
@@ -650,6 +662,41 @@ final class HelperBundleManager {
         }
     }
 
+    /// Find the index of an app in the Dock by bundle ID
+    /// Returns nil if not found
+    /// Uses CFPreferences API to read from cfprefsd cache (not stale file on disk)
+    func findDockIndex(bundleId: String) -> Int? {
+        let dockAppId = "com.apple.dock" as CFString
+        guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
+            return nil
+        }
+
+        for (index, entry) in persistentApps.enumerated() {
+            if let tileData = entry["tile-data"] as? [String: Any] {
+                // First check the bundle-identifier stored directly in tile-data
+                if let storedBundleId = tileData["bundle-identifier"] as? String,
+                   storedBundleId == bundleId {
+                    return index
+                }
+
+                // Fallback: check Info.plist
+                if let fileData = tileData["file-data"] as? [String: Any],
+                   let urlString = fileData["_CFURLString"] as? String,
+                   let url = URL(string: urlString) {
+                    let appPath = "/" + url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                    let infoPlistPath = URL(fileURLWithPath: appPath).appendingPathComponent("Contents/Info.plist")
+
+                    if let plist = NSDictionary(contentsOf: infoPlistPath),
+                       let existingBundleId = plist["CFBundleIdentifier"] as? String,
+                       existingBundleId == bundleId {
+                        return index
+                    }
+                }
+            }
+        }
+        return nil
+    }
+
     /// Check if app with given bundle ID is already in Dock (returns the dock entry path if found)
     /// Uses CFPreferences API to read from cfprefsd cache (not stale file on disk)
     func findInDock(bundleId: String) -> URL? {
@@ -826,9 +873,15 @@ final class HelperBundleManager {
 
     /// Add app to Dock without launching it (only if not already present)
     /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
-    func addToDock(at appPath: URL) {
+    /// - Parameters:
+    ///   - appPath: Path to the app bundle
+    ///   - atIndex: Optional index to insert at (preserves position during updates). If nil, appends to end.
+    func addToDock(at appPath: URL, atIndex: Int? = nil) {
         print("📌 Adding to Dock: \(appPath.lastPathComponent)")
         print("   App path: \(appPath.path)")
+        if let index = atIndex {
+            print("   Target index: \(index) (preserving position)")
+        }
 
         // Get bundle identifier from the app first
         let infoPlistPath = appPath.appendingPathComponent("Contents/Info.plist")
@@ -874,9 +927,15 @@ final class HelperBundleManager {
             "tile-type": "file-tile"
         ]
 
-        // Add to persistent apps
+        // Add to persistent apps (at specific index if provided, otherwise append)
         var updatedApps = currentApps
-        updatedApps.append(newEntry)
+        if let index = atIndex, index >= 0, index <= updatedApps.count {
+            updatedApps.insert(newEntry, at: index)
+            print("   Inserting at index \(index)")
+        } else {
+            updatedApps.append(newEntry)
+            print("   Appending to end")
+        }
 
         // Write using CFPreferences API (industry standard - same approach as dockutil)
         // This writes directly to cfprefsd, avoiding the "write to file then sync" problem
