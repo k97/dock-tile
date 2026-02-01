@@ -384,7 +384,7 @@ struct DockTileDetailView: View {
                     // User wants tile removed - always try to remove from Dock
                     // Remove from Dock plist regardless of whether bundle exists
                     print("🗑️ Removing tile from Dock: \(configToSave.name)")
-                    try HelperBundleManager.shared.removeFromDock(for: configToSave)
+                    try await HelperBundleManager.shared.removeFromDock(for: configToSave)
                     print("✅ Tile removed from Dock: \(configToSave.name)")
                 }
 

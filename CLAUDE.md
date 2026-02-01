@@ -377,6 +377,47 @@ private struct QuaternaryFillView: NSViewRepresentable {
 
 ## Recent Changes
 
+### CFPreferences API for Dock Integration (2026-02)
+- **Problem**: Toggling "Show Tile" OFF then back ON didn't reliably add the tile back to Dock (required 2-3 attempts)
+- **Root Cause**: Direct plist file writing bypassed the `cfprefsd` cache, causing sync issues
+- **Research**: Investigated industry-standard tools (dockutil) and found they use CFPreferences API
+- **Solution**: Refactored all Dock plist operations in `HelperBundleManager.swift` to use CFPreferences API
+
+**Key API Calls:**
+```swift
+// Read from Dock preferences (reads from cfprefsd cache)
+CFPreferencesCopyAppValue("persistent-apps" as CFString, "com.apple.dock" as CFString)
+
+// Write to Dock preferences (writes directly to cfprefsd)
+CFPreferencesSetAppValue("persistent-apps" as CFString, updatedApps as CFArray, "com.apple.dock" as CFString)
+
+// Sync changes to disk
+CFPreferencesAppSynchronize("com.apple.dock" as CFString)
+```
+
+**Methods Updated:**
+| Method | Purpose |
+|--------|---------|
+| `addToDock(at:)` | Adds tiles to Dock |
+| `removeFromDock(at:)` | Removes tiles by path |
+| `removeFromDock(bundleId:)` | Removes tiles by bundle ID |
+| `removeFromDockPlist(bundleId:)` | Removes tiles during uninstall |
+| `isInDock(at:)` | Checks if app is in Dock by path |
+| `findInDock(bundleId:)` | Finds Dock entry by bundle ID |
+
+**Benefits:**
+- ✅ No privacy prompts (unlike `defaults import` shell command)
+- ✅ Reliable sync with cfprefsd cache
+- ✅ Industry-standard approach (same as dockutil)
+- ✅ No shell commands required
+
+**Removed:**
+- `syncPreferences()` method - no longer needed since CFPreferences handles sync internally
+
+**Race Condition Prevention:**
+- Added `installingBundleIds` Set to prevent double-installation
+- Added `removingBundleIds` Set to prevent double-removal
+
 ### macOS Tahoe Icon Style Support (2026-02)
 - **Discovery**: macOS Tahoe has TWO independent appearance settings:
   - **Appearance** (Light/Dark/Auto) - controls window chrome
@@ -717,7 +758,7 @@ DockTileConfigurationView (Main Window)
 
 | # | Task | Status | Priority | Notes |
 |---|------|--------|----------|-------|
-| 7 | **Onboarding Screen** | 🔲 Pending | Medium | Welcome flow explaining the app (optional but nice) |
+| 7 | **Onboarding Flow** | 🔲 Pending | Medium | Bartender/Alcove/Klack-style onboarding (no permissions needed - CFPreferences approach) |
 
 ### Phase 4: App Store & Marketing
 
@@ -803,12 +844,40 @@ xcrun notarytool submit DockTile.dmg \
 xcrun stapler staple DockTile.dmg
 ```
 
-#### 7. Onboarding Screen (Optional)
-**Goal**: Welcome new users and explain the concept
-- Page 1: "Create custom Dock tiles"
-- Page 2: "Add your favorite apps"
-- Page 3: "Click to launch"
-- Use SwiftUI `TabView` with `.tabViewStyle(.page)`
+#### 7. Onboarding Flow (Optional - No Permissions Required)
+**Goal**: Bartender/Alcove/Klack-style onboarding that educates users about the app
+
+**Note**: Since migrating to CFPreferences API (2026-02), **no permissions are required**. The onboarding is now purely educational and optional.
+
+**Design Inspiration**:
+- **Bartender 5/6**: Clean cards with illustrations
+- **Alcove**: Friendly illustrations explaining features
+- **Klack**: Step-by-step wizard showing capabilities
+
+**Onboarding Flow** (1-2 screens):
+```
+Screen 1: Welcome + How It Works
+├── App icon + "Welcome to DockTile"
+├── Brief tagline: "Create custom app launchers for your Dock"
+├── Illustration/visual showing Dock with custom tiles
+├── 2-3 bullet points explaining the concept:
+│   • "Group your favorite apps into custom tiles"
+│   • "One click to launch multiple apps"
+│   • "Customize with colors and icons"
+└── "Get Started" button → dismisses onboarding
+```
+
+**Technical Implementation**:
+- Use SwiftUI with simple state-driven view
+- Store onboarding completion in `UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")`
+- Show on first launch only (check in `AppDelegate` or main view)
+- Single screen is sufficient since no permissions needed
+
+**UI Components**:
+- `OnboardingView.swift` - Welcome screen with feature highlights
+
+**Assets Needed**:
+- Welcome illustration (optional, can use SF Symbols)
 
 #### 8. App Store Review
 **Potential Issues**:
@@ -856,7 +925,12 @@ Phase 2: Distribution Setup
 ├── Task 5: DMG installer
 └── Task 6: Code signing (requires Apple Developer account)
 
-Phase 3-4: Polish & Launch
-├── Task 7: Onboarding (optional)
+Phase 3: User Experience
+└── Task 7: Onboarding Flow (optional)
+    ├── No permissions required (CFPreferences API handles Dock integration)
+    ├── Purely educational - explains app concept
+    └── Design: Bartender/Alcove/Klack style
+
+Phase 4: Marketing & Launch
 └── Task 9-10: Distribution & marketing
 ```

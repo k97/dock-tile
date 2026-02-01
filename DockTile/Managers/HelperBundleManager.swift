@@ -18,6 +18,12 @@ final class HelperBundleManager {
     /// Directory where helper bundles are stored: ~/Library/Application Support/DockTile/
     private let helperDirectory: URL
 
+    /// Track bundle IDs currently being installed to prevent double-installation
+    private var installingBundleIds: Set<String> = []
+
+    /// Track bundle IDs currently being removed to prevent double-removal
+    private var removingBundleIds: Set<String> = []
+
     // MARK: - Initialization
 
     private init() {
@@ -43,6 +49,15 @@ final class HelperBundleManager {
     /// Install a helper bundle for the given configuration
     /// If helper already exists (by bundle ID), updates it in place
     func installHelper(for config: DockTileConfiguration) async throws {
+        // Prevent double-installation if this bundle is already being installed
+        guard !installingBundleIds.contains(config.bundleIdentifier) else {
+            print("⚠️ Skipping install - already in progress for: \(config.name)")
+            return
+        }
+
+        installingBundleIds.insert(config.bundleIdentifier)
+        defer { installingBundleIds.remove(config.bundleIdentifier) }
+
         print("🔧 Installing helper for: \(config.name)")
         print("   Bundle ID: \(config.bundleIdentifier)")
 
@@ -151,19 +166,50 @@ final class HelperBundleManager {
         // 5. Add to Dock (we already removed it earlier if it was there)
         addToDock(at: helperPath)
 
-        // 5. Restart Dock to apply changes and launch the helper
-        // The helper will be launched by Dock since it's now a persistent app
+        // 6. Restart Dock to apply changes
         restartDock()
 
-        // 6. Wait a moment for Dock to stabilize, then ensure helper is running
-        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        // 7. Wait for Dock to fully restart and stabilize
+        // The Dock takes time to reload the plist and render
+        try await Task.sleep(nanoseconds: 800_000_000) // 0.8 seconds
 
-        // Check if Dock auto-launched it, if not launch manually
+        // 8. Verify the app is in Dock after restart
+        var verifyCount = 0
+        while findInDock(bundleId: config.bundleIdentifier) == nil && verifyCount < 5 {
+            print("   Waiting for Dock to register app (attempt \(verifyCount + 1))...")
+            try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+            verifyCount += 1
+        }
+
+        if findInDock(bundleId: config.bundleIdentifier) != nil {
+            print("   ✓ App registered in Dock")
+        } else {
+            print("   ⚠️ App not found in Dock after restart, attempting to re-add...")
+            // Try adding again - sometimes the first write doesn't take
+            addToDock(at: helperPath)
+            restartDock()
+            try await Task.sleep(nanoseconds: 500_000_000)
+        }
+
+        // 9. Launch the helper app (Dock doesn't auto-launch persistent apps)
         if !isHelperRunning(bundleId: config.bundleIdentifier) {
             print("   Launching helper app...")
             launchHelper(at: helperPath)
+
+            // Wait for launch to complete
+            var launchWaitCount = 0
+            while !isHelperRunning(bundleId: config.bundleIdentifier) && launchWaitCount < 10 {
+                try await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+                launchWaitCount += 1
+            }
+
+            if isHelperRunning(bundleId: config.bundleIdentifier) {
+                print("   ✓ Helper launched successfully")
+            } else {
+                print("   ⚠️ Helper may not have launched - user may need to click the Dock icon")
+            }
         } else {
-            print("   ✓ Helper auto-launched by Dock")
+            print("   ✓ Helper already running")
         }
 
         print("✅ Helper installed at: \(helperPath.path)")
@@ -275,14 +321,41 @@ final class HelperBundleManager {
 
     /// Remove tile from Dock only (without deleting bundle)
     /// Use this when user toggles "Show Tile" OFF - removes from Dock but keeps bundle
-    func removeFromDock(for config: DockTileConfiguration) throws {
+    func removeFromDock(for config: DockTileConfiguration) async throws {
+        // Prevent double-removal if this bundle is already being removed
+        guard !removingBundleIds.contains(config.bundleIdentifier) else {
+            print("⚠️ Skipping remove - already in progress for: \(config.name)")
+            return
+        }
+
+        // Also prevent removal while installation is in progress
+        guard !installingBundleIds.contains(config.bundleIdentifier) else {
+            print("⚠️ Skipping remove - installation in progress for: \(config.name)")
+            return
+        }
+
+        removingBundleIds.insert(config.bundleIdentifier)
+        defer { removingBundleIds.remove(config.bundleIdentifier) }
+
         print("🗑️ Removing from Dock only: \(config.name)")
         print("   Bundle ID: \(config.bundleIdentifier)")
 
         // Quit helper if running
         if isHelperRunning(bundleId: config.bundleIdentifier) {
             quitHelper(bundleId: config.bundleIdentifier)
-            Thread.sleep(forTimeInterval: 0.3)
+
+            // Wait for the app to fully terminate
+            var waitCount = 0
+            while isHelperRunning(bundleId: config.bundleIdentifier) && waitCount < 10 {
+                try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+                waitCount += 1
+            }
+
+            if isHelperRunning(bundleId: config.bundleIdentifier) {
+                print("   ⚠️ Helper still running after 1 second")
+            } else {
+                print("   ✓ Helper terminated after \(waitCount) checks")
+            }
         }
 
         // Remove from Dock plist (works even if bundle doesn't exist)
@@ -290,6 +363,19 @@ final class HelperBundleManager {
 
         // Restart Dock to apply changes
         restartDock()
+
+        // Wait for Dock to fully restart
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+
+        // Verify removal
+        if findInDock(bundleId: config.bundleIdentifier) == nil {
+            print("   ✓ Verified tile removed from Dock")
+        } else {
+            print("   ⚠️ Tile may still be in Dock - attempting re-removal...")
+            removeFromDockPlist(bundleId: config.bundleIdentifier)
+            restartDock()
+            try await Task.sleep(nanoseconds: 300_000_000)
+        }
 
         print("✅ Removed from Dock: \(config.name)")
     }
@@ -495,12 +581,10 @@ final class HelperBundleManager {
     }
 
     /// Check if app is already in Dock (by path)
+    /// Uses CFPreferences API to read from cfprefsd cache (not stale file on disk)
     func isInDock(at appPath: URL) -> Bool {
-        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
-
-        guard let dockPlist = NSDictionary(contentsOf: dockPlistPath),
-              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
+        let dockAppId = "com.apple.dock" as CFString
+        guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             return false
         }
 
@@ -517,12 +601,10 @@ final class HelperBundleManager {
     }
 
     /// Check if app with given bundle ID is already in Dock (returns the dock entry path if found)
+    /// Uses CFPreferences API to read from cfprefsd cache (not stale file on disk)
     func findInDock(bundleId: String) -> URL? {
-        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
-
-        guard let dockPlist = NSDictionary(contentsOf: dockPlistPath),
-              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
+        let dockAppId = "com.apple.dock" as CFString
+        guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             return nil
         }
 
@@ -535,7 +617,15 @@ final class HelperBundleManager {
                 let appPath = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
                 let fullPath = "/" + appPath
 
-                // Check if this app has the bundle ID we're looking for
+                // First check the bundle-identifier stored in the Dock plist entry itself
+                // This is more reliable because it doesn't depend on the app bundle existing
+                if let storedBundleId = tileData["bundle-identifier"] as? String,
+                   storedBundleId == bundleId {
+                    return URL(fileURLWithPath: fullPath)
+                }
+
+                // Fallback: Check if this app has the bundle ID in Info.plist
+                // (for entries created by other means that don't have bundle-identifier in tile-data)
                 let infoPlistPath = URL(fileURLWithPath: fullPath)
                     .appendingPathComponent("Contents/Info.plist")
 
@@ -550,20 +640,19 @@ final class HelperBundleManager {
     }
 
     /// Remove app from Dock by bundle ID (checks Info.plist of each app)
+    /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
     func removeFromDock(bundleId: String) {
         print("📌 Removing from Dock by bundle ID: \(bundleId)")
 
-        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
-
-        guard let dockPlist = NSMutableDictionary(contentsOf: dockPlistPath),
-              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
-            print("   ⚠️ Could not read Dock plist")
+        // Read current persistent-apps using CFPreferences
+        let dockAppId = "com.apple.dock" as CFString
+        guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
+            print("   ⚠️ Could not read persistent-apps from CFPreferences")
             return
         }
 
         // Filter out apps with matching bundle ID
-        let filteredApps = persistentApps.filter { entry in
+        let filteredApps = currentApps.filter { entry in
             guard let tileData = entry["tile-data"] as? [String: Any],
                   let fileData = tileData["file-data"] as? [String: Any],
                   let urlString = fileData["_CFURLString"] as? String,
@@ -572,44 +661,60 @@ final class HelperBundleManager {
             }
 
             let appPath = "/" + url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+
+            // First check the bundle-identifier stored directly in tile-data
+            if let storedBundleId = tileData["bundle-identifier"] as? String,
+               storedBundleId == bundleId {
+                print("   Found and removing (tile-data): \(appPath)")
+                return false  // Remove this entry
+            }
+
+            // Fallback: check Info.plist
             let infoPlistPath = URL(fileURLWithPath: appPath)
                 .appendingPathComponent("Contents/Info.plist")
 
             if let plist = NSDictionary(contentsOf: infoPlistPath),
                let existingBundleId = plist["CFBundleIdentifier"] as? String,
                existingBundleId == bundleId {
-                print("   Found and removing: \(appPath)")
+                print("   Found and removing (Info.plist): \(appPath)")
                 return false  // Remove this entry
             }
             return true  // Keep this entry
         }
 
-        if filteredApps.count < persistentApps.count {
-            dockPlist["persistent-apps"] = filteredApps
-            if dockPlist.write(to: dockPlistPath, atomically: true) {
-                print("   ✓ Removed from Dock plist")
+        if filteredApps.count < currentApps.count {
+            // Write using CFPreferences API
+            CFPreferencesSetAppValue(
+                "persistent-apps" as CFString,
+                filteredApps as CFArray,
+                dockAppId
+            )
+
+            if CFPreferencesAppSynchronize(dockAppId) {
+                print("   ✓ Removed from Dock via CFPreferences")
+            } else {
+                print("   ⚠️ CFPreferences sync failed")
             }
         } else {
             print("   ✓ Bundle ID not found in Dock")
         }
     }
 
-    /// Remove app from Dock plist by path pattern (doesn't require bundle to exist)
+    /// Remove app from Dock plist by bundle ID (doesn't require bundle to exist)
+    /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
     /// Used during uninstall when bundle may be deleted before Dock restart
     private func removeFromDockPlist(bundleId: String) {
         print("📌 Removing from Dock plist: \(bundleId)")
 
-        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
-
-        guard let dockPlist = NSMutableDictionary(contentsOf: dockPlistPath),
-              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
-            print("   ⚠️ Could not read Dock plist")
+        // Read current persistent-apps using CFPreferences
+        let dockAppId = "com.apple.dock" as CFString
+        guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
+            print("   ⚠️ Could not read persistent-apps from CFPreferences")
             return
         }
 
-        // Filter out apps - check both by Info.plist (if exists) and by path pattern
-        let filteredApps = persistentApps.filter { entry in
+        // Filter out apps - check by bundle-identifier in tile-data first, then fallback to Info.plist
+        let filteredApps = currentApps.filter { entry in
             guard let tileData = entry["tile-data"] as? [String: Any],
                   let fileData = tileData["file-data"] as? [String: Any],
                   let urlString = fileData["_CFURLString"] as? String,
@@ -618,14 +723,23 @@ final class HelperBundleManager {
             }
 
             let appPath = "/" + url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+
+            // First check the bundle-identifier stored directly in tile-data
+            // This is the most reliable method as it doesn't depend on the app bundle existing
+            if let storedBundleId = tileData["bundle-identifier"] as? String,
+               storedBundleId == bundleId {
+                print("   Found by tile-data bundle-identifier: \(appPath)")
+                return false  // Remove this entry
+            }
+
+            // Fallback: Try to read bundle ID from Info.plist
             let infoPlistPath = URL(fileURLWithPath: appPath)
                 .appendingPathComponent("Contents/Info.plist")
 
-            // Try to read bundle ID from Info.plist
             if let plist = NSDictionary(contentsOf: infoPlistPath),
                let existingBundleId = plist["CFBundleIdentifier"] as? String,
                existingBundleId == bundleId {
-                print("   Found by bundle ID: \(appPath)")
+                print("   Found by Info.plist bundle ID: \(appPath)")
                 return false  // Remove this entry
             }
 
@@ -642,10 +756,18 @@ final class HelperBundleManager {
             return true  // Keep this entry
         }
 
-        if filteredApps.count < persistentApps.count {
-            dockPlist["persistent-apps"] = filteredApps
-            if dockPlist.write(to: dockPlistPath, atomically: true) {
-                print("   ✓ Removed from Dock plist")
+        if filteredApps.count < currentApps.count {
+            // Write using CFPreferences API
+            CFPreferencesSetAppValue(
+                "persistent-apps" as CFString,
+                filteredApps as CFArray,
+                dockAppId
+            )
+
+            if CFPreferencesAppSynchronize(dockAppId) {
+                print("   ✓ Removed from Dock plist via CFPreferences")
+            } else {
+                print("   ⚠️ CFPreferences sync failed")
             }
         } else {
             print("   ✓ Entry not found in Dock")
@@ -653,31 +775,33 @@ final class HelperBundleManager {
     }
 
     /// Add app to Dock without launching it (only if not already present)
+    /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
     func addToDock(at appPath: URL) {
         print("📌 Adding to Dock: \(appPath.lastPathComponent)")
         print("   App path: \(appPath.path)")
 
-        // Check if already in Dock first
-        if isInDock(at: appPath) {
-            print("   ✓ Already in Dock - no action needed")
+        // Get bundle identifier from the app first
+        let infoPlistPath = appPath.appendingPathComponent("Contents/Info.plist")
+        guard let bundleId = NSDictionary(contentsOf: infoPlistPath)?["CFBundleIdentifier"] as? String else {
+            print("   ⚠️ Could not read bundle ID from app")
+            return
+        }
+
+        // Check if already in Dock by bundle ID (more reliable than path)
+        if findInDock(bundleId: bundleId) != nil {
+            print("   ✓ Already in Dock (bundle ID: \(bundleId)) - no action needed")
             return
         }
 
         print("   Not in Dock yet, adding...")
 
-        // Use defaults to add to com.apple.dock persistent-apps
-        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
-
-        guard let dockPlist = NSMutableDictionary(contentsOf: dockPlistPath),
-              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
-            print("   ⚠️ Could not read Dock plist")
+        // Read current persistent-apps using CFPreferences (industry standard approach)
+        // This ensures we're reading from cfprefsd cache, not stale file on disk
+        let dockAppId = "com.apple.dock" as CFString
+        guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
+            print("   ⚠️ Could not read persistent-apps from CFPreferences")
             return
         }
-
-        // Get bundle identifier from the app
-        let infoPlistPath = appPath.appendingPathComponent("Contents/Info.plist")
-        let bundleId = (NSDictionary(contentsOf: infoPlistPath)?["CFBundleIdentifier"] as? String) ?? ""
 
         // Generate a unique GUID for the dock entry
         let guid = Int(Date().timeIntervalSince1970 * 1000) % Int(Int32.max)
@@ -701,34 +825,40 @@ final class HelperBundleManager {
         ]
 
         // Add to persistent apps
-        var updatedApps = persistentApps
+        var updatedApps = currentApps
         updatedApps.append(newEntry)
-        dockPlist["persistent-apps"] = updatedApps
 
-        // Write back (caller is responsible for restarting Dock)
-        if dockPlist.write(to: dockPlistPath, atomically: true) {
-            print("   ✓ Added to Dock plist (GUID: \(guid), bundle: \(bundleId))")
+        // Write using CFPreferences API (industry standard - same approach as dockutil)
+        // This writes directly to cfprefsd, avoiding the "write to file then sync" problem
+        CFPreferencesSetAppValue(
+            "persistent-apps" as CFString,
+            updatedApps as CFArray,
+            dockAppId
+        )
+
+        // Synchronize to flush changes to disk
+        if CFPreferencesAppSynchronize(dockAppId) {
+            print("   ✓ Added to Dock via CFPreferences (GUID: \(guid), bundle: \(bundleId))")
         } else {
-            print("   ⚠️ Failed to write Dock plist")
+            print("   ⚠️ CFPreferences sync failed")
         }
     }
 
     /// Remove app from Dock (by path)
+    /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
     func removeFromDock(at appPath: URL) {
         print("📌 Removing from Dock: \(appPath.lastPathComponent)")
 
-        let dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
-
-        guard let dockPlist = NSMutableDictionary(contentsOf: dockPlistPath),
-              let persistentApps = dockPlist["persistent-apps"] as? [[String: Any]] else {
-            print("   ⚠️ Could not read Dock plist")
+        // Read current persistent-apps using CFPreferences
+        let dockAppId = "com.apple.dock" as CFString
+        guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
+            print("   ⚠️ Could not read persistent-apps from CFPreferences")
             return
         }
 
         // Filter out the app
         let appName = appPath.lastPathComponent
-        let filteredApps = persistentApps.filter { entry in
+        let filteredApps = currentApps.filter { entry in
             if let tileData = entry["tile-data"] as? [String: Any],
                let fileData = tileData["file-data"] as? [String: Any],
                let path = fileData["_CFURLString"] as? String {
@@ -737,11 +867,19 @@ final class HelperBundleManager {
             return true
         }
 
-        if filteredApps.count < persistentApps.count {
-            dockPlist["persistent-apps"] = filteredApps
-            if dockPlist.write(to: dockPlistPath, atomically: true) {
-                print("   ✓ Removed from Dock plist")
+        if filteredApps.count < currentApps.count {
+            // Write using CFPreferences API
+            CFPreferencesSetAppValue(
+                "persistent-apps" as CFString,
+                filteredApps as CFArray,
+                dockAppId
+            )
+
+            if CFPreferencesAppSynchronize(dockAppId) {
+                print("   ✓ Removed from Dock via CFPreferences")
                 restartDock()
+            } else {
+                print("   ⚠️ CFPreferences sync failed")
             }
         } else {
             print("   ✓ Was not in Dock")
@@ -772,6 +910,7 @@ final class HelperBundleManager {
             .joined()
             .trimmingCharacters(in: .whitespaces)
     }
+
 }
 
 // MARK: - Errors
