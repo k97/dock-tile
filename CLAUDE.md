@@ -51,6 +51,7 @@ DockTile/
 ├── Managers/
 │   ├── ConfigurationManager.swift # State management with JSON persistence
 │   ├── HelperBundleManager.swift  # Helper bundle creation/installation/Dock integration
+│   ├── IconStyleManager.swift     # Observes macOS icon style (Default/Dark/Clear/Tinted)
 │   └── DockPlistWatcher.swift     # Monitors Dock plist for manual removals
 ├── Models/
 │   ├── ConfigurationModels.swift  # DockTileConfiguration, AppItem, TintColor, LayoutMode
@@ -237,6 +238,46 @@ The `showInAppSwitcher` toggle controls whether a tile appears in Cmd+Tab:
 - Syncs `isVisibleInDock` state in configuration
 - Uses `DispatchSource.makeFileSystemObjectSource` for efficient watching
 
+### Icon Style Manager (macOS Tahoe)
+
+`IconStyleManager.swift` manages the macOS "Icon and widget style" setting (separate from Light/Dark appearance):
+
+**Icon Styles:**
+- `.defaultStyle` - Standard icons (key not set in UserDefaults)
+- `.dark` - Dark tinted icons (`RegularDark` value)
+- `.clear` - Clear/transparent style
+- `.tinted` - Accent color tinted
+
+**Architecture:**
+- Single `IconStyleManager.shared` instance as source of truth
+- Uses `@ObservedObject` pattern for SwiftUI views
+- 2-second polling timer (reliable fallback since notifications are unreliable)
+- Posts `.iconStyleDidChange` notification for non-SwiftUI components
+
+**Usage in Views:**
+```swift
+@ObservedObject private var iconStyleManager = IconStyleManager.shared
+
+var body: some View {
+    // Reference currentStyle to trigger re-renders
+    let _ = iconStyleManager.currentStyle
+    // ... view content
+}
+```
+
+**App Icon Loading Strategy:**
+- Apps WITH `Assets.car` (Claude, ChatGPT, system apps): Use `NSWorkspace.shared.icon(forFile:)` which respects icon style
+- Apps WITHOUT `Assets.car` (Ollama, etc.): Load `.icns` directly from bundle to avoid unwanted dark tinting
+
+**Detection:**
+```swift
+func appHasAssetCatalog(atPath path: String) -> Bool {
+    let assetCatalogURL = URL(fileURLWithPath: path)
+        .appendingPathComponent("Contents/Resources/Assets.car")
+    return FileManager.default.fileExists(atPath: assetCatalogURL.path)
+}
+```
+
 ### Native macOS Color Patterns
 
 SwiftUI's `Color(nsColor:)` initializer doesn't reliably bridge AppKit colors. Use `NSViewRepresentable` instead:
@@ -335,6 +376,29 @@ private struct QuaternaryFillView: NSViewRepresentable {
 ```
 
 ## Recent Changes
+
+### macOS Tahoe Icon Style Support (2026-02)
+- **Discovery**: macOS Tahoe has TWO independent appearance settings:
+  - **Appearance** (Light/Dark/Auto) - controls window chrome
+  - **Icon and widget style** (Default/Dark/Clear/Tinted) - controls icon rendering
+- **New File**: `IconStyleManager.swift` - Observes icon style changes via `AppleIconAppearanceTheme` UserDefaults key
+- **IconStyle enum**: `.defaultStyle`, `.dark`, `.clear`, `.tinted`
+- **Known values**: `RegularDark` = Dark style, key not set = Default style
+- **Architecture**: Single `IconStyleManager.shared` as source of truth with `@ObservedObject` pattern
+- **Polling**: 2-second poll timer (reliable fallback since distributed notifications are unreliable)
+- **Updates**:
+  - `DockTileIconPreview.swift` - Uses `IconStyle` for real-time preview updates
+  - `IconGenerator.swift` - Generates icons using `IconStyle` parameter
+  - `HelperBundleManager.swift` - Generates `AppIcon-default.icns` and `AppIcon-dark.icns`
+  - `HelperAppDelegate.swift` - Observes `AppleIconAppearanceTheme` and switches dock icons
+  - `NativePopoverViews.swift` - Popover icons respond to icon style changes
+  - `DockTileDetailView.swift` - Selected Items table (`AppIconView`) responds to icon style
+  - `ItemRowView.swift` - App rows respond to icon style changes
+- **App Icon Loading**: Smart detection based on Asset Catalog presence:
+  - Apps WITH `Assets.car`: Use `NSWorkspace.shared.icon(forFile:)` for style-aware icons
+  - Apps WITHOUT `Assets.car` (e.g., Ollama): Load `.icns` directly to avoid unwanted dark tinting
+- **View Re-render Pattern**: Reference `iconStyleManager.currentStyle` in view body with `let _ =` to trigger re-renders
+- **Documentation**: See `ICON_STYLE_ARCHITECTURE.md` for full details
 
 ### Auto-Save Draft Mode & Add Button Control (2026-01)
 - **Auto-Save**: All edits in DockTileDetailView and CustomiseTileView now save immediately as drafts

@@ -162,6 +162,10 @@ struct StackPopoverView: View {
     @State private var selectedIndex: Int? = nil
     @State private var keyboardNavigationEnabled = false
 
+    // Observe IconStyleManager for icon style changes
+    // Used to force view recreation via .id() modifier
+    @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
     private var apps: [AppItem] {
         configuration?.appItems ?? []
     }
@@ -208,6 +212,9 @@ struct StackPopoverView: View {
                                 isSelected: selectedIndex == index,
                                 onLaunch: onLaunch
                             )
+                            // Force view recreation when icon style changes
+                            // This clears NSWorkspace icon cache for this view
+                            .id("\(app.id)-\(iconStyleManager.currentStyle.rawValue)")
                             .onTapGesture {
                                 launchAppAt(index: index)
                             }
@@ -324,7 +331,14 @@ struct StackAppItem: View {
     let isSelected: Bool  // Keyboard navigation selection only
     let onLaunch: () -> Void
 
+    // Observe IconStyleManager for icon style changes
+    // This triggers view refresh when system icon style changes
+    @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
     var body: some View {
+        // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
+        let _ = iconStyleManager.currentStyle
+
         VStack(spacing: 6) {
             // Large app icon (64x64 like native Dock folders)
             appIconView
@@ -350,6 +364,8 @@ struct StackAppItem: View {
 
     @ViewBuilder
     private var appIconView: some View {
+        // NSWorkspace.shared.icon(forFile:) returns the system's current styled icon
+        // Apps that don't support icon styles will return their default icon
         if let nsImage = getAppIcon() {
             Image(nsImage: nsImage)
                 .resizable()
@@ -362,19 +378,22 @@ struct StackAppItem: View {
     }
 
     private func getAppIcon() -> NSImage? {
-        // Try stored icon data first
-        if let iconData = app.iconData,
-           let nsImage = NSImage(data: iconData) {
-            return nsImage
-        }
-
         // For folders, get icon from folder path
         if app.isFolder, let folderPath = app.folderPath {
             return NSWorkspace.shared.icon(forFile: folderPath)
         }
 
-        // Get from bundle identifier (this returns clean icon without alias arrow)
+        // Get app URL
         if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+            // Check if app has Asset Catalog (supports icon style variants)
+            // Apps WITHOUT Assets.car don't support icon variants, so load directly from .icns
+            // to avoid macOS applying unwanted dark tinting
+            if !appHasAssetCatalog(atPath: appURL.path) {
+                if let icon = loadIconDirectlyFromBundle(atPath: appURL.path) {
+                    return icon
+                }
+            }
+            // App has Asset Catalog - use NSWorkspace which respects icon style
             return NSWorkspace.shared.icon(forFile: appURL.path)
         }
 
@@ -388,11 +407,59 @@ struct StackAppItem: View {
 
         for path in searchPaths {
             if FileManager.default.fileExists(atPath: path) {
+                if !appHasAssetCatalog(atPath: path) {
+                    if let icon = loadIconDirectlyFromBundle(atPath: path) {
+                        return icon
+                    }
+                }
                 return NSWorkspace.shared.icon(forFile: path)
             }
         }
 
+        // Fallback to stored icon data if available
+        if let iconData = app.iconData,
+           let nsImage = NSImage(data: iconData) {
+            return nsImage
+        }
+
         return nil
+    }
+
+    /// Check if app bundle has an Asset Catalog (Assets.car)
+    /// Apps with Asset Catalogs typically support icon style variants
+    private func appHasAssetCatalog(atPath path: String) -> Bool {
+        let assetCatalogURL = URL(fileURLWithPath: path)
+            .appendingPathComponent("Contents/Resources/Assets.car")
+        return FileManager.default.fileExists(atPath: assetCatalogURL.path)
+    }
+
+    /// Load icon directly from app bundle's .icns file
+    /// Used for apps without Asset Catalog to bypass macOS icon style transformations
+    private func loadIconDirectlyFromBundle(atPath path: String) -> NSImage? {
+        let bundleURL = URL(fileURLWithPath: path)
+
+        // Read Info.plist to get icon file name
+        let infoPlistURL = bundleURL.appendingPathComponent("Contents/Info.plist")
+        guard let infoPlist = NSDictionary(contentsOf: infoPlistURL) else {
+            return nil
+        }
+
+        // Try CFBundleIconFile first, then CFBundleIconName
+        let iconFileName = infoPlist["CFBundleIconFile"] as? String
+            ?? infoPlist["CFBundleIconName"] as? String
+
+        guard var iconName = iconFileName else {
+            return nil
+        }
+
+        // Add .icns extension if not present
+        if !iconName.hasSuffix(".icns") {
+            iconName += ".icns"
+        }
+
+        // Load the icon directly from Resources folder
+        let iconURL = bundleURL.appendingPathComponent("Contents/Resources/\(iconName)")
+        return NSImage(contentsOf: iconURL)
     }
 }
 
@@ -406,6 +473,10 @@ struct ListPopoverView: View {
 
     @State private var selectedIndex: Int? = nil
     @State private var keyboardNavigationEnabled = false
+
+    // Observe IconStyleManager for icon style changes
+    // Used to force view recreation via .id() modifier
+    @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
     private var apps: [AppItem] {
         configuration?.appItems ?? []
@@ -439,6 +510,9 @@ struct ListPopoverView: View {
                             isSelected: selectedIndex == index,
                             onLaunch: onLaunch
                         )
+                        // Force view recreation when icon style changes
+                        // This clears NSWorkspace icon cache for this view
+                        .id("\(app.id)-\(iconStyleManager.currentStyle.rawValue)")
                         .onTapGesture {
                             launchAppAt(index: index)
                         }
@@ -558,12 +632,19 @@ struct ListAppRow: View {
 
     @State private var isHovered = false
 
+    // Observe IconStyleManager for icon style changes
+    // This triggers view refresh when system icon style changes
+    @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
     /// Whether to show highlight (selection takes priority over hover)
     private var isHighlighted: Bool {
         isSelected || isHovered
     }
 
     var body: some View {
+        // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
+        let _ = iconStyleManager.currentStyle
+
         HStack(spacing: 8) {
             // Small icon (16x16 like native menu items)
             appIconView
@@ -593,6 +674,8 @@ struct ListAppRow: View {
 
     @ViewBuilder
     private var appIconView: some View {
+        // NSWorkspace.shared.icon(forFile:) returns the system's current styled icon
+        // Apps that don't support icon styles will return their default icon
         if let nsImage = getAppIcon() {
             Image(nsImage: nsImage)
                 .resizable()
@@ -605,20 +688,26 @@ struct ListAppRow: View {
     }
 
     private func getAppIcon() -> NSImage? {
-        if let iconData = app.iconData,
-           let nsImage = NSImage(data: iconData) {
-            return nsImage
-        }
-
         // For folders, get icon from folder path
         if app.isFolder, let folderPath = app.folderPath {
             return NSWorkspace.shared.icon(forFile: folderPath)
         }
 
+        // Get app URL
         if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+            // Check if app has Asset Catalog (supports icon style variants)
+            // Apps WITHOUT Assets.car don't support icon variants, so load directly from .icns
+            // to avoid macOS applying unwanted dark tinting
+            if !appHasAssetCatalog(atPath: appURL.path) {
+                if let icon = loadIconDirectlyFromBundle(atPath: appURL.path) {
+                    return icon
+                }
+            }
+            // App has Asset Catalog - use NSWorkspace which respects icon style
             return NSWorkspace.shared.icon(forFile: appURL.path)
         }
 
+        // Try common paths for apps
         let searchPaths = [
             "/Applications/\(app.name).app",
             "/System/Applications/\(app.name).app",
@@ -628,11 +717,59 @@ struct ListAppRow: View {
 
         for path in searchPaths {
             if FileManager.default.fileExists(atPath: path) {
+                if !appHasAssetCatalog(atPath: path) {
+                    if let icon = loadIconDirectlyFromBundle(atPath: path) {
+                        return icon
+                    }
+                }
                 return NSWorkspace.shared.icon(forFile: path)
             }
         }
 
+        // Fallback to stored icon data if available
+        if let iconData = app.iconData,
+           let nsImage = NSImage(data: iconData) {
+            return nsImage
+        }
+
         return nil
+    }
+
+    /// Check if app bundle has an Asset Catalog (Assets.car)
+    /// Apps with Asset Catalogs typically support icon style variants
+    private func appHasAssetCatalog(atPath path: String) -> Bool {
+        let assetCatalogURL = URL(fileURLWithPath: path)
+            .appendingPathComponent("Contents/Resources/Assets.car")
+        return FileManager.default.fileExists(atPath: assetCatalogURL.path)
+    }
+
+    /// Load icon directly from app bundle's .icns file
+    /// Used for apps without Asset Catalog to bypass macOS icon style transformations
+    private func loadIconDirectlyFromBundle(atPath path: String) -> NSImage? {
+        let bundleURL = URL(fileURLWithPath: path)
+
+        // Read Info.plist to get icon file name
+        let infoPlistURL = bundleURL.appendingPathComponent("Contents/Info.plist")
+        guard let infoPlist = NSDictionary(contentsOf: infoPlistURL) else {
+            return nil
+        }
+
+        // Try CFBundleIconFile first, then CFBundleIconName
+        let iconFileName = infoPlist["CFBundleIconFile"] as? String
+            ?? infoPlist["CFBundleIconName"] as? String
+
+        guard var iconName = iconFileName else {
+            return nil
+        }
+
+        // Add .icns extension if not present
+        if !iconName.hasSuffix(".icns") {
+            iconName += ".icns"
+        }
+
+        // Load the icon directly from Resources folder
+        let iconURL = bundleURL.appendingPathComponent("Contents/Resources/\(iconName)")
+        return NSImage(contentsOf: iconURL)
     }
 }
 

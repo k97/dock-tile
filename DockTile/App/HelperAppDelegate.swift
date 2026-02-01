@@ -19,11 +19,25 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// Track if popover was shown due to app activation (Cmd+Tab)
     private var showedPopoverOnActivation = false
 
+    /// Observers for icon style changes (distributed notifications)
+    private var iconStyleObservers: [any NSObjectProtocol] = []
+
+    /// Poll timer for icon style changes (reliable fallback)
+    private var iconStylePollTimer: Timer?
+
+    /// Current icon style (Default/Dark/Clear/Tinted)
+    private var currentIconStyle: IconStyle = .defaultStyle
+
     // MARK: - Runtime Detection
 
     /// Current bundle ID
     private var currentBundleId: String {
         Bundle.main.bundleIdentifier ?? "com.docktile.app"
+    }
+
+    /// Current bundle path
+    private var currentBundlePath: URL {
+        Bundle.main.bundleURL
     }
 
     // MARK: - Application Lifecycle
@@ -59,12 +73,21 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
             print("⚠️ No configuration found for bundle ID: \(currentBundleId)")
         }
 
+        // Set up icon style observation for dynamic icon switching
+        // NOTE: This observes "Icon and widget style" setting, NOT "Appearance" (Light/Dark)
+        setupIconStyleObservation()
+
+        // Set initial icon based on current icon style
+        currentIconStyle = IconStyle.current
+        updateIconForCurrentStyle()
+
         print("✓ Helper app ready")
         // App is now running in Dock - popover will show when user clicks the icon
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         print("👋 Helper app terminating...")
+        cleanupIconStyleObservation()
     }
 
     /// Keep helper apps running even when all windows are closed
@@ -333,5 +356,91 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         print("   Config not found for \(currentBundleId), defaulting to hidden")
         return false
+    }
+
+    // MARK: - Icon Style Observation (Dynamic Icon Switching)
+    // NOTE: This observes "Icon and widget style" setting (Default/Dark/Clear/Tinted)
+    // This is SEPARATE from "Appearance" (Light/Dark) - macOS Tahoe has two independent settings
+
+    /// Set up observers for icon style changes
+    private func setupIconStyleObservation() {
+        // Observe distributed notifications that might indicate icon style changes
+        // macOS Tahoe may use various notification names for this setting
+        let notificationNames = [
+            "AppleIconAppearanceThemeChangedNotification",
+            "AppleInterfaceThemeChangedNotification",  // May also fire for icon style
+            "com.apple.desktop.darkModeChanged"
+        ]
+
+        for name in notificationNames {
+            let observer = DistributedNotificationCenter.default().addObserver(
+                forName: NSNotification.Name(name),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                // Capture notification name for logging (avoid sending Notification across actors)
+                let notificationName = name
+                Task { @MainActor in
+                    print("[HelperAppDelegate] Notification received: \(notificationName)")
+                    self?.handleIconStyleChange()
+                }
+            }
+            iconStyleObservers.append(observer)
+        }
+
+        // Set up polling as a reliable fallback (every 1 second)
+        iconStylePollTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkForIconStyleChange()
+            }
+        }
+
+        print("   ✓ Icon style observation set up")
+    }
+
+    /// Handle icon style change by switching the dock icon
+    private func handleIconStyleChange() {
+        let newStyle = IconStyle.current
+        guard newStyle != currentIconStyle else {
+            return // No change
+        }
+
+        print("🎨 Icon style changed: \(currentIconStyle.rawValue) → \(newStyle.rawValue)")
+        currentIconStyle = newStyle
+        updateIconForCurrentStyle()
+    }
+
+    /// Check for icon style change (called by poll timer)
+    private func checkForIconStyleChange() {
+        let newStyle = IconStyle.current
+        guard newStyle != currentIconStyle else {
+            return // No change
+        }
+
+        print("🎨 Poll detected icon style change: \(currentIconStyle.rawValue) → \(newStyle.rawValue)")
+        currentIconStyle = newStyle
+        updateIconForCurrentStyle()
+    }
+
+    /// Update the dock icon to match the current icon style
+    private func updateIconForCurrentStyle() {
+        // Switch the icon files based on icon style
+        let success = HelperBundleManager.switchIcon(for: currentBundlePath, to: currentIconStyle)
+
+        if success {
+            print("   ✓ Switched dock icon to \(currentIconStyle.rawValue) style")
+        } else {
+            print("   ⚠️ Failed to switch dock icon")
+        }
+    }
+
+    /// Clean up observers when the app terminates
+    private func cleanupIconStyleObservation() {
+        iconStylePollTimer?.invalidate()
+        iconStylePollTimer = nil
+        for observer in iconStyleObservers {
+            DistributedNotificationCenter.default().removeObserver(observer)
+        }
+        iconStyleObservers.removeAll()
     }
 }

@@ -40,6 +40,8 @@
 		AAIGOV02 /* IconGridOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAIGOV01; };
 		AASPGV02 /* SymbolPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASPGV01; };
 		AAEPGV02 /* EmojiPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEPGV01; };
+		AAAPM001 /* AppearanceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAPM002; };
+		AAISM001 /* IconStyleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAISM002; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -78,6 +80,8 @@
 		AAIGOV01 /* IconGridOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGridOverlay.swift; sourceTree = "<group>"; };
 		AASPGV01 /* SymbolPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPickerGrid.swift; sourceTree = "<group>"; };
 		AAEPGV01 /* EmojiPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerGrid.swift; sourceTree = "<group>"; };
+		AAAPM002 /* AppearanceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceManager.swift; sourceTree = "<group>"; };
+		AAISM002 /* IconStyleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconStyleManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,6 +179,8 @@
 		AA624C88 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				AAAPM002 /* AppearanceManager.swift */,
+				AAISM002 /* IconStyleManager.swift */,
 				AAC48362 /* ConfigurationManager.swift */,
 				AAH00002 /* HelperBundleManager.swift */,
 				AADPW001 /* DockPlistWatcher.swift */,
@@ -329,6 +335,8 @@
 				AAIGOV02 /* IconGridOverlay.swift in Sources */,
 				AASPGV02 /* SymbolPickerGrid.swift in Sources */,
 				AAEPGV02 /* EmojiPickerGrid.swift in Sources */,
+				AAAPM001 /* AppearanceManager.swift in Sources */,
+				AAISM001 /* IconStyleManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

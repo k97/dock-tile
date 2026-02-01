@@ -5,6 +5,7 @@
 //  Generate app icons (.icns) from tint color + symbol (SF Symbol or emoji)
 //  Supports both SF Symbols and emojis for icon generation
 //  Uses macOS Tahoe-style continuous corners (superellipse/squircle)
+//  Supports appearance-aware rendering (light/dark mode)
 //  Swift 6 - Strict Concurrency
 //
 
@@ -46,12 +47,14 @@ struct IconGenerator {
 
     /// Generate an icon image with gradient background and symbol/emoji
     /// Uses Tahoe-style continuous corners (squircle) and beveled glass effect
+    /// Supports icon style-aware rendering for Default/Dark/Clear/Tinted modes
     static func generateIcon(
         tintColor: TintColor,
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
-        size: CGSize
+        size: CGSize,
+        iconStyle: IconStyle = IconStyle.current
     ) -> NSImage {
         let image = NSImage(size: size)
 
@@ -71,21 +74,44 @@ struct IconGenerator {
         let rect = CGRect(origin: .zero, size: size)
         let squirclePath = createSquirclePath(in: rect, cornerRadius: cornerRadius)
 
-        // Draw gradient background
-        drawGradient(context: context, path: squirclePath, tintColor: tintColor, rect: rect)
+        // Get appearance-aware colors
+        let colors = tintColor.nsColors(for: iconStyle)
 
-        // Draw beveled glass effect (inner stroke) - matches DockTileIconPreview
-        drawBeveledStroke(context: context, path: squirclePath, size: size)
+        // Draw gradient background (appearance-aware)
+        drawGradient(
+            context: context,
+            path: squirclePath,
+            topColor: colors.backgroundTop,
+            bottomColor: colors.backgroundBottom,
+            rect: rect
+        )
+
+        // Draw beveled glass effect (inner stroke)
+        // Use subtler stroke in dark mode
+        let strokeOpacity: CGFloat = iconStyle == .dark ? 0.2 : 0.5
+        drawBeveledStroke(context: context, path: squirclePath, size: size, strokeOpacity: strokeOpacity)
 
         // Calculate font size based on icon scale
         let fontSize = size.width * iconRatio(for: iconScale, iconType: iconType)
 
-        // Draw icon (SF Symbol or emoji)
+        // Draw icon (SF Symbol or emoji) with appearance-aware colors
         switch iconType {
         case .sfSymbol:
-            drawSFSymbol(symbolName: iconValue, rect: rect, fontSize: fontSize)
+            drawSFSymbol(
+                symbolName: iconValue,
+                rect: rect,
+                fontSize: fontSize,
+                color: colors.foreground
+            )
         case .emoji:
-            drawEmoji(emoji: iconValue, rect: rect, fontSize: fontSize)
+            // Emojis: "Sticker on Glass" metaphor - keep full color
+            // Add subtle shadow in dark mode to lift off the surface
+            drawEmoji(
+                emoji: iconValue,
+                rect: rect,
+                fontSize: fontSize,
+                addShadow: iconStyle == .dark
+            )
         }
 
         image.unlockFocus()
@@ -104,7 +130,8 @@ struct IconGenerator {
             iconType: .emoji,
             iconValue: symbol,
             iconScale: ConfigurationDefaults.iconScale,
-            size: size
+            size: size,
+            iconStyle: IconStyle.current
         )
     }
 
@@ -113,7 +140,8 @@ struct IconGenerator {
     private static func drawGradient(
         context: CGContext,
         path: CGPath,
-        tintColor: TintColor,
+        topColor: NSColor,
+        bottomColor: NSColor,
         rect: CGRect
     ) {
         // Save context state before clipping
@@ -122,10 +150,6 @@ struct IconGenerator {
         // Clip to squircle path
         context.addPath(path)
         context.clip()
-
-        // Get gradient colors
-        let topColor = NSColor(tintColor.colorTop)
-        let bottomColor = NSColor(tintColor.colorBottom)
 
         // Create gradient
         let colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -159,11 +183,12 @@ struct IconGenerator {
     // MARK: - Beveled Glass Effect
 
     /// Draw the beveled glass inner stroke effect matching DockTileIconPreview
-    /// White stroke at 50% opacity, 0.5pt line width (scaled proportionally)
+    /// White stroke with configurable opacity, 0.5pt line width (scaled proportionally)
     private static func drawBeveledStroke(
         context: CGContext,
         path: CGPath,
-        size: CGSize
+        size: CGSize,
+        strokeOpacity: CGFloat = 0.5
     ) {
         context.saveGState()
 
@@ -173,7 +198,7 @@ struct IconGenerator {
 
         // Set stroke properties
         context.addPath(path)
-        context.setStrokeColor(NSColor.white.withAlphaComponent(0.5).cgColor)
+        context.setStrokeColor(NSColor.white.withAlphaComponent(strokeOpacity).cgColor)
         context.setLineWidth(lineWidth)
 
         // Stroke the path
@@ -184,7 +209,12 @@ struct IconGenerator {
 
     // MARK: - SF Symbol Drawing
 
-    private static func drawSFSymbol(symbolName: String, rect: CGRect, fontSize: CGFloat) {
+    private static func drawSFSymbol(
+        symbolName: String,
+        rect: CGRect,
+        fontSize: CGFloat,
+        color: NSColor = .white
+    ) {
         // Create SF Symbol configuration
         let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .medium)
 
@@ -192,7 +222,7 @@ struct IconGenerator {
         guard let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else {
             // Fallback to a default symbol if the requested one doesn't exist
-            drawFallbackSymbol(rect: rect, fontSize: fontSize)
+            drawFallbackSymbol(rect: rect, fontSize: fontSize, color: color)
             return
         }
 
@@ -202,12 +232,12 @@ struct IconGenerator {
         let y = (rect.height - symbolSize.height) / 2
         let drawRect = CGRect(x: x, y: y, width: symbolSize.width, height: symbolSize.height)
 
-        // Draw with white color
-        let tintedImage = symbolImage.tinted(with: .white)
+        // Draw with the specified color (appearance-aware)
+        let tintedImage = symbolImage.tinted(with: color)
         tintedImage.draw(in: drawRect)
     }
 
-    private static func drawFallbackSymbol(rect: CGRect, fontSize: CGFloat) {
+    private static func drawFallbackSymbol(rect: CGRect, fontSize: CGFloat, color: NSColor = .white) {
         // Draw a star as fallback
         let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .medium)
         guard let fallbackImage = NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil)?
@@ -220,17 +250,36 @@ struct IconGenerator {
         let y = (rect.height - symbolSize.height) / 2
         let drawRect = CGRect(x: x, y: y, width: symbolSize.width, height: symbolSize.height)
 
-        let tintedImage = fallbackImage.tinted(with: .white)
+        let tintedImage = fallbackImage.tinted(with: color)
         tintedImage.draw(in: drawRect)
     }
 
     // MARK: - Emoji Drawing
 
-    private static func drawEmoji(emoji: String, rect: CGRect, fontSize: CGFloat) {
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: fontSize),
-            .foregroundColor: NSColor.white
+    private static func drawEmoji(
+        emoji: String,
+        rect: CGRect,
+        fontSize: CGFloat,
+        addShadow: Bool = false
+    ) {
+        // Emojis keep their full color ("Sticker on Glass" metaphor)
+        // No foregroundColor applied - let the emoji render naturally
+
+        let font = NSFont.systemFont(ofSize: fontSize)
+
+        // Create attributed string without foreground color (keeps emoji colors)
+        var attributes: [NSAttributedString.Key: Any] = [
+            .font: font
         ]
+
+        // In dark mode, add a subtle shadow to lift the emoji off the surface
+        if addShadow {
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+            shadow.shadowOffset = NSSize(width: 0, height: -1)
+            shadow.shadowBlurRadius = 2
+            attributes[.shadow] = shadow
+        }
 
         let attributedString = NSAttributedString(string: emoji, attributes: attributes)
         let stringSize = attributedString.size()
@@ -246,12 +295,14 @@ struct IconGenerator {
     // MARK: - ICNS Generation
 
     /// Generate a complete .icns file with all standard resolutions
+    /// Supports icon style-aware rendering for Default/Dark/Clear/Tinted modes
     static func generateIcns(
         tintColor: TintColor,
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
-        outputURL: URL
+        outputURL: URL,
+        iconStyle: IconStyle = IconStyle.current
     ) throws {
         // Standard macOS icon sizes for .icns (base sizes)
         // Each needs 1x and @2x versions
@@ -270,7 +321,8 @@ struct IconGenerator {
                 iconType: iconType,
                 iconValue: iconValue,
                 iconScale: iconScale,
-                size: CGSize(width: baseSize, height: baseSize)
+                size: CGSize(width: baseSize, height: baseSize),
+                iconStyle: iconStyle
             )
             let filename1x = "icon_\(baseSize)x\(baseSize).png"
             try saveAsPNG(image: image1x, url: iconsetURL.appendingPathComponent(filename1x))
@@ -281,7 +333,8 @@ struct IconGenerator {
                 iconType: iconType,
                 iconValue: iconValue,
                 iconScale: iconScale,
-                size: CGSize(width: baseSize * 2, height: baseSize * 2)
+                size: CGSize(width: baseSize * 2, height: baseSize * 2),
+                iconStyle: iconStyle
             )
             let filename2x = "icon_\(baseSize)x\(baseSize)@2x.png"
             try saveAsPNG(image: image2x, url: iconsetURL.appendingPathComponent(filename2x))
@@ -320,7 +373,8 @@ struct IconGenerator {
             iconType: .emoji,
             iconValue: symbol,
             iconScale: ConfigurationDefaults.iconScale,
-            outputURL: outputURL
+            outputURL: outputURL,
+            iconStyle: IconStyle.current
         )
     }
 
@@ -344,19 +398,22 @@ struct IconGenerator {
     // MARK: - Quick Preview Generation
 
     /// Generate a preview image for UI display (faster, single size)
+    /// Supports icon style-aware rendering for Default/Dark/Clear/Tinted modes
     static func generatePreview(
         tintColor: TintColor,
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
-        size: CGFloat = 80
+        size: CGFloat = 80,
+        iconStyle: IconStyle = IconStyle.current
     ) -> NSImage {
         return generateIcon(
             tintColor: tintColor,
             iconType: iconType,
             iconValue: iconValue,
             iconScale: iconScale,
-            size: CGSize(width: size, height: size)
+            size: CGSize(width: size, height: size),
+            iconStyle: iconStyle
         )
     }
 
@@ -371,7 +428,8 @@ struct IconGenerator {
             iconType: .emoji,
             iconValue: symbol,
             iconScale: ConfigurationDefaults.iconScale,
-            size: CGSize(width: size, height: size)
+            size: CGSize(width: size, height: size),
+            iconStyle: IconStyle.current
         )
     }
 }

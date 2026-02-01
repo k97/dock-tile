@@ -3,6 +3,7 @@
 //  DockTile
 //
 //  Individual app item row with drag handle and remove button
+//  Fetches fresh icons from system to respect current icon style
 //  Swift 6 - Strict Concurrency
 //
 
@@ -15,6 +16,10 @@ struct ItemRowView: View {
 
     @State private var isHovered = false
 
+    // Observe IconStyleManager for icon style changes
+    // This triggers view refresh when system icon style changes
+    @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
     var body: some View {
         HStack(spacing: 12) {
             // Drag handle
@@ -23,22 +28,9 @@ struct ItemRowView: View {
                 .foregroundColor(.secondary)
                 .frame(width: 16)
 
-            // App icon
-            if let iconData = item.iconData, let nsImage = NSImage(data: iconData) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .frame(width: 32, height: 32)
-            } else {
-                // Fallback icon
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(width: 32, height: 32)
-                    .overlay(
-                        Image(systemName: "app")
-                            .font(.system(size: 16))
-                            .foregroundColor(.secondary)
-                    )
-            }
+            // App icon - fetch fresh from system to respect current icon style
+            appIconView
+                .frame(width: 32, height: 32)
 
             // App name
             Text(item.name)
@@ -65,6 +57,63 @@ struct ItemRowView: View {
         .onHover { hovering in
             isHovered = hovering
         }
+    }
+
+    @ViewBuilder
+    private var appIconView: some View {
+        // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
+        // This ensures NSWorkspace returns the correct style-aware icon
+        let _ = iconStyleManager.currentStyle
+
+        if let nsImage = getAppIcon() {
+            Image(nsImage: nsImage)
+                .resizable()
+                .interpolation(.high)
+        } else {
+            // Fallback icon
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.secondary.opacity(0.2))
+                .overlay(
+                    Image(systemName: "app")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary)
+                )
+        }
+    }
+
+    /// Fetch app icon fresh from system (respects current icon style)
+    private func getAppIcon() -> NSImage? {
+        // For folders, get icon from folder path
+        if item.isFolder, let folderPath = item.folderPath {
+            return NSWorkspace.shared.icon(forFile: folderPath)
+        }
+
+        // Get from bundle identifier - returns style-aware icon from macOS
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: item.bundleIdentifier) {
+            return NSWorkspace.shared.icon(forFile: appURL.path)
+        }
+
+        // Try common paths for apps
+        let searchPaths = [
+            "/Applications/\(item.name).app",
+            "/System/Applications/\(item.name).app",
+            "/Applications/Utilities/\(item.name).app",
+            "\(NSHomeDirectory())/Applications/\(item.name).app"
+        ]
+
+        for path in searchPaths {
+            if FileManager.default.fileExists(atPath: path) {
+                return NSWorkspace.shared.icon(forFile: path)
+            }
+        }
+
+        // Fallback to stored icon data if fresh fetch fails
+        if let iconData = item.iconData,
+           let nsImage = NSImage(data: iconData) {
+            return nsImage
+        }
+
+        return nil
     }
 }
 

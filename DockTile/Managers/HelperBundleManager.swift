@@ -101,16 +101,44 @@ final class HelperBundleManager {
             helperPath: helperPath
         )
 
-        // 2. Generate icon AFTER bundle is created, directly into Resources
-        let iconDestPath = helperPath.appendingPathComponent("Contents/Resources/AppIcon.icns")
+        // 2. Generate icons for different icon styles (Default/Dark/Clear/Tinted)
+        // NOTE: macOS Tahoe has TWO independent settings:
+        //       - "Appearance" (Light/Dark) - controls window chrome
+        //       - "Icon and widget style" (Default/Dark/Clear/Tinted) - controls icons
+        // We generate icons for each icon style
+        let resourcesPath = helperPath.appendingPathComponent("Contents/Resources")
+
+        // Generate default style icon (colorful gradient background)
+        let defaultIconPath = resourcesPath.appendingPathComponent("AppIcon-default.icns")
         try IconGenerator.generateIcns(
             tintColor: config.tintColor,
             iconType: config.iconType,
             iconValue: config.iconValue,
             iconScale: config.iconScale,
-            outputURL: iconDestPath
+            outputURL: defaultIconPath,
+            iconStyle: .defaultStyle
         )
-        print("   ✓ Generated icon")
+        print("   ✓ Generated default style icon")
+
+        // Generate dark style icon (dark background, tint-colored symbol)
+        let darkIconPath = resourcesPath.appendingPathComponent("AppIcon-dark.icns")
+        try IconGenerator.generateIcns(
+            tintColor: config.tintColor,
+            iconType: config.iconType,
+            iconValue: config.iconValue,
+            iconScale: config.iconScale,
+            outputURL: darkIconPath,
+            iconStyle: .dark
+        )
+        print("   ✓ Generated dark style icon")
+
+        // Copy appropriate icon to AppIcon.icns based on current icon style
+        let currentStyle = IconStyle.current
+        let sourceIconPath = currentStyle == .dark ? darkIconPath : defaultIconPath
+        let iconDestPath = resourcesPath.appendingPathComponent("AppIcon.icns")
+        try? FileManager.default.removeItem(at: iconDestPath)
+        try FileManager.default.copyItem(at: sourceIconPath, to: iconDestPath)
+        print("   ✓ Set active icon (style: \(currentStyle.rawValue))")
 
         // 3. Code sign the bundle
         try codesignHelper(at: helperPath)
@@ -365,8 +393,34 @@ final class HelperBundleManager {
         try? touchProcess.run()
         touchProcess.waitUntilExit()
 
-        // Re-register with Launch Services to refresh icon cache
+        // Also touch the icon file specifically
+        let iconPath = helperPath.appendingPathComponent("Contents/Resources/AppIcon.icns")
+        let touchIconProcess = Process()
+        touchIconProcess.executableURL = URL(fileURLWithPath: "/usr/bin/touch")
+        touchIconProcess.arguments = [iconPath.path]
+        touchIconProcess.standardOutput = FileHandle.nullDevice
+        touchIconProcess.standardError = FileHandle.nullDevice
+        try? touchIconProcess.run()
+        touchIconProcess.waitUntilExit()
+
+        // Clear icon services cache for this specific app
+        // The cache is stored in /var/folders/*/*/com.apple.iconservices*
+        // We can't delete the whole cache, but we can force a refresh by:
+        // 1. Unregistering the app
+        // 2. Re-registering it
+
         let lsregisterPath = "/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister"
+
+        // First unregister to clear any cached data
+        let unregisterProcess = Process()
+        unregisterProcess.executableURL = URL(fileURLWithPath: lsregisterPath)
+        unregisterProcess.arguments = ["-u", helperPath.path]
+        unregisterProcess.standardOutput = FileHandle.nullDevice
+        unregisterProcess.standardError = FileHandle.nullDevice
+        try? unregisterProcess.run()
+        unregisterProcess.waitUntilExit()
+
+        // Re-register with Launch Services to refresh icon cache
         let lsProcess = Process()
         lsProcess.executableURL = URL(fileURLWithPath: lsregisterPath)
         lsProcess.arguments = ["-f", "-R", helperPath.path]
@@ -374,6 +428,70 @@ final class HelperBundleManager {
         lsProcess.standardError = FileHandle.nullDevice
         try? lsProcess.run()
         lsProcess.waitUntilExit()
+    }
+
+    // MARK: - Dynamic Icon Switching (for Helper Apps)
+
+    /// Switch the active icon to match the current icon style
+    /// Called by helper apps when system icon style changes
+    /// NOTE: This responds to "Icon and widget style" setting, NOT "Appearance" (Light/Dark)
+    /// - Parameter bundlePath: Path to the helper bundle
+    /// - Parameter iconStyle: The icon style to switch to (Default/Dark/Clear/Tinted)
+    /// - Returns: True if icon was switched successfully
+    @discardableResult
+    static func switchIcon(for bundlePath: URL, to iconStyle: IconStyle) -> Bool {
+        let resourcesPath = bundlePath.appendingPathComponent("Contents/Resources")
+
+        // Map icon style to icon file
+        // For now, default/clear/tinted all use the "default" colorful icon
+        // Dark uses the dark icon
+        let sourceIconName: String
+        switch iconStyle {
+        case .dark:
+            sourceIconName = "AppIcon-dark.icns"
+        case .defaultStyle, .clear, .tinted:
+            sourceIconName = "AppIcon-default.icns"
+        }
+
+        let sourceIconPath = resourcesPath.appendingPathComponent(sourceIconName)
+        let destIconPath = resourcesPath.appendingPathComponent("AppIcon.icns")
+
+        // Check if source icon exists - fallback to AppIcon-light.icns for backward compatibility
+        var actualSourcePath = sourceIconPath
+        if !FileManager.default.fileExists(atPath: sourceIconPath.path) {
+            // Try fallback to old naming (AppIcon-light.icns)
+            let fallbackPath = resourcesPath.appendingPathComponent("AppIcon-light.icns")
+            if FileManager.default.fileExists(atPath: fallbackPath.path) {
+                actualSourcePath = fallbackPath
+                print("[HelperBundleManager] Using fallback icon: AppIcon-light.icns")
+            } else {
+                print("[HelperBundleManager] Source icon not found: \(sourceIconPath.path)")
+                return false
+            }
+        }
+
+        do {
+            // Remove current icon and copy the new one
+            try? FileManager.default.removeItem(at: destIconPath)
+            try FileManager.default.copyItem(at: actualSourcePath, to: destIconPath)
+            print("[HelperBundleManager] Switched icon to: \(sourceIconName) (style: \(iconStyle.rawValue))")
+
+            // Touch bundle and refresh icon cache
+            HelperBundleManager.shared.touchBundle(at: bundlePath)
+
+            // Refresh the dock tile icon
+            // Note: This may require a Dock restart to fully take effect
+            // We'll use NSApplication.setApplicationIconImage as a workaround for in-memory icon
+            if let iconImage = NSImage(contentsOf: destIconPath) {
+                NSApp.applicationIconImage = iconImage
+                print("[HelperBundleManager] Updated in-memory app icon")
+            }
+
+            return true
+        } catch {
+            print("[HelperBundleManager] Failed to switch icon: \(error)")
+            return false
+        }
     }
 
     /// Check if app is already in Dock (by path)

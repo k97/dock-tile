@@ -158,29 +158,17 @@ struct DockTileDetailView: View {
         HStack(alignment: .center, spacing: 16) {
             // Left column: Icon preview with Customise button
             VStack(alignment: .center, spacing: 12) {
-                // Icon container: 118×118pt with cornerRadius(24)
+                // Icon container: 118×118pt
+                // Uses DockTileIconPreview which is appearance-aware (light/dark mode)
                 // Tappable to open customise view
-                // NOTE: No drop shadow - matches IconGenerator output exactly
-                // The Dock adds shadows dynamically to all icons
-                ZStack {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [editedConfig.tintColor.colorTop, editedConfig.tintColor.colorBottom],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-
-                    // Beveled glass effect (inner stroke)
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5)
-
-                    // Icon content
-                    iconContent
-                }
-                .frame(width: 118, height: 118)
-                .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                DockTileIconPreview(
+                    tintColor: editedConfig.tintColor,
+                    iconType: editedConfig.iconType,
+                    iconValue: editedConfig.iconValue,
+                    iconScale: editedConfig.iconScale,
+                    size: 118
+                )
+                .contentShape(RoundedRectangle(cornerRadius: 118 * 0.225, style: .continuous))
                 .onHover { hovering in
                     if hovering {
                         NSCursor.pointingHand.push()
@@ -267,31 +255,6 @@ struct DockTileDetailView: View {
                     .fill(Color(nsColor: .quinaryLabel))
                     .frame(height: 1)
             }
-        }
-    }
-
-    // MARK: - Icon Content
-
-    /// Calculate icon size from scale value (same formula as DockTileIconPreview)
-    private var iconSize: CGFloat {
-        let containerSize: CGFloat = 118
-        let baseRatio = 0.30 + (CGFloat(editedConfig.iconScale - 10) * 0.035)
-        let ratio = editedConfig.iconType == .emoji ? baseRatio + 0.05 : baseRatio
-        return containerSize * ratio
-    }
-
-    @ViewBuilder
-    private var iconContent: some View {
-        switch editedConfig.iconType {
-        case .sfSymbol:
-            // White SF Symbol - no text shadow (matches IconGenerator and native icons)
-            Image(systemName: editedConfig.iconValue)
-                .font(.system(size: iconSize, weight: .medium))
-                .foregroundColor(.white)
-
-        case .emoji:
-            Text(editedConfig.iconValue)
-                .font(.system(size: iconSize))
         }
     }
 
@@ -609,28 +572,50 @@ struct NativeAppsTableView: View {
 struct AppIconView: View {
     let item: AppItem
 
-    private var appIcon: NSImage? {
-        // Try to get from stored data
-        if let iconData = item.iconData,
-           let image = NSImage(data: iconData) {
-            return image
-        }
+    // Observe IconStyleManager for icon style changes
+    // This triggers view refresh when system icon style changes
+    @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
+    private func getAppIcon() -> NSImage? {
         // For folders, get icon from folder path
         if item.isFolder, let folderPath = item.folderPath {
             return NSWorkspace.shared.icon(forFile: folderPath)
         }
 
-        // Try to get from bundle identifier
+        // Get from bundle identifier - returns style-aware icon from macOS
         if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: item.bundleIdentifier) {
             return NSWorkspace.shared.icon(forFile: appURL.path)
+        }
+
+        // Try common paths for apps
+        let searchPaths = [
+            "/Applications/\(item.name).app",
+            "/System/Applications/\(item.name).app",
+            "/Applications/Utilities/\(item.name).app",
+            "\(NSHomeDirectory())/Applications/\(item.name).app"
+        ]
+
+        for path in searchPaths {
+            if FileManager.default.fileExists(atPath: path) {
+                return NSWorkspace.shared.icon(forFile: path)
+            }
+        }
+
+        // Fallback to stored icon data if fresh fetch fails
+        if let iconData = item.iconData,
+           let nsImage = NSImage(data: iconData) {
+            return nsImage
         }
 
         return nil
     }
 
     var body: some View {
-        if let icon = appIcon {
+        // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
+        // This ensures NSWorkspace returns the correct style-aware icon
+        let _ = iconStyleManager.currentStyle
+
+        if let icon = getAppIcon() {
             Image(nsImage: icon)
                 .resizable()
                 .interpolation(.high)
