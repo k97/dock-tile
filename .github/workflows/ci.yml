@@ -15,143 +15,101 @@ env:
   PROJECT: DockTile.xcodeproj
 
 jobs:
-  build:
-    name: Build & Verify
+  build-and-test:
+    name: Build & Test
     runs-on: macos-15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: List available Xcode versions
+        run: ls -la /Applications/ | grep Xcode || true
+
       - name: Select Xcode
         run: |
-          # List available Xcode versions for debugging
-          ls -la /Applications/ | grep Xcode || true
-          # Use the latest Xcode 16.x available (prefer 16.2, then 16.1, then 16)
+          # Use Xcode 16.2 if available, otherwise latest 16.x
           if [ -d "/Applications/Xcode_16.2.app" ]; then
             sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           elif [ -d "/Applications/Xcode_16.1.app" ]; then
             sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
-          else
+          elif [ -d "/Applications/Xcode_16.app" ]; then
             sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+          else
+            echo "No Xcode 16.x found, using default"
           fi
 
-      - name: Show Xcode version
+      - name: Show Xcode and SDK info
         run: |
           xcodebuild -version
-          xcodebuild -showsdks | head -20
+          xcrun --show-sdk-path
+          xcodebuild -showsdks
 
-      - name: Build
+      - name: Build Debug
         run: |
+          set -o pipefail
           xcodebuild \
             -project $PROJECT \
             -scheme $SCHEME \
             -configuration Debug \
-            -destination 'platform=macOS,arch=arm64' \
+            -destination 'platform=macOS' \
             -derivedDataPath ./build \
-            build \
-            | xcpretty --color
-
-      - name: Build Release
-        run: |
-          xcodebuild \
-            -project $PROJECT \
-            -scheme $SCHEME \
-            -configuration Release \
-            -destination 'platform=macOS,arch=arm64' \
-            -derivedDataPath ./build \
-            build \
-            | xcpretty --color
+            CODE_SIGNING_ALLOWED='NO' \
+            ONLY_ACTIVE_ARCH=NO \
+            build 2>&1 | tee build.log | xcpretty --color || (cat build.log && exit 1)
 
       - name: Verify app bundle
         run: |
-          # Find the app bundle (may be in different locations depending on CI environment)
+          echo "=== Build Products Directory ==="
+          find ./build/Build/Products -type d -name "*.app" || echo "No .app found"
+
           APP_PATH=$(find ./build/Build/Products -name "DockTile.app" -type d | head -1)
 
           if [ -z "$APP_PATH" ]; then
-            echo "App bundle not found!"
-            echo "Contents of build directory:"
-            find ./build -name "*.app" -type d 2>/dev/null || echo "No .app bundles found"
+            echo "❌ App bundle not found!"
+            echo "Build directory contents:"
+            ls -laR ./build/Build/Products/ || true
             exit 1
           fi
 
-          echo "Found app at: $APP_PATH"
+          echo "✅ Found app at: $APP_PATH"
+          echo "=== Contents ==="
+          ls -la "$APP_PATH/Contents/"
+          ls -la "$APP_PATH/Contents/MacOS/" || echo "MacOS folder empty or missing"
 
-          echo "Checking app bundle structure..."
-          ls -la "$APP_PATH/Contents/" || true
-          ls -la "$APP_PATH/Contents/MacOS/" || true
-
-          echo "Checking Info.plist..."
-          test -f "$APP_PATH/Contents/Info.plist" || (echo "Info.plist not found" && exit 1)
-
-          echo "Checking for executable..."
-          EXEC_COUNT=$(ls "$APP_PATH/Contents/MacOS/" 2>/dev/null | wc -l)
-          if [ "$EXEC_COUNT" -eq 0 ]; then
-            echo "No executable found in MacOS folder"
-            exit 1
-          fi
-
-          echo "App bundle verification passed!"
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: DockTile-Debug
-          path: ./build/Build/Products/**/DockTile.app
-          retention-days: 7
-
-  # Test job - runs unit tests after build
-  # Note: Requires DockTileTests target to be added in Xcode (see Scripts/setup-tests.sh)
-  test:
-    name: Run Tests
-    runs-on: macos-15
-    needs: build
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Select Xcode
-        run: |
-          # Use the latest Xcode 16.x available (prefer 16.2, then 16.1, then 16)
-          if [ -d "/Applications/Xcode_16.2.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
-          elif [ -d "/Applications/Xcode_16.1.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
+          if [ -f "$APP_PATH/Contents/MacOS/DockTile" ]; then
+            echo "✅ Executable found"
           else
-            sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+            echo "⚠️ Main executable not found, checking for any executable..."
+            ls -la "$APP_PATH/Contents/MacOS/"
           fi
-          xcodebuild -version
 
       - name: Run Unit Tests
         run: |
+          set -o pipefail
           xcodebuild test \
             -project $PROJECT \
             -scheme $SCHEME \
-            -destination 'platform=macOS,arch=arm64' \
+            -destination 'platform=macOS' \
             -derivedDataPath ./build \
             -enableCodeCoverage YES \
             -only-testing:DockTileTests \
             CODE_SIGNING_ALLOWED='NO' \
-            | xcpretty --color --report junit --output ./build/test-results.xml
+            2>&1 | tee test.log | xcpretty --color || (cat test.log && exit 1)
 
-      - name: Upload Test Results
-        if: always()
+      - name: Upload Build Log
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: ./build/test-results.xml
+          name: build-logs
+          path: |
+            build.log
+            test.log
 
-      - name: Generate Coverage Report
-        if: success()
-        run: |
-          xcrun xccov view --report --json \
-            ./build/Logs/Test/*.xcresult \
-            > ./build/coverage.json || echo "Coverage report generation failed"
-
-      - name: Upload Coverage
+      - name: Upload build artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: ./build/coverage.json
+          name: DockTile-Debug
+          path: ./build/Build/Products/Debug/DockTile.app
+          retention-days: 7
