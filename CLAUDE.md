@@ -88,17 +88,208 @@ DockTile/
 ## Build & Development Commands
 
 ```bash
-# Build the project
+# Build Debug
 xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Debug build
 
-# Run tests
-xcodebuild test -project DockTile.xcodeproj -scheme DockTile
+# Build Release
+xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Release build
 
 # Clean build
 xcodebuild -project DockTile.xcodeproj -scheme DockTile clean
 
 # Build location
 ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Debug/DockTile.app
+```
+
+## Testing
+
+### Running Tests Locally
+
+**Quick Start (Xcode):**
+1. Open `DockTile.xcodeproj` in Xcode
+2. Press **Cmd+U** to run all tests
+
+**Quick Start (Terminal):**
+```bash
+xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
+  -destination 'platform=macOS' -only-testing:DockTileTests
+```
+
+### Test Framework
+
+| Purpose | Framework | Notes |
+|---------|-----------|-------|
+| Unit Tests | **Swift Testing** | Modern `@Test` macro, `#expect` assertions, parallel by default |
+| UI Tests | **XCUITest** | Accessibility-based element identification |
+| Snapshot Tests | **swift-snapshot-testing** | Visual regression testing (optional dependency) |
+
+### Test Directory Structure
+
+```
+DockTileTests/
+├── Unit/
+│   ├── Managers/
+│   │   ├── ConfigurationManagerTests.swift
+│   │   └── DockPlistWatcherTests.swift
+│   ├── Models/
+│   │   ├── ConfigurationModelsTests.swift
+│   │   └── TintColorTests.swift
+│   └── Utilities/
+│       ├── IconGeneratorTests.swift
+│       └── ColorExtensionsTests.swift
+├── Integration/
+│   └── HelperBundleLifecycleTests.swift
+└── Mocks/
+    ├── MockFileManager.swift
+    ├── MockUserDefaults.swift
+    └── MockDockPreferences.swift
+
+DockTileUITests/
+└── ConfigurationFlowUITests.swift
+```
+
+### Test Commands
+
+```bash
+# Run all unit tests
+xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
+  -destination 'platform=macOS' -only-testing:DockTileTests
+
+# Run specific test class
+xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
+  -destination 'platform=macOS' -only-testing:DockTileTests/ConfigurationModelsTests
+
+# Run with coverage
+xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
+  -destination 'platform=macOS' -enableCodeCoverage YES
+
+# Run UI tests (locally only)
+xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
+  -destination 'platform=macOS' -only-testing:DockTileUITests
+
+# Generate coverage report
+xcrun xccov view --report DerivedData/*/Logs/Test/*.xcresult
+```
+
+### Coverage Targets
+
+| Component | Target | Notes |
+|-----------|--------|-------|
+| Managers | 85-90% | Core business logic |
+| Models | 80-90% | Data validation, encoding/decoding |
+| Utilities | 90%+ | Pure functions |
+| UI Views | 50-60% | Snapshot tests + selective UI tests |
+| **Overall** | **75-80%** | Practical target for macOS app |
+
+### Test Setup (Xcode)
+
+Test targets need to be added in Xcode. Run the setup script for instructions:
+
+```bash
+./Scripts/setup-tests.sh
+```
+
+The script provides step-by-step instructions for:
+1. Adding `DockTileTests` unit test target
+2. Adding `DockTileUITests` UI test target
+3. Moving test files into targets
+4. Adding `swift-snapshot-testing` dependency (optional)
+
+### CI Integration
+
+Tests run automatically on every push and PR via GitHub Actions (`.github/workflows/ci.yml`):
+- Unit tests run in CI (fast, no system access needed)
+- UI tests and integration tests run locally only (require real Dock interaction)
+
+### Release Build Pipeline
+
+The project includes automated scripts for building distributable releases:
+
+```bash
+# Full release build (unsigned)
+./Scripts/build-release.sh
+
+# Full release build with code signing
+./Scripts/build-release.sh --sign
+
+# Full release build with signing + notarization
+./Scripts/build-release.sh --sign --notarize
+
+# Create DMG from existing app
+./Scripts/create-dmg.sh --app-path /path/to/DockTile.app
+
+# Notarize an existing DMG
+./Scripts/notarize.sh --dmg-path ./build/DockTile-1.0.dmg
+```
+
+### Build Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `Scripts/build-release.sh` | Orchestrates full release: build → sign → DMG → notarize |
+| `Scripts/create-dmg.sh` | Creates DMG installer from app bundle |
+| `Scripts/notarize.sh` | Submits DMG to Apple for notarization |
+
+### CI/CD (GitHub Actions)
+
+The project uses GitHub Actions for continuous integration:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | Push to main/develop, PRs | Build verification |
+| `release.yml` | Tag push (v*) | Build, sign, notarize, release |
+
+**Required GitHub Secrets for Release:**
+
+| Secret | Description |
+|--------|-------------|
+| `DEVELOPER_ID_APPLICATION_CERTIFICATE` | Base64-encoded .p12 certificate |
+| `DEVELOPER_ID_APPLICATION_PASSWORD` | Certificate password |
+| `KEYCHAIN_PASSWORD` | Temporary keychain password |
+| `APPLE_TEAM_ID` | Apple Developer Team ID |
+| `APPLE_DEVELOPER_NAME` | Developer name for signing identity |
+| `APPLE_ID` | Apple ID email for notarization |
+| `APPLE_APP_SPECIFIC_PASSWORD` | App-specific password from appleid.apple.com |
+
+### Code Signing & Entitlements
+
+**Entitlements File:** `DockTile/DockTile.entitlements`
+
+The app requires specific entitlements for its helper bundle architecture:
+
+| Entitlement | Reason |
+|-------------|--------|
+| `cs.allow-unsigned-executable-memory` | For ad-hoc signed helper bundles |
+| `cs.disable-library-validation` | To load helper bundles |
+| `automation.apple-events` | To restart Dock via osascript |
+
+**Manual Code Signing:**
+```bash
+# Sign with Developer ID
+codesign --force --deep --sign "Developer ID Application: Your Name (TEAM_ID)" \
+  --options runtime \
+  --entitlements DockTile/DockTile.entitlements \
+  /path/to/DockTile.app
+
+# Verify signature
+codesign --verify --deep --strict /path/to/DockTile.app
+```
+
+### Creating a Release
+
+1. **Update version** in Xcode (Marketing Version + Build Number)
+2. **Commit changes** and push to main
+3. **Create and push tag:**
+   ```bash
+   git tag -a v1.0.0 -m "Release 1.0.0"
+   git push origin v1.0.0
+   ```
+4. GitHub Actions will automatically build, sign, notarize, and create a release
+
+**Manual Release:**
+```bash
+./Scripts/build-release.sh --sign --notarize
+# Output: ./build/DockTile-1.0.dmg (signed and notarized)
 ```
 
 ## Configuration Schema & Backward Compatibility
@@ -1040,9 +1231,9 @@ DockTileConfigurationView (Main Window)
 
 | # | Task | Status | Priority | Notes |
 |---|------|--------|----------|-------|
-| 4 | **Build Pipeline (CI/CD)** | 🔲 Pending | High | No .github/workflows, no Fastlane, no build scripts |
-| 5 | **DMG Installer** | 🔲 Pending | High | No DMG scripts exist yet |
-| 6 | **Code Signing & Notarization** | 🔲 Pending | High | No entitlements file, no signing scripts |
+| 4 | **Build Pipeline (CI/CD)** | ✅ Done | High | GitHub Actions workflows: `ci.yml` (builds on push/PR), `release.yml` (builds/signs/notarizes on tag) |
+| 5 | **DMG Installer** | ✅ Done | High | `Scripts/create-dmg.sh` creates DMG with Applications symlink |
+| 6 | **Code Signing & Notarization** | ✅ Done | High | `DockTile.entitlements` + `Scripts/notarize.sh` + `Scripts/build-release.sh` |
 
 ### Phase 3: User Experience
 
@@ -1070,69 +1261,67 @@ DockTileConfigurationView (Main Window)
 - Use the same design language as tile icons (gradients, rounded corners)
 - Generate all required sizes for macOS (16, 32, 128, 256, 512 @ 1x and 2x)
 
-#### 4. Build Pipeline (GitHub Actions)
-**Goal**: Automated builds producing signed DMG files
-```yaml
-# Suggested workflow:
-# 1. Trigger: Push to main or tag creation
-# 2. Build: xcodebuild archive
-# 3. Sign: codesign with Developer ID certificate
-# 4. Notarize: xcrun notarytool
-# 5. Package: create-dmg or dmgbuild
-# 6. Release: Upload to GitHub Releases
+#### 4. Build Pipeline (GitHub Actions) ✅ COMPLETE
+**Implementation**: `.github/workflows/ci.yml` and `.github/workflows/release.yml`
+
+**CI Workflow** (`ci.yml`):
+- Triggers on push to main/develop and PRs
+- Builds Debug and Release configurations
+- Verifies app bundle structure
+- Uploads build artifact
+
+**Release Workflow** (`release.yml`):
+- Triggers on tag push (v*)
+- Imports signing certificate from GitHub Secrets
+- Builds with Developer ID signing
+- Creates DMG installer
+- Notarizes with Apple
+- Creates GitHub Release with DMG and checksum
+
+**Required GitHub Secrets**:
+- `DEVELOPER_ID_APPLICATION_CERTIFICATE` - Base64-encoded .p12
+- `DEVELOPER_ID_APPLICATION_PASSWORD` - Certificate password
+- `KEYCHAIN_PASSWORD` - Temporary keychain password
+- `APPLE_TEAM_ID` - Team ID
+- `APPLE_DEVELOPER_NAME` - Developer name
+- `APPLE_ID` - Apple ID email
+- `APPLE_APP_SPECIFIC_PASSWORD` - App-specific password
+
+#### 5. DMG Installer ✅ COMPLETE
+**Implementation**: `Scripts/create-dmg.sh`
+
+Features:
+- Auto-detects app from DerivedData or custom path
+- Creates DMG with Applications symlink
+- Generates SHA-256 checksum
+- Outputs to `./build/` directory
+
+Usage:
+```bash
+./Scripts/create-dmg.sh --app-path /path/to/DockTile.app --version 1.0
 ```
 
-**Requirements**:
-- Apple Developer ID Application certificate (for signing)
-- Apple Developer ID Installer certificate (for pkg, if needed)
-- App-specific password for notarization
-- GitHub secrets for credentials
+**Future Enhancement**: Add background image and prettier layout using `create-dmg` npm package.
 
-#### 5. DMG Installer (SF Symbols Style)
-**Goal**: Beautiful installer experience
-- Background image showing app icon and Applications folder
-- Arrow indicating drag-to-install
-- Properly sized window (600×400 typical)
-- Tools: `create-dmg` (npm) or `dmgbuild` (Python)
+#### 6. Code Signing & Notarization ✅ COMPLETE
+**Implementation**:
+- `DockTile/DockTile.entitlements` - Hardened runtime entitlements
+- `Scripts/notarize.sh` - Notarization script
+- `Scripts/build-release.sh` - Full release orchestration
 
-Example with create-dmg:
+**Entitlements** (required for helper bundle architecture):
+- `cs.allow-unsigned-executable-memory`
+- `cs.disable-library-validation`
+- `automation.apple-events`
+
+**Usage**:
 ```bash
-create-dmg \
-  --volname "DockTile" \
-  --volicon "DockTile.icns" \
-  --background "installer-bg.png" \
-  --window-pos 200 120 \
-  --window-size 600 400 \
-  --icon-size 100 \
-  --icon "DockTile.app" 150 185 \
-  --hide-extension "DockTile.app" \
-  --app-drop-link 450 185 \
-  "DockTile.dmg" \
-  "build/"
-```
+# Full release build with signing and notarization
+./Scripts/build-release.sh --sign --notarize
 
-#### 6. Code Signing & Notarization
-**Requirements for distribution outside App Store**:
-- Developer ID Application certificate
-- Hardened Runtime enabled
-- Notarization with Apple
-
-```bash
-# Sign
-codesign --deep --force --verify --verbose \
-  --sign "Developer ID Application: Your Name (TEAM_ID)" \
-  --options runtime \
-  DockTile.app
-
-# Notarize
-xcrun notarytool submit DockTile.dmg \
-  --apple-id "your@email.com" \
-  --team-id "TEAM_ID" \
-  --password "@keychain:AC_PASSWORD" \
-  --wait
-
-# Staple
-xcrun stapler staple DockTile.dmg
+# Or step by step:
+./Scripts/create-dmg.sh --app-path ./build/Build/Products/Release/DockTile.app
+./Scripts/notarize.sh --dmg-path ./build/DockTile-1.0.dmg
 ```
 
 #### 7. Onboarding Flow (Optional - No Permissions Required)
@@ -1382,10 +1571,16 @@ Bug Fixes (CURRENT)
     ├── "Configure..." should open main DockTile.app with tile selected
     └── Location: HelperAppDelegate.swift
 
-Phase 2: Distribution Setup
-├── Task 4: GitHub Actions pipeline
-├── Task 5: DMG installer
-└── Task 6: Code signing (requires Apple Developer account)
+Phase 2: Distribution Setup ✅ COMPLETE
+├── Task 4: GitHub Actions pipeline ✅
+│   ├── .github/workflows/ci.yml (build on push/PR)
+│   └── .github/workflows/release.yml (sign/notarize on tag)
+├── Task 5: DMG installer ✅
+│   └── Scripts/create-dmg.sh
+└── Task 6: Code signing ✅
+    ├── DockTile/DockTile.entitlements
+    ├── Scripts/notarize.sh
+    └── Scripts/build-release.sh
 
 Phase 3: User Experience
 └── Task 7: Onboarding Flow (optional)

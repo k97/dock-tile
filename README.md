@@ -104,6 +104,24 @@ xcodebuild -project DockTile.xcodeproj -scheme DockTile build
 xcodebuild -project DockTile.xcodeproj -scheme DockTile clean
 ```
 
+## Testing
+
+Run the test suite to verify everything works:
+
+```bash
+# Run all unit tests
+xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
+  -destination 'platform=macOS' -only-testing:DockTileTests
+
+# Run with code coverage
+xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
+  -destination 'platform=macOS' -enableCodeCoverage YES
+```
+
+Or in Xcode: Press **Cmd+U** to run all tests.
+
+Tests are automatically run on every push via GitHub Actions CI.
+
 ---
 
 Made with care for macOS

@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SCHEME: DockTile
+  PROJECT: DockTile.xcodeproj
+
+jobs:
+  build:
+    name: Build & Verify
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project $PROJECT \
+            -scheme $SCHEME \
+            -configuration Debug \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath ./build \
+            build \
+            | xcpretty --color
+
+      - name: Build Release
+        run: |
+          xcodebuild \
+            -project $PROJECT \
+            -scheme $SCHEME \
+            -configuration Release \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath ./build \
+            build \
+            | xcpretty --color
+
+      - name: Verify app bundle
+        run: |
+          APP_PATH="./build/Build/Products/Release/DockTile.app"
+
+          echo "Checking app bundle exists..."
+          test -d "$APP_PATH" || (echo "App bundle not found" && exit 1)
+
+          echo "Checking executable..."
+          test -f "$APP_PATH/Contents/MacOS/DockTile" || (echo "Executable not found" && exit 1)
+
+          echo "Checking Info.plist..."
+          test -f "$APP_PATH/Contents/Info.plist" || (echo "Info.plist not found" && exit 1)
+
+          echo "Checking icon..."
+          test -f "$APP_PATH/Contents/Resources/AppIcon.icns" || test -d "$APP_PATH/Contents/Resources/AppIcon.icon" || (echo "Icon not found" && exit 1)
+
+          echo "App bundle verification passed!"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DockTile-Debug
+          path: ./build/Build/Products/Debug/DockTile.app
+          retention-days: 7
+
+  # Test job - runs unit tests after build
+  # Note: Requires DockTileTests target to be added in Xcode (see Scripts/setup-tests.sh)
+  test:
+    name: Run Tests
+    runs-on: macos-15
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Run Unit Tests
+        run: |
+          xcodebuild test \
+            -project $PROJECT \
+            -scheme $SCHEME \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath ./build \
+            -enableCodeCoverage YES \
+            -only-testing:DockTileTests \
+            CODE_SIGNING_ALLOWED='NO' \
+            | xcpretty --color --report junit --output ./build/test-results.xml
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./build/test-results.xml
+
+      - name: Generate Coverage Report
+        if: success()
+        run: |
+          xcrun xccov view --report --json \
+            ./build/Logs/Test/*.xcresult \
+            > ./build/coverage.json || echo "Coverage report generation failed"
+
+      - name: Upload Coverage
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./build/coverage.json
