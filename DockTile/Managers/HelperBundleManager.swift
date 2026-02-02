@@ -30,7 +30,9 @@ final class HelperBundleManager {
 
     // MARK: - Properties
 
-    /// Directory where helper bundles are stored: ~/Library/Application Support/DockTile/
+    /// Directory where helper bundles are stored
+    /// Dev: ~/Library/Application Support/DockTile-Dev/
+    /// Release: ~/Library/Application Support/DockTile/
     private let helperDirectory: URL
 
     /// Track bundle IDs currently being installed to prevent double-installation
@@ -42,12 +44,8 @@ final class HelperBundleManager {
     // MARK: - Initialization
 
     private init() {
-        let appSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0]
-
-        helperDirectory = appSupport.appendingPathComponent("DockTile")
+        // Use environment-specific support folder
+        helperDirectory = AppEnvironment.supportURL
 
         // Ensure directory exists
         try? FileManager.default.createDirectory(

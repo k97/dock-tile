@@ -22,23 +22,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     // MARK: - Runtime Detection
 
-    /// Main app bundle ID
-    private let mainAppBundleId = "com.docktile.app"
-
     /// Current bundle ID
     private var currentBundleId: String {
-        Bundle.main.bundleIdentifier ?? mainAppBundleId
+        Bundle.main.bundleIdentifier ?? AppEnvironment.mainAppBundleId
     }
 
     /// Detect if running as main app or helper bundle
     private var isHelperApp: Bool {
-        // Main app has bundle ID "com.docktile.app"
-        // Helper apps have IDs like "com.docktile.UUID-STRING"
+        // Main app has bundle ID like "com.docktile.app" or "com.docktile.dev.app"
+        // Helper apps have IDs like "com.docktile.UUID-STRING" or "com.docktile.dev.UUID-STRING"
         let bundleId = currentBundleId
-        if bundleId == mainAppBundleId || bundleId == "com.docktile" {
+        let mainBundleId = AppEnvironment.mainAppBundleId
+        let helperPrefix = AppEnvironment.helperBundlePrefix
+
+        if bundleId == mainBundleId {
             return false
         }
-        return bundleId.hasPrefix("com.docktile.")
+        return bundleId.hasPrefix("\(helperPrefix).")
     }
 
     // MARK: - Application Lifecycle

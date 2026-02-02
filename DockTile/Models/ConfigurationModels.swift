@@ -55,7 +55,9 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         self.appItems = appItems
         self.isVisibleInDock = isVisibleInDock
         self.showInAppSwitcher = showInAppSwitcher
-        self.bundleIdentifier = bundleIdentifier ?? "com.docktile.\(id.uuidString)"
+        // Use environment-specific prefix for bundle IDs
+        // Dev: com.docktile.dev.<UUID>  |  Release: com.docktile.<UUID>
+        self.bundleIdentifier = bundleIdentifier ?? "\(AppEnvironment.helperBundlePrefix).\(id.uuidString)"
         self.lastDockIndex = lastDockIndex
     }
 
