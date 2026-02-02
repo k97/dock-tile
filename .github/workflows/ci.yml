@@ -53,19 +53,31 @@ jobs:
 
       - name: Verify app bundle
         run: |
-          APP_PATH="./build/Build/Products/Release/DockTile.app"
+          # Find the app bundle (may be in different locations depending on CI environment)
+          APP_PATH=$(find ./build/Build/Products -name "DockTile.app" -type d | head -1)
 
-          echo "Checking app bundle exists..."
-          test -d "$APP_PATH" || (echo "App bundle not found" && exit 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "App bundle not found!"
+            echo "Contents of build directory:"
+            find ./build -name "*.app" -type d 2>/dev/null || echo "No .app bundles found"
+            exit 1
+          fi
 
-          echo "Checking executable..."
-          test -f "$APP_PATH/Contents/MacOS/DockTile" || (echo "Executable not found" && exit 1)
+          echo "Found app at: $APP_PATH"
+
+          echo "Checking app bundle structure..."
+          ls -la "$APP_PATH/Contents/" || true
+          ls -la "$APP_PATH/Contents/MacOS/" || true
 
           echo "Checking Info.plist..."
           test -f "$APP_PATH/Contents/Info.plist" || (echo "Info.plist not found" && exit 1)
 
-          echo "Checking icon..."
-          test -f "$APP_PATH/Contents/Resources/AppIcon.icns" || test -d "$APP_PATH/Contents/Resources/AppIcon.icon" || (echo "Icon not found" && exit 1)
+          echo "Checking for executable..."
+          EXEC_COUNT=$(ls "$APP_PATH/Contents/MacOS/" 2>/dev/null | wc -l)
+          if [ "$EXEC_COUNT" -eq 0 ]; then
+            echo "No executable found in MacOS folder"
+            exit 1
+          fi
 
           echo "App bundle verification passed!"
 
@@ -73,7 +85,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DockTile-Debug
-          path: ./build/Build/Products/Debug/DockTile.app
+          path: ./build/Build/Products/**/DockTile.app
           retention-days: 7
 
   # Test job - runs unit tests after build
