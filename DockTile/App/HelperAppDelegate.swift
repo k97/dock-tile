@@ -344,13 +344,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         } else {
-            // Fallback
-            workspace.launchApplication(
-                withBundleIdentifier: bundleId,
-                options: [],
-                additionalEventParamDescriptor: nil,
-                launchIdentifier: nil
-            )
+            print("❌ Could not find application with bundle ID: \(bundleId)")
         }
     }
 

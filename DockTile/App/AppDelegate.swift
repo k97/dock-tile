@@ -393,13 +393,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 }
             }
         } else {
-            // Fallback to deprecated API for compatibility
-            workspace.launchApplication(
-                withBundleIdentifier: bundleId,
-                options: [],
-                additionalEventParamDescriptor: nil,
-                launchIdentifier: nil
-            )
+            print("❌ Could not find application with bundle ID: \(bundleId)")
         }
     }
 
