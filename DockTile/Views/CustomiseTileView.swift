@@ -506,6 +506,7 @@ private struct CustomColorPickerButton: View {
 
 // MARK: - Color Panel Delegate
 
+@MainActor
 private class ColorPanelDelegate: NSObject {
     nonisolated(unsafe) static var associatedKey: UInt8 = 0
     let onColorChange: (NSColor) -> Void
@@ -514,7 +515,7 @@ private class ColorPanelDelegate: NSObject {
         self.onColorChange = onColorChange
     }
 
-    @MainActor @objc func colorChanged(_ sender: NSColorPanel) {
+    @objc func colorChanged(_ sender: NSColorPanel) {
         onColorChange(sender.color)
     }
 }
