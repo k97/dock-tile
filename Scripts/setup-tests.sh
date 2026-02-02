@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Setup Tests for DockTile
+# Setup Tests for Dock Tile
 # This script provides instructions for adding test targets to the Xcode project
 
 set -e
 
 echo "========================================"
-echo "DockTile Test Setup Instructions"
+echo "Dock Tile Test Setup Instructions"
 echo "========================================"
 echo ""
 echo "The test files have been created in:"

@@ -171,7 +171,7 @@ struct StackPopoverView: View {
     }
 
     private var tileName: String {
-        configuration?.name ?? "DockTile"
+        configuration?.name ?? "Dock Tile"
     }
 
     // MARK: - Dynamic Grid Configuration
@@ -503,7 +503,7 @@ struct ListPopoverView: View {
     }
 
     private var tileName: String {
-        configuration?.name ?? "DockTile"
+        configuration?.name ?? "Dock Tile"
     }
 
     var body: some View {

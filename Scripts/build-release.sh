@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# build-release.sh - Build a complete release of DockTile
+# build-release.sh - Build a complete release of Dock Tile
 #
 # Usage: ./Scripts/build-release.sh [--version VERSION] [--sign] [--notarize]
 #
@@ -75,7 +75,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo -e "${GREEN}╔═══════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║     DockTile Release Builder          ║${NC}"
+echo -e "${GREEN}║     Dock Tile Release Builder         ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════╝${NC}"
 echo ""
 

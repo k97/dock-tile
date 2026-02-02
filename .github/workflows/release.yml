@@ -148,14 +148,14 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: DockTile ${{ steps.version.outputs.VERSION }}
+          name: Dock Tile ${{ steps.version.outputs.VERSION }}
           body: |
-            ## DockTile ${{ steps.version.outputs.VERSION }}
+            ## Dock Tile ${{ steps.version.outputs.VERSION }}
 
             ### Installation
             1. Download `DockTile-${{ steps.version.outputs.VERSION }}.dmg`
-            2. Open the DMG and drag DockTile to Applications
-            3. Launch DockTile from Applications
+            2. Open the DMG and drag Dock Tile to Applications
+            3. Launch Dock Tile from Applications
 
             ### Requirements
             - macOS 15.0 (Sequoia) or later

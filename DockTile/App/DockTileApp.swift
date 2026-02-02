@@ -11,7 +11,7 @@
 
 import SwiftUI
 
-/// Main SwiftUI App - only used by main DockTile app, not helpers
+/// Main SwiftUI App - only used by main Dock Tile app, not helpers
 /// Called from main.swift when running as main app
 struct DockTileApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -33,7 +33,7 @@ struct DockTileApp: App {
         .defaultSize(width: windowWidth, height: 600)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New DockTile") {
+                Button("New Dock Tile") {
                     configManager.createConfiguration()
                 }
                 .keyboardShortcut("n", modifiers: .command)

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# create-dmg.sh - Create a DMG installer for DockTile
+# create-dmg.sh - Create a DMG installer for Dock Tile
 #
 # Usage: ./Scripts/create-dmg.sh [--app-path PATH] [--output-dir DIR] [--version VERSION]
 #
@@ -20,7 +20,7 @@ APP_NAME="DockTile"
 APP_PATH=""
 OUTPUT_DIR="./build"
 VERSION=""
-VOLUME_NAME="DockTile"
+VOLUME_NAME="Dock Tile"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -53,7 +53,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo -e "${GREEN}=== DockTile DMG Creator ===${NC}"
+echo -e "${GREEN}=== Dock Tile DMG Creator ===${NC}"
 
 # Find app if not specified
 if [[ -z "$APP_PATH" ]]; then

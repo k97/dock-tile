@@ -1,4 +1,4 @@
-# DockTile
+# Dock Tile
 
 A native macOS utility that lets you create custom Dock tiles to organise and launch your favourite apps with a single click.
 
@@ -7,7 +7,7 @@ A native macOS utility that lets you create custom Dock tiles to organise and la
 
 ## Overview
 
-DockTile brings the power of custom app launchers to your macOS Dock. Create multiple tiles, each with its own curated list of apps, custom icon, and colour scheme. Click a tile to reveal a beautiful popover with your apps ready to launch.
+Dock Tile brings the power of custom app launchers to your macOS Dock. Create multiple tiles, each with its own curated list of apps, custom icon, and colour scheme. Click a tile to reveal a beautiful popover with your apps ready to launch.
 
 Think of it as customisable Dock folders - with native vibrancy effects, SF Symbols, emoji icons, and the polish you'd expect from a first-party macOS app.
 
@@ -53,7 +53,7 @@ Think of it as customisable Dock folders - with native vibrancy effects, SF Symb
 
 ## Getting Started
 
-1. **Launch DockTile** - Open the app from your Applications folder
+1. **Launch Dock Tile** - Open the app from your Applications folder
 2. **Create a Tile** - Click the "+" button in the sidebar to create a new tile
 3. **Customise** - Click "Customise" to choose an icon and colour
 4. **Add Apps** - Click "+" in the Selected Items section to add apps
@@ -62,7 +62,7 @@ Think of it as customisable Dock folders - with native vibrancy effects, SF Symb
 
 ## How It Works
 
-DockTile creates lightweight helper applications for each tile you configure. These helpers appear as independent apps in the Dock and show a native popover when clicked.
+Dock Tile creates lightweight helper applications for each tile you configure. These helpers appear as independent apps in the Dock and show a native popover when clicked.
 
 ## Tile Settings
 

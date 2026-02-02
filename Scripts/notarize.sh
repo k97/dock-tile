@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# notarize.sh - Notarize DockTile DMG with Apple
+# notarize.sh - Notarize Dock Tile DMG with Apple
 #
 # Usage: ./Scripts/notarize.sh --dmg-path PATH [--apple-id ID] [--team-id ID] [--password PWD]
 #
@@ -73,7 +73,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo -e "${GREEN}=== DockTile Notarization ===${NC}"
+echo -e "${GREEN}=== Dock Tile Notarization ===${NC}"
 
 # Verify DMG path
 if [[ -z "$DMG_PATH" ]]; then
