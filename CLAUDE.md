@@ -1241,6 +1241,7 @@ DockTileConfigurationView (Main Window)
 |---|------|--------|----------|-------|
 | 7 | **Onboarding Flow** | 🔲 Pending | Medium | Bartender/Alcove/Klack-style onboarding (no permissions needed - CFPreferences approach) |
 | 7b | **Clear/Tinted Mode Hint** | 🔲 Deferred | Low | Show subtitle in CustomiseTileView colour section explaining "Dock applies system tint" when in Clear/Tinted mode. Needs careful layout to not break inspector card. |
+| 11 | **Localization (English Variants)** | 🔲 Pending | Medium | US (en), UK (en-GB), AU (en-AU) English. Leverage existing `AppStrings.swift` infrastructure. |
 
 ### Phase 4: App Store & Marketing
 
@@ -1555,6 +1556,102 @@ Picker("", selection: $editedConfig.layoutMode) {
 - Write description highlighting use cases
 - Schedule for Tuesday-Thursday (best days)
 
+#### 11. Localization (English Variants)
+**Goal**: Support US, UK, and AU English localizations
+
+**Target Locales**:
+| Locale | Code | Notes |
+|--------|------|-------|
+| US English | `en` | Base/development language (already exists) |
+| UK English | `en-GB` | British spelling: "Customise", "Colour" |
+| AU English | `en-AU` | Australian spelling (same as UK) |
+
+**Infrastructure (Already in Place)**:
+- `AppStrings.swift` with `NSLocalizedString` wrappers
+- All user-visible strings centralized with localization keys
+
+**Files to Create**:
+```
+DockTile/Resources/
+├── en.lproj/
+│   ├── Localizable.strings      # App strings (base)
+│   └── InfoPlist.strings        # Info.plist strings (base)
+├── en-GB.lproj/
+│   ├── Localizable.strings      # UK English translations
+│   └── InfoPlist.strings
+└── en-AU.lproj/
+    ├── Localizable.strings      # AU English translations
+    └── InfoPlist.strings
+```
+
+**String Differences (UK/AU vs US)**:
+| Key | US English | UK/AU English |
+|-----|------------|---------------|
+| Customise button | "Customize" | "Customise" |
+| Colour section | "Color" | "Colour" |
+| Any "...ize" words | "-ize" suffix | "-ise" suffix |
+| Any "...or" words | "-or" suffix | "-our" suffix |
+
+**Implementation Steps**:
+1. **Export Base Strings**: Use `genstrings` or Xcode's export feature
+   ```bash
+   find DockTile -name "*.swift" -exec genstrings -o DockTile/Resources/en.lproj {} +
+   ```
+
+2. **Create Localizable.strings** (en.lproj - base):
+   ```
+   /* App display name */
+   "app.name" = "Dock Tile";
+
+   /* Menu item to create a new tile */
+   "menu.newTile" = "New Dock Tile";
+
+   /* Navigation title for sidebar */
+   "sidebar.title" = "Dock Tile";
+   ```
+
+3. **Create UK/AU Variants**: Copy base and update spellings
+   ```
+   /* Customize button becomes Customise */
+   "button.customize" = "Customise";
+
+   /* Color picker becomes Colour */
+   "label.color" = "Colour";
+   ```
+
+4. **Update Xcode Project**:
+   - Add `.lproj` folders to project
+   - Enable localization in project settings
+   - Set "Use Base Internationalization" = YES
+
+5. **Update AppStrings.swift** (if needed):
+   - Ensure all keys match `.strings` files
+   - Add any missing `NSLocalizedString` calls
+
+**Testing**:
+```bash
+# Test UK English
+defaults write com.docktile.app AppleLanguages "(en-GB)"
+open "/path/to/Dock Tile.app"
+
+# Reset to system language
+defaults delete com.docktile.app AppleLanguages
+```
+
+**Xcode 15+ Alternative**: Consider using **String Catalogs** (`.xcstrings`) instead of `.strings` files:
+- Single file for all localizations
+- Better diffing and merge conflict resolution
+- Visual editor in Xcode
+- Automatic extraction of strings
+
+**Future Expansion**:
+Once English variants are complete, the infrastructure supports adding:
+- German (de)
+- French (fr)
+- Spanish (es)
+- Japanese (ja)
+- Simplified Chinese (zh-Hans)
+
 ---
 
 ### Implementation Order (Remaining)
@@ -1590,4 +1687,11 @@ Phase 3: User Experience
 
 Phase 4: Marketing & Launch
 └── Task 9-10: Distribution & marketing
+
+Phase 5: Localization
+└── Task 11: English Variants (US, UK, AU)
+    ├── Leverage existing AppStrings.swift infrastructure
+    ├── Create en.lproj, en-GB.lproj, en-AU.lproj folders
+    ├── Spelling differences: -ize → -ise, -or → -our
+    └── Consider String Catalogs (.xcstrings) for Xcode 15+
 ```
