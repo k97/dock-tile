@@ -265,7 +265,9 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.hide(animated: true)
+            Task { @MainActor in
+                self?.hide(animated: true)
+            }
         }
 
         // Add global click monitor to dismiss on click outside
