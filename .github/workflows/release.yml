@@ -8,7 +8,8 @@ on:
 env:
   SCHEME: DockTile
   PROJECT: DockTile.xcodeproj
-  APP_NAME: DockTile
+  APP_NAME: "Dock Tile"
+  APP_NAME_NO_SPACE: DockTile
 
 jobs:
   # Run tests first - release only proceeds if tests pass
@@ -87,7 +88,7 @@ jobs:
         env:
           SIGNING_IDENTITY: "Developer ID Application: ${{ secrets.APPLE_DEVELOPER_NAME }} (${{ secrets.APPLE_TEAM_ID }})"
         run: |
-          APP_PATH="./build/Build/Products/Release/$APP_NAME.app"
+          APP_PATH="./build/Build/Products/Release/${APP_NAME}.app"
 
           # Sign with hardened runtime
           codesign --force --deep --sign "$SIGNING_IDENTITY" \
@@ -99,25 +100,17 @@ jobs:
           codesign --verify --deep --strict "$APP_PATH"
           echo "App signed successfully"
 
+      - name: Install create-dmg
+        run: brew install create-dmg
+
       - name: Create DMG
         run: |
-          APP_PATH="./build/Build/Products/Release/$APP_NAME.app"
-          DMG_NAME="${APP_NAME}-${{ steps.version.outputs.VERSION }}.dmg"
+          ./Scripts/create-dmg.sh \
+            --app-path "./build/Build/Products/Release/${APP_NAME}.app" \
+            --output-dir . \
+            --version ${{ steps.version.outputs.VERSION }}
 
-          # Create temporary folder for DMG contents
-          mkdir -p ./dmg-contents
-          cp -R "$APP_PATH" ./dmg-contents/
-
-          # Create symlink to Applications
-          ln -s /Applications ./dmg-contents/Applications
-
-          # Create DMG
-          hdiutil create -volname "$APP_NAME" \
-            -srcfolder ./dmg-contents \
-            -ov -format UDZO \
-            "./$DMG_NAME"
-
-          echo "DMG created: $DMG_NAME"
+          echo "DMG created: ${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
 
       - name: Notarize DMG
         env:
@@ -125,7 +118,7 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          DMG_NAME="${APP_NAME}-${{ steps.version.outputs.VERSION }}.dmg"
+          DMG_NAME="${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
 
           # Submit for notarization
           xcrun notarytool submit "./$DMG_NAME" \
@@ -139,33 +132,38 @@ jobs:
 
           echo "DMG notarized and stapled"
 
-      - name: Generate checksums
+      - name: Regenerate checksum after notarization
         run: |
-          DMG_NAME="${APP_NAME}-${{ steps.version.outputs.VERSION }}.dmg"
+          # Checksum must be regenerated after stapling (file changed)
+          DMG_NAME="${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
           shasum -a 256 "./$DMG_NAME" > "./${DMG_NAME}.sha256"
-          echo "Checksum generated"
+          echo "Checksum regenerated after notarization"
+          cat "./${DMG_NAME}.sha256"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           name: Dock Tile ${{ steps.version.outputs.VERSION }}
           body: |
-            ## Dock Tile ${{ steps.version.outputs.VERSION }}
+            ## Installation
 
-            ### Installation
             1. Download `DockTile-${{ steps.version.outputs.VERSION }}.dmg`
-            2. Open the DMG and drag Dock Tile to Applications
-            3. Launch Dock Tile from Applications
+            2. Open the DMG and drag **Dock Tile** to Applications
+            3. Launch from Applications
 
-            ### Requirements
+            ## Requirements
+
             - macOS 15.0 (Sequoia) or later
 
-            ### Checksum
-            See `DockTile-${{ steps.version.outputs.VERSION }}.dmg.sha256` for SHA-256 verification.
+            ## Verification
+
+            ```bash
+            shasum -a 256 -c DockTile-${{ steps.version.outputs.VERSION }}.dmg.sha256
+            ```
           files: |
-            ./${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}.dmg
-            ./${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}.dmg.sha256
-          draft: false
+            ./${{ env.APP_NAME_NO_SPACE }}-${{ steps.version.outputs.VERSION }}.dmg
+            ./${{ env.APP_NAME_NO_SPACE }}-${{ steps.version.outputs.VERSION }}.dmg.sha256
+          draft: true
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,11 +1,15 @@
 #!/bin/bash
 #
-# create-dmg.sh - Create a DMG installer for Dock Tile
+# create-dmg.sh - Create a professional DMG installer for Dock Tile
 #
 # Usage: ./Scripts/create-dmg.sh [--app-path PATH] [--output-dir DIR] [--version VERSION]
 #
-# This script creates a distributable DMG file with the app and an Applications symlink.
-# For a prettier DMG with background image, consider using create-dmg npm package.
+# This script creates a distributable DMG file with:
+# - Custom background image with drag-to-Applications guidance
+# - Properly positioned icons
+# - Applications symlink for easy installation
+#
+# Requires: create-dmg (brew install create-dmg)
 
 set -euo pipefail
 
@@ -16,11 +20,17 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Defaults
-APP_NAME="DockTile"
+APP_NAME="Dock Tile"
+APP_NAME_NO_SPACE="DockTile"  # For DMG filename (no spaces)
 APP_PATH=""
 OUTPUT_DIR="./build"
 VERSION=""
 VOLUME_NAME="Dock Tile"
+
+# Script directory for finding resources
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+BACKGROUND_IMAGE="$PROJECT_ROOT/DockTile/Resources/dmg-background.png"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -55,6 +65,18 @@ done
 
 echo -e "${GREEN}=== Dock Tile DMG Creator ===${NC}"
 
+# Check for create-dmg tool
+if ! command -v create-dmg &> /dev/null; then
+    echo -e "${YELLOW}create-dmg not found. Installing via Homebrew...${NC}"
+    if command -v brew &> /dev/null; then
+        brew install create-dmg
+    else
+        echo -e "${RED}Error: Homebrew not found. Please install create-dmg manually:${NC}"
+        echo "  brew install create-dmg"
+        exit 1
+    fi
+fi
+
 # Find app if not specified
 if [[ -z "$APP_PATH" ]]; then
     echo "Searching for DockTile.app..."
@@ -63,12 +85,12 @@ if [[ -z "$APP_PATH" ]]; then
     DERIVED_DATA_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "DockTile-*" -type d 2>/dev/null | head -1)
 
     if [[ -n "$DERIVED_DATA_PATH" ]]; then
-        APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release/$APP_NAME.app"
+        APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release/${APP_NAME}.app"
     fi
 
     # Try local build directory
     if [[ ! -d "$APP_PATH" ]]; then
-        APP_PATH="./build/Build/Products/Release/$APP_NAME.app"
+        APP_PATH="./build/Build/Products/Release/${APP_NAME}.app"
     fi
 fi
 
@@ -89,38 +111,67 @@ fi
 
 echo "Version: $VERSION"
 
+# Verify background image exists
+if [[ ! -f "$BACKGROUND_IMAGE" ]]; then
+    echo -e "${YELLOW}Warning: Background image not found at $BACKGROUND_IMAGE${NC}"
+    echo "Attempting to generate it..."
+
+    if [[ -f "$SCRIPT_DIR/generate-dmg-background.swift" ]]; then
+        cd "$PROJECT_ROOT"
+        swift "$SCRIPT_DIR/generate-dmg-background.swift"
+        cd - > /dev/null
+    else
+        echo -e "${RED}Error: Cannot find generate-dmg-background.swift${NC}"
+        echo "Creating DMG without background image..."
+        BACKGROUND_IMAGE=""
+    fi
+fi
+
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
 
-# Set up DMG filename and temp directory
-DMG_NAME="${APP_NAME}-${VERSION}.dmg"
+# Set up DMG filename (use no-space version for filename)
+DMG_NAME="${APP_NAME_NO_SPACE}-${VERSION}.dmg"
 DMG_PATH="$OUTPUT_DIR/$DMG_NAME"
-TEMP_DIR=$(mktemp -d)
-DMG_CONTENTS="$TEMP_DIR/dmg-contents"
-
-echo "Creating DMG contents..."
-
-# Create directory structure
-mkdir -p "$DMG_CONTENTS"
-
-# Copy app
-cp -R "$APP_PATH" "$DMG_CONTENTS/"
-
-# Create Applications symlink
-ln -s /Applications "$DMG_CONTENTS/Applications"
 
 # Remove existing DMG if present
 rm -f "$DMG_PATH"
 
-echo "Creating DMG..."
+echo "Creating DMG with professional layout..."
 
-# Create DMG using hdiutil
-hdiutil create \
-    -volname "$VOLUME_NAME" \
-    -srcfolder "$DMG_CONTENTS" \
-    -ov \
-    -format UDZO \
-    "$DMG_PATH"
+# Build create-dmg command
+CREATE_DMG_ARGS=(
+    --volname "$VOLUME_NAME"
+    --window-pos 200 120
+    --window-size 800 400
+    --icon-size 128
+    --icon "${APP_NAME}.app" 200 190
+    --hide-extension "${APP_NAME}.app"
+    --app-drop-link 600 190
+    --no-internet-enable
+)
+
+# Add background if available
+if [[ -n "$BACKGROUND_IMAGE" && -f "$BACKGROUND_IMAGE" ]]; then
+    CREATE_DMG_ARGS+=(--background "$BACKGROUND_IMAGE")
+    echo "Using background image: $BACKGROUND_IMAGE"
+fi
+
+# Create the DMG
+# Note: create-dmg expects the source to be a directory containing the app
+TEMP_DIR=$(mktemp -d)
+cp -R "$APP_PATH" "$TEMP_DIR/"
+
+create-dmg "${CREATE_DMG_ARGS[@]}" "$DMG_PATH" "$TEMP_DIR/" || {
+    # create-dmg returns non-zero if there are warnings but still succeeds
+    if [[ -f "$DMG_PATH" ]]; then
+        echo -e "${YELLOW}create-dmg completed with warnings${NC}"
+    else
+        echo -e "${RED}create-dmg failed${NC}"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+}
 
 # Cleanup temp directory
 rm -rf "$TEMP_DIR"
@@ -138,5 +189,7 @@ echo "  Size: $DMG_SIZE"
 echo "  SHA256: $(cat "$DMG_PATH.sha256" | cut -d' ' -f1)"
 echo ""
 echo "Next steps:"
-echo "  1. Sign the DMG (if not already signed)"
-echo "  2. Notarize with: ./Scripts/notarize.sh --dmg-path $DMG_PATH"
+echo "  1. Sign the DMG (if not already signed):"
+echo "     codesign --sign \"Developer ID Application: ...\" \"$DMG_PATH\""
+echo "  2. Notarize with: ./Scripts/notarize.sh --dmg-path \"$DMG_PATH\""
+echo "  3. Test by mounting: hdiutil attach \"$DMG_PATH\""
