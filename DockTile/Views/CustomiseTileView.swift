@@ -194,23 +194,13 @@ struct CustomiseTileView: View {
 
     @ViewBuilder
     private var segmentedPicker: some View {
-        if #available(macOS 26.0, *) {
-            Picker("", selection: $selectedIconTab) {
-                Text("Symbol").tag(IconPickerTab.symbol)
-                Text("Emoji").tag(IconPickerTab.emoji)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .buttonSizing(.flexible)
-        } else {
-            Picker("", selection: $selectedIconTab) {
-                Text("Symbol").tag(IconPickerTab.symbol)
-                Text("Emoji").tag(IconPickerTab.emoji)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: .infinity)
+        Picker("", selection: $selectedIconTab) {
+            Text("Symbol").tag(IconPickerTab.symbol)
+            Text("Emoji").tag(IconPickerTab.emoji)
         }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Tile Icon Size Section
