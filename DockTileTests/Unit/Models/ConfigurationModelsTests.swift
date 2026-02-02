@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import DockTile
+@testable import Dock_Tile
 
 // MARK: - DockTileConfiguration Tests
 

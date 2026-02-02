@@ -1,7 +1,7 @@
 import Testing
 import SwiftUI
 import AppKit
-@testable import DockTile
+@testable import Dock_Tile
 
 // MARK: - Color Extension Tests
 

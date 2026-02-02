@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import SwiftUI
-@testable import DockTile
+@testable import Dock_Tile
 
 // MARK: - ConfigurationManager Tests
 

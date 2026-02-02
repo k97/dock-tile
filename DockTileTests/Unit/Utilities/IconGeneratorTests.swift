@@ -1,7 +1,7 @@
 import Testing
 import AppKit
 import Foundation
-@testable import DockTile
+@testable import Dock_Tile
 
 // MARK: - IconGenerator Tests
 

@@ -1,7 +1,7 @@
 import Testing
 import Foundation
 import ImageIO
-@testable import DockTile
+@testable import Dock_Tile
 
 // MARK: - Helper Bundle Lifecycle Integration Tests
 
