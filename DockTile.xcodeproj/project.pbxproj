@@ -43,6 +43,7 @@
 		AANPV01 /* NativePopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AANPV02 /* NativePopoverViews.swift */; };
 		AASPGV02 /* SymbolPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASPGV01 /* SymbolPickerGrid.swift */; };
 		AAU00001 /* IconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAU00002 /* IconGenerator.swift */; };
+		AASTR001 /* AppStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASTR002 /* AppStrings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -103,6 +104,7 @@
 		AANPV02 /* NativePopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePopoverViews.swift; sourceTree = "<group>"; };
 		AASPGV01 /* SymbolPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPickerGrid.swift; sourceTree = "<group>"; };
 		AAU00002 /* IconGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGenerator.swift; sourceTree = "<group>"; };
+		AASTR002 /* AppStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStrings.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -156,8 +158,17 @@
 				AA1C0BC3 /* Views */,
 				AA18D09C /* Components */,
 				AAU00003 /* Utilities */,
+				AASTR003 /* Constants */,
 			);
 			path = DockTile;
+			sourceTree = "<group>";
+		};
+		AASTR003 /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				AASTR002 /* AppStrings.swift */,
+			);
+			path = Constants;
 			sourceTree = "<group>";
 		};
 		AA000C /* App */ = {
@@ -472,6 +483,7 @@
 				AAEPGV02 /* EmojiPickerGrid.swift in Sources */,
 				AAAPM001 /* AppearanceManager.swift in Sources */,
 				AAISM001 /* IconStyleManager.swift in Sources */,
+				AASTR001 /* AppStrings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

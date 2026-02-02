@@ -1099,7 +1099,7 @@ enum HelperBundleError: Error, LocalizedError {
         case .codesignFailed:
             return "Failed to code sign helper bundle"
         case .mainAppNotFound:
-            return "Main Dock Tile.app not found"
+            return AppStrings.Error.mainAppNotFound
         }
     }
 }

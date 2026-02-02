@@ -44,7 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     // MARK: - Application Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("🚀 Dock Tile launching...")
+        print(AppStrings.Log.launching)
         print("   Bundle ID: \(currentBundleId)")
         print("   Is Helper: \(isHelperApp)")
 
@@ -54,7 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             configureAsMainApp()
         }
 
-        print("✓ Dock Tile ready")
+        print(AppStrings.Log.ready)
     }
 
     private func configureAsHelper() {
@@ -134,7 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Find and show the configuration window
         for window in NSApp.windows {
             if window.contentViewController is NSHostingController<AnyView> ||
-               window.title.contains("Dock Tile") ||
+               window.title.contains(AppStrings.appName) ||
                window.windowNumber > 0 {
                 window.makeKeyAndOrderFront(nil)
                 break
@@ -143,7 +143,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        print("👋 Dock Tile terminating...")
+        print(AppStrings.Log.terminating)
     }
 
     // MARK: - URL Handling (Deep Linking)

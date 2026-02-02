@@ -33,7 +33,7 @@ struct DockTileApp: App {
         .defaultSize(width: windowWidth, height: 600)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New Dock Tile") {
+                Button(AppStrings.Menu.newTile) {
                     configManager.createConfiguration()
                 }
                 .keyboardShortcut("n", modifiers: .command)

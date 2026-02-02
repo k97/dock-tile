@@ -46,7 +46,7 @@ struct DockTileSidebarView: View {
                 }
             }
         }
-        .navigationTitle("Dock Tile")
+        .navigationTitle(AppStrings.Sidebar.title)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
