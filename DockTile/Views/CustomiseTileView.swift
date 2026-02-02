@@ -514,7 +514,7 @@ private class ColorPanelDelegate: NSObject {
         self.onColorChange = onColorChange
     }
 
-    @objc func colorChanged(_ sender: NSColorPanel) {
+    @MainActor @objc func colorChanged(_ sender: NSColorPanel) {
         onColorChange(sender.color)
     }
 }
