@@ -9,11 +9,23 @@
 import AppKit
 
 /// Detect if running as helper app based on bundle ID
+/// Main apps: com.docktile.app (release) or com.docktile.dev.app (dev)
+/// Helper apps: com.docktile.<UUID> (release) or com.docktile.dev.<UUID> (dev)
 private func isHelperApp() -> Bool {
     let bundleId = Bundle.main.bundleIdentifier ?? "com.docktile.app"
-    if bundleId == "com.docktile.app" || bundleId == "com.docktile" {
+
+    // Main app bundle IDs (not helpers)
+    let mainAppBundleIds = [
+        "com.docktile.app",      // Release
+        "com.docktile.dev.app",  // Dev
+        "com.docktile"           // Legacy/fallback
+    ]
+
+    if mainAppBundleIds.contains(bundleId) {
         return false
     }
+
+    // Helper apps have bundle IDs like com.docktile.<UUID> or com.docktile.dev.<UUID>
     return bundleId.hasPrefix("com.docktile.")
 }
 

@@ -1,0 +1,18 @@
+// Dev.xcconfig
+// Development build configuration for "Dock Tile Dev"
+// See RELEASE.md for documentation on Dev/Release workflow
+
+#include "Base.xcconfig"
+
+// App Identity
+PRODUCT_BUNDLE_IDENTIFIER = com.docktile.dev.app
+PRODUCT_NAME = Dock Tile Dev
+
+// Icon (requires AppIcon-Dev.icon in Resources)
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Dev
+
+// Environment-specific values (read at runtime via Info.plist)
+DOCKTILE_ENVIRONMENT = DEV
+DOCKTILE_HELPER_PREFIX = com.docktile.dev
+DOCKTILE_PREFS_FILENAME = com.docktile.dev.configs.json
+DOCKTILE_SUPPORT_FOLDER = DockTile-Dev

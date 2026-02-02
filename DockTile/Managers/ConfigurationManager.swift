@@ -56,13 +56,10 @@ final class ConfigurationManager: ObservableObject {
     // MARK: - Initialization
 
     init() {
-        // Set up storage location: ~/Library/Preferences/com.docktile.configs.json
-        let preferencesDir = FileManager.default.urls(
-            for: .libraryDirectory,
-            in: .userDomainMask
-        )[0].appendingPathComponent("Preferences")
-
-        self.storageURL = preferencesDir.appendingPathComponent("com.docktile.configs.json")
+        // Set up storage location using environment-specific filename
+        // Dev: ~/Library/Preferences/com.docktile.dev.configs.json
+        // Release: ~/Library/Preferences/com.docktile.configs.json
+        self.storageURL = AppEnvironment.preferencesURL
 
         // Configure JSON encoder/decoder
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

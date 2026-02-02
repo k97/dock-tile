@@ -1,0 +1,13 @@
+// Base.xcconfig
+// Shared build settings for all DockTile variants
+// See RELEASE.md for documentation on Dev/Release workflow
+
+// Version
+MARKETING_VERSION = 1.0
+CURRENT_PROJECT_VERSION = 1
+
+// Deployment
+MACOSX_DEPLOYMENT_TARGET = 15.0
+
+// Swift
+SWIFT_VERSION = 6.0

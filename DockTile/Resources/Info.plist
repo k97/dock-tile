@@ -24,7 +24,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.docktile.app</string>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>docktile</string>
@@ -32,7 +32,15 @@
 		</dict>
 	</array>
 	<key>CFBundleIconName</key>
-	<string>AppIcon</string>
+	<string>$(ASSETCATALOG_COMPILER_APPICON_NAME)</string>
+	<key>DTEnvironment</key>
+	<string>$(DOCKTILE_ENVIRONMENT)</string>
+	<key>DTHelperPrefix</key>
+	<string>$(DOCKTILE_HELPER_PREFIX)</string>
+	<key>DTPrefsFilename</key>
+	<string>$(DOCKTILE_PREFS_FILENAME)</string>
+	<key>DTSupportFolder</key>
+	<string>$(DOCKTILE_SUPPORT_FOLDER)</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>15.0</string>
 	<key>LSUIElement</key>
