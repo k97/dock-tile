@@ -52,7 +52,10 @@ struct CustomiseTileView: View {
         }
         .onChange(of: editedConfig) { _, _ in
             // Mark as edited immediately (enables + button)
-            configManager.markSelectedConfigAsEdited()
+            // Defer to avoid "Publishing changes from within view updates" warning
+            DispatchQueue.main.async {
+                configManager.markSelectedConfigAsEdited()
+            }
         }
         // Debounced auto-save using task(id:) - cancels previous task when editedConfig changes
         .task(id: editedConfig) {
@@ -77,7 +80,10 @@ struct CustomiseTileView: View {
                 )
 
                 // Apple icon guide grid overlay (adaptive color based on background)
-                IconGridOverlay(size: 120, backgroundColor: editedConfig.tintColor)
+                IconGridOverlay(
+                    size: 120,
+                    backgroundColor: editedConfig.tintColor
+                )
             }
 
             // Tile name anchored below preview
@@ -122,17 +128,23 @@ struct CustomiseTileView: View {
     // MARK: - Colour Section
 
     private var colourSection: some View {
-        HStack {
-            Text("Colour")
-                .font(.body)
-                .foregroundColor(.primary)
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Colour")
+                    .font(.system(size: 13))
+                    .foregroundColor(.primary)
+
+                Text("Choose a background colour for your tile")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
 
             Spacer()
 
             // Colour picker strip (right-aligned)
             colourPickerStrip
         }
-        .frame(height: 40)
+        .frame(height: 52)
     }
 
     private var colourPickerStrip: some View {
@@ -203,21 +215,33 @@ struct CustomiseTileView: View {
 
     // MARK: - Tile Icon Size Section
 
+    /// Maximum allowed scale value based on icon type (keeps icon within safe area)
+    private var maxIconScale: Int {
+        // Emoji has +5% offset, so needs lower max to stay within safe area
+        editedConfig.iconType == .emoji ? 16 : 17
+    }
+
     private var tileIconSizeSection: some View {
-        HStack {
-            Text("Tile Icon Size")
-                .font(.body)
-                .foregroundColor(.primary)
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Tile Icon Size")
+                    .font(.system(size: 13))
+                    .foregroundColor(.primary)
+
+                Text("Adjust the size of your icon within the tile")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
 
             Spacer()
 
-            Stepper(value: $editedConfig.iconScale, in: 10...20) {
+            Stepper(value: $editedConfig.iconScale, in: 10...maxIconScale) {
                 Text("\(editedConfig.iconScale)")
                     .monospacedDigit()
                     .frame(width: 24, alignment: .trailing)
             }
         }
-        .frame(height: 40)
+        .frame(height: 52)
     }
 
     // MARK: - Tile Icon Section

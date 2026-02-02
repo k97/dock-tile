@@ -2,7 +2,21 @@
 //  HelperAppDelegate.swift
 //  DockTile
 //
-//  Pure AppKit delegate for helper apps - no SwiftUI to avoid window creation crashes
+//  NSApplicationDelegate for helper bundles (the tiles that appear in the Dock).
+//  Pure AppKit - no SwiftUI to avoid window creation crashes.
+//
+//  HELPER MODE ARCHITECTURE:
+//  Supports two modes based on showInAppSwitcher config:
+//
+//  - Ghost Mode (default): .accessory policy, hidden from Cmd+Tab
+//    Left-click shows popover, right-click context menu won't work
+//
+//  - App Mode: .regular policy, visible in Cmd+Tab
+//    Left-click shows popover, right-click shows "Configure..." menu
+//
+//  The mode is determined at launch by reading the config file.
+//  Changing modes requires regenerating the helper bundle (via "Update" button).
+//
 //  Swift 6 - Strict Concurrency
 //
 
@@ -49,15 +63,31 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // Disable automatic window restoration before app finishes launching
         UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")
 
-        // CRITICAL: Set activation policy BEFORE app finishes launching
-        // This must happen early or macOS will ignore the policy change
+        // HELPER MODE ARCHITECTURE:
+        // We support two modes based on user preference (showInAppSwitcher config):
+        //
+        // MODE A: "Ghost Mode" (showInAppSwitcher = false, DEFAULT)
+        //   - LSUIElement = true was set in Info.plist during bundle generation
+        //   - We use .accessory activation policy here
+        //   - Result: Dock icon visible (via Dock plist), hidden from Cmd+Tab
+        //   - Trade-off: Right-click context menu (applicationDockMenu) won't work
+        //
+        // MODE B: "App Mode" (showInAppSwitcher = true)
+        //   - LSUIElement was NOT set in Info.plist
+        //   - We use .regular activation policy here
+        //   - Result: Dock icon visible, visible in Cmd+Tab, context menu works
+        //
+        // Read the config to determine which mode to use
         let showInAppSwitcher = readShowInAppSwitcherFromDisk()
+
         if showInAppSwitcher {
+            // MODE B: App Mode - full Dock integration with context menu
             NSApp.setActivationPolicy(.regular)
-            print("   App Switcher: visible (regular)")
+            print("   Mode: App Mode (.regular) - visible in Cmd+Tab, context menu enabled")
         } else {
+            // MODE A: Ghost Mode - hidden from Cmd+Tab, no context menu
             NSApp.setActivationPolicy(.accessory)
-            print("   App Switcher: hidden (accessory)")
+            print("   Mode: Ghost Mode (.accessory) - hidden from Cmd+Tab, no context menu")
         }
     }
 
@@ -162,14 +192,21 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Context Menu (Right-Click)
 
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        // NOTE: This method is only called when the helper is in "App Mode" (showInAppSwitcher = true)
+        // In "Ghost Mode" (LSUIElement = true), the Dock treats the app as a shortcut
+        // and doesn't call this delegate method.
+        NSLog("🔧 applicationDockMenu called (App Mode)")
+        print("🔧 applicationDockMenu called (App Mode)")
         let menu = NSMenu()
 
         // "Configure..." option
-        menu.addItem(NSMenuItem(
+        let configureItem = NSMenuItem(
             title: "Configure...",
             action: #selector(openConfigurator),
             keyEquivalent: ""
-        ))
+        )
+        configureItem.target = self
+        menu.addItem(configureItem)
 
         menu.addItem(NSMenuItem.separator())
 

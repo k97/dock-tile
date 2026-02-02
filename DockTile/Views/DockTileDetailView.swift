@@ -91,7 +91,10 @@ struct DockTileDetailView: View {
             // Mark as edited immediately when any field changes (enables + button)
             // Skip the initial load to avoid immediately marking new tiles as edited
             guard hasAppearedOnce else { return }
-            configManager.markSelectedConfigAsEdited()
+            // Defer to avoid "Publishing changes from within view updates" warning
+            DispatchQueue.main.async {
+                configManager.markSelectedConfigAsEdited()
+            }
         }
         // NOTE: tileName onChange removed - tileName now syncs to editedConfig.name
         // on every keystroke (see TextField onChange), which triggers this onChange
@@ -129,25 +132,29 @@ struct DockTileDetailView: View {
             // 3. This would reset the user's toggle before they can click "Done"
             // The correct state will be set when user clicks "Done" and we install/uninstall
             if let updatedConfig = newConfigs.first(where: { $0.id == editedConfig.id }) {
-                // Sync icon-related properties (may be changed in CustomiseTileView)
-                if editedConfig.iconType != updatedConfig.iconType {
-                    editedConfig.iconType = updatedConfig.iconType
-                }
-                if editedConfig.iconValue != updatedConfig.iconValue {
-                    editedConfig.iconValue = updatedConfig.iconValue
-                }
-                if editedConfig.iconScale != updatedConfig.iconScale {
-                    editedConfig.iconScale = updatedConfig.iconScale
-                }
-                if editedConfig.tintColor != updatedConfig.tintColor {
-                    editedConfig.tintColor = updatedConfig.tintColor
-                }
-                if editedConfig.symbolEmoji != updatedConfig.symbolEmoji {
-                    editedConfig.symbolEmoji = updatedConfig.symbolEmoji
-                }
-                // Sync showInAppSwitcher if it was changed externally
-                if editedConfig.showInAppSwitcher != updatedConfig.showInAppSwitcher {
-                    editedConfig.showInAppSwitcher = updatedConfig.showInAppSwitcher
+                // Defer state updates to avoid "Publishing changes from within view updates" warning
+                // This is necessary because .onChange fires during the view update cycle
+                DispatchQueue.main.async {
+                    // Sync icon-related properties (may be changed in CustomiseTileView)
+                    if editedConfig.iconType != updatedConfig.iconType {
+                        editedConfig.iconType = updatedConfig.iconType
+                    }
+                    if editedConfig.iconValue != updatedConfig.iconValue {
+                        editedConfig.iconValue = updatedConfig.iconValue
+                    }
+                    if editedConfig.iconScale != updatedConfig.iconScale {
+                        editedConfig.iconScale = updatedConfig.iconScale
+                    }
+                    if editedConfig.tintColor != updatedConfig.tintColor {
+                        editedConfig.tintColor = updatedConfig.tintColor
+                    }
+                    if editedConfig.symbolEmoji != updatedConfig.symbolEmoji {
+                        editedConfig.symbolEmoji = updatedConfig.symbolEmoji
+                    }
+                    // Sync showInAppSwitcher if it was changed externally
+                    if editedConfig.showInAppSwitcher != updatedConfig.showInAppSwitcher {
+                        editedConfig.showInAppSwitcher = updatedConfig.showInAppSwitcher
+                    }
                 }
             }
         }

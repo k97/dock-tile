@@ -2,7 +2,22 @@
 //  HelperBundleManager.swift
 //  DockTile
 //
-//  Manages creation and deletion of helper app bundles for multi-instance support
+//  Manages creation, installation, and deletion of helper app bundles.
+//  Each helper bundle is a copy of the main DockTile.app that runs independently
+//  in the Dock with its own configuration, icon, and app list.
+//
+//  HELPER MODE ARCHITECTURE:
+//  Helpers support two modes based on user preference (showInAppSwitcher toggle):
+//
+//  - Ghost Mode (default): LSUIElement=true, .accessory policy
+//    Hidden from Cmd+Tab, no right-click context menu
+//
+//  - App Mode: No LSUIElement, .regular policy
+//    Visible in Cmd+Tab, right-click context menu works
+//
+//  This dual-mode exists because macOS doesn't support having a Dock icon
+//  while being hidden from Cmd+Tab AND having applicationDockMenu work.
+//
 //  Swift 6 - Strict Concurrency
 //
 
@@ -123,7 +138,8 @@ final class HelperBundleManager {
         try generateHelperBundle(
             appName: appName,
             bundleId: config.bundleIdentifier,
-            helperPath: helperPath
+            helperPath: helperPath,
+            showInAppSwitcher: config.showInAppSwitcher
         )
 
         // 2. Generate icons for ALL icon styles (Default/Dark/Clear/Tinted)
@@ -429,7 +445,8 @@ final class HelperBundleManager {
     private func generateHelperBundle(
         appName: String,
         bundleId: String,
-        helperPath: URL
+        helperPath: URL,
+        showInAppSwitcher: Bool
     ) throws {
         let mainAppPath = Bundle.main.bundlePath
 
@@ -449,11 +466,12 @@ final class HelperBundleManager {
         )
         print("   ✓ Copied bundle structure")
 
-        // Update Info.plist
+        // Update Info.plist (includes LSUIElement setting based on showInAppSwitcher)
         try updateInfoPlist(
             at: helperPath,
             bundleId: bundleId,
-            appName: appName
+            appName: appName,
+            showInAppSwitcher: showInAppSwitcher
         )
         print("   ✓ Updated Info.plist")
 
@@ -473,7 +491,7 @@ final class HelperBundleManager {
         // requires the main executable to be a regular file, not a symlink
     }
 
-    private func updateInfoPlist(at helperPath: URL, bundleId: String, appName: String) throws {
+    private func updateInfoPlist(at helperPath: URL, bundleId: String, appName: String, showInAppSwitcher: Bool) throws {
         let infoPlistPath = helperPath.appendingPathComponent("Contents/Info.plist")
 
         guard var plist = NSDictionary(contentsOf: infoPlistPath) as? [String: Any] else {
@@ -489,11 +507,37 @@ final class HelperBundleManager {
         // The icon file is placed at Contents/Resources/AppIcon.icns
         plist["CFBundleIconFile"] = "AppIcon"
 
-        // CRITICAL: Set LSUIElement = true so app doesn't appear in Cmd+Tab by default
-        // The app will still appear in Dock because we add it via Dock plist
-        // At launch, if showInAppSwitcher is true, we call setActivationPolicy(.regular)
-        // to make it visible in Cmd+Tab
-        plist["LSUIElement"] = true
+        // HELPER MODE ARCHITECTURE:
+        // We support two modes based on user preference (showInAppSwitcher toggle):
+        //
+        // MODE A: "Ghost Mode" (showInAppSwitcher = false, DEFAULT)
+        //   - LSUIElement = true in Info.plist
+        //   - Helper uses .accessory activation policy at runtime
+        //   - Result: Dock icon visible (via Dock plist), hidden from Cmd+Tab
+        //   - Trade-off: Right-click context menu (applicationDockMenu) won't work
+        //   - Use case: Users who want minimal UI footprint
+        //
+        // MODE B: "App Mode" (showInAppSwitcher = true)
+        //   - LSUIElement NOT set (removed from Info.plist)
+        //   - Helper uses .regular activation policy at runtime
+        //   - Result: Dock icon visible, visible in Cmd+Tab, context menu works
+        //   - Use case: Users who want full Dock integration with right-click menu
+        //
+        // WHY THIS ARCHITECTURE:
+        // macOS fundamentally links Dock icon visibility with Cmd+Tab visibility.
+        // There's no supported way to have a Dock icon while hiding from Cmd+Tab
+        // AND having applicationDockMenu work. This is an OS-level constraint.
+        // We give users the choice of which trade-off they prefer.
+
+        if showInAppSwitcher {
+            // MODE B: App Mode - remove LSUIElement for full Dock integration
+            plist.removeValue(forKey: "LSUIElement")
+            print("   Mode: App Mode (visible in Cmd+Tab, context menu enabled)")
+        } else {
+            // MODE A: Ghost Mode - set LSUIElement for Cmd+Tab hiding
+            plist["LSUIElement"] = true
+            print("   Mode: Ghost Mode (hidden from Cmd+Tab, no context menu)")
+        }
 
         // Write back
         let nsDict = plist as NSDictionary
@@ -643,13 +687,10 @@ final class HelperBundleManager {
             // Touch bundle and refresh icon cache
             HelperBundleManager.shared.touchBundle(at: bundlePath)
 
-            // Refresh the dock tile icon
-            // Note: This may require a Dock restart to fully take effect
-            // We'll use NSApplication.setApplicationIconImage as a workaround for in-memory icon
-            if let iconImage = NSImage(contentsOf: destIconPath) {
-                NSApp.applicationIconImage = iconImage
-                print("[HelperBundleManager] Updated in-memory app icon")
-            }
+            // NOTE: We intentionally do NOT set NSApp.applicationIconImage here.
+            // Setting it programmatically causes the Dock icon to appear larger than
+            // other apps. The file-based icon switch (AppIcon.icns) is sufficient -
+            // macOS will pick up the change after touchBundle() refreshes the cache.
 
             return true
         } catch {

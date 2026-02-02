@@ -17,10 +17,17 @@ struct IconGenerator {
 
     // MARK: - Icon Scale Helper
 
+    /// Maximum safe ratio - matches the outer guide circle (80% of icon bounds)
+    /// Icons should not exceed this to maintain visual consistency with native macOS icons
+    static let maxSafeRatio: CGFloat = 0.60
+
+    /// Threshold for showing warning (95% of max safe ratio)
+    static let warningThreshold: CGFloat = 0.57
+
     /// Calculate icon ratio from scale value (10-20 range)
     /// - Parameter iconScale: Scale value (10-20), default 14
     /// - Parameter iconType: Type of icon (SF Symbol or Emoji)
-    /// - Returns: Ratio to multiply by icon size (0.30-0.70 range)
+    /// - Returns: Ratio to multiply by icon size, capped at maxSafeRatio
     private static func iconRatio(for iconScale: Int, iconType: IconType) -> CGFloat {
         // Base ratio: maps iconScale 10-20 to approximately 0.30-0.65
         let baseRatio = 0.30 + (CGFloat(iconScale - 10) * 0.035)
@@ -28,7 +35,18 @@ struct IconGenerator {
         // Emoji gets +5% offset for visual weight
         let ratio = iconType == .emoji ? baseRatio + 0.05 : baseRatio
 
-        return ratio
+        // Hard cap at safe area to ensure icons don't exceed the outer guide circle
+        return min(ratio, maxSafeRatio)
+    }
+
+    /// Check if the icon scale is at or near the safe area limit
+    /// Used by CustomiseTileView to show visual warning
+    /// - Parameter iconScale: Scale value (10-20)
+    /// - Parameter iconType: Type of icon (SF Symbol or Emoji)
+    /// - Returns: True if at or near the maximum safe size
+    static func isAtSafeAreaLimit(iconScale: Int, iconType: IconType) -> Bool {
+        let ratio = iconRatio(for: iconScale, iconType: iconType)
+        return ratio >= warningThreshold
     }
 
     // MARK: - Squircle Path Generation
@@ -56,15 +74,39 @@ struct IconGenerator {
         size: CGSize,
         iconStyle: IconStyle = IconStyle.current
     ) -> NSImage {
-        let image = NSImage(size: size)
+        // Create an NSImage with explicit 1x scale (1 pixel per point)
+        // This ensures 16pt = 16px for .icns generation, regardless of display scale
+        let pixelWidth = Int(size.width)
+        let pixelHeight = Int(size.height)
 
-        image.lockFocus()
-
-        // Create drawing context
-        guard let context = NSGraphicsContext.current?.cgContext else {
-            image.unlockFocus()
-            return image
+        // Create bitmap representation with exact pixel dimensions
+        guard let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: pixelWidth,
+            pixelsHigh: pixelHeight,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else {
+            return NSImage(size: size)
         }
+
+        // Set the size in points to match pixels (1:1 scale)
+        bitmapRep.size = size
+
+        // Create graphics context from bitmap
+        guard let graphicsContext = NSGraphicsContext(bitmapImageRep: bitmapRep) else {
+            return NSImage(size: size)
+        }
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = graphicsContext
+
+        let context = graphicsContext.cgContext
 
         // Calculate corner radius based on size (proportional to icon size)
         // 22.5% matches SwiftUI's DockTileIconPreview cornerRadius calculation
@@ -114,7 +156,11 @@ struct IconGenerator {
             )
         }
 
-        image.unlockFocus()
+        NSGraphicsContext.restoreGraphicsState()
+
+        // Create NSImage from the bitmap representation
+        let image = NSImage(size: size)
+        image.addRepresentation(bitmapRep)
 
         return image
     }

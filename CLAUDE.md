@@ -156,7 +156,9 @@ This approach handles 95% of schema changes. Old configs missing new fields will
    - Copies main DockTile.app as template
    - **Removes `Assets.car`** to prevent main app icon from overriding custom icons
    - Updates Info.plist with unique bundle ID and name
-   - Sets `LSUIElement = true` (hides from Cmd+Tab by default)
+   - **Conditionally sets `LSUIElement`** based on `showInAppSwitcher` config:
+     - `showInAppSwitcher = false` → `LSUIElement = true` (Ghost Mode)
+     - `showInAppSwitcher = true` → LSUIElement removed (App Mode)
    - Generates custom `.icns` icon via `IconGenerator` (all 4 style variants)
    - Code signs with ad-hoc signature
    - Saves original Dock position (if updating existing tile)
@@ -165,9 +167,11 @@ This approach handles 95% of schema changes. Old configs missing new fields will
 
 2. **Runtime** (`HelperAppDelegate`):
    - Reads `showInAppSwitcher` from config in `applicationWillFinishLaunching`
-   - Calls `setActivationPolicy(.regular)` if should appear in Cmd+Tab
+   - **Sets activation policy based on mode**:
+     - Ghost Mode → `.accessory` (hidden from Cmd+Tab)
+     - App Mode → `.regular` (visible in Cmd+Tab, context menu works)
    - Shows NSPopover on dock icon click
-   - Supports keyboard navigation when activated via Cmd+Tab
+   - Supports keyboard navigation when activated via Cmd+Tab (App Mode only)
 
 3. **Deletion** (`HelperBundleManager.uninstallHelper`):
    - Quits running helper
@@ -175,13 +179,45 @@ This approach handles 95% of schema changes. Old configs missing new fields will
    - Deletes helper bundle
    - Restarts Dock
 
-### App Switcher (Cmd+Tab) Visibility
+### Helper Mode Architecture (Ghost Mode vs App Mode)
 
-The `showInAppSwitcher` toggle controls whether a tile appears in Cmd+Tab:
+The `showInAppSwitcher` toggle controls helper tile behavior through a dual-mode architecture:
 
-- **Info.plist**: `LSUIElement = true` makes app NOT appear in Cmd+Tab by default
-- **Runtime**: `NSApp.setActivationPolicy(.regular)` overrides to show in Cmd+Tab
-- **Why this order**: macOS ignores `setActivationPolicy(.accessory)` if `LSUIElement` is not set
+| Mode | `showInAppSwitcher` | `LSUIElement` | Activation Policy | Cmd+Tab | Context Menu |
+|------|---------------------|---------------|-------------------|---------|--------------|
+| **Ghost Mode** | `false` (default) | `true` | `.accessory` | ❌ Hidden | ❌ Won't work |
+| **App Mode** | `true` | Not set | `.regular` | ✅ Visible | ✅ Works |
+
+**Why Two Modes?**
+
+macOS has a fundamental architectural constraint: there's no supported way to have a Dock icon while hiding from Cmd+Tab AND having `applicationDockMenu` work. This is an OS-level limitation, not a bug.
+
+- `LSUIElement = true` hides the app from Cmd+Tab but also makes the Dock treat it as a "shortcut" rather than a "running app", preventing `applicationDockMenu` from being called
+- `LSUIElement = false` (or not set) allows full Dock integration including context menus, but the app will appear in Cmd+Tab
+
+**Implementation:**
+
+1. **Bundle Generation** (`HelperBundleManager.updateInfoPlist`):
+   - If `showInAppSwitcher = false`: Sets `LSUIElement = true` in Info.plist
+   - If `showInAppSwitcher = true`: Removes `LSUIElement` from Info.plist
+
+2. **Runtime** (`HelperAppDelegate.applicationWillFinishLaunching`):
+   - Reads `showInAppSwitcher` from config
+   - Sets `.accessory` policy for Ghost Mode, `.regular` for App Mode
+
+**Trade-offs:**
+
+| Feature | Ghost Mode | App Mode |
+|---------|------------|----------|
+| Dock icon | ✅ Visible | ✅ Visible |
+| Left-click popover | ✅ Works | ✅ Works |
+| Hidden from Cmd+Tab | ✅ Yes | ❌ No |
+| Right-click context menu | ❌ No | ✅ Yes |
+| "Configure..." option | ❌ No | ✅ Yes |
+
+**User Guidance:**
+- Users who want minimal UI footprint should use Ghost Mode (default)
+- Users who want right-click context menu should enable "Show in App Switcher"
 
 ### NSPopover Implementation
 
@@ -384,6 +420,95 @@ private struct QuaternaryFillView: NSViewRepresentable {
 ```
 
 ## Recent Changes
+
+### Helper Mode Architecture: Ghost Mode vs App Mode (2026-02)
+- **Feature**: Restored the "Show in App Switcher" toggle functionality with a dual-mode architecture
+- **Problem**: Previous fix for context menu broke the ghost mode feature - tiles always appeared in Cmd+Tab
+- **Root Cause**: macOS has a fundamental constraint - you can't have Dock icon + hidden from Cmd+Tab + working context menu. You must choose between:
+  - Ghost Mode: Hidden from Cmd+Tab, but no context menu
+  - App Mode: Visible in Cmd+Tab, with working context menu
+- **Solution**: Implemented dual-mode architecture based on `showInAppSwitcher` toggle:
+
+  | Mode | `showInAppSwitcher` | `LSUIElement` | Policy | Cmd+Tab | Context Menu |
+  |------|---------------------|---------------|--------|---------|--------------|
+  | Ghost | `false` (default) | `true` | `.accessory` | ❌ | ❌ |
+  | App | `true` | Not set | `.regular` | ✅ | ✅ |
+
+- **Implementation**:
+  - `HelperBundleManager.updateInfoPlist()`: Conditionally sets `LSUIElement` based on config
+  - `HelperAppDelegate.applicationWillFinishLaunching()`: Sets activation policy based on config
+- **Files Modified**:
+  - `HelperBundleManager.swift` - Added `showInAppSwitcher` parameter to bundle generation
+  - `HelperAppDelegate.swift` - Reads config and sets appropriate activation policy
+  - `CLAUDE.md` - Added Helper Mode Architecture documentation
+- **User Impact**: Users can now choose their preferred trade-off:
+  - Default (Ghost Mode): Minimal UI footprint, hidden from Cmd+Tab
+  - App Mode: Full Dock integration with right-click "Configure..." menu
+
+### Icon Generation Pixel Dimensions Fix (2026-02)
+- **Problem**: Generated .icns files were missing 16x16 and 128x128 sizes, causing helper tile icons to appear larger in the Dock compared to native macOS apps
+- **Root Cause**: `NSImage(size:)` with `lockFocus()` creates a backing store at the display's scale factor (2x on Retina). A 16pt icon became 32 pixels, which `iconutil` couldn't recognize as a valid 16x16 icon and excluded it.
+- **Investigation**: Compared extracted iconsets between DockTile's icons and native Safari/Calculator apps - Safari had `ic04` (16x16) and `ic07` (128x128) type codes while DockTile only had larger sizes.
+- **Fix**: Replaced `NSImage(size:).lockFocus()` approach with explicit `NSBitmapImageRep` creation:
+  ```swift
+  // Create bitmap representation with exact pixel dimensions
+  guard let bitmapRep = NSBitmapImageRep(
+      bitmapDataPlanes: nil,
+      pixelsWide: pixelWidth,  // Exact pixel count, not points
+      pixelsHigh: pixelHeight,
+      bitsPerSample: 8,
+      samplesPerPixel: 4,
+      hasAlpha: true,
+      isPlanar: false,
+      colorSpaceName: .deviceRGB,
+      bytesPerRow: 0,
+      bitsPerPixel: 0
+  ) else { ... }
+
+  // Create graphics context from bitmap
+  guard let graphicsContext = NSGraphicsContext(bitmapImageRep: bitmapRep) else { ... }
+  NSGraphicsContext.current = graphicsContext
+  // ... draw into context ...
+  ```
+- **Files Modified**: `IconGenerator.swift` - `generateIcon()` function
+- **Result**: Generated .icns files now include all 10 required sizes (16, 32, 128, 256, 512 @ 1x and 2x), matching native macOS app icons
+
+### Context Menu Fix for Helper Tiles (2026-02)
+- **Problem**: Right-clicking on helper tiles in Dock didn't show the "Configure..." context menu
+- **Root Cause**: `LSUIElement=true` in Info.plist causes the Dock to treat the app as a "shortcut" rather than a "running app", preventing `applicationDockMenu(_:)` from being called
+- **Initial Fix**: Removed `LSUIElement` and always used `.regular` policy
+- **Limitation**: This broke ghost mode - tiles always appeared in Cmd+Tab
+- **Final Solution**: See "Helper Mode Architecture" above - implemented dual-mode system where users choose between ghost mode (no context menu) and app mode (with context menu)
+
+### Running App Icon Size Fix (2026-02)
+- **Problem**: Helper tile icons appeared larger in the Dock when the app was running vs when quit
+- **Root Cause**: `HelperBundleManager.switchIcon()` was calling `NSApp.applicationIconImage = iconImage` to update the icon at runtime. Setting the icon programmatically causes macOS to render it differently (larger) than the static bundle icon.
+- **Investigation**: Other native apps (Notes, Safari, Finder) never change size because they don't set `applicationIconImage` at runtime - they rely entirely on the static `.icns` file in their bundle.
+- **Fix**: Removed `NSApp.applicationIconImage` assignment. The icon switching still works via file-based approach:
+  1. Copy the correct icon variant to `AppIcon.icns`
+  2. Call `touchBundle()` to update modification date
+  3. Re-register with Launch Services
+  4. macOS picks up the new icon from the file system
+- **Files Modified**: `HelperBundleManager.swift` - Removed `applicationIconImage` assignment in `switchIcon()`
+- **Result**: Helper tile icons now maintain consistent size whether running or not
+
+### Icon Safe Area Limits (2026-02)
+- **Feature**: Added hard cap on icon size to prevent icons from exceeding Apple's icon safe area guidelines
+- **Implementation**:
+  - Added `maxSafeRatio` (0.60) and `warningThreshold` (0.57) constants to `IconGenerator`
+  - Stepper in CustomiseTileView is now capped at max 17 for SF Symbols, 16 for Emojis
+  - Removed warning text since stepper is now capped
+- **Files Modified**:
+  - `IconGenerator.swift` - Added safe area constants and `isAtSafeAreaLimit()` method
+  - `CustomiseTileView.swift` - Capped stepper and updated row styling to 52pt height
+
+### SwiftUI State Update Warnings Fix (2026-02)
+- **Problem**: Console warnings "Publishing changes from within view updates is not allowed"
+- **Root Cause**: Calling `configManager.markSelectedConfigAsEdited()` directly inside `.onChange` modifiers
+- **Fix**: Wrapped state updates in `DispatchQueue.main.async { }` to defer them outside the view update cycle
+- **Files Modified**:
+  - `CustomiseTileView.swift` - Wrapped `markSelectedConfigAsEdited()` call
+  - `DockTileDetailView.swift` - Wrapped `markSelectedConfigAsEdited()` and config sync updates
 
 ### Dock Position Preservation for Show/Hide Toggle (2026-02)
 - **Problem**: When user toggles "Show Tile" OFF then back ON, the tile would appear at the end of the Dock instead of its original position

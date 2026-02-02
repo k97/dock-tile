@@ -14,29 +14,34 @@ struct IconGridOverlay: View {
     let size: CGFloat
     let backgroundColor: TintColor?  // Optional: for adaptive color based on luminance
     let lineWidth: CGFloat
+    let showSafeAreaWarning: Bool  // When true, outer circle shows in warning color
 
     /// Fixed line color (legacy initializer)
     init(
         size: CGFloat,
         lineColor: Color = Color(hex: "#5DB3F9").opacity(0.6),
-        lineWidth: CGFloat = 1
+        lineWidth: CGFloat = 1,
+        showSafeAreaWarning: Bool = false
     ) {
         self.size = size
         self.backgroundColor = nil
         self.lineWidth = lineWidth
         self._fixedLineColor = lineColor
+        self.showSafeAreaWarning = showSafeAreaWarning
     }
 
     /// Adaptive line color based on background luminance
     init(
         size: CGFloat,
         backgroundColor: TintColor,
-        lineWidth: CGFloat = 1
+        lineWidth: CGFloat = 1,
+        showSafeAreaWarning: Bool = false
     ) {
         self.size = size
         self.backgroundColor = backgroundColor
         self.lineWidth = lineWidth
         self._fixedLineColor = nil
+        self.showSafeAreaWarning = showSafeAreaWarning
     }
 
     // Store fixed color for legacy initializer
@@ -61,6 +66,11 @@ struct IconGridOverlay: View {
         } else {
             return Color.white.opacity(0.35)
         }
+    }
+
+    /// Warning color for outer circle when icon is at safe area limit
+    private var warningColor: Color {
+        Color.orange.opacity(0.8)
     }
 
     private var cornerRadius: CGFloat {
@@ -135,27 +145,39 @@ struct IconGridOverlay: View {
         let center = CGPoint(x: rect.midX, y: rect.midY)
 
         // Three circles at different radii (based on Apple's template)
-        // Outer circle: ~80% of half-width
+        // Outer circle: ~80% of half-width (this is the safe area boundary)
         // Middle circle: ~50% of half-width
         // Inner circle: ~20% of half-width
-        let radii: [CGFloat] = [
-            rect.width * 0.40,  // Outer
+        let outerRadius = rect.width * 0.40  // Outer (safe area boundary)
+        let innerRadii: [CGFloat] = [
             rect.width * 0.25,  // Middle
             rect.width * 0.10   // Inner
         ]
 
-        var circlePath = Path()
-
-        for radius in radii {
-            circlePath.addEllipse(in: CGRect(
+        // Draw inner circles with normal line color
+        var innerPath = Path()
+        for radius in innerRadii {
+            innerPath.addEllipse(in: CGRect(
                 x: center.x - radius,
                 y: center.y - radius,
                 width: radius * 2,
                 height: radius * 2
             ))
         }
+        context.stroke(innerPath, with: .color(lineColor), lineWidth: lineWidth)
 
-        context.stroke(circlePath, with: .color(lineColor), lineWidth: lineWidth)
+        // Draw outer circle - use warning color if at safe area limit
+        var outerPath = Path()
+        outerPath.addEllipse(in: CGRect(
+            x: center.x - outerRadius,
+            y: center.y - outerRadius,
+            width: outerRadius * 2,
+            height: outerRadius * 2
+        ))
+
+        let outerColor = showSafeAreaWarning ? warningColor : lineColor
+        let outerLineWidth = showSafeAreaWarning ? lineWidth * 2 : lineWidth
+        context.stroke(outerPath, with: .color(outerColor), lineWidth: outerLineWidth)
     }
 }
 

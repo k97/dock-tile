@@ -20,7 +20,9 @@ private func isHelperApp() -> Bool {
 // Check before any SwiftUI initialization
 if isHelperApp() {
     // Helper app: Pure AppKit, no SwiftUI WindowGroup
-    print("🚀 Starting as helper app (pure AppKit)")
+    let bundleId = Bundle.main.bundleIdentifier ?? "unknown"
+    NSLog("🚀 Starting as helper app (pure AppKit) - Bundle ID: %@", bundleId)
+    print("🚀 Starting as helper app (pure AppKit) - Bundle ID: \(bundleId)")
 
     // Create autoreleasepool to manage memory properly
     autoreleasepool {
@@ -29,6 +31,7 @@ if isHelperApp() {
         // NSApplication.delegate is a weak reference, so we must keep a strong reference
         let delegate = HelperAppDelegate()
         app.delegate = delegate
+        NSLog("✓ Delegate set: %@", String(describing: type(of: delegate)))
 
         // Use withExtendedLifetime to ensure delegate isn't deallocated during run()
         withExtendedLifetime(delegate) {
