@@ -1304,6 +1304,7 @@ DockTileConfigurationView (Main Window)
 | 8 | **App Store Review** | ✅ Assessed | Medium | Not viable - sandbox restrictions block helper bundle creation |
 | 9 | **Alternative Distribution** | 🔲 Pending | Low | Direct download recommended; SetApp as secondary |
 | 10 | **ProductHunt Launch** | 🔲 Pending | Low | Marketing page and launch strategy |
+| 12 | **Landing Page Website** | 🔲 Pending | Medium | Static site in `/website` folder, hosted on Vercel at `docktile.rkarthik.co` |
 
 ---
 
@@ -1610,6 +1611,55 @@ Picker("", selection: $editedConfig.layoutMode) {
 - Write description highlighting use cases
 - Schedule for Tuesday-Thursday (best days)
 
+#### 12. Landing Page Website
+**Goal**: Create a minimalist landing page for DockTile
+
+**Design Inspiration**:
+- [solstice.daneden.me](https://solstice.daneden.me) - Clean, minimal layout
+- [ora.daneden.me](https://ora.daneden.me) - Simple hero + features
+- [sindresorhus.com/app-buddy](https://sindresorhus.com/app-buddy) - FAQ & Support sections
+
+**Tech Stack**:
+- Static HTML/CSS (no framework needed)
+- Hosted on **Vercel** (free tier)
+- Custom domain: `docktile.rkarthik.co`
+
+**Folder Structure**:
+```
+website/
+├── index.html          # Main landing page
+├── styles.css          # Styles (dark mode support)
+├── assets/
+│   ├── app-icon.png    # App icon for hero
+│   └── screenshot.png  # App screenshot (optional)
+├── faq.html            # FAQ page (or section in index)
+└── vercel.json         # Vercel config (if needed)
+```
+
+**Page Sections**:
+1. **Hero**: App icon + tagline + Download button (links to GitHub release)
+2. **Features**: 3-4 key highlights with icons
+3. **Screenshot**: 1-2 app screenshots (user will provide)
+4. **FAQ**: Collapsible `<details>` elements (content from existing faq.md)
+5. **Support**: mailto link for contact
+6. **Footer**: Privacy policy link, GitHub repo link (if public later), creator credit
+
+**Support/Contact**:
+- Primary: `mailto:` link (email TBD)
+- No GitHub Issues (repo is private)
+
+**Vercel Setup**:
+```json
+// vercel.json in repo root
+{
+  "rootDirectory": "website"
+}
+```
+
+**DNS Setup** (for docktile.rkarthik.co):
+- Add CNAME record pointing to Vercel's domain
+- Configure custom domain in Vercel dashboard
+
 #### 11. Localization (English Variants)
 **Goal**: Support US, UK, and AU English localizations
 
@@ -1740,6 +1790,11 @@ Phase 3: User Experience
     └── Design: Bartender/Alcove/Klack style
 
 Phase 4: Marketing & Launch
+├── Task 12: Landing Page Website
+│   ├── Static HTML/CSS in /website folder
+│   ├── Hosted on Vercel at docktile.rkarthik.co
+│   ├── Sections: Hero, Features, Screenshot, FAQ, Support, Footer
+│   └── Contact via mailto: link (repo is private)
 └── Task 9-10: Distribution & marketing
 
 Phase 5: Localization
