@@ -113,6 +113,7 @@ jobs:
           echo "DMG created: ${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
 
       - name: Notarize DMG
+        timeout-minutes: 15
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
@@ -120,17 +121,24 @@ jobs:
         run: |
           DMG_NAME="${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
 
-          # Submit for notarization
+          echo "Submitting $DMG_NAME for notarization..."
+          echo "Apple ID: $APPLE_ID"
+          echo "Team ID: $APPLE_TEAM_ID"
+
+          # Submit for notarization with verbose output
           xcrun notarytool submit "./$DMG_NAME" \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-            --wait
+            --wait \
+            --verbose
+
+          echo "Notarization complete. Stapling ticket..."
 
           # Staple the notarization ticket
           xcrun stapler staple "./$DMG_NAME"
 
-          echo "DMG notarized and stapled"
+          echo "DMG notarized and stapled successfully"
 
       - name: Regenerate checksum after notarization
         run: |
