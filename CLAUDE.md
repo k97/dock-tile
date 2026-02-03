@@ -28,6 +28,49 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Right-click**: Shows context menu with app list and "Configure..." option
 - **App Switcher toggle**: Uses `LSUIElement` + `setActivationPolicy()` to control Cmd+Tab visibility
 
+## Dev vs Release Build Separation
+
+**IMPORTANT**: The project uses separate configurations for Development and Release builds to prevent dev/test data from mixing with production user data.
+
+### Build Configurations
+
+| Configuration | Bundle ID Suffix | Config File | Support Folder | Purpose |
+|---------------|------------------|-------------|----------------|---------|
+| **Debug** | `.dev` | `com.docktile.dev.configs.json` | `DockTile-Dev/` | Local development |
+| **Release** | (none) | `com.docktile.configs.json` | `DockTile/` | Production release |
+
+### How It Works
+
+The separation is controlled via Xcode build settings that set Info.plist variables:
+
+| Info.plist Key | Debug Value | Release Value |
+|----------------|-------------|---------------|
+| `DTEnvironment` | `dev` | `release` |
+| `DTHelperPrefix` | `DockTile-Dev` | `DockTile` |
+| `DTPrefsFilename` | `com.docktile.dev.configs.json` | `com.docktile.configs.json` |
+| `DTSupportFolder` | `DockTile-Dev` | `DockTile` |
+
+### File Locations by Environment
+
+| Item | Debug | Release |
+|------|-------|---------|
+| Config file | `~/Library/Preferences/com.docktile.dev.configs.json` | `~/Library/Preferences/com.docktile.configs.json` |
+| Helper bundles | `~/Library/Application Support/DockTile-Dev/` | `~/Library/Application Support/DockTile/` |
+| Helper bundle IDs | `com.docktile.dev.helper.*` | `com.docktile.helper.*` |
+
+### Why This Matters
+
+1. **Development tiles don't appear in production** - Dev helper bundles are completely separate
+2. **Safe testing** - You can test destructive operations without affecting real user tiles
+3. **Clean releases** - Release builds never see dev configuration data
+4. **Parallel usage** - You can run dev and release versions simultaneously
+
+### When Working on Code
+
+- **Always use Debug configuration** for development (`Cmd+R` in Xcode)
+- **Release configuration** is only for final testing and CI/CD builds
+- If you see tiles/configs from the wrong environment, check which build configuration you're running
+
 ## Technical Constraints
 
 | Requirement | Specification |

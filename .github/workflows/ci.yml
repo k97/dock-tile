@@ -63,7 +63,8 @@ jobs:
           echo "=== Build Products Directory ==="
           find ./build/Build/Products -type d -name "*.app" || echo "No .app found"
 
-          APP_PATH=$(find ./build/Build/Products -name "DockTile.app" -type d | head -1)
+          # Debug builds produce "Dock Tile Dev.app", Release builds produce "Dock Tile.app"
+          APP_PATH=$(find ./build/Build/Products -name "Dock Tile*.app" -type d | head -1)
 
           if [ -z "$APP_PATH" ]; then
             echo "❌ App bundle not found!"
@@ -77,11 +78,13 @@ jobs:
           ls -la "$APP_PATH/Contents/"
           ls -la "$APP_PATH/Contents/MacOS/" || echo "MacOS folder empty or missing"
 
-          if [ -f "$APP_PATH/Contents/MacOS/DockTile" ]; then
+          # Check for any executable in MacOS folder
+          if ls "$APP_PATH/Contents/MacOS/"* 1> /dev/null 2>&1; then
             echo "✅ Executable found"
-          else
-            echo "⚠️ Main executable not found, checking for any executable..."
             ls -la "$APP_PATH/Contents/MacOS/"
+          else
+            echo "❌ No executable found in MacOS folder"
+            exit 1
           fi
 
       - name: Run Unit Tests
@@ -111,5 +114,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DockTile-Debug
-          path: ./build/Build/Products/Debug/DockTile.app
+          path: ./build/Build/Products/Debug/Dock Tile*.app
           retention-days: 7
