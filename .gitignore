@@ -1,3 +1,9 @@
+# Build output
+build/
+DerivedData/
+*.dmg
+*.dmg.sha256
+
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
@@ -60,3 +66,17 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# macOS
+.DS_Store
+*.DS_Store
+
+# Claude Code
+.claude/
+
+# Certificates (sensitive)
+*.p12
+*.p12.base64
+*.certSigningRequest
+*.cer
+*.key
