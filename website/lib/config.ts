@@ -3,10 +3,10 @@
 
 export const siteConfig = {
   // Contact & Support
-  contactEmail: "placeholder@example.com", // TODO: Update with actual email
+  contactEmail: "support.docktile@rkarthik.co",
 
   // Download Links
-  downloadUrl: "https://github.com/placeholder/dock-tile/releases", // TODO: Update with actual GitHub releases URL
+  downloadUrl: "https://github.com/k97/dock-tile/releases", // TODO: Update with actual GitHub releases URL
   releaseNotesUrl: "/release-notes",
   latestVersion: "1.0.0",
 
