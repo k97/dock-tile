@@ -8,10 +8,10 @@ export function Screenshot() {
 
   return (
     <section className="px-4 py-8 md:py-12 max-w-4xl mx-auto">
-      <div className="relative rounded-xl overflow-hidden shadow-2xl dark:shadow-black/40 border border-border">
+      <div className="relative rounded-4xl overflow-hidden shadow-2xl dark:shadow-black/40 border border-border">
         {!hasError ? (
           <Image
-            src="/assets/screenshot.png"
+            src="/assets/dock-tile-stage.png"
             alt="Dock Tile app screenshot"
             width={1400}
             height={750}

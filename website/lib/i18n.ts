@@ -24,13 +24,13 @@ export const localisedContent = {
     description:
       "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders.",
     downloadButton: "Download for macOS",
-    systemRequirements: "Requires macOS 15.0 or later",
+    systemRequirements: "Requires macOS 26 or later",
 
     // FAQ
     faq: [
       {
         question: "What macOS version do I need?",
-        answer: "Dock Tile requires macOS 15.0 (Tahoe) or later.",
+        answer: "Dock Tile requires macOS 26 (Tahoe) or later.",
       },
       {
         question: "Is it available on the App Store?",
@@ -106,13 +106,13 @@ export const localisedContent = {
     description:
       "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders.",
     downloadButton: "Download for macOS",
-    systemRequirements: "Requires macOS 15.0 or later",
+    systemRequirements: "Requires macOS 26 or later",
 
     // FAQ
     faq: [
       {
         question: "What macOS version do I need?",
-        answer: "Dock Tile requires macOS 15.0 (Tahoe) or later.",
+        answer: "Dock Tile requires macOS 26 (Tahoe) or later.",
       },
       {
         question: "Is it available on the App Store?",
@@ -188,13 +188,13 @@ export const localisedContent = {
     description:
       "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders.",
     downloadButton: "Download for macOS",
-    systemRequirements: "Requires macOS 15.0 or later",
+    systemRequirements: "Requires macOS 26 or later",
 
     // FAQ
     faq: [
       {
         question: "What macOS version do I need?",
-        answer: "Dock Tile requires macOS 15.0 (Tahoe) or later.",
+        answer: "Dock Tile requires macOS 26 (Tahoe) or later.",
       },
       {
         question: "Is it available on the App Store?",
