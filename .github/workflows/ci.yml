@@ -93,11 +93,13 @@ jobs:
           xcodebuild test \
             -project $PROJECT \
             -scheme $SCHEME \
+            -configuration Debug \
             -destination 'platform=macOS' \
             -derivedDataPath ./build \
             -enableCodeCoverage YES \
             -only-testing:DockTileTests \
             CODE_SIGNING_ALLOWED='NO' \
+            ENABLE_TESTABILITY=YES \
             2>&1 | tee test.log | xcpretty --color || (cat test.log && exit 1)
 
       - name: Upload Build Log
