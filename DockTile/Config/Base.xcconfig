@@ -11,3 +11,7 @@ MACOSX_DEPLOYMENT_TARGET = 15.0
 
 // Swift
 SWIFT_VERSION = 6.0
+
+// Module name - keep consistent across Debug/Release for testability
+// The PRODUCT_NAME can differ (Dock Tile Dev vs Dock Tile) but module name must be stable
+PRODUCT_MODULE_NAME = Dock_Tile
