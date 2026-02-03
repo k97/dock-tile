@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow Expectations
+
+**After making code changes, always run tests before committing:**
+```bash
+xcodebuild test -project DockTile.xcodeproj -scheme DockTile -configuration Debug -destination 'platform=macOS' -only-testing:DockTileTests CODE_SIGNING_ALLOWED=NO
+```
+
+- Tests must pass before committing changes
+- If tests fail, fix the issues before proceeding
+- This applies to all code modifications (bug fixes, features, refactoring)
+
 ## Project Overview
 
 **Dock Tile** is a multi-instance macOS utility for macOS 15.0+ (Tahoe) that serves as a minimalist "app container" in the Dock. It enables power users to pin multiple distinct dock tiles (via Helper Bundles), each with independent app lists and custom icons/tints.
