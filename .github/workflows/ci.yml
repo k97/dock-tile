@@ -3,8 +3,16 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - 'website/**'
+      - 'vercel.json'
+      - '*.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'website/**'
+      - 'vercel.json'
+      - '*.md'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

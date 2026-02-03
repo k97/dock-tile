@@ -1,5 +1,7 @@
 name: Release
 
+# Triggered only by version tags (v*), not by branch pushes
+# Website changes (website/**, vercel.json) don't affect this workflow
 on:
   push:
     tags:
