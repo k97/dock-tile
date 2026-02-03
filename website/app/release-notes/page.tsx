@@ -29,7 +29,7 @@ export default function ReleaseNotesPage() {
             <section>
               <div className="flex items-baseline gap-3 mb-4">
                 <h2 className="text-2xl font-semibold m-0">Version 1.0.0</h2>
-                <span className="text-sm text-muted-foreground">February 2026</span>
+                <span className="text-sm text-muted-foreground">Coming Q1 2026</span>
               </div>
               <p className="text-muted-foreground mb-4">
                 Initial release of {siteConfig.appName}.

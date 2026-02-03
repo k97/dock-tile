@@ -77,25 +77,28 @@ export function Hero() {
 
       {/* CTA Buttons */}
       <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
-        <Button asChild size="lg" className="gap-2 px-8 py-6 rounded-xl text-md cursor-pointer ">
+        {/* Coming Soon - disabled state */}
+        <Button
+          size="lg"
+          disabled
+          className="gap-2 px-8 py-6 rounded-xl text-md cursor-not-allowed opacity-60"
+        >
+          Coming Soon
+        </Button>
+
+        {/* Original download button - uncomment when ready to launch
+        <Button asChild size="lg" className="gap-2 px-8 py-6 rounded-xl text-md cursor-pointer">
           <a href={siteConfig.downloadUrl} onClick={trackDownloadClick}>
             <Download className="h-4 w-4" />
             {content.downloadButton}
           </a>
         </Button>
+        */}
       </div>
 
-      {/* Version & System Requirements - Sindre style */}
+      {/* System Requirements */}
       <p className="mt-4 text-sm text-muted-foreground">
-        <a
-          href={siteConfig.releaseNotesUrl}
-          className="text-foreground hover:underline underline-offset-4"
-          onClick={trackReleaseNotesClick}
-        >
-          v{siteConfig.latestVersion}
-        </a>
-        {" · "}
-        Requires macOS 26 or later
+        Coming Q1 2026 · Requires macOS 26 or later
       </p>
     </section>
   );
