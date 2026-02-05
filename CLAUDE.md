@@ -908,7 +908,7 @@ runs-on: macos-26  # ARM64 only, beta status
   - Next.js site already deployed to Vercel at `docktile.rkarthik.co`
   - Currently in "Coming Soon" state
   - TODO: Switch to "Download" button and hook up GitHub Releases
-- **Project Status**: 100% feature-complete, ready for v1.0 release
+- **Project Status**: 100% feature-complete, ready for v1.0.0 release
 - **Files Modified**: `CLAUDE.md` - Updated Known Issues, Release Roadmap, Task Details
 
 ### CI/CD Infrastructure Updates (2026-02)
@@ -1607,7 +1607,7 @@ DockTileConfigurationView (Main Window)
 │                       └── EmojiPickerGrid (when .emoji)
 ```
 
-## Release Roadmap (v1.0)
+## Release Roadmap (v1.0.0)
 
 ### Phase 1: UI Polish
 
@@ -1664,7 +1664,7 @@ DockTileConfigurationView (Main Window)
 - Test infrastructure (unit + integration tests)
 - Website deployed to Vercel (currently in "Coming Soon" state)
 
-### 🚀 Ready for v1.0 Release
+### 🚀 Ready for v1.0.0 Release
 The app is ready to ship. Remaining work is launch preparation:
 
 | Task | Status | Effort |
@@ -1675,8 +1675,8 @@ The app is ready to ship. Remaining work is launch preparation:
 | Add release notes link | 🔲 TODO | 15 min |
 | Update system requirements text | 🔲 TODO | 5 min |
 | Add app screenshots | 🔲 TODO | 30 min |
-| **Create v1.0 Release** | 🔲 TODO | 30 min |
-| Tag release, let CI build & sign | 🔲 TODO | Automated |
+| **Create v1.0.0 Release** | 🔲 TODO | 30 min |
+| Tag release (v1.0.0), let CI build & sign | 🔲 TODO | Automated |
 | **ProductHunt Launch** | 🔲 Optional | 2-4 hours |
 
 ### 📊 Completion Stats
