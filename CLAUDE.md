@@ -896,6 +896,17 @@ runs-on: macos-26  # ARM64 only, beta status
 
 ## Recent Changes
 
+### Documentation Cleanup (2026-02)
+- **Cleanup**: Removed "Missing Configure... Context Menu" from Known Issues
+- **Reason**: Not a bug - this is the designed trade-off in Ghost Mode vs App Mode architecture
+- **Context Menu Behavior**:
+  - Ghost Mode (`showInAppSwitcher = false`, default): No context menu, hidden from Cmd+Tab
+  - App Mode (`showInAppSwitcher = true`): Full context menu with "Configure..." option, visible in Cmd+Tab
+- **User Choice**: Users can toggle between modes based on their preference
+- **Removed Task 7**: Onboarding Flow - not needed since no permissions required
+- **Updated Task 12**: Landing Page Website now "In Progress" with Next.js deployment
+- **Files Modified**: `CLAUDE.md` - Updated Known Issues, Release Roadmap, and Task Details
+
 ### CI/CD Infrastructure Updates (2026-02)
 - **Feature**: Configured intelligent build skipping for CI and Vercel
 - **GitHub Actions**: Already had `paths-ignore` for website/docs (no changes needed)
@@ -1491,13 +1502,9 @@ CFPreferencesAppSynchronize("com.apple.dock" as CFString)
 
 ## Known Issues / TODO
 
-### Missing "Configure..." Context Menu (Regression)
-- **Problem**: Right-clicking on a helper tile's Dock icon should show a context menu with "Configure..." option that opens the main DockTile app with that tile selected in detail view
-- **Expected Behavior**:
-  - Right-click on helper tile in Dock → Context menu appears with app list + "Configure..." option
-  - Clicking "Configure..." → Opens main DockTile.app and selects the corresponding tile
-- **Status**: Lost during recent refactoring - needs investigation and fix
-- **Location**: Likely in `HelperAppDelegate.swift` (context menu setup)
+**No critical bugs or regressions at this time.** ✅
+
+All core functionality is working as designed. See Release Roadmap below for remaining tasks.
 
 ## Performance Targets
 
@@ -1626,7 +1633,6 @@ DockTileConfigurationView (Main Window)
 
 | # | Task | Status | Priority | Notes |
 |---|------|--------|----------|-------|
-| 7 | **Onboarding Flow** | 🔲 Pending | Medium | Bartender/Alcove/Klack-style onboarding (no permissions needed - CFPreferences approach) |
 | 7b | **Clear/Tinted Mode Hint** | 🔲 Deferred | Low | Show subtitle in CustomiseTileView colour section explaining "Dock applies system tint" when in Clear/Tinted mode. Needs careful layout to not break inspector card. |
 | 11 | **Localization (English Variants)** | ✅ Done | Medium | US (en), UK (en-GB), AU (en-AU) English. String Catalogs (.xcstrings) with UK fallback for non-English locales. |
 
@@ -1637,7 +1643,7 @@ DockTileConfigurationView (Main Window)
 | 8 | **App Store Review** | ✅ Assessed | Medium | Not viable - sandbox restrictions block helper bundle creation |
 | 9 | **Alternative Distribution** | 🔲 Pending | Low | Direct download recommended; SetApp as secondary |
 | 10 | **ProductHunt Launch** | 🔲 Pending | Low | Marketing page and launch strategy |
-| 12 | **Landing Page Website** | 🔲 Pending | Medium | Static site in `/website` folder, hosted on Vercel at `docktile.rkarthik.co` |
+| 12 | **Landing Page Website** | 🟡 In Progress | Medium | Next.js site deployed to Vercel. **TODO**: Switch from "Coming Soon" to "Download" button, hook up release downloads |
 
 ---
 
@@ -1712,41 +1718,6 @@ Usage:
 ./Scripts/create-dmg.sh --app-path ./build/Build/Products/Release/DockTile.app
 ./Scripts/notarize.sh --dmg-path ./build/DockTile-1.0.dmg
 ```
-
-#### 7. Onboarding Flow (Optional - No Permissions Required)
-**Goal**: Bartender/Alcove/Klack-style onboarding that educates users about the app
-
-**Note**: Since migrating to CFPreferences API (2026-02), **no permissions are required**. The onboarding is now purely educational and optional.
-
-**Design Inspiration**:
-- **Bartender 5/6**: Clean cards with illustrations
-- **Alcove**: Friendly illustrations explaining features
-- **Klack**: Step-by-step wizard showing capabilities
-
-**Onboarding Flow** (1-2 screens):
-```
-Screen 1: Welcome + How It Works
-├── App icon + "Welcome to DockTile"
-├── Brief tagline: "Create custom app launchers for your Dock"
-├── Illustration/visual showing Dock with custom tiles
-├── 2-3 bullet points explaining the concept:
-│   • "Group your favorite apps into custom tiles"
-│   • "One click to launch multiple apps"
-│   • "Customize with colors and icons"
-└── "Get Started" button → dismisses onboarding
-```
-
-**Technical Implementation**:
-- Use SwiftUI with simple state-driven view
-- Store onboarding completion in `UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")`
-- Show on first launch only (check in `AppDelegate` or main view)
-- Single screen is sufficient since no permissions needed
-
-**UI Components**:
-- `OnboardingView.swift` - Welcome screen with feature highlights
-
-**Assets Needed**:
-- Welcome illustration (optional, can use SF Symbols)
 
 #### 1b.1 Drag to Reorder Apps
 **Goal**: Allow users to drag rows in the Selected Items table to reorder apps
@@ -1947,51 +1918,54 @@ Picker("", selection: $editedConfig.layoutMode) {
 #### 12. Landing Page Website
 **Goal**: Create a minimalist landing page for DockTile
 
-**Design Inspiration**:
-- [solstice.daneden.me](https://solstice.daneden.me) - Clean, minimal layout
-- [ora.daneden.me](https://ora.daneden.me) - Simple hero + features
-- [sindresorhus.com/app-buddy](https://sindresorhus.com/app-buddy) - FAQ & Support sections
+**Current Status**: ✅ **Deployed to Vercel** at `docktile.rkarthik.co` with "Coming Soon" state
 
 **Tech Stack**:
-- Static HTML/CSS (no framework needed)
+- **Next.js 15** with TypeScript
+- **Tailwind CSS** with dark mode support
+- **shadcn/ui** components
 - Hosted on **Vercel** (free tier)
 - Custom domain: `docktile.rkarthik.co`
 
-**Folder Structure**:
-```
-website/
-├── index.html          # Main landing page
-├── styles.css          # Styles (dark mode support)
-├── assets/
-│   ├── app-icon.png    # App icon for hero
-│   └── screenshot.png  # App screenshot (optional)
-├── faq.html            # FAQ page (or section in index)
-└── vercel.json         # Vercel config (if needed)
-```
+**Page Sections** (Complete):
+1. ✅ **Hero**: App icon with 3D tilt effect + tagline + "Coming Soon" button
+2. ✅ **Screenshot**: Placeholder for app screenshot
+3. ✅ **FAQ**: Collapsible sections with common questions
+4. ✅ **Support**: Contact information
+5. ✅ **Footer**: Privacy policy link, creator credit
 
-**Page Sections**:
-1. **Hero**: App icon + tagline + Download button (links to GitHub release)
-2. **Features**: 3-4 key highlights with icons
-3. **Screenshot**: 1-2 app screenshots (user will provide)
-4. **FAQ**: Collapsible `<details>` elements (content from existing faq.md)
-5. **Support**: mailto link for contact
-6. **Footer**: Privacy policy link, GitHub repo link (if public later), creator credit
+**TODO - Launch Preparation**:
+1. **Switch "Coming Soon" to "Download" button**:
+   - In `website/components/hero.tsx`:
+     - Comment out lines 81-87 (Coming Soon button)
+     - Uncomment lines 89-96 (Download button)
+   - Update download URL in `website/lib/config.ts` to point to GitHub release
 
-**Support/Contact**:
-- Primary: `mailto:` link (email TBD)
-- No GitHub Issues (repo is private)
+2. **Hook up Release Notes**:
+   - Option A: Link to GitHub Releases page
+   - Option B: Create `/releases` page in Next.js site
+   - Add "Release Notes" link in footer or hero section
 
-**Vercel Setup**:
-```json
-// vercel.json in repo root
-{
-  "rootDirectory": "website"
-}
-```
+3. **Update System Requirements**:
+   - Change "Coming Q1 2026 · Requires macOS 26 or later" to actual release date
+   - Confirm minimum macOS version (currently set to macOS 26, but app works on macOS 15+)
 
-**DNS Setup** (for docktile.rkarthik.co):
-- Add CNAME record pointing to Vercel's domain
-- Configure custom domain in Vercel dashboard
+4. **Add App Screenshots**:
+   - Replace placeholder in `website/components/screenshot.tsx`
+   - Provide high-quality screenshots of:
+     - Main configuration window
+     - Dock with custom tiles
+     - Popover with app grid
+
+**Vercel Configuration**:
+- Root-level `vercel.json` configured with `ignoreCommand` for monorepo
+- Automatic deployments on push to main/develop
+- Custom domain configured
+
+**Analytics**:
+- Download click tracking implemented
+- Release notes click tracking implemented
+- Uses `trackDownloadClick()` and `trackReleaseNotesClick()` in `website/lib/analytics.ts`
 
 #### 11. Localization (English Variants)
 **Goal**: Support US, UK, and AU English localizations
