@@ -393,6 +393,129 @@ This approach handles 95% of schema changes. Old configs missing new fields will
 | bundleIdentifier | String | Generated | Helper bundle ID |
 | lastDockIndex | Int? | nil | (v5) Saved Dock position for show/hide restoration |
 
+## Localization
+
+### Supported Locales
+
+| Locale | Code | Notes |
+|--------|------|-------|
+| UK English | `en-GB` | Base/fallback language for all non-English locales |
+| US English | `en-US` | American spelling (Customize, Color) |
+| AU English | `en-AU` | Australian spelling (same as UK: Customise, Colour) |
+
+### Architecture
+
+- **Format**: String Catalogs (`.xcstrings`) - Xcode 15+ format
+- **Base Language**: en-GB (UK English)
+- **Fallback Strategy**: All non-English languages fall back to en-GB
+- **Files**:
+  - `DockTile/Resources/Localizable.xcstrings` - Main app strings
+  - `DockTile/Resources/InfoPlist.xcstrings` - App metadata (CFBundleDisplayName, copyright)
+  - `DockTile/Constants/AppStrings.swift` - Centralized string accessors
+
+### Key Spelling Differences
+
+| Category | US English (en-US) | UK/AU English (en-GB, en-AU) |
+|----------|-------------------|------------------------------|
+| Customize button | "Customize" | "Customise" |
+| Color picker | "Color" | "Colour" |
+| Navigation title | "Customize Tile" | "Customise Tile" |
+| Subtitle | "Choose a background color" | "Choose a background colour" |
+
+### Usage in Code
+
+All user-facing strings use the `AppStrings` enum:
+
+```swift
+// ✅ Correct
+Button(AppStrings.Button.customise) { ... }
+Text(AppStrings.Label.colour)
+
+// ❌ Wrong - Do not use hardcoded strings
+Button("Customise") { ... }
+Text("Colour")
+```
+
+**AppStrings Categories**:
+- `AppStrings.Button.*` - Button labels
+- `AppStrings.Label.*` - Form labels
+- `AppStrings.Menu.*` - Menu items
+- `AppStrings.Navigation.*` - Navigation titles
+- `AppStrings.Section.*` - Section headers
+- `AppStrings.Empty.*` - Empty state messages
+- `AppStrings.Error.*` - User-facing error messages
+- `AppStrings.Log.*` - Debug logs (NOT localized - always English)
+
+### Testing Localization
+
+**Manual Testing**:
+```bash
+# Test UK English
+defaults write com.docktile.DockTile AppleLanguages "(en-GB)"
+open ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Debug/DockTile.app
+
+# Test US English
+defaults write com.docktile.DockTile AppleLanguages "(en-US)"
+open ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Debug/DockTile.app
+
+# Test AU English
+defaults write com.docktile.DockTile AppleLanguages "(en-AU)"
+open ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Debug/DockTile.app
+
+# Reset to system language
+defaults delete com.docktile.DockTile AppleLanguages
+```
+
+**Unit Tests**:
+- `DockTileTests/Unit/Constants/AppStringsTests.swift`
+- Tests all string keys return non-empty values
+- Tests locale-specific spelling (US vs UK/AU)
+- Tests fallback behavior for non-English locales
+
+### Adding New Strings
+
+1. **Add to Localizable.xcstrings**:
+   - Open `DockTile/Resources/Localizable.xcstrings` in Xcode
+   - Add new key with translations for en-GB, en-US, en-AU
+   - Use clear, descriptive keys (e.g., `button.save`, `label.userName`)
+
+2. **Add to AppStrings.swift**:
+   ```swift
+   enum AppStrings {
+       enum Button {
+           static let save = NSLocalizedString(
+               "button.save",
+               value: "Save",  // UK English value
+               comment: "Save button label"
+           )
+       }
+   }
+   ```
+
+3. **Use in code**:
+   ```swift
+   Button(AppStrings.Button.save) { ... }
+   ```
+
+4. **Add test**:
+   ```swift
+   @Test("Save button string exists")
+   func saveButtonExists() {
+       #expect(!AppStrings.Button.save.isEmpty)
+   }
+   ```
+
+### Adding New Languages
+
+To add German, French, Spanish, etc.:
+
+1. Open `Localizable.xcstrings` in Xcode
+2. Click "+" → Add Language → Select language
+3. Translate all strings to new language
+4. Test with: `defaults write com.docktile.DockTile AppleLanguages "(de)"`
+
+The infrastructure supports unlimited languages - just add translations to the String Catalog.
+
 ## Key Implementation Details
 
 ### Helper Bundle Lifecycle
@@ -665,6 +788,35 @@ private struct QuaternaryFillView: NSViewRepresentable {
 ```
 
 ## Recent Changes
+
+### English Localization Support (US, UK, AU) (2026-02)
+- **Feature**: Implemented comprehensive localization infrastructure for English language variants
+- **Scope**: Added support for US English (en-US), UK English (en-GB), and Australian English (en-AU)
+- **Approach**: String Catalogs (`.xcstrings`) with en-GB as base language
+- **Key Spelling Differences**:
+  - **US**: Customize, Color
+  - **UK/AU**: Customise, Colour
+- **Fallback Strategy**:
+  - Non-English languages (French, German, etc.) → en-GB (UK English)
+  - US users → en-US (US spelling)
+  - UK/AU users → en-GB/en-AU (UK spelling)
+- **Files Created**:
+  - `DockTile/Resources/Localizable.xcstrings` - Main app strings
+  - `DockTile/Resources/InfoPlist.xcstrings` - App metadata (bundle name, copyright)
+  - `DockTileTests/Unit/Constants/AppStringsTests.swift` - Localization unit tests
+  - `STRING_INVENTORY.md` - Complete string inventory documentation
+- **Files Modified**:
+  - `DockTile/Constants/AppStrings.swift` - Expanded with all localization keys organized by category (Buttons, Labels, Menu, Navigation, etc.)
+  - All View files (`DockTileConfigurationView`, `DockTileSidebarView`, `DockTileDetailView`, `CustomiseTileView`) - Replaced hardcoded strings with `AppStrings` references
+  - All UI components (`NativePopoverViews.swift`) - Replaced hardcoded strings
+  - `HelperAppDelegate.swift` - Context menu strings localized
+  - `HelperBundleManager.swift` - User-facing error messages localized
+- **Testing**:
+  - Debug build: ✅ SUCCESS
+  - Release build: ✅ SUCCESS
+  - Unit tests: Created (pending Xcode project integration)
+- **Helper Bundles**: Automatically inherit localization from main app (no special handling needed)
+- **Future Expansion**: Infrastructure supports adding more languages (German, French, Spanish, Japanese, Chinese)
 
 ### Helper Mode Architecture: Ghost Mode vs App Mode (2026-02)
 - **Feature**: Restored the "Show in App Switcher" toggle functionality with a dual-mode architecture
@@ -1295,7 +1447,7 @@ DockTileConfigurationView (Main Window)
 |---|------|--------|----------|-------|
 | 7 | **Onboarding Flow** | 🔲 Pending | Medium | Bartender/Alcove/Klack-style onboarding (no permissions needed - CFPreferences approach) |
 | 7b | **Clear/Tinted Mode Hint** | 🔲 Deferred | Low | Show subtitle in CustomiseTileView colour section explaining "Dock applies system tint" when in Clear/Tinted mode. Needs careful layout to not break inspector card. |
-| 11 | **Localization (English Variants)** | 🔲 Pending | Medium | US (en), UK (en-GB), AU (en-AU) English. Leverage existing `AppStrings.swift` infrastructure. |
+| 11 | **Localization (English Variants)** | ✅ Done | Medium | US (en), UK (en-GB), AU (en-AU) English. String Catalogs (.xcstrings) with UK fallback for non-English locales. |
 
 ### Phase 4: App Store & Marketing
 
