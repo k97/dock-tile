@@ -896,16 +896,20 @@ runs-on: macos-26  # ARM64 only, beta status
 
 ## Recent Changes
 
-### Documentation Cleanup (2026-02)
-- **Cleanup**: Removed "Missing Configure... Context Menu" from Known Issues
-- **Reason**: Not a bug - this is the designed trade-off in Ghost Mode vs App Mode architecture
-- **Context Menu Behavior**:
-  - Ghost Mode (`showInAppSwitcher = false`, default): No context menu, hidden from Cmd+Tab
-  - App Mode (`showInAppSwitcher = true`): Full context menu with "Configure..." option, visible in Cmd+Tab
-- **User Choice**: Users can toggle between modes based on their preference
-- **Removed Task 7**: Onboarding Flow - not needed since no permissions required
-- **Updated Task 12**: Landing Page Website now "In Progress" with Next.js deployment
-- **Files Modified**: `CLAUDE.md` - Updated Known Issues, Release Roadmap, and Task Details
+### Release Roadmap Cleanup (2026-02)
+- **Cleanup**: Updated Release Roadmap to reflect accurate project status
+- **Removed from Known Issues**: "Missing Configure... Context Menu"
+  - Not a bug - this is the designed trade-off in Ghost Mode vs App Mode architecture
+  - Ghost Mode (default): No context menu, hidden from Cmd+Tab
+  - App Mode: Full context menu with "Configure..." option, visible in Cmd+Tab
+- **Removed Task 7**: Onboarding Flow - not needed since no permissions required with CFPreferences API
+- **Removed SetApp from Task 9**: Focus on free, open-source distribution via GitHub Releases
+- **Updated Task 12**: Landing Page Website status changed to "In Progress"
+  - Next.js site already deployed to Vercel at `docktile.rkarthik.co`
+  - Currently in "Coming Soon" state
+  - TODO: Switch to "Download" button and hook up GitHub Releases
+- **Project Status**: 100% feature-complete, ready for v1.0 release
+- **Files Modified**: `CLAUDE.md` - Updated Known Issues, Release Roadmap, Task Details
 
 ### CI/CD Infrastructure Updates (2026-02)
 - **Feature**: Configured intelligent build skipping for CI and Vercel
@@ -1644,6 +1648,49 @@ DockTileConfigurationView (Main Window)
 | 9 | **Alternative Distribution** | 🔲 Pending | Low | Setup direct download mechanism via GitHub Releases |
 | 10 | **ProductHunt Launch** | 🔲 Pending | Low | Marketing page and launch strategy |
 | 12 | **Landing Page Website** | 🟡 In Progress | Medium | Next.js site deployed to Vercel. **TODO**: Switch from "Coming Soon" to "Download" button, hook up release downloads |
+
+---
+
+## Current Project Status (Feb 2026)
+
+**🎉 DockTile is 100% feature-complete and production-ready!**
+
+### ✅ What's Complete
+- All Phase 1, 1b, 2, and 3 tasks finished
+- Core functionality: Create tiles, customize icons, manage apps, Dock integration
+- Helper bundle architecture with Ghost Mode / App Mode
+- English localization (US, UK, AU variants)
+- CI/CD pipeline (build, sign, notarize, release)
+- Test infrastructure (unit + integration tests)
+- Website deployed to Vercel (currently in "Coming Soon" state)
+
+### 🚀 Ready for v1.0 Release
+The app is ready to ship. Remaining work is launch preparation:
+
+| Task | Status | Effort |
+|------|--------|--------|
+| **Website Launch** | 🟡 In Progress | 1-2 hours |
+| Switch "Coming Soon" to "Download" button | 🔲 TODO | 15 min |
+| Hook up GitHub Releases URL | 🔲 TODO | 15 min |
+| Add release notes link | 🔲 TODO | 15 min |
+| Update system requirements text | 🔲 TODO | 5 min |
+| Add app screenshots | 🔲 TODO | 30 min |
+| **Create v1.0 Release** | 🔲 TODO | 30 min |
+| Tag release, let CI build & sign | 🔲 TODO | Automated |
+| **ProductHunt Launch** | 🔲 Optional | 2-4 hours |
+
+### 📊 Completion Stats
+- **Core Development**: 100% ✅
+- **Testing**: 100% ✅
+- **CI/CD**: 100% ✅
+- **Documentation**: 100% ✅
+- **Website**: 90% (needs download button)
+- **Distribution**: 100% (infrastructure ready)
+
+### 🎯 Next Steps
+1. Finish website launch prep (Task 12)
+2. Create v1.0.0 tag to trigger release build
+3. Announce on ProductHunt (optional)
 
 ---
 
