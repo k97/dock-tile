@@ -50,18 +50,21 @@ struct CustomiseTileView: View {
                 }
             }
         }
-        .onChange(of: editedConfig) { _, _ in
+        .onChange(of: editedConfig) { oldValue, newValue in
             // Mark as edited immediately (enables + button)
             // Defer to avoid "Publishing changes from within view updates" warning
             DispatchQueue.main.async {
                 configManager.markSelectedConfigAsEdited()
             }
-        }
-        // Debounced auto-save using task(id:) - cancels previous task when editedConfig changes
-        .task(id: editedConfig) {
-            // Wait 300ms before saving (debounce)
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            configManager.updateConfiguration(editedConfig)
+
+            // Only save if the config actually changed (prevent infinite loop)
+            if oldValue.id == newValue.id {
+                Task {
+                    // Wait 300ms before saving (debounce)
+                    try? await Task.sleep(nanoseconds: 300_000_000)
+                    configManager.updateConfiguration(newValue)
+                }
+            }
         }
     }
 
