@@ -30,7 +30,7 @@ VOLUME_NAME="Dock Tile"
 # Script directory for finding resources
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-BACKGROUND_IMAGE="$PROJECT_ROOT/DockTile/Resources/dmg-background.png"
+BACKGROUND_IMAGE="$PROJECT_ROOT/DockTile/Resources/dmg-background@2x.png"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do

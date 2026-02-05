@@ -10,9 +10,11 @@ import Cocoa
 import CoreGraphics
 
 // Configuration
-let width: CGFloat = 800
-let height: CGFloat = 400
-let outputPath = "DockTile/Resources/dmg-background.png"
+// Generate at 2x resolution for Retina displays (1600x800 @ 144 DPI)
+// This prevents pixelation on modern Macs
+let width: CGFloat = 1600
+let height: CGFloat = 800
+let outputPath = "DockTile/Resources/dmg-background@2x.png"
 
 // Colors
 let gradientTopColor = NSColor(red: 0.96, green: 0.96, blue: 0.97, alpha: 1.0)  // #F5F5F7
@@ -58,14 +60,14 @@ if let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations:
     )
 }
 
-// Draw arrow
-let arrowY = height / 2 + 10  // Slightly above center
-let arrowStartX: CGFloat = 320
-let arrowEndX: CGFloat = 480
-let arrowHeadSize: CGFloat = 12
+// Draw arrow (scaled 2x for Retina)
+let arrowY = height / 2 + 20  // Slightly above center (scaled 2x)
+let arrowStartX: CGFloat = 640  // 320 * 2
+let arrowEndX: CGFloat = 960    // 480 * 2
+let arrowHeadSize: CGFloat = 24  // 12 * 2
 
 cgContext.setStrokeColor(arrowColor.cgColor)
-cgContext.setLineWidth(2.5)
+cgContext.setLineWidth(5.0)  // 2.5 * 2
 cgContext.setLineCap(.round)
 cgContext.setLineJoin(.round)
 
@@ -80,9 +82,9 @@ cgContext.addLine(to: CGPoint(x: arrowEndX - arrowHeadSize, y: arrowY + arrowHea
 
 cgContext.strokePath()
 
-// Draw text
+// Draw text (scaled 2x for Retina)
 let text = "Drag to Applications"
-let font = NSFont.systemFont(ofSize: 14, weight: .medium)
+let font = NSFont.systemFont(ofSize: 28, weight: .medium)  // 14 * 2
 let attributes: [NSAttributedString.Key: Any] = [
     .font: font,
     .foregroundColor: textColor
@@ -90,7 +92,7 @@ let attributes: [NSAttributedString.Key: Any] = [
 
 let textSize = text.size(withAttributes: attributes)
 let textX = (width - textSize.width) / 2
-let textY: CGFloat = 85  // Position from bottom
+let textY: CGFloat = 170  // 85 * 2 - Position from bottom
 
 // Flip context for text drawing (CoreGraphics is bottom-up)
 cgContext.saveGState()
@@ -105,7 +107,8 @@ cgContext.restoreGState()
 NSGraphicsContext.restoreGraphicsState()
 
 // Note: PNG DPI is set via sips command after creation
-// The bitmap is created at 1:1 pixel ratio which is correct for 72 DPI
+// The bitmap is created at 2x resolution (1600x800) for Retina displays
+// This will be displayed at 800x400 points on screen (144 DPI equivalent)
 
 // Save as PNG
 guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
@@ -123,10 +126,11 @@ try? fileManager.createDirectory(atPath: directory, withIntermediateDirectories:
 
 do {
     try pngData.write(to: URL(fileURLWithPath: fullPath))
-    print("Background image created successfully!")
+    print("Retina DMG background created successfully!")
     print("  Path: \(fullPath)")
-    print("  Size: \(Int(width))x\(Int(height)) pixels")
-    print("  DPI: 72x72")
+    print("  Size: \(Int(width))x\(Int(height)) pixels (@2x)")
+    print("  Display size: 800x400 points")
+    print("  DPI: 144x144 (Retina)")
 } catch {
     print("Failed to write file: \(error)")
     exit(1)
