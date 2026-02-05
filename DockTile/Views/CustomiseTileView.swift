@@ -154,7 +154,7 @@ struct CustomiseTileView: View {
                 ColorSwatchButton(
                     color: preset.colorBottom,
                     isSelected: isPresetSelected(preset),
-                    size: 28
+                    size: 24
                 ) {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         editedConfig.tintColor = .preset(preset)
@@ -166,7 +166,7 @@ struct CustomiseTileView: View {
             CustomColorPickerButton(
                 selectedColor: $customColor,
                 isSelected: isCustomColorSelected,
-                size: 28
+                size: 24
             ) { newColor in
                 let hexString = newColor.toHexString()
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {

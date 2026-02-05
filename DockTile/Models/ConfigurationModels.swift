@@ -134,7 +134,6 @@ enum TintColor: Hashable, Codable {
     enum PresetColor: String, CaseIterable, Codable, Hashable {
         case red = "red"
         case orange = "orange"
-        case yellow = "yellow"
         case green = "green"
         case blue = "blue"
         case purple = "purple"
@@ -145,7 +144,6 @@ enum TintColor: Hashable, Codable {
             switch self {
             case .red: return "Red"
             case .orange: return "Orange"
-            case .yellow: return "Yellow"
             case .green: return "Green"
             case .blue: return "Blue"
             case .purple: return "Purple"
@@ -159,7 +157,6 @@ enum TintColor: Hashable, Codable {
             switch self {
             case .red: return Color(hex: "#FF6B6B")
             case .orange: return Color(hex: "#FFA94D")
-            case .yellow: return Color(hex: "#FFD93D")
             case .green: return Color(hex: "#6BCF7F")
             case .blue: return Color(hex: "#4DABF7")
             case .purple: return Color(hex: "#B197FC")
@@ -173,7 +170,6 @@ enum TintColor: Hashable, Codable {
             switch self {
             case .red: return Color(hex: "#FF3B30")
             case .orange: return Color(hex: "#FF9500")
-            case .yellow: return Color(hex: "#FFCC00")
             case .green: return Color(hex: "#34C759")
             case .blue: return Color(hex: "#007AFF")
             case .purple: return Color(hex: "#AF52DE")
@@ -231,7 +227,6 @@ enum TintColor: Hashable, Codable {
 
     static let red = TintColor.preset(.red)
     static let orange = TintColor.preset(.orange)
-    static let yellow = TintColor.preset(.yellow)
     static let green = TintColor.preset(.green)
     static let blue = TintColor.preset(.blue)
     static let purple = TintColor.preset(.purple)

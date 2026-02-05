@@ -231,7 +231,7 @@ extension Color {
             Text("⭐")
                 .font(.system(size: 64))
 
-            IconGridOverlay(size: 160, backgroundColor: .yellow)
+            IconGridOverlay(size: 160, backgroundColor: .orange)
         }
     }
     .padding(60)
