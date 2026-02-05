@@ -14,7 +14,7 @@ import CoreGraphics
 // This prevents pixelation on modern Macs
 let width: CGFloat = 1600
 let height: CGFloat = 800
-let outputPath = "DockTile/Resources/dmg-background@2x.png"
+let outputPath = "DockTile/Resources/dmg-background.png"
 
 // Colors
 let gradientTopColor = NSColor(red: 0.96, green: 0.96, blue: 0.97, alpha: 1.0)  // #F5F5F7
