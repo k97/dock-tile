@@ -46,16 +46,22 @@ NSGraphicsContext.current = context
 
 let cgContext = context.cgContext
 
+// Flip coordinate system to match standard top-left origin (like PNG)
+// CoreGraphics uses bottom-left by default, but we want top-left
+cgContext.translateBy(x: 0, y: height)
+cgContext.scaleBy(x: 1, y: -1)
+
 // Draw gradient background
 let colorSpace = CGColorSpaceCreateDeviceRGB()
 let colors = [gradientTopColor.cgColor, gradientBottomColor.cgColor] as CFArray
 let locations: [CGFloat] = [0.0, 1.0]
 
 if let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: locations) {
+    // After coordinate flip, (0,0) is top-left, so draw from top to bottom
     cgContext.drawLinearGradient(
         gradient,
-        start: CGPoint(x: 0, y: height),
-        end: CGPoint(x: 0, y: 0),
+        start: CGPoint(x: 0, y: 0),      // Top (gradientTopColor)
+        end: CGPoint(x: 0, y: height),   // Bottom (gradientBottomColor)
         options: []
     )
 }
@@ -92,17 +98,11 @@ let attributes: [NSAttributedString.Key: Any] = [
 
 let textSize = text.size(withAttributes: attributes)
 let textX = (width - textSize.width) / 2
-let textY: CGFloat = 170  // 85 * 2 - Position from bottom
+let textY: CGFloat = height - 170 - textSize.height  // Position from bottom
 
-// Flip context for text drawing (CoreGraphics is bottom-up)
-cgContext.saveGState()
-cgContext.translateBy(x: 0, y: height)
-cgContext.scaleBy(x: 1, y: -1)
-
-let textRect = CGRect(x: textX, y: height - textY - textSize.height, width: textSize.width, height: textSize.height)
+// No need to flip again - we already flipped the entire coordinate system
+let textRect = CGRect(x: textX, y: textY, width: textSize.width, height: textSize.height)
 text.draw(in: textRect, withAttributes: attributes)
-
-cgContext.restoreGState()
 
 NSGraphicsContext.restoreGraphicsState()
 
