@@ -30,7 +30,8 @@ VOLUME_NAME="Dock Tile"
 # Script directory for finding resources
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-BACKGROUND_IMAGE="$PROJECT_ROOT/DockTile/Resources/dmg-background.png"
+# Use TIFF bundle for Retina support
+BACKGROUND_IMAGE="$PROJECT_ROOT/DockTile/Resources/dmg-background.tiff"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
