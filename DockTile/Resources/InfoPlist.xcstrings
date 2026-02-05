@@ -1,0 +1,78 @@
+{
+  "sourceLanguage" : "en-GB",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "App display name shown in Dock and Finder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Tile"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Tile"
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Tile"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Tile"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Tile"
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Tile"
+          }
+        }
+      }
+    },
+    "NSHumanReadableCopyright" : {
+      "comment" : "Copyright notice",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copyright © 2026 Karthik Rameshkumar. All rights reserved."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copyright © 2026 Karthik Rameshkumar. All rights reserved."
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copyright © 2026 Karthik Rameshkumar. All rights reserved."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

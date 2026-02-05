@@ -201,7 +201,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         // "Configure..." option
         let configureItem = NSMenuItem(
-            title: "Configure...",
+            title: AppStrings.Menu.configure,
             action: #selector(openConfigurator),
             keyEquivalent: ""
         )
@@ -214,7 +214,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         if let config = getCurrentConfiguration() {
             if config.appItems.isEmpty {
                 let item = NSMenuItem(
-                    title: "No apps configured",
+                    title: AppStrings.Empty.noApps,
                     action: nil,
                     keyEquivalent: ""
                 )

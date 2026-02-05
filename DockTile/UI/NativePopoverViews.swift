@@ -266,10 +266,10 @@ struct StackPopoverView: View {
             Image(systemName: "app.badge.plus")
                 .font(.system(size: 32))
                 .foregroundStyle(.secondary)
-            Text("No apps configured")
+            Text(AppStrings.Empty.noApps)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.secondary)
-            Text("Configure to add apps")
+            Text(AppStrings.Subtitle.configureToAdd)
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
         }
@@ -359,7 +359,7 @@ struct StackAppItem: View {
         // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
         let _ = iconStyleManager.currentStyle
 
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             // Large app icon (64x64 like native Dock folders)
             appIconView
                 .frame(width: 64, height: 64)
@@ -373,7 +373,7 @@ struct StackAppItem: View {
                 .truncationMode(.middle)
                 .frame(width: 90)
         }
-        .padding(6)
+        .padding(2)
         .background(
             // Keyboard selection only - no hover effect for grid view
             RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -547,14 +547,14 @@ struct ListPopoverView: View {
             // Utility items
             ListMenuRow(
                 icon: "gearshape",
-                title: "Options",
+                title: AppStrings.Menu.options,
                 hasSubmenu: true,
                 action: { /* Options submenu */ }
             )
 
             ListMenuRow(
                 icon: "folder",
-                title: "Open in Finder",
+                title: AppStrings.Menu.openInFinder,
                 hasSubmenu: false,
                 action: openInFinder
             )
@@ -577,7 +577,7 @@ struct ListPopoverView: View {
     }
 
     private var emptyStateView: some View {
-        Text("No apps configured")
+        Text(AppStrings.Empty.noApps)
             .font(.system(size: 12))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)

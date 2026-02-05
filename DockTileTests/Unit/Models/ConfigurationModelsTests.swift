@@ -293,7 +293,6 @@ struct TintColorTests {
         let expected: [(TintColor.PresetColor, String)] = [
             (.red, "red"),
             (.orange, "orange"),
-            (.yellow, "yellow"),
             (.green, "green"),
             (.blue, "blue"),
             (.purple, "purple"),
@@ -317,7 +316,6 @@ struct TintColorTests {
     func staticProperties() {
         #expect(TintColor.red == .preset(.red))
         #expect(TintColor.orange == .preset(.orange))
-        #expect(TintColor.yellow == .preset(.yellow))
         #expect(TintColor.green == .preset(.green))
         #expect(TintColor.blue == .preset(.blue))
         #expect(TintColor.purple == .preset(.purple))

@@ -21,6 +21,7 @@ struct DockTileDetailView: View {
     @State private var isProcessing = false
     @State private var errorMessage: String?
     @State private var showDeleteConfirmation = false
+    @State private var showDockRestartConsent = false  // Show consent dialog for Dock restart
     @State private var hasAppearedOnce = false  // Track if view has fully loaded
     @State private var isCurrentlyInDock = false  // Track actual Dock state
     @FocusState private var isNameFieldFocused: Bool  // Track focus for commit-on-blur
@@ -29,10 +30,10 @@ struct DockTileDetailView: View {
     private var actionButtonText: String {
         if editedConfig.isVisibleInDock {
             // User wants tile in Dock
-            return isCurrentlyInDock ? "Update" : "Add to Dock"
+            return isCurrentlyInDock ? AppStrings.Button.update : AppStrings.Button.addToDock
         } else {
             // User wants tile removed from Dock
-            return isCurrentlyInDock ? "Remove from Dock" : "Done"
+            return isCurrentlyInDock ? AppStrings.Button.removeFromDock : AppStrings.Button.done
         }
     }
 
@@ -77,13 +78,21 @@ struct DockTileDetailView: View {
                 }
             }
         }
-        .alert("Delete Tile", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert(AppStrings.Title.deleteTile, isPresented: $showDeleteConfirmation) {
+            Button(AppStrings.Button.cancel, role: .cancel) {}
+            Button(AppStrings.Button.delete, role: .destructive) {
                 deleteTile()
             }
         } message: {
             Text("This will permanently delete the tile and remove it from the dock.")
+        }
+        .onChange(of: showDockRestartConsent) { _, newValue in
+            if newValue {
+                // Defer alert presentation to avoid SwiftUI transaction warning
+                DispatchQueue.main.async {
+                    showDockRestartConsentAlert()
+                }
+            }
         }
         // NOTE: .onChange(of: config.id) removed - parent view uses .id(selectedConfig.id)
         // to force complete view recreation when switching configs, making sync unnecessary
@@ -188,14 +197,14 @@ struct DockTileDetailView: View {
                     onCustomise()
                 }
 
-                SubtleButton(title: "Customise", width: 118, action: onCustomise)
+                SubtleButton(title: AppStrings.Button.customise, width: 118, action: onCustomise)
             }
 
             // Right column: Custom Form Group
             VStack(spacing: 0) {
                 // Row 1: Tile Name
                 formRow(isLast: false) {
-                    Text("Tile Name")
+                    Text(AppStrings.Label.tileName)
                     Spacer()
                     TextField("", text: $tileName)
                         .textFieldStyle(.plain)
@@ -213,7 +222,7 @@ struct DockTileDetailView: View {
 
                 // Row 2: Show Tile
                 formRow(isLast: false) {
-                    Text("Show Tile")
+                    Text(AppStrings.Label.showTile)
                     Spacer()
                     Toggle("", isOn: $editedConfig.isVisibleInDock)
                         .labelsHidden()
@@ -222,18 +231,18 @@ struct DockTileDetailView: View {
 
                 // Row 3: Layout
                 formRow(isLast: false) {
-                    Text("Layout")
+                    Text(AppStrings.Label.layout)
                     Spacer()
                     Picker("", selection: $editedConfig.layoutMode) {
-                        Text("Grid").tag(LayoutMode.grid)
-                        Text("List").tag(LayoutMode.list)
+                        Text(AppStrings.Layout.grid).tag(LayoutMode.grid)
+                        Text(AppStrings.Layout.list).tag(LayoutMode.list)
                     }
                     .labelsHidden()
                 }
 
                 // Row 4: Show in App Switcher (last row, no separator)
                 formRow(isLast: true) {
-                    Text("Show in App Switcher")
+                    Text(AppStrings.Label.showInAppSwitcher)
                     Spacer()
                     Toggle("", isOn: $editedConfig.showInAppSwitcher)
                         .labelsHidden()
@@ -271,7 +280,7 @@ struct DockTileDetailView: View {
 
     private var appsTableSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Selected Items")
+            Text(AppStrings.Section.selectedItems)
                 .font(.headline)
                 .padding(.bottom, 12)
 
@@ -331,7 +340,7 @@ struct DockTileDetailView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Remove from Dock")
+                    Text(AppStrings.Button.removeFromDock)
                         .font(.system(size: 13))
                         .foregroundColor(.primary)
 
@@ -343,7 +352,7 @@ struct DockTileDetailView: View {
                 Spacer()
 
                 SubtleButton(
-                    title: "Remove",
+                    title: AppStrings.Button.remove,
                     textColor: .red,
                     action: { showDeleteConfirmation = true }
                 )
@@ -365,6 +374,19 @@ struct DockTileDetailView: View {
     }
 
     private func handleDockAction() {
+        // Check if user has already acknowledged Dock restart
+        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")
+
+        if !hasAcknowledged {
+            // Show consent dialog
+            showDockRestartConsent = true
+        } else {
+            // Proceed directly
+            performDockAction()
+        }
+    }
+
+    private func performDockAction() {
         isProcessing = true
         errorMessage = nil
 
@@ -421,6 +443,40 @@ struct DockTileDetailView: View {
         }
     }
 
+    private func showDockRestartConsentAlert() {
+        // Create native NSAlert with checkbox
+        let alert = NSAlert()
+        alert.messageText = AppStrings.Alert.restartDockTitle
+        alert.informativeText = AppStrings.Alert.restartDockMessage
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: AppStrings.Button.confirm)
+        alert.addButton(withTitle: AppStrings.Button.cancel)
+
+        // Add "Don't show this again" checkbox (left-aligned, macOS default)
+        let checkbox = NSButton(checkboxWithTitle: AppStrings.Alert.restartDockCheckbox, target: nil, action: nil)
+        checkbox.state = .off  // Default unchecked
+
+        alert.accessoryView = checkbox
+
+        // Show alert modally
+        let response = alert.runModal()
+
+        // Reset state
+        showDockRestartConsent = false
+
+        // Handle response
+        if response == .alertFirstButtonReturn {
+            // User clicked "Confirm"
+            // Check if "Don't show this again" was checked
+            if checkbox.state == .on {
+                UserDefaults.standard.set(true, forKey: "hasAcknowledgedDockRestart")
+            }
+            // Proceed with dock action
+            performDockAction()
+        }
+        // If user clicked "Cancel", do nothing
+    }
+
     private func deleteTile() {
         // Delete will handle uninstalling helper if needed
         // Use editedConfig.id to ensure we delete the correct tile
@@ -442,8 +498,8 @@ struct DockTileDetailView: View {
         panel.allowedContentTypes = [.application, .folder]
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
         panel.treatsFilePackagesAsDirectories = false
-        panel.prompt = "Add"
-        panel.message = "Select an application or folder to add"
+        panel.prompt = AppStrings.Button.add
+        panel.message = AppStrings.FilePicker.message
 
         if panel.runModal() == .OK, let url = panel.url {
             var isDirectory: ObjCBool = false
@@ -505,13 +561,13 @@ struct NativeAppsTableView: View {
         VStack(spacing: 0) {
             // Header row - uses same color as even rows (slightly darker)
             HStack(spacing: 0) {
-                Text("Item")
+                Text(AppStrings.Table.item)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                Text("Kind")
+                Text(AppStrings.Table.kind)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
@@ -649,7 +705,7 @@ struct NativeAppsTableView: View {
 
     private var emptyState: some View {
         VStack(spacing: 8) {
-            Text("No items added yet")
+            Text(AppStrings.Empty.noItemsAdded)
                 .foregroundStyle(.secondary)
             Text("Click + to add applications or folders")
                 .font(.caption)
@@ -661,7 +717,7 @@ struct NativeAppsTableView: View {
     }
 
     private func itemKind(for item: AppItem) -> String {
-        item.isFolder ? "Folder" : "Application"
+        item.isFolder ? AppStrings.Kind.folder : AppStrings.Kind.application
     }
 }
 

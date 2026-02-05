@@ -25,7 +25,10 @@ env:
 jobs:
   build-and-test:
     name: Build & Test
-    runs-on: macos-15
+    # Use macos-26 beta (Tahoe) to match local development environment
+    # Note: This is ARM64 only, beta status, "as-is" with no SLA
+    # See: https://github.blog/changelog/2025-09-11-actions-macos-26-image-now-in-public-preview/
+    runs-on: macos-26
 
     steps:
       - name: Checkout
@@ -36,15 +39,25 @@ jobs:
 
       - name: Select Xcode
         run: |
-          # Use Xcode 16.2 if available, otherwise latest 16.x
-          if [ -d "/Applications/Xcode_16.2.app" ]; then
+          # Try to use Xcode 26.2 (matches local dev environment)
+          # Fall back to latest available Xcode 16.x if not found
+          if [ -d "/Applications/Xcode_26.2.app" ]; then
+            echo "✅ Using Xcode 26.2 (matches local environment)"
+            sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_26.app" ]; then
+            echo "✅ Using Xcode 26.0"
+            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_16.2.app" ]; then
+            echo "⚠️  Using Xcode 16.2 (fallback)"
             sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           elif [ -d "/Applications/Xcode_16.1.app" ]; then
+            echo "⚠️  Using Xcode 16.1 (fallback)"
             sudo xcode-select -s /Applications/Xcode_16.1.app/Contents/Developer
           elif [ -d "/Applications/Xcode_16.app" ]; then
+            echo "⚠️  Using Xcode 16.0 (fallback)"
             sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
           else
-            echo "No Xcode 16.x found, using default"
+            echo "❌ No suitable Xcode found, using system default"
           fi
 
       - name: Show Xcode and SDK info

@@ -2,27 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Hardened Runtime -->
-	<key>com.apple.security.app-sandbox</key>
-	<false/>
+	<!-- Hardened Runtime Entitlements (App runs OUTSIDE sandbox) -->
 
-	<!-- Allow JIT compilation (required for some Swift features) -->
-	<key>com.apple.security.cs.allow-jit</key>
-	<true/>
-
-	<!-- Allow unsigned executable memory (required for ad-hoc signed helper bundles) -->
+	<!-- Allow loading ad-hoc signed helper bundles -->
 	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
 	<true/>
-
-	<!-- Disable library validation (required to load helper bundles) -->
 	<key>com.apple.security.cs.disable-library-validation</key>
 	<true/>
 
-	<!-- Allow DYLD environment variables (for debugging) -->
-	<key>com.apple.security.cs.allow-dyld-environment-variables</key>
-	<true/>
-
-	<!-- Apple Events (for restarting Dock via AppleScript/osascript) -->
+	<!-- Allow restarting Dock via osascript -->
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
 </dict>

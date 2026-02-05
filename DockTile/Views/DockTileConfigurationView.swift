@@ -144,7 +144,7 @@ struct EmptyConfigurationView: View {
                 .foregroundColor(.secondary)
 
             VStack(spacing: 8) {
-                Text("Create Your First Tile")
+                Text(AppStrings.Empty.createFirstTile)
                     .font(.title2)
                     .fontWeight(.medium)
 
@@ -159,7 +159,7 @@ struct EmptyConfigurationView: View {
             }) {
                 HStack(spacing: 6) {
                     Image(systemName: "plus")
-                    Text("New Tile")
+                    Text(AppStrings.Button.newTile)
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)

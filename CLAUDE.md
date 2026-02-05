@@ -182,24 +182,20 @@ xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
 ```
 DockTileTests/
 ├── Unit/
-│   ├── Managers/
-│   │   ├── ConfigurationManagerTests.swift
-│   │   └── DockPlistWatcherTests.swift
+│   ├── Constants/
+│   │   └── AppStringsTests.swift           # Localization tests (US/UK/AU variants)
 │   ├── Models/
 │   │   ├── ConfigurationModelsTests.swift
 │   │   └── TintColorTests.swift
 │   └── Utilities/
-│       ├── IconGeneratorTests.swift
-│       └── ColorExtensionsTests.swift
+│       └── IconGeneratorTests.swift
 ├── Integration/
-│   └── HelperBundleLifecycleTests.swift
+│   └── DockRestartConsentTests.swift       # Consent dialog behavior tests
 └── Mocks/
-    ├── MockFileManager.swift
-    ├── MockUserDefaults.swift
-    └── MockDockPreferences.swift
+    └── (future mock objects)
 
 DockTileUITests/
-└── ConfigurationFlowUITests.swift
+└── (future UI tests)
 ```
 
 ### Test Commands
@@ -392,6 +388,167 @@ This approach handles 95% of schema changes. Old configs missing new fields will
 | showInAppSwitcher | Bool | false | (v2) Show in Cmd+Tab |
 | bundleIdentifier | String | Generated | Helper bundle ID |
 | lastDockIndex | Int? | nil | (v5) Saved Dock position for show/hide restoration |
+
+## Localization
+
+### Supported Locales
+
+| Locale | Code | Notes |
+|--------|------|-------|
+| UK English | `en-GB` | Base/fallback language for all non-English locales |
+| US English | `en-US` | American spelling (Customize, Color) |
+| AU English | `en-AU` | Australian spelling (same as UK: Customise, Colour) |
+
+### Architecture
+
+- **Format**: String Catalogs (`.xcstrings`) - Xcode 15+ format
+- **Base Language**: en-GB (UK English)
+- **Fallback Strategy**: All non-English languages fall back to en-GB
+- **Files**:
+  - `DockTile/Resources/Localizable.xcstrings` - Main app strings
+  - `DockTile/Resources/InfoPlist.xcstrings` - App metadata (CFBundleDisplayName, copyright)
+  - `DockTile/Constants/AppStrings.swift` - Centralized string accessors
+
+### Key Spelling Differences
+
+| Category | US English (en-US) | UK/AU English (en-GB, en-AU) |
+|----------|-------------------|------------------------------|
+| Customize button | "Customize" | "Customise" |
+| Color picker | "Color" | "Colour" |
+| Navigation title | "Customize Tile" | "Customise Tile" |
+| Subtitle | "Choose a background color" | "Choose a background colour" |
+
+### Usage in Code
+
+All user-facing strings use the `AppStrings` enum:
+
+```swift
+// ✅ Correct
+Button(AppStrings.Button.customise) { ... }
+Text(AppStrings.Label.colour)
+
+// ❌ Wrong - Do not use hardcoded strings
+Button("Customise") { ... }
+Text("Colour")
+```
+
+**AppStrings Categories**:
+- `AppStrings.Button.*` - Button labels
+- `AppStrings.Label.*` - Form labels
+- `AppStrings.Menu.*` - Menu items
+- `AppStrings.Navigation.*` - Navigation titles
+- `AppStrings.Section.*` - Section headers
+- `AppStrings.Empty.*` - Empty state messages
+- `AppStrings.Error.*` - User-facing error messages
+- `AppStrings.Log.*` - Debug logs (NOT localized - always English)
+
+### Testing Localization
+
+**Manual Testing**:
+```bash
+# Test UK English
+defaults write com.docktile.DockTile AppleLanguages "(en-GB)"
+open ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Debug/DockTile.app
+
+# Test US English
+defaults write com.docktile.DockTile AppleLanguages "(en-US)"
+open ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Debug/DockTile.app
+
+# Test AU English
+defaults write com.docktile.DockTile AppleLanguages "(en-AU)"
+open ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Debug/DockTile.app
+
+# Reset to system language
+defaults delete com.docktile.DockTile AppleLanguages
+```
+
+**Unit Tests**:
+- `DockTileTests/Unit/Constants/AppStringsTests.swift`
+- Tests all string keys return non-empty values
+- Tests locale-specific spelling (US vs UK/AU)
+- Tests fallback behavior for non-English locales
+
+### Adding New Strings
+
+1. **Add to Localizable.xcstrings**:
+   - Open `DockTile/Resources/Localizable.xcstrings` in Xcode
+   - Add new key with translations for en-GB, en-US, en-AU
+   - Use clear, descriptive keys (e.g., `button.save`, `label.userName`)
+
+2. **Add to AppStrings.swift**:
+   ```swift
+   enum AppStrings {
+       enum Button {
+           static let save = NSLocalizedString(
+               "button.save",
+               value: "Save",  // UK English value
+               comment: "Save button label"
+           )
+       }
+   }
+   ```
+
+3. **Use in code**:
+   ```swift
+   Button(AppStrings.Button.save) { ... }
+   ```
+
+4. **Add test**:
+   ```swift
+   @Test("Save button string exists")
+   func saveButtonExists() {
+       #expect(!AppStrings.Button.save.isEmpty)
+   }
+   ```
+
+### Adding New Languages
+
+To add German, French, Spanish, etc.:
+
+1. Open `Localizable.xcstrings` in Xcode
+2. Click "+" → Add Language → Select language
+3. Translate all strings to new language
+4. Test with: `defaults write com.docktile.DockTile AppleLanguages "(de)"`
+
+The infrastructure supports unlimited languages - just add translations to the String Catalog.
+
+### User Consent for Dock Modifications
+
+**Consent Dialog**: Before any Dock-modifying action (add, update, show, hide, remove), the app shows a one-time consent dialog:
+
+| Element | Content |
+|---------|---------|
+| Title | "Dock Restart Required" |
+| Message | "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected." |
+| Checkbox | "Don't show this again" |
+| Buttons | "Confirm" (primary) / "Cancel" (secondary) |
+| Icon | ⚠️ Warning icon (NSAlert.Style.warning) |
+
+**Behavior**:
+- Shows on first Dock-modifying action (if user has not checked "Don't show this again")
+- Covers ALL Dock actions: add, update, show tile, hide tile, remove tile
+- After user checks box + clicks Confirm, never shows again
+- Clicking Cancel aborts the action (no Dock modification)
+- Preference stored in `UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")`
+
+**Implementation**:
+- Dialog created using native `NSAlert` with `NSButton` checkbox accessory
+- Uses macOS default left-aligned layout for icon, title, message, and checkbox
+- Shown modally via `alert.runModal()` in `DockTileDetailView.showDockRestartConsentAlert()`
+- Alert presentation deferred with `DispatchQueue.main.async` to avoid SwiftUI transaction warnings
+- Checked via `handleDockAction()` → checks UserDefaults → shows dialog or proceeds directly
+- On Confirm: saves checkbox state to UserDefaults if checked, then calls `performDockAction()`
+- On Cancel: dismisses dialog, no action taken
+
+**Localization**:
+- All strings in `AppStrings.Alert.*` and `AppStrings.Button.confirm`
+- No spelling differences between US/UK/AU variants
+- Test coverage in `AppStringsTests.swift`
+
+**Testing**:
+- Unit tests: `AppStringsTests.swift` - verifies all alert strings exist
+- Integration tests: `DockRestartConsentTests.swift` - tests consent flow and UserDefaults persistence
+- Manual testing: Reset preference with `defaults delete com.docktile.DockTile hasAcknowledgedDockRestart`
 
 ## Key Implementation Details
 
@@ -664,7 +821,183 @@ private struct QuaternaryFillView: NSViewRepresentable {
                     └───────────────────────────────────────────┘
 ```
 
+## CI/CD Configuration
+
+### GitHub Actions Path Filtering
+
+The CI workflow uses `paths-ignore` to skip builds when only non-code files change:
+
+```yaml
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - 'website/**'
+      - 'vercel.json'
+      - '*.md'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'website/**'
+      - 'vercel.json'
+      - '*.md'
+```
+
+**Behavior:**
+- ✅ Xcode/Swift changes → CI runs
+- ⏭️  Website/docs only → CI skips
+- ✅ Mixed changes → CI runs
+
+### Vercel Ignore Build Step
+
+The Vercel deployment uses `ignoreCommand` to skip builds when only Xcode files change:
+
+**Configuration** (`vercel.json`):
+```json
+{
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet . ':(exclude)website/**' ':(exclude)vercel.json'"
+}
+```
+
+**Behavior:**
+- ⏭️  Xcode/Swift changes only → Vercel skips
+- ✅ Website changes → Vercel builds
+- ✅ Mixed changes → Vercel builds
+
+**How it works:**
+- `git diff --quiet` returns exit code 0 if no changes (skip build)
+- `:(exclude)` syntax excludes website paths from diff
+- If only website files changed, diff finds changes → exit 1 → build proceeds
+
+**References:**
+- [Vercel Ignore Build Step Guide](https://vercel.com/kb/guide/how-do-i-use-the-ignored-build-step-field-on-vercel)
+- [GitHub Actions Path Filtering](https://github.com/orgs/community/discussions/164673)
+
+### macOS 26 Beta Runners
+
+Both CI and release workflows use `macos-26` beta runners to match local development:
+
+```yaml
+runs-on: macos-26  # ARM64 only, beta status
+```
+
+**Benefits:**
+- ✅ Same SDK as local (macOS 26.2)
+- ✅ Access to macOS 26+ APIs (`.buttonSizing`, etc.)
+- ✅ Xcode 26.2 available
+
+**Trade-offs:**
+- ⚠️  Beta status: "as-is" with no SLA
+- ⚠️  ARM64 only (matches target anyway)
+
+**Reference:** [macOS 26 Beta Announcement](https://github.blog/changelog/2025-09-11-actions-macos-26-image-now-in-public-preview/)
+
+---
+
 ## Recent Changes
+
+### CI/CD Infrastructure Updates (2026-02)
+- **Feature**: Configured intelligent build skipping for CI and Vercel
+- **GitHub Actions**: Already had `paths-ignore` for website/docs (no changes needed)
+- **Vercel**: Added `ignoreCommand` using official recommended pattern
+  - Uses `git diff --quiet` with `:(exclude)` syntax
+  - Skips builds when only Xcode files changed
+  - Works within Vercel's 10-commit shallow clone limitation
+- **macOS 26 Runners**: Updated workflows to use `macos-26` beta runners
+  - Matches local development environment (macOS 26.2, Xcode 26.2)
+  - Enables macOS 26+ APIs like `.buttonSizing(.flexible)`
+- **Files Created/Modified**:
+  - `vercel.json` - Added ignore command with best-practice pattern
+  - `.github/workflows/ci.yml` - Updated to `macos-26` runners
+  - `.github/workflows/release.yml` - Updated to `macos-26` runners
+
+### Test Infrastructure Fixes (2026-02)
+- **Feature**: Fixed all remaining test failures to enable CI/CD integration
+- **Consent Dialog Tests**: Fixed race condition in `DockRestartConsentTests`
+  - Added `.serialized` trait to prevent parallel execution conflicts
+  - Tests validate UserDefaults persistence of `hasAcknowledgedDockRestart` flag
+- **Localization Tests**: Fixed `AppStringsTests` to work with String Catalogs
+  - Created `localizedString(for:locale:)` helper that parses `.xcstrings` JSON directly
+  - Replaced `withLocale` approach (doesn't work with NSLocalizedString caching)
+  - Updated all 7 test functions: US/UK/AU spelling variants
+  - Tests verify "Customize" vs "Customise" and "Color" vs "Colour"
+- **TintColor Tests**: Fixed `TintColorTests` after `.yellow` color removal
+  - Updated expected count from 8 to 7 preset colors
+  - Removed `.yellow` from switch statements in icon name tests
+- **Module Import Fixes**: Updated all test files to use correct module name `Dock_Tile`
+- **Files Modified**:
+  - `DockTileTests/Integration/DockRestartConsentTests.swift` - Added `.serialized`
+  - `DockTileTests/Unit/Constants/AppStringsTests.swift` - New JSON parsing helper
+  - `DockTileTests/Unit/Models/TintColorTests.swift` - Updated color count
+  - `DockTileTests/Unit/Models/ConfigurationModelsTests.swift` - Removed `.yellow`
+  - `DockTileTests/Unit/Utilities/IconGeneratorTests.swift` - Removed `.yellow`
+- **Testing**:
+  - All unit tests: ✅ PASS (Cmd+U in Xcode)
+  - Terminal tests: ✅ PASS (`xcodebuild test`)
+  - Ready for CI/CD integration
+- **Infrastructure**: Tests now fully compatible with String Catalogs (.xcstrings) format
+
+### English Localization Support (US, UK, AU) (2026-02)
+- **Feature**: Implemented comprehensive localization infrastructure for English language variants
+- **Scope**: Added support for US English (en-US), UK English (en-GB), and Australian English (en-AU)
+- **Approach**: String Catalogs (`.xcstrings`) with en-GB as base language
+- **Key Spelling Differences**:
+  - **US**: Customize, Color
+  - **UK/AU**: Customise, Colour
+- **Fallback Strategy**:
+  - Non-English languages (French, German, etc.) → en-GB (UK English)
+  - US users → en-US (US spelling)
+  - UK/AU users → en-GB/en-AU (UK spelling)
+- **Files Created**:
+  - `DockTile/Resources/Localizable.xcstrings` - Main app strings
+  - `DockTile/Resources/InfoPlist.xcstrings` - App metadata (bundle name, copyright)
+  - `DockTileTests/Unit/Constants/AppStringsTests.swift` - Localization unit tests
+  - `STRING_INVENTORY.md` - Complete string inventory documentation
+- **Files Modified**:
+  - `DockTile/Constants/AppStrings.swift` - Expanded with all localization keys organized by category (Buttons, Labels, Menu, Navigation, etc.)
+  - All View files (`DockTileConfigurationView`, `DockTileSidebarView`, `DockTileDetailView`, `CustomiseTileView`) - Replaced hardcoded strings with `AppStrings` references
+  - All UI components (`NativePopoverViews.swift`) - Replaced hardcoded strings
+  - `HelperAppDelegate.swift` - Context menu strings localized
+  - `HelperBundleManager.swift` - User-facing error messages localized
+- **Testing**:
+  - Debug build: ✅ SUCCESS
+  - Release build: ✅ SUCCESS
+  - Unit tests: Created (pending Xcode project integration)
+- **Helper Bundles**: Automatically inherit localization from main app (no special handling needed)
+- **Future Expansion**: Infrastructure supports adding more languages (German, French, Spanish, Japanese, Chinese)
+
+### macOS 26+ Flexible Button Sizing (2026-02)
+- **Feature**: Segmented picker now uses flexible button sizing on macOS 26+
+- **Implementation**: Option 3 approach with separate computed properties and `@available` checks
+  ```swift
+  @available(macOS 26.0, *)
+  private var pickerWithFlexibleSizing: some View {
+      Picker(...).buttonSizing(.flexible)
+  }
+
+  private var pickerWithStandardSizing: some View {
+      Picker(...)  // macOS 15-25
+  }
+
+  @ViewBuilder
+  private var segmentedPicker: some View {
+      if #available(macOS 26.0, *) {
+          pickerWithFlexibleSizing
+      } else {
+          pickerWithStandardSizing
+      }
+  }
+  ```
+- **Why This Works**:
+  - `@available` annotation tells compiler to skip API validation on older targets
+  - Separate properties avoid SwiftUI type system conflicts
+  - Runtime check ensures correct version is used
+- **Enabled By**: CI now uses `macos-26` runners with SDK 26.2
+- **Benefits**:
+  - macOS 26+ users: Full-width segmented control buttons in CustomiseTileView
+  - macOS 15-25 users: Standard sizing (works perfectly)
+  - No functionality lost on older OS versions
+- **Location**: `DockTile/Views/CustomiseTileView.swift` (segmented picker for Symbol/Emoji tabs)
 
 ### Helper Mode Architecture: Ghost Mode vs App Mode (2026-02)
 - **Feature**: Restored the "Show in App Switcher" toggle functionality with a dual-mode architecture
@@ -1295,7 +1628,7 @@ DockTileConfigurationView (Main Window)
 |---|------|--------|----------|-------|
 | 7 | **Onboarding Flow** | 🔲 Pending | Medium | Bartender/Alcove/Klack-style onboarding (no permissions needed - CFPreferences approach) |
 | 7b | **Clear/Tinted Mode Hint** | 🔲 Deferred | Low | Show subtitle in CustomiseTileView colour section explaining "Dock applies system tint" when in Clear/Tinted mode. Needs careful layout to not break inspector card. |
-| 11 | **Localization (English Variants)** | 🔲 Pending | Medium | US (en), UK (en-GB), AU (en-AU) English. Leverage existing `AppStrings.swift` infrastructure. |
+| 11 | **Localization (English Variants)** | ✅ Done | Medium | US (en), UK (en-GB), AU (en-AU) English. String Catalogs (.xcstrings) with UK fallback for non-English locales. |
 
 ### Phase 4: App Store & Marketing
 

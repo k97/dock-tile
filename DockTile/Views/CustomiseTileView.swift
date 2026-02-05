@@ -42,26 +42,29 @@ struct CustomiseTileView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowBackgroundView())
-        .navigationTitle("Customise Tile")
+        .navigationTitle(AppStrings.Navigation.customiseTile)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button(action: onBack) {
-                    Label("Back", systemImage: "chevron.left")
+                    Label(AppStrings.Button.back, systemImage: "chevron.left")
                 }
             }
         }
-        .onChange(of: editedConfig) { _, _ in
+        .onChange(of: editedConfig) { oldValue, newValue in
             // Mark as edited immediately (enables + button)
             // Defer to avoid "Publishing changes from within view updates" warning
             DispatchQueue.main.async {
                 configManager.markSelectedConfigAsEdited()
             }
-        }
-        // Debounced auto-save using task(id:) - cancels previous task when editedConfig changes
-        .task(id: editedConfig) {
-            // Wait 300ms before saving (debounce)
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            configManager.updateConfiguration(editedConfig)
+
+            // Only save if the config actually changed (prevent infinite loop)
+            if oldValue.id == newValue.id {
+                Task {
+                    // Wait 300ms before saving (debounce)
+                    try? await Task.sleep(nanoseconds: 300_000_000)
+                    configManager.updateConfiguration(newValue)
+                }
+            }
         }
     }
 
@@ -130,11 +133,11 @@ struct CustomiseTileView: View {
     private var colourSection: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Colour")
+                Text(AppStrings.Label.colour)
                     .font(.system(size: 13))
                     .foregroundColor(.primary)
 
-                Text("Choose a background colour for your tile")
+                Text(AppStrings.Subtitle.chooseColour)
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -154,7 +157,7 @@ struct CustomiseTileView: View {
                 ColorSwatchButton(
                     color: preset.colorBottom,
                     isSelected: isPresetSelected(preset),
-                    size: 28
+                    size: 24
                 ) {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         editedConfig.tintColor = .preset(preset)
@@ -166,7 +169,7 @@ struct CustomiseTileView: View {
             CustomColorPickerButton(
                 selectedColor: $customColor,
                 isSelected: isCustomColorSelected,
-                size: 28
+                size: 24
             ) { newColor in
                 let hexString = newColor.toHexString()
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -192,15 +195,37 @@ struct CustomiseTileView: View {
 
     // MARK: - Segmented Picker
 
-    @ViewBuilder
-    private var segmentedPicker: some View {
+    /// Segmented picker with flexible button sizing (macOS 26+)
+    @available(macOS 26.0, *)
+    private var pickerWithFlexibleSizing: some View {
         Picker("", selection: $selectedIconTab) {
-            Text("Symbol").tag(IconPickerTab.symbol)
-            Text("Emoji").tag(IconPickerTab.emoji)
+            Text(AppStrings.Tab.symbol).tag(IconPickerTab.symbol)
+            Text(AppStrings.Tab.emoji).tag(IconPickerTab.emoji)
         }
         .pickerStyle(.segmented)
         .labelsHidden()
         .frame(maxWidth: .infinity)
+        .buttonSizing(.flexible)
+    }
+
+    /// Segmented picker with standard sizing (macOS 15.0+)
+    private var pickerWithStandardSizing: some View {
+        Picker("", selection: $selectedIconTab) {
+            Text(AppStrings.Tab.symbol).tag(IconPickerTab.symbol)
+            Text(AppStrings.Tab.emoji).tag(IconPickerTab.emoji)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private var segmentedPicker: some View {
+        if #available(macOS 26.0, *) {
+            pickerWithFlexibleSizing
+        } else {
+            pickerWithStandardSizing
+        }
     }
 
     // MARK: - Tile Icon Size Section
@@ -214,11 +239,11 @@ struct CustomiseTileView: View {
     private var tileIconSizeSection: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Tile Icon Size")
+                Text(AppStrings.Label.tileIconSize)
                     .font(.system(size: 13))
                     .foregroundColor(.primary)
 
-                Text("Adjust the size of your icon within the tile")
+                Text(AppStrings.Subtitle.iconSize)
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -238,7 +263,7 @@ struct CustomiseTileView: View {
 
     private var tileIconSection: some View {
         VStack(spacing: 12) {
-            Text("Tile Icon")
+            Text(AppStrings.Label.tileIcon)
                 .font(.body)
                 .foregroundColor(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -318,7 +343,7 @@ struct CustomiseTileView: View {
                 .foregroundColor(.secondary)
 
             TextField(
-                selectedIconTab == .symbol ? "Search symbols" : "Search emojis",
+                selectedIconTab == .symbol ? AppStrings.Search.symbols : AppStrings.Search.emojis,
                 text: $searchText
             )
             .textFieldStyle(.plain)

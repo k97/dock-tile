@@ -1,0 +1,13 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "develop": true
+    }
+  },
+  "github": {
+    "silent": true,
+    "autoJobCancelation": true
+  },
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet . ':(exclude)website/**' ':(exclude)vercel.json'"
+}

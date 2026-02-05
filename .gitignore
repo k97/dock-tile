@@ -11,6 +11,11 @@ DerivedData/
 ## User settings
 xcuserdata/
 
+## Backup files
+*.backup
+*.backup-*
+*.pbxproj.backup*
+
 ## Obj-C/Swift specific
 *.hmap
 

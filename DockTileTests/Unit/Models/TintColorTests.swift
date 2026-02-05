@@ -41,7 +41,7 @@ struct TintColorExtendedTests {
 
     @Test("PresetColor allCases contains all colors")
     func allCasesComplete() {
-        let expected = 8  // red, orange, yellow, green, blue, purple, pink, gray
+        let expected = 7  // red, orange, green, blue, purple, pink, gray
         #expect(TintColor.PresetColor.allCases.count == expected)
     }
 
@@ -227,7 +227,6 @@ extension TintColor.PresetColor {
         switch self {
         case .red: return "circle.fill"
         case .orange: return "circle.fill"
-        case .yellow: return "circle.fill"
         case .green: return "circle.fill"
         case .blue: return "circle.fill"
         case .purple: return "circle.fill"
