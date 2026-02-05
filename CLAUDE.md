@@ -13,6 +13,117 @@ xcodebuild test -project DockTile.xcodeproj -scheme DockTile -configuration Debu
 - If tests fail, fix the issues before proceeding
 - This applies to all code modifications (bug fixes, features, refactoring)
 
+## Best Practices & Lessons Learned
+
+### Test Writing Guidelines
+
+**Environment-Agnostic Paths:**
+- ❌ **Never** use hardcoded paths like `/Users/karthik/Projects/dock-tile`
+- ✅ **Always** use `#filePath` with `deletingLastPathComponent()` for dynamic resolution
+- **Example**:
+  ```swift
+  let testFilePath = #filePath
+  let projectPath = URL(fileURLWithPath: testFilePath)
+      .deletingLastPathComponent()  // Remove filename
+      .deletingLastPathComponent()  // Remove parent directory
+      .path
+  ```
+
+**Parallel Execution Awareness:**
+- Swift Testing runs tests in parallel by default
+- Use `.serialized` trait when tests share mutable state (UserDefaults, files)
+- **Example**:
+  ```swift
+  @Suite("Tests that modify UserDefaults", .serialized)
+  struct MyTests { ... }
+  ```
+
+**Localization Testing:**
+- `NSLocalizedString` is cached at app launch - can't be changed at runtime
+- For testing different locales, parse `.xcstrings` JSON directly
+- Don't rely on `Bundle.main` for String Catalogs - they compile differently
+
+### CI/CD Feature Checklist
+
+Before implementing platform-specific APIs:
+1. ✅ Check GitHub Actions runner availability (e.g., macos-26 beta)
+2. ✅ Verify SDK version matches local environment
+3. ✅ Use `@available` checks with fallback implementations
+4. ✅ Test locally AND in CI before merging
+
+**Example - Platform-Specific API:**
+```swift
+@available(macOS 26.0, *)
+private var featureWithNewAPI: some View { ... }
+
+private var featureFallback: some View { ... }
+
+@ViewBuilder
+private var feature: some View {
+    if #available(macOS 26.0, *) {
+        featureWithNewAPI
+    } else {
+        featureFallback
+    }
+}
+```
+
+### Schema Evolution Best Practices
+
+**When Adding New Configuration Fields:**
+1. Add field to struct with default value
+2. Add default in `ConfigurationDefaults`
+3. Add to `CodingKeys` enum
+4. Use `decodeIfPresent` in custom decoder
+5. **Never** break backward compatibility - old configs must always load
+
+**Example**:
+```swift
+// In DockTileConfiguration:
+var newField: Bool
+
+// In ConfigurationDefaults:
+static let newField = false
+
+// In init(from decoder:):
+newField = try container.decodeIfPresent(Bool.self, forKey: .newField)
+    ?? ConfigurationDefaults.newField
+```
+
+### Documentation Workflow
+
+**Update Documentation During (Not After) Implementation:**
+- Update CLAUDE.md as you make architectural changes
+- Add to "Recent Changes" section immediately after feature completion
+- Document trade-offs and constraints (e.g., "Ghost Mode vs App Mode")
+- Include code examples for complex patterns
+
+**Key Sections to Update:**
+- Architecture Principles (for structural changes)
+- Recent Changes (chronological log with dates)
+- Known Issues / TODO (remove when fixed)
+- Technical Constraints (if platform requirements change)
+
+### Git & Version Control
+
+**Backup File Prevention:**
+- Xcode and tools may create `.backup`, `.backup-*`, `*.pbxproj.backup*` files
+- These are already in `.gitignore` - don't commit them
+- If you see them in `git status`, they need to be added to `.gitignore`
+
+**Branch Strategy:**
+- Feature branches for all non-trivial work
+- Use descriptive names: `feature/localization-support`, `fix/icon-caching`
+- Create PRs for review before merging to main
+
+### Vercel & Website Integration
+
+**Monorepo Path Filtering:**
+- Use `vercel.json` with `ignoreCommand` to prevent unnecessary builds
+- Pattern: `git diff HEAD^ HEAD --quiet . ':(exclude)path/**'`
+- Example: Skip Vercel builds when only Xcode files changed
+- See "CI/CD Configuration" section for full details
+
 ## Project Overview
 
 **Dock Tile** is a multi-instance macOS utility for macOS 15.0+ (Tahoe) that serves as a minimalist "app container" in the Dock. It enables power users to pin multiple distinct dock tiles (via Helper Bundles), each with independent app lists and custom icons/tints.
