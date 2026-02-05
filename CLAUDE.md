@@ -1641,7 +1641,7 @@ DockTileConfigurationView (Main Window)
 | # | Task | Status | Priority | Notes |
 |---|------|--------|----------|-------|
 | 8 | **App Store Review** | ✅ Assessed | Medium | Not viable - sandbox restrictions block helper bundle creation |
-| 9 | **Alternative Distribution** | 🔲 Pending | Low | Direct download recommended; SetApp as secondary |
+| 9 | **Alternative Distribution** | 🔲 Pending | Low | Setup direct download mechanism via GitHub Releases |
 | 10 | **ProductHunt Launch** | 🔲 Pending | Low | Marketing page and launch strategy |
 | 12 | **Landing Page Website** | 🟡 In Progress | Medium | Next.js site deployed to Vercel. **TODO**: Switch from "Coming Soon" to "Download" button, hook up release downloads |
 
@@ -1899,13 +1899,24 @@ Picker("", selection: $editedConfig.layoutMode) {
 - Modifying system Dock preferences
 - Apps like this typically distributed via direct download
 
-#### 9. Alternative Distribution Options
-| Option | Pros | Cons |
-|--------|------|------|
-| **Direct Download** | Full control, no fees | Need to handle payments, hosting |
-| **SetApp** | Subscription model, good exposure | Revenue share, approval process |
-| **Gumroad** | Easy payments, good for indie | 5-10% fees |
-| **Paddle** | Professional, handles taxes | Integration work |
+#### 9. Alternative Distribution
+**Goal**: Setup direct download distribution via GitHub Releases
+
+**Approach**: Free, open-source distribution model
+- Host releases on GitHub Releases
+- DMG installer already configured via `Scripts/create-dmg.sh`
+- Code signing and notarization pipeline ready
+- No payment processing needed (free app)
+
+**Implementation**:
+1. Tag release (e.g., `v1.0.0`)
+2. GitHub Actions automatically builds, signs, notarizes, and creates release
+3. Users download DMG from GitHub Releases page
+4. Website links directly to latest release
+
+**Future Options** (if needed):
+- Gumroad for paid upgrades/donations
+- Paddle for professional payment handling
 
 #### 10. ProductHunt Launch
 **Preparation**:
