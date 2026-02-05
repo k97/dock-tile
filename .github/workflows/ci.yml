@@ -25,9 +25,10 @@ env:
 jobs:
   build-and-test:
     name: Build & Test
-    # Use macos-latest to get the newest available runner (currently macos-15, will auto-update to macos-26 when available)
-    # Fallback: Use macos-15 if macos-latest isn't sufficient
-    runs-on: macos-latest
+    # Use macos-26 beta (Tahoe) to match local development environment
+    # Note: This is ARM64 only, beta status, "as-is" with no SLA
+    # See: https://github.blog/changelog/2025-09-11-actions-macos-26-image-now-in-public-preview/
+    runs-on: macos-26
 
     steps:
       - name: Checkout

@@ -17,7 +17,8 @@ jobs:
   # Run tests first - release only proceeds if tests pass
   test:
     name: Run Tests
-    runs-on: macos-latest
+    # Use macos-26 beta (Tahoe) to match local development environment
+    runs-on: macos-26
 
     steps:
       - name: Checkout
@@ -47,7 +48,8 @@ jobs:
 
   build-and-release:
     name: Build, Sign & Release
-    runs-on: macos-latest
+    # Use macos-26 beta (Tahoe) to match local development environment
+    runs-on: macos-26
     needs: test  # Only run if tests pass
 
     steps:
