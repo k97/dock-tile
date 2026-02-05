@@ -182,24 +182,20 @@ xcodebuild test -project DockTile.xcodeproj -scheme DockTile \
 ```
 DockTileTests/
 ├── Unit/
-│   ├── Managers/
-│   │   ├── ConfigurationManagerTests.swift
-│   │   └── DockPlistWatcherTests.swift
+│   ├── Constants/
+│   │   └── AppStringsTests.swift           # Localization tests (US/UK/AU variants)
 │   ├── Models/
 │   │   ├── ConfigurationModelsTests.swift
 │   │   └── TintColorTests.swift
 │   └── Utilities/
-│       ├── IconGeneratorTests.swift
-│       └── ColorExtensionsTests.swift
+│       └── IconGeneratorTests.swift
 ├── Integration/
-│   └── HelperBundleLifecycleTests.swift
+│   └── DockRestartConsentTests.swift       # Consent dialog behavior tests
 └── Mocks/
-    ├── MockFileManager.swift
-    ├── MockUserDefaults.swift
-    └── MockDockPreferences.swift
+    └── (future mock objects)
 
 DockTileUITests/
-└── ConfigurationFlowUITests.swift
+└── (future UI tests)
 ```
 
 ### Test Commands
@@ -516,6 +512,44 @@ To add German, French, Spanish, etc.:
 
 The infrastructure supports unlimited languages - just add translations to the String Catalog.
 
+### User Consent for Dock Modifications
+
+**Consent Dialog**: Before any Dock-modifying action (add, update, show, hide, remove), the app shows a one-time consent dialog:
+
+| Element | Content |
+|---------|---------|
+| Title | "Dock Restart Required" |
+| Message | "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected." |
+| Checkbox | "Don't show this again" |
+| Buttons | "Confirm" (primary) / "Cancel" (secondary) |
+| Icon | ⚠️ Warning icon (NSAlert.Style.warning) |
+
+**Behavior**:
+- Shows on first Dock-modifying action (if user has not checked "Don't show this again")
+- Covers ALL Dock actions: add, update, show tile, hide tile, remove tile
+- After user checks box + clicks Confirm, never shows again
+- Clicking Cancel aborts the action (no Dock modification)
+- Preference stored in `UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")`
+
+**Implementation**:
+- Dialog created using native `NSAlert` with `NSButton` checkbox accessory
+- Uses macOS default left-aligned layout for icon, title, message, and checkbox
+- Shown modally via `alert.runModal()` in `DockTileDetailView.showDockRestartConsentAlert()`
+- Alert presentation deferred with `DispatchQueue.main.async` to avoid SwiftUI transaction warnings
+- Checked via `handleDockAction()` → checks UserDefaults → shows dialog or proceeds directly
+- On Confirm: saves checkbox state to UserDefaults if checked, then calls `performDockAction()`
+- On Cancel: dismisses dialog, no action taken
+
+**Localization**:
+- All strings in `AppStrings.Alert.*` and `AppStrings.Button.confirm`
+- No spelling differences between US/UK/AU variants
+- Test coverage in `AppStringsTests.swift`
+
+**Testing**:
+- Unit tests: `AppStringsTests.swift` - verifies all alert strings exist
+- Integration tests: `DockRestartConsentTests.swift` - tests consent flow and UserDefaults persistence
+- Manual testing: Reset preference with `defaults delete com.docktile.DockTile hasAcknowledgedDockRestart`
+
 ## Key Implementation Details
 
 ### Helper Bundle Lifecycle
@@ -788,6 +822,32 @@ private struct QuaternaryFillView: NSViewRepresentable {
 ```
 
 ## Recent Changes
+
+### Test Infrastructure Fixes (2026-02)
+- **Feature**: Fixed all remaining test failures to enable CI/CD integration
+- **Consent Dialog Tests**: Fixed race condition in `DockRestartConsentTests`
+  - Added `.serialized` trait to prevent parallel execution conflicts
+  - Tests validate UserDefaults persistence of `hasAcknowledgedDockRestart` flag
+- **Localization Tests**: Fixed `AppStringsTests` to work with String Catalogs
+  - Created `localizedString(for:locale:)` helper that parses `.xcstrings` JSON directly
+  - Replaced `withLocale` approach (doesn't work with NSLocalizedString caching)
+  - Updated all 7 test functions: US/UK/AU spelling variants
+  - Tests verify "Customize" vs "Customise" and "Color" vs "Colour"
+- **TintColor Tests**: Fixed `TintColorTests` after `.yellow` color removal
+  - Updated expected count from 8 to 7 preset colors
+  - Removed `.yellow` from switch statements in icon name tests
+- **Module Import Fixes**: Updated all test files to use correct module name `Dock_Tile`
+- **Files Modified**:
+  - `DockTileTests/Integration/DockRestartConsentTests.swift` - Added `.serialized`
+  - `DockTileTests/Unit/Constants/AppStringsTests.swift` - New JSON parsing helper
+  - `DockTileTests/Unit/Models/TintColorTests.swift` - Updated color count
+  - `DockTileTests/Unit/Models/ConfigurationModelsTests.swift` - Removed `.yellow`
+  - `DockTileTests/Unit/Utilities/IconGeneratorTests.swift` - Removed `.yellow`
+- **Testing**:
+  - All unit tests: ✅ PASS (Cmd+U in Xcode)
+  - Terminal tests: ✅ PASS (`xcodebuild test`)
+  - Ready for CI/CD integration
+- **Infrastructure**: Tests now fully compatible with String Catalogs (.xcstrings) format
 
 ### English Localization Support (US, UK, AU) (2026-02)
 - **Feature**: Implemented comprehensive localization infrastructure for English language variants

@@ -421,17 +421,14 @@ final class HelperBundleManager {
         // Restart Dock to apply changes
         restartDock()
 
-        // Wait for Dock to fully restart
-        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        // Wait for Dock to fully restart and plist to update
+        try await waitForTileRemoval(bundleId: config.bundleIdentifier)
 
-        // Verify removal
+        // Final verification (should always succeed now)
         if findInDock(bundleId: config.bundleIdentifier) == nil {
             print("   ✓ Verified tile removed from Dock")
         } else {
-            print("   ⚠️ Tile may still be in Dock - attempting re-removal...")
-            removeFromDockPlist(bundleId: config.bundleIdentifier)
-            restartDock()
-            try await Task.sleep(nanoseconds: 300_000_000)
+            print("   ⚠️ Tile still in Dock after restart - this shouldn't happen")
         }
 
         print("✅ Removed from Dock: \(config.name)")
@@ -1062,6 +1059,26 @@ final class HelperBundleManager {
         try? process.run()
         process.waitUntilExit()
         print("   ✓ Dock restarted")
+    }
+
+    /// Wait for Dock to fully restart and plist to update after tile removal
+    /// Polls CFPreferences to ensure the tile is actually gone before proceeding
+    private func waitForTileRemoval(bundleId: String, maxAttempts: Int = 30) async throws {
+        print("   ⏳ Waiting for Dock plist to update...")
+
+        for attempt in 1...maxAttempts {
+            // Re-read from CFPreferences to get fresh state
+            if findInDock(bundleId: bundleId) == nil {
+                print("   ✓ Dock plist updated (verified after \(attempt) checks)")
+                return
+            }
+
+            // Wait 100ms between checks (total max wait: 3 seconds)
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+
+        // If we get here, tile is still in plist after max wait
+        print("   ⚠️ Tile still in plist after \(maxAttempts) checks (3s)")
     }
 
     // MARK: - Helpers

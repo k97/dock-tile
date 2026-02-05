@@ -197,13 +197,20 @@ struct CustomiseTileView: View {
 
     @ViewBuilder
     private var segmentedPicker: some View {
-        Picker("", selection: $selectedIconTab) {
+        let picker = Picker("", selection: $selectedIconTab) {
             Text(AppStrings.Tab.symbol).tag(IconPickerTab.symbol)
             Text(AppStrings.Tab.emoji).tag(IconPickerTab.emoji)
         }
         .pickerStyle(.segmented)
         .labelsHidden()
         .frame(maxWidth: .infinity)
+
+        // macOS 26+ supports flexible button sizing for full-width segmented controls
+        if #available(macOS 26.0, *) {
+            picker.buttonSizing(.flexible)
+        } else {
+            picker
+        }
     }
 
     // MARK: - Tile Icon Size Section

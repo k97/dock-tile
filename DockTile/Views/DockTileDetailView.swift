@@ -21,6 +21,7 @@ struct DockTileDetailView: View {
     @State private var isProcessing = false
     @State private var errorMessage: String?
     @State private var showDeleteConfirmation = false
+    @State private var showDockRestartConsent = false  // Show consent dialog for Dock restart
     @State private var hasAppearedOnce = false  // Track if view has fully loaded
     @State private var isCurrentlyInDock = false  // Track actual Dock state
     @FocusState private var isNameFieldFocused: Bool  // Track focus for commit-on-blur
@@ -84,6 +85,14 @@ struct DockTileDetailView: View {
             }
         } message: {
             Text("This will permanently delete the tile and remove it from the dock.")
+        }
+        .onChange(of: showDockRestartConsent) { _, newValue in
+            if newValue {
+                // Defer alert presentation to avoid SwiftUI transaction warning
+                DispatchQueue.main.async {
+                    showDockRestartConsentAlert()
+                }
+            }
         }
         // NOTE: .onChange(of: config.id) removed - parent view uses .id(selectedConfig.id)
         // to force complete view recreation when switching configs, making sync unnecessary
@@ -365,6 +374,19 @@ struct DockTileDetailView: View {
     }
 
     private func handleDockAction() {
+        // Check if user has already acknowledged Dock restart
+        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")
+
+        if !hasAcknowledged {
+            // Show consent dialog
+            showDockRestartConsent = true
+        } else {
+            // Proceed directly
+            performDockAction()
+        }
+    }
+
+    private func performDockAction() {
         isProcessing = true
         errorMessage = nil
 
@@ -419,6 +441,40 @@ struct DockTileDetailView: View {
             }
             isProcessing = false
         }
+    }
+
+    private func showDockRestartConsentAlert() {
+        // Create native NSAlert with checkbox
+        let alert = NSAlert()
+        alert.messageText = AppStrings.Alert.restartDockTitle
+        alert.informativeText = AppStrings.Alert.restartDockMessage
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: AppStrings.Button.confirm)
+        alert.addButton(withTitle: AppStrings.Button.cancel)
+
+        // Add "Don't show this again" checkbox (left-aligned, macOS default)
+        let checkbox = NSButton(checkboxWithTitle: AppStrings.Alert.restartDockCheckbox, target: nil, action: nil)
+        checkbox.state = .off  // Default unchecked
+
+        alert.accessoryView = checkbox
+
+        // Show alert modally
+        let response = alert.runModal()
+
+        // Reset state
+        showDockRestartConsent = false
+
+        // Handle response
+        if response == .alertFirstButtonReturn {
+            // User clicked "Confirm"
+            // Check if "Don't show this again" was checked
+            if checkbox.state == .on {
+                UserDefaults.standard.set(true, forKey: "hasAcknowledgedDockRestart")
+            }
+            // Proceed with dock action
+            performDockAction()
+        }
+        // If user clicked "Cancel", do nothing
     }
 
     private func deleteTile() {

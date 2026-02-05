@@ -23,6 +23,28 @@ enum AppStrings {
         comment: "App display name"
     )
 
+    // MARK: - Alert Messages
+
+    enum Alert {
+        static let restartDockTitle = NSLocalizedString(
+            "alert.restartDock.title",
+            value: "Dock Restart Required",
+            comment: "Alert title when Dock restart is required"
+        )
+
+        static let restartDockMessage = NSLocalizedString(
+            "alert.restartDock.message",
+            value: "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected.",
+            comment: "Alert message explaining Dock restart"
+        )
+
+        static let restartDockCheckbox = NSLocalizedString(
+            "alert.restartDock.checkbox",
+            value: "Don't show this again",
+            comment: "Checkbox label to suppress future Dock restart alerts"
+        )
+    }
+
     // MARK: - Buttons
 
     enum Button {
@@ -48,6 +70,12 @@ enum AppStrings {
             "button.cancel",
             value: "Cancel",
             comment: "Cancel button in alerts"
+        )
+
+        static let confirm = NSLocalizedString(
+            "button.confirm",
+            value: "Confirm",
+            comment: "Confirm button for alert dialogs"
         )
 
         static let customise = NSLocalizedString(

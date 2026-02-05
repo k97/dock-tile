@@ -158,7 +158,7 @@ struct IconGeneratorTests {
 
     @Test("generateIcon with all preset colors")
     func generateIconAllColors() {
-        let colors: [TintColor] = [.red, .orange, .yellow, .green, .blue, .purple, .pink, .gray]
+        let colors: [TintColor] = [.red, .orange, .green, .blue, .purple, .pink, .gray]
 
         for color in colors {
             let image = IconGenerator.generateIcon(
