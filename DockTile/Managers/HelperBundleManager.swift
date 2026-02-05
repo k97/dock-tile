@@ -1089,13 +1089,13 @@ enum HelperBundleError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .infoPlistReadFailed:
-            return "Failed to read Info.plist"
+            return AppStrings.Error.failedToReadInfoPlist
         case .infoPlistWriteFailed:
-            return "Failed to write Info.plist"
+            return AppStrings.Error.failedToWriteInfoPlist
         case .bundleCopyFailed:
-            return "Failed to copy bundle"
+            return AppStrings.Error.failedToCopyBundle
         case .codesignFailed:
-            return "Failed to code sign helper bundle"
+            return AppStrings.Error.failedToCodeSign
         case .mainAppNotFound:
             return AppStrings.Error.mainAppNotFound
         }

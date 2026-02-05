@@ -22,7 +22,7 @@ struct DockTileSidebarView: View {
                         .font(.system(size: 32))
                         .foregroundColor(.secondary)
 
-                    Text("No Tiles")
+                    Text(AppStrings.Empty.noTiles)
                         .font(.headline)
                         .foregroundColor(.secondary)
 
@@ -56,8 +56,8 @@ struct DockTileSidebarView: View {
                 }
                 .disabled(!configManager.selectedConfigHasBeenEdited)
                 .help(configManager.selectedConfigHasBeenEdited
-                    ? "Create new tile"
-                    : "Edit current tile before creating another")
+                    ? AppStrings.Tooltip.createNewTile
+                    : AppStrings.Tooltip.editFirst)
             }
         }
     }
@@ -88,13 +88,13 @@ struct ConfigurationContextMenu: View {
     let config: DockTileConfiguration
 
     var body: some View {
-        Button("Duplicate") {
+        Button(AppStrings.Button.duplicate) {
             configManager.duplicateConfiguration(config)
         }
 
         Divider()
 
-        Button("Delete", role: .destructive) {
+        Button(AppStrings.Button.delete, role: .destructive) {
             configManager.deleteConfiguration(config.id)
         }
     }
@@ -111,6 +111,6 @@ struct ConfigurationContextMenu: View {
                 return manager
             }())
     } detail: {
-        Text("Detail")
+        Text(AppStrings.Empty.detail)
     }
 }

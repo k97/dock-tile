@@ -42,11 +42,11 @@ struct CustomiseTileView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowBackgroundView())
-        .navigationTitle("Customise Tile")
+        .navigationTitle(AppStrings.Navigation.customiseTile)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button(action: onBack) {
-                    Label("Back", systemImage: "chevron.left")
+                    Label(AppStrings.Button.back, systemImage: "chevron.left")
                 }
             }
         }
@@ -130,11 +130,11 @@ struct CustomiseTileView: View {
     private var colourSection: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Colour")
+                Text(AppStrings.Label.colour)
                     .font(.system(size: 13))
                     .foregroundColor(.primary)
 
-                Text("Choose a background colour for your tile")
+                Text(AppStrings.Subtitle.chooseColour)
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -195,8 +195,8 @@ struct CustomiseTileView: View {
     @ViewBuilder
     private var segmentedPicker: some View {
         Picker("", selection: $selectedIconTab) {
-            Text("Symbol").tag(IconPickerTab.symbol)
-            Text("Emoji").tag(IconPickerTab.emoji)
+            Text(AppStrings.Tab.symbol).tag(IconPickerTab.symbol)
+            Text(AppStrings.Tab.emoji).tag(IconPickerTab.emoji)
         }
         .pickerStyle(.segmented)
         .labelsHidden()
@@ -214,11 +214,11 @@ struct CustomiseTileView: View {
     private var tileIconSizeSection: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Tile Icon Size")
+                Text(AppStrings.Label.tileIconSize)
                     .font(.system(size: 13))
                     .foregroundColor(.primary)
 
-                Text("Adjust the size of your icon within the tile")
+                Text(AppStrings.Subtitle.iconSize)
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }
@@ -238,7 +238,7 @@ struct CustomiseTileView: View {
 
     private var tileIconSection: some View {
         VStack(spacing: 12) {
-            Text("Tile Icon")
+            Text(AppStrings.Label.tileIcon)
                 .font(.body)
                 .foregroundColor(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -318,7 +318,7 @@ struct CustomiseTileView: View {
                 .foregroundColor(.secondary)
 
             TextField(
-                selectedIconTab == .symbol ? "Search symbols" : "Search emojis",
+                selectedIconTab == .symbol ? AppStrings.Search.symbols : AppStrings.Search.emojis,
                 text: $searchText
             )
             .textFieldStyle(.plain)
