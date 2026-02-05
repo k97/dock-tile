@@ -1007,6 +1007,26 @@ runs-on: macos-26  # ARM64 only, beta status
 
 ## Recent Changes
 
+### DMG Background Retina Support (2026-02)
+- **Feature**: Improved DMG installer background for Retina displays
+- **Implementation**: TIFF bundle approach with multi-resolution support
+  - Generates both 1x (800x400) and 2x (1600x800) PNG versions
+  - Creates TIFF bundle using `tiffutil -cathidpicheck` for Retina support
+  - macOS automatically selects correct resolution based on display
+- **Technical Details**:
+  - Rewrote `Scripts/generate-dmg-background.swift` with proper coordinate system handling
+  - Fixed CoreGraphics (bottom-left origin) vs PNG (top-left origin) mismatch
+  - Uses `NSBitmapImageRep` with direct context drawing for pixel-perfect output
+  - Proper scaling factor calculation (2x) for all elements (gradient, arrow, text)
+  - Improved color contrast for better visibility
+- **Files Modified**:
+  - `Scripts/generate-dmg-background.swift` - Complete rewrite for TIFF generation
+  - `Scripts/create-dmg.sh` - Updated to use `.tiff` bundle
+  - `DockTile/Resources/dmg-background.png` - 1x version (800x400)
+  - `DockTile/Resources/dmg-background@2x.png` - 2x version (1600x800)
+  - `DockTile/Resources/dmg-background.tiff` - Multi-resolution TIFF bundle
+- **Result**: Crisp, high-quality "Drag to Applications" background on both Retina and non-Retina displays
+
 ### Release Roadmap Cleanup (2026-02)
 - **Cleanup**: Updated Release Roadmap to reflect accurate project status
 - **Removed from Known Issues**: "Missing Configure... Context Menu"
