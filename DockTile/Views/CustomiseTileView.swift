@@ -195,7 +195,9 @@ struct CustomiseTileView: View {
 
     // MARK: - Segmented Picker
 
-    private var segmentedPicker: some View {
+    /// Segmented picker with flexible button sizing (macOS 26+)
+    @available(macOS 26.0, *)
+    private var pickerWithFlexibleSizing: some View {
         Picker("", selection: $selectedIconTab) {
             Text(AppStrings.Tab.symbol).tag(IconPickerTab.symbol)
             Text(AppStrings.Tab.emoji).tag(IconPickerTab.emoji)
@@ -203,9 +205,27 @@ struct CustomiseTileView: View {
         .pickerStyle(.segmented)
         .labelsHidden()
         .frame(maxWidth: .infinity)
-        // Note: .buttonSizing(.flexible) would be nice for full-width buttons, but it's
-        // only available in future macOS versions and not in the current SDK.
-        // The picker works perfectly with standard sizing.
+        .buttonSizing(.flexible)
+    }
+
+    /// Segmented picker with standard sizing (macOS 15.0+)
+    private var pickerWithStandardSizing: some View {
+        Picker("", selection: $selectedIconTab) {
+            Text(AppStrings.Tab.symbol).tag(IconPickerTab.symbol)
+            Text(AppStrings.Tab.emoji).tag(IconPickerTab.emoji)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private var segmentedPicker: some View {
+        if #available(macOS 26.0, *) {
+            pickerWithFlexibleSizing
+        } else {
+            pickerWithStandardSizing
+        }
     }
 
     // MARK: - Tile Icon Size Section

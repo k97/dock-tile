@@ -202,7 +202,14 @@ struct AppStringsTests {
     /// - Returns: The localized string for the given key and locale
     private func localizedString(for key: String, locale: String) -> String {
         // Load the .xcstrings file from the project
-        let projectPath = "/Users/karthik/Projects/dock-tile"
+        // Use #filePath to get the current test file location, then navigate to project root
+        let testFilePath = #filePath
+        let projectPath = URL(fileURLWithPath: testFilePath)
+            .deletingLastPathComponent()  // Remove AppStringsTests.swift
+            .deletingLastPathComponent()  // Remove Constants/
+            .deletingLastPathComponent()  // Remove Unit/
+            .deletingLastPathComponent()  // Remove DockTileTests/
+            .path
         let xcstringsPath = "\(projectPath)/DockTile/Resources/Localizable.xcstrings"
 
         guard let data = try? Data(contentsOf: URL(fileURLWithPath: xcstringsPath)),
