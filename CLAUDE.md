@@ -821,7 +821,95 @@ private struct QuaternaryFillView: NSViewRepresentable {
                     └───────────────────────────────────────────┘
 ```
 
+## CI/CD Configuration
+
+### GitHub Actions Path Filtering
+
+The CI workflow uses `paths-ignore` to skip builds when only non-code files change:
+
+```yaml
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - 'website/**'
+      - 'vercel.json'
+      - '*.md'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'website/**'
+      - 'vercel.json'
+      - '*.md'
+```
+
+**Behavior:**
+- ✅ Xcode/Swift changes → CI runs
+- ⏭️  Website/docs only → CI skips
+- ✅ Mixed changes → CI runs
+
+### Vercel Ignore Build Step
+
+The Vercel deployment uses `ignoreCommand` to skip builds when only Xcode files change:
+
+**Configuration** (`vercel.json`):
+```json
+{
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet . ':(exclude)website/**' ':(exclude)vercel.json'"
+}
+```
+
+**Behavior:**
+- ⏭️  Xcode/Swift changes only → Vercel skips
+- ✅ Website changes → Vercel builds
+- ✅ Mixed changes → Vercel builds
+
+**How it works:**
+- `git diff --quiet` returns exit code 0 if no changes (skip build)
+- `:(exclude)` syntax excludes website paths from diff
+- If only website files changed, diff finds changes → exit 1 → build proceeds
+
+**References:**
+- [Vercel Ignore Build Step Guide](https://vercel.com/kb/guide/how-do-i-use-the-ignored-build-step-field-on-vercel)
+- [GitHub Actions Path Filtering](https://github.com/orgs/community/discussions/164673)
+
+### macOS 26 Beta Runners
+
+Both CI and release workflows use `macos-26` beta runners to match local development:
+
+```yaml
+runs-on: macos-26  # ARM64 only, beta status
+```
+
+**Benefits:**
+- ✅ Same SDK as local (macOS 26.2)
+- ✅ Access to macOS 26+ APIs (`.buttonSizing`, etc.)
+- ✅ Xcode 26.2 available
+
+**Trade-offs:**
+- ⚠️  Beta status: "as-is" with no SLA
+- ⚠️  ARM64 only (matches target anyway)
+
+**Reference:** [macOS 26 Beta Announcement](https://github.blog/changelog/2025-09-11-actions-macos-26-image-now-in-public-preview/)
+
+---
+
 ## Recent Changes
+
+### CI/CD Infrastructure Updates (2026-02)
+- **Feature**: Configured intelligent build skipping for CI and Vercel
+- **GitHub Actions**: Already had `paths-ignore` for website/docs (no changes needed)
+- **Vercel**: Added `ignoreCommand` using official recommended pattern
+  - Uses `git diff --quiet` with `:(exclude)` syntax
+  - Skips builds when only Xcode files changed
+  - Works within Vercel's 10-commit shallow clone limitation
+- **macOS 26 Runners**: Updated workflows to use `macos-26` beta runners
+  - Matches local development environment (macOS 26.2, Xcode 26.2)
+  - Enables macOS 26+ APIs like `.buttonSizing(.flexible)`
+- **Files Created/Modified**:
+  - `vercel.json` - Added ignore command with best-practice pattern
+  - `.github/workflows/ci.yml` - Updated to `macos-26` runners
+  - `.github/workflows/release.yml` - Updated to `macos-26` runners
 
 ### Test Infrastructure Fixes (2026-02)
 - **Feature**: Fixed all remaining test failures to enable CI/CD integration
@@ -877,6 +965,39 @@ private struct QuaternaryFillView: NSViewRepresentable {
   - Unit tests: Created (pending Xcode project integration)
 - **Helper Bundles**: Automatically inherit localization from main app (no special handling needed)
 - **Future Expansion**: Infrastructure supports adding more languages (German, French, Spanish, Japanese, Chinese)
+
+### macOS 26+ Flexible Button Sizing (2026-02)
+- **Feature**: Segmented picker now uses flexible button sizing on macOS 26+
+- **Implementation**: Option 3 approach with separate computed properties and `@available` checks
+  ```swift
+  @available(macOS 26.0, *)
+  private var pickerWithFlexibleSizing: some View {
+      Picker(...).buttonSizing(.flexible)
+  }
+
+  private var pickerWithStandardSizing: some View {
+      Picker(...)  // macOS 15-25
+  }
+
+  @ViewBuilder
+  private var segmentedPicker: some View {
+      if #available(macOS 26.0, *) {
+          pickerWithFlexibleSizing
+      } else {
+          pickerWithStandardSizing
+      }
+  }
+  ```
+- **Why This Works**:
+  - `@available` annotation tells compiler to skip API validation on older targets
+  - Separate properties avoid SwiftUI type system conflicts
+  - Runtime check ensures correct version is used
+- **Enabled By**: CI now uses `macos-26` runners with SDK 26.2
+- **Benefits**:
+  - macOS 26+ users: Full-width segmented control buttons in CustomiseTileView
+  - macOS 15-25 users: Standard sizing (works perfectly)
+  - No functionality lost on older OS versions
+- **Location**: `DockTile/Views/CustomiseTileView.swift` (segmented picker for Symbol/Emoji tabs)
 
 ### Helper Mode Architecture: Ghost Mode vs App Mode (2026-02)
 - **Feature**: Restored the "Show in App Switcher" toggle functionality with a dual-mode architecture
