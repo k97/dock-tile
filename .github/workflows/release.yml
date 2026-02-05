@@ -17,14 +17,22 @@ jobs:
   # Run tests first - release only proceeds if tests pass
   test:
     name: Run Tests
-    runs-on: macos-15
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+        run: |
+          # Try to use Xcode 26.2 (matches local dev environment)
+          if [ -d "/Applications/Xcode_26.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_26.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+          fi
 
       - name: Run Unit Tests
         run: |
@@ -39,7 +47,7 @@ jobs:
 
   build-and-release:
     name: Build, Sign & Release
-    runs-on: macos-15
+    runs-on: macos-latest
     needs: test  # Only run if tests pass
 
     steps:
@@ -47,7 +55,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+        run: |
+          # Try to use Xcode 26.2 (matches local dev environment)
+          if [ -d "/Applications/Xcode_26.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_26.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_16.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+          fi
 
       - name: Extract version from tag
         id: version
