@@ -204,21 +204,49 @@ jobs:
         with:
           name: Dock Tile ${{ steps.version.outputs.VERSION }}
           body: |
-            ## Installation
+            🎉 **First stable release of Dock Tile!**
 
-            1. Download `DockTile-${{ steps.version.outputs.VERSION }}.dmg`
+            Dock Tile is a minimalist macOS utility that lets you create multiple custom dock tiles, each with independent app lists and custom icons.
+
+            ## ✨ Key Features
+
+            - **Multi-Instance Tiles**: Create unlimited custom dock tiles with independent configurations
+            - **Icon Customization**: Choose from 1000+ SF Symbols or emojis, with gradient color backgrounds
+            - **Smart Layouts**: Grid view with dynamic columns (2-7) or compact list view
+            - **Ghost Mode**: Hide tiles from Cmd+Tab while keeping them in Dock (default)
+            - **App Mode**: Enable Cmd+Tab visibility with right-click context menu support
+            - **Native Design**: Follows macOS Tahoe design guidelines with icon style support (Default/Dark/Clear/Tinted)
+            - **Localized**: English variants for US, UK, and AU
+
+            ## 📦 Installation
+
+            1. Download `DockTile-${{ steps.version.outputs.VERSION }}.dmg` below
             2. Open the DMG and drag **Dock Tile** to Applications
             3. Launch from Applications
+            4. Click **+** to create your first dock tile
 
-            ## Requirements
+            ## 🖥️ Requirements
 
-            - macOS 15.0 (Sequoia) or later
+            - **macOS 15.0** (Sequoia) or later
+            - Apple Silicon or Intel Mac
 
-            ## Verification
+            ## 🔐 Verification
+
+            The DMG is signed and notarized by Apple. To verify the checksum:
 
             ```bash
             shasum -a 256 -c DockTile-${{ steps.version.outputs.VERSION }}.dmg.sha256
             ```
+
+            ## 🐛 Known Issues
+
+            - None at this time! Please report issues at https://github.com/k97/dock-tile/issues
+
+            ## 💬 Support
+
+            - Documentation: See [CLAUDE.md](https://github.com/k97/dock-tile/blob/main/CLAUDE.md)
+            - Issues: https://github.com/k97/dock-tile/issues
+            - Website: https://docktile.rkarthik.co
           files: |
             ./${{ env.APP_NAME_NO_SPACE }}-${{ steps.version.outputs.VERSION }}.dmg
             ./${{ env.APP_NAME_NO_SPACE }}-${{ steps.version.outputs.VERSION }}.dmg.sha256
