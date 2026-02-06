@@ -40,6 +40,7 @@ jobs:
           xcodebuild test \
             -project $PROJECT \
             -scheme $SCHEME \
+            -configuration Debug \
             -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath ./build \
             -only-testing:DockTileTests \
