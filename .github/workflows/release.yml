@@ -133,7 +133,7 @@ jobs:
           echo "DMG created: ${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
 
       - name: Notarize DMG
-        timeout-minutes: 240
+        timeout-minutes: 360
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
@@ -155,9 +155,9 @@ jobs:
           echo "Submission ID: $SUBMISSION_ID"
 
           # Poll for completion with custom loop (more control than --wait)
-          # 480 attempts × 30 seconds = 4 hours max
-          echo "Waiting for notarization to complete (max 4 hours)..."
-          for i in {1..480}; do
+          # 720 attempts × 30 seconds = 6 hours max
+          echo "Waiting for notarization to complete (max 6 hours)..."
+          for i in {1..720}; do
             sleep 30
 
             STATUS_OUTPUT=$(xcrun notarytool info "$SUBMISSION_ID" \
