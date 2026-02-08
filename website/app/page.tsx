@@ -1,5 +1,5 @@
 import { Hero } from "@/components/hero";
-import { Screenshot } from "@/components/screenshot";
+import { ScreenCapCarousel } from "@/components/screenshot";
 import { FAQ } from "@/components/faq";
 import { Support } from "@/components/support";
 import { Footer } from "@/components/footer";
@@ -9,7 +9,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <main className="flex-1">
         <Hero />
-        <Screenshot />
+        <ScreenCapCarousel />
         <FAQ />
         <Support />
       </main>
