@@ -137,7 +137,7 @@ export function Hero() {
         >
           v{siteConfig.latestVersion}
         </a>
-        {" · Free · macOS 15.0+"}
+        {" · Free · macOS 26+"}
       </p>
     </section>
   );
