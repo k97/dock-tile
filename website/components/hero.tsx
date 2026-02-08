@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Download } from "lucide-react";
+import { Download, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
@@ -11,6 +11,9 @@ import { trackDownloadClick, trackReleaseNotesClick } from "@/lib/analytics";
 export function Hero() {
   const { content } = useLocale();
   const iconRef = React.useRef<HTMLDivElement>(null);
+
+  // Download button state machine
+  const [downloadState, setDownloadState] = React.useState<'ready' | 'downloading' | 'downloaded'>('ready');
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!iconRef.current) return;
@@ -30,6 +33,27 @@ export function Hero() {
     if (!iconRef.current) return;
     iconRef.current.style.transform =
       "perspective(1000px) rotateX(0) rotateY(0) scale(1)";
+  };
+
+  const handleDownload = () => {
+    // Track analytics
+    trackDownloadClick();
+
+    // Change to downloading state
+    setDownloadState('downloading');
+
+    // Initiate download
+    window.location.href = siteConfig.downloadUrl;
+
+    // After 2 seconds, assume download started and show "Downloaded"
+    setTimeout(() => {
+      setDownloadState('downloaded');
+
+      // After 4 more seconds, reset to ready
+      setTimeout(() => {
+        setDownloadState('ready');
+      }, 4000);
+    }, 2000);
   };
 
   return (
@@ -77,28 +101,43 @@ export function Hero() {
 
       {/* CTA Buttons */}
       <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
-        {/* Coming Soon - disabled state */}
         <Button
           size="lg"
-          disabled
-          className="gap-2 px-8 py-6 rounded-xl text-md cursor-not-allowed opacity-60"
+          onClick={handleDownload}
+          disabled={downloadState !== 'ready'}
+          className="gap-2 px-8 py-6 rounded-xl text-md cursor-pointer"
         >
-          Coming Soon
+          {downloadState === 'ready' && (
+            <>
+              <Download className="h-4 w-4" />
+              {content.downloadButton}
+            </>
+          )}
+          {downloadState === 'downloading' && (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Downloading...
+            </>
+          )}
+          {downloadState === 'downloaded' && (
+            <>
+              <Check className="h-4 w-4" />
+              Downloaded
+            </>
+          )}
         </Button>
-
-        {/* Original download button - uncomment when ready to launch
-        <Button asChild size="lg" className="gap-2 px-8 py-6 rounded-xl text-md cursor-pointer">
-          <a href={siteConfig.downloadUrl} onClick={trackDownloadClick}>
-            <Download className="h-4 w-4" />
-            {content.downloadButton}
-          </a>
-        </Button>
-        */}
       </div>
 
-      {/* System Requirements */}
+      {/* Version & System Requirements */}
       <p className="mt-4 text-sm text-muted-foreground">
-        Coming Q1 2026 · Requires macOS 26 or later
+        <a
+          href={siteConfig.releaseNotesUrl}
+          className="text-foreground hover:underline underline-offset-4"
+          onClick={trackReleaseNotesClick}
+        >
+          v{siteConfig.latestVersion}
+        </a>
+        {" · Free · macOS 15.0+"}
       </p>
     </section>
   );
