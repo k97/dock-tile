@@ -57,7 +57,7 @@ export function Hero() {
   };
 
   return (
-    <section className="flex flex-col items-center text-center px-4 pt-16 pb-8 md:pt-24 md:pb-12">
+    <section id="hero-section" className="flex flex-col items-center text-center px-4 pt-16 pb-8 md:pt-24 md:pb-12">
       {/* App Icon with 3D tilt effect and macOS glass styling */}
       <div
         ref={iconRef}
@@ -100,7 +100,7 @@ export function Hero() {
       </p>
 
       {/* CTA Buttons */}
-      <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+      <div id="hero-cta" className="mt-8 flex flex-col sm:flex-row items-center gap-3">
         <Button
           size="lg"
           onClick={handleDownload}
