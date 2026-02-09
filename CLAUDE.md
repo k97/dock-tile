@@ -1026,20 +1026,35 @@ runs-on: macos-26  # ARM64 only, beta status
   - **Downloading**: "Downloading..." with spinner (2 seconds)
   - **Downloaded**: "Downloaded" with checkmark (4 seconds auto-reset)
 - ✅ Direct download link to `DockTile-1.0.0-beta.dmg` on GitHub Releases
-- ✅ Restored version subtext: "v1.0.0-beta · Free · macOS 15.0+"
+- ✅ Restored version subtext: "v1.0.0-beta · Free · macOS 26+"
 - ✅ Version link points to GitHub release notes
 - ✅ Website live at https://docktile.rkarthik.co
+- ✅ Dedicated FAQ page at `/faq` with all 12 FAQs
+- ✅ Homepage shows first 4 FAQs with "More FAQs" button
+- ✅ Release notes page at `/release-notes`
+- ✅ Footer added to all pages
 
 **Files Modified**:
 - `.github/workflows/release.yml` - Added permissions, fixed test config, increased timeout, improved release notes
 - `website/components/hero.tsx` - Download button state machine
 - `website/lib/config.ts` - Beta version and release URLs
+- `website/app/faq/page.tsx` - Dedicated FAQ page with URL hash navigation
+- `website/app/release-notes/page.tsx` - Release notes page
+- `website/components/faq.tsx` - Homepage FAQ component (shows first 4)
+- `website/components/footer.tsx` - Footer component added to all pages
 
 **Next Steps**:
 - Collect feedback from beta testers over next few weeks
 - Address any critical issues
 - Plan stable v1.0.0 release
 - ProductHunt launch after beta period
+
+### Popover Spacing Adjustments (2026-02)
+- **Change**: Adjusted grid view popover spacing to be closer to native macOS feel
+- **Padding**: Reduced padding around each item from 6pt to 2pt
+- **Spacing**: Reduced spacing between icon and label from 6pt to 4pt
+- **Files Modified**: `DockTile/UI/NativePopoverViews.swift`
+- **Result**: More compact, native-looking grid layout in helper tile popovers
 
 ### DMG Background Retina Support (2026-02)
 - **Feature**: Improved DMG installer background for Retina displays
