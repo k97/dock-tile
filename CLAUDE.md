@@ -1007,6 +1007,40 @@ runs-on: macos-26  # ARM64 only, beta status
 
 ## Recent Changes
 
+### v1.0.0-beta Release (2026-02-08)
+- **Milestone**: First public beta release of DockTile! 🎉
+- **Release**: Published at https://github.com/k97/dock-tile/releases/tag/v1.0.0-beta
+- **Distribution**: Signed and notarized DMG available for download
+- **Status**: Public beta for early testing and feedback
+
+**Release Pipeline Improvements**:
+- ✅ Fixed CI/CD workflow permissions (`contents: write` required for release creation)
+- ✅ Fixed test configuration (explicitly use Debug configuration with `-enable-testing`)
+- ✅ Increased notarization timeout from 4 hours to 6 hours
+- ✅ Improved release notes with feature highlights, installation steps, and support links
+- ✅ Automated build, sign, notarize, and release process working end-to-end
+
+**Website Updates**:
+- ✅ Launched download functionality with 3-state button:
+  - **Ready**: "Download" with download icon
+  - **Downloading**: "Downloading..." with spinner (2 seconds)
+  - **Downloaded**: "Downloaded" with checkmark (4 seconds auto-reset)
+- ✅ Direct download link to `DockTile-1.0.0-beta.dmg` on GitHub Releases
+- ✅ Restored version subtext: "v1.0.0-beta · Free · macOS 15.0+"
+- ✅ Version link points to GitHub release notes
+- ✅ Website live at https://docktile.rkarthik.co
+
+**Files Modified**:
+- `.github/workflows/release.yml` - Added permissions, fixed test config, increased timeout, improved release notes
+- `website/components/hero.tsx` - Download button state machine
+- `website/lib/config.ts` - Beta version and release URLs
+
+**Next Steps**:
+- Collect feedback from beta testers over next few weeks
+- Address any critical issues
+- Plan stable v1.0.0 release
+- ProductHunt launch after beta period
+
 ### DMG Background Retina Support (2026-02)
 - **Feature**: Improved DMG installer background for Retina displays
 - **Implementation**: TIFF bundle approach with multi-resolution support
@@ -1776,52 +1810,53 @@ DockTileConfigurationView (Main Window)
 | # | Task | Status | Priority | Notes |
 |---|------|--------|----------|-------|
 | 8 | **App Store Review** | ✅ Assessed | Medium | Not viable - sandbox restrictions block helper bundle creation |
-| 9 | **Alternative Distribution** | 🔲 Pending | Low | Setup direct download mechanism via GitHub Releases |
-| 10 | **ProductHunt Launch** | 🔲 Pending | Low | Marketing page and launch strategy |
-| 12 | **Landing Page Website** | 🟡 In Progress | Medium | Next.js site deployed to Vercel. **TODO**: Switch from "Coming Soon" to "Download" button, hook up release downloads |
+| 9 | **Alternative Distribution** | ✅ Done | High | GitHub Releases with direct DMG download - v1.0.0-beta live |
+| 10 | **ProductHunt Launch** | 🔲 Deferred | Low | Planned after beta testing period (2-3 weeks) |
+| 12 | **Landing Page Website** | ✅ Done | High | Live at docktile.rkarthik.co with download button and release notes link |
 
 ---
 
 ## Current Project Status (Feb 2026)
 
-**🎉 DockTile is 100% feature-complete and production-ready!**
+**🎉 v1.0.0-beta is LIVE! Public beta released on Feb 8, 2026**
 
 ### ✅ What's Complete
 - All Phase 1, 1b, 2, and 3 tasks finished
 - Core functionality: Create tiles, customize icons, manage apps, Dock integration
 - Helper bundle architecture with Ghost Mode / App Mode
 - English localization (US, UK, AU variants)
-- CI/CD pipeline (build, sign, notarize, release)
+- CI/CD pipeline (build, sign, notarize, release) - fully automated and working
 - Test infrastructure (unit + integration tests)
-- Website deployed to Vercel (currently in "Coming Soon" state)
+- Website deployed to Vercel with download functionality
+- **v1.0.0-beta**: Public beta release available for download
 
-### 🚀 Ready for v1.0.0 Release
-The app is ready to ship. Remaining work is launch preparation:
+### 🧪 Beta Testing Phase (Current)
+**Status**: Collecting feedback from early adopters
 
-| Task | Status | Effort |
-|------|--------|--------|
-| **Website Launch** | 🟡 In Progress | 1-2 hours |
-| Switch "Coming Soon" to "Download" button | 🔲 TODO | 15 min |
-| Hook up GitHub Releases URL | 🔲 TODO | 15 min |
-| Add release notes link | 🔲 TODO | 15 min |
-| Update system requirements text | 🔲 TODO | 5 min |
-| Add app screenshots | 🔲 TODO | 30 min |
-| **Create v1.0.0 Release** | 🔲 TODO | 30 min |
-| Tag release (v1.0.0), let CI build & sign | 🔲 TODO | Automated |
-| **ProductHunt Launch** | 🔲 Optional | 2-4 hours |
+| Activity | Status | Timeline |
+|----------|--------|----------|
+| **Beta Release** | ✅ Live | Released Feb 8, 2026 |
+| Download page | ✅ Live | https://docktile.rkarthik.co |
+| GitHub Release | ✅ Public | https://github.com/k97/dock-tile/releases/tag/v1.0.0-beta |
+| **Gather Feedback** | 🔄 In Progress | 2-3 weeks |
+| Fix critical issues | 🔲 As needed | Ongoing |
+| **Stable v1.0.0 Release** | 🔲 Planned | After beta period |
+| **ProductHunt Launch** | 🔲 Planned | After stable release |
 
 ### 📊 Completion Stats
 - **Core Development**: 100% ✅
 - **Testing**: 100% ✅
 - **CI/CD**: 100% ✅
 - **Documentation**: 100% ✅
-- **Website**: 90% (needs download button)
-- **Distribution**: 100% (infrastructure ready)
+- **Website**: 100% ✅ (download button live)
+- **Distribution**: 100% ✅ (beta released)
+- **Beta Testing**: 10% 🔄 (just started)
 
 ### 🎯 Next Steps
-1. Finish website launch prep (Task 12)
-2. Create v1.0.0 tag to trigger release build
-3. Announce on ProductHunt (optional)
+1. Monitor beta feedback and GitHub issues
+2. Address any critical bugs or issues
+3. After 2-3 weeks of stable beta: tag v1.0.0 stable
+4. Launch on ProductHunt after stable release
 
 ---
 
