@@ -8,7 +8,7 @@ export function Support() {
   const { content } = useLocale();
 
   return (
-    <section className="px-4 py-8 md:py-12 max-w-2xl mx-auto text-center">
+    <section id="support" className="px-4 py-8 md:py-12 max-w-2xl mx-auto text-center">
       <h2 className="text-2xl md:text-3xl font-display mb-4">
         {content.supportTitle}
       </h2>

@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Inter, Special_Gothic_Expanded_One } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LocaleProvider } from "@/components/locale-provider";
+import { Header } from "@/components/header";
 import { siteConfig } from "@/lib/config";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import "./globals.css";
@@ -83,7 +84,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LocaleProvider>{children}</LocaleProvider>
+          <LocaleProvider>
+            <Header />
+            {children}
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

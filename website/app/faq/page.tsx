@@ -1,20 +1,16 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/footer";
 import { useLocale } from "@/components/locale-provider";
 import { slugify } from "@/lib/i18n";
 import { trackFaqOpen } from "@/lib/analytics";
-import { siteConfig } from "@/lib/config";
 
 export default function FAQPage() {
   const { content } = useLocale();
@@ -72,16 +68,9 @@ export default function FAQPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex-1 py-12 px-4">
+      <div className="flex-1 pt-26 pb-12 px-4">
         <main className="max-w-2xl mx-auto">
-          <Button variant="outline" size="lg" className="mb-8 -ml-2 rounded-xl" asChild>
-            <Link href="/">
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Back to {siteConfig.appName}
-            </Link>
-          </Button>
-
-          <h1 className="text-4xl font-display mb-8">Frequently Asked Questions</h1>
+          <h1 className="text-xl md:text-3xl font-display mb-12 text-center">Frequently Asked Questions</h1>
 
           <Accordion
             type="single"

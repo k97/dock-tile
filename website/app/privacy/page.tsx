@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/footer";
 import { siteConfig } from "@/lib/config";
 
@@ -13,16 +10,9 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="flex-1 py-12 px-4">
+      <div className="flex-1 pt-26 pb-12 px-4">
         <main className="max-w-2xl mx-auto">
-        <Button variant="outline" size="lg" className="mb-8 -ml-2 rounded-xl  "  asChild>
-          <Link href="/" className=" font-medium ">
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back to {siteConfig.appName}
-          </Link>
-        </Button>
-
-        <h1 className="text-4xl font-display mb-6">Privacy Policy</h1>
+        <h1 className="text-xl md:text-3xl font-display mb-12 text-center">Privacy Policy</h1>
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-6">
           <p className="text-muted-foreground">
