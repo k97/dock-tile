@@ -2,7 +2,10 @@
 //  SymbolPickerGrid.swift
 //  DockTile
 //
-//  Categorized SF Symbols grid picker for tile icon customization
+//  SF Symbols grid picker that loads all available symbols from the system
+//  CoreGlyphs bundle. Categories and search keywords are read at runtime,
+//  so the picker always matches the user's macOS version.
+//
 //  Swift 6 - Strict Concurrency
 //
 
@@ -16,23 +19,25 @@ struct SymbolPickerGrid: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
     private let symbolSize: CGFloat = 24
 
-    /// Filter symbols based on search text
-    private func filteredSymbols(for category: SymbolCategory) -> [String] {
-        guard !searchText.isEmpty else { return category.symbols }
-        let query = searchText.lowercased()
-        return category.symbols.filter { $0.lowercased().contains(query) }
-    }
+    /// Shared catalog loaded once from the system
+    private var catalog: SFSymbolCatalog { SFSymbolCatalog.shared }
 
-    /// Check if category has any matching symbols
-    private func categoryHasMatches(_ category: SymbolCategory) -> Bool {
-        !filteredSymbols(for: category).isEmpty
+    /// Filtered symbols for a given category
+    private func filteredSymbols(for category: SFSymbolCatalog.Category) -> [String] {
+        let symbols = catalog.symbols(for: category.key)
+        guard !searchText.isEmpty else { return symbols }
+        let query = searchText.lowercased()
+        return symbols.filter { symbol in
+            symbol.lowercased().contains(query)
+                || catalog.searchKeywords(for: symbol).contains(where: { $0.contains(query) })
+        }
     }
 
     var body: some View {
-        // Symbol grid only - search field is managed by parent
         LazyVStack(alignment: .leading, spacing: 16) {
-            ForEach(SymbolCategory.allCases, id: \.self) { category in
-                if categoryHasMatches(category) {
+            ForEach(catalog.displayCategories, id: \.key) { category in
+                let symbols = filteredSymbols(for: category)
+                if !symbols.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(category.displayName)
                             .font(.caption)
@@ -40,7 +45,7 @@ struct SymbolPickerGrid: View {
                             .foregroundColor(.secondary)
 
                         LazyVGrid(columns: columns, spacing: 8) {
-                            ForEach(filteredSymbols(for: category), id: \.self) { symbol in
+                            ForEach(symbols, id: \.self) { symbol in
                                 SymbolButton(
                                     symbolName: symbol,
                                     isSelected: selectedSymbol == symbol,
@@ -83,235 +88,156 @@ private struct SymbolButton: View {
     }
 }
 
-// MARK: - Symbol Categories
+// MARK: - SF Symbol Catalog (reads from system CoreGlyphs bundle)
 
-enum SymbolCategory: CaseIterable {
-    case people
-    case animalsNature
-    case foodDrink
-    case activity
-    case travelPlaces
-    case objects
-    case symbols
+final class SFSymbolCatalog: @unchecked Sendable {
+    static let shared = SFSymbolCatalog()
 
-    var displayName: String {
-        switch self {
-        case .people: return "People"
-        case .animalsNature: return "Animals & Nature"
-        case .foodDrink: return "Food & Drink"
-        case .activity: return "Activity"
-        case .travelPlaces: return "Travel & Places"
-        case .objects: return "Objects"
-        case .symbols: return "Symbols"
-        }
+    struct Category {
+        let key: String
+        let icon: String
+        let displayName: String
     }
 
-    var symbols: [String] {
-        switch self {
-        case .people:
-            return [
-                "person.fill",
-                "person.2.fill",
-                "person.3.fill",
-                "figure.stand",
-                "figure.walk",
-                "figure.run",
-                "figure.wave",
-                "person.crop.circle.fill",
-                "person.crop.square.fill",
-                "person.badge.plus",
-                "person.badge.minus",
-                "person.badge.clock.fill",
-                "eye.fill",
-                "eye.slash.fill",
-                "mouth.fill",
-                "nose.fill",
-                "ear.fill",
-                "hand.raised.fill",
-                "hand.thumbsup.fill",
-                "hand.thumbsdown.fill",
-                "hands.clap.fill",
-                "hand.wave.fill",
-                "brain.head.profile",
-                "face.smiling.fill",
-                "face.dashed.fill"
-            ]
+    /// Ordered list of categories to display (excludes meta categories)
+    let displayCategories: [Category]
 
-        case .animalsNature:
-            return [
-                "pawprint.fill",
-                "dog.fill",
-                "cat.fill",
-                "bird.fill",
-                "fish.fill",
-                "tortoise.fill",
-                "hare.fill",
-                "ant.fill",
-                "ladybug.fill",
-                "leaf.fill",
-                "leaf.arrow.triangle.circlepath",
-                "tree.fill",
-                "mountain.2.fill",
-                "water.waves",
-                "flame.fill",
-                "drop.fill",
-                "snowflake",
-                "cloud.fill",
-                "sun.max.fill",
-                "moon.fill",
-                "moon.stars.fill",
-                "sparkles",
-                "star.fill",
-                "globe.americas.fill",
-                "globe.europe.africa.fill"
-            ]
+    /// symbol name → [category keys]
+    private let symbolToCategories: [String: [String]]
 
-        case .foodDrink:
-            return [
-                "cup.and.saucer.fill",
-                "mug.fill",
-                "wineglass.fill",
-                "birthday.cake.fill",
-                "carrot.fill",
-                "fork.knife",
-                "takeoutbag.and.cup.and.straw.fill"
-            ]
+    /// category key → [symbol names] (ordered)
+    private let categorySymbols: [String: [String]]
 
-        case .activity:
-            return [
-                "sportscourt.fill",
-                "figure.run",
-                "figure.walk",
-                "figure.hiking",
-                "figure.yoga",
-                "figure.dance",
-                "figure.boxing",
-                "figure.golf",
-                "figure.tennis",
-                "figure.basketball",
-                "figure.soccer",
-                "dumbbell.fill",
-                "medal.fill",
-                "trophy.fill",
-                "gamecontroller.fill",
-                "paintpalette.fill",
-                "theatermasks.fill",
-                "music.note",
-                "music.mic",
-                "guitars.fill",
-                "pianokeys",
-                "film.fill",
-                "camera.fill",
-                "video.fill"
-            ]
+    /// symbol name → [search keywords]
+    private let symbolSearchKeywords: [String: [String]]
 
-        case .travelPlaces:
-            return [
-                "airplane",
-                "car.fill",
-                "bus.fill",
-                "tram.fill",
-                "ferry.fill",
-                "bicycle",
-                "scooter",
-                "fuelpump.fill",
-                "map.fill",
-                "mappin.and.ellipse",
-                "location.fill",
-                "building.fill",
-                "building.2.fill",
-                "house.fill",
-                "tent.fill",
-                "beach.umbrella.fill",
-                "mountain.2.fill",
-                "globe",
-                "suitcase.fill",
-                "bed.double.fill"
-            ]
+    private init() {
+        let bundle = Bundle(path: "/System/Library/CoreServices/CoreGlyphs.bundle")
 
-        case .objects:
-            return [
-                "desktopcomputer",
-                "laptopcomputer",
-                "iphone",
-                "ipad",
-                "applewatch",
-                "airpods",
-                "headphones",
-                "tv.fill",
-                "display",
-                "keyboard.fill",
-                "computermouse.fill",
-                "printer.fill",
-                "scanner.fill",
-                "externaldrive.fill",
-                "memorychip.fill",
-                "cpu.fill",
-                "wifi",
-                "antenna.radiowaves.left.and.right",
-                "lightbulb.fill",
-                "lamp.desk.fill",
-                "flashlight.on.fill",
-                "battery.100",
-                "bolt.fill",
-                "wrench.fill",
-                "hammer.fill",
-                "screwdriver.fill",
-                "scissors",
-                "pencil",
-                "paintbrush.fill",
-                "folder.fill",
-                "doc.fill",
-                "book.fill",
-                "bookmark.fill",
-                "paperclip",
-                "link",
-                "lock.fill",
-                "key.fill",
-                "creditcard.fill",
-                "bag.fill",
-                "cart.fill",
-                "gift.fill",
-                "shippingbox.fill"
-            ]
+        // Load categories list
+        var categories: [Category] = []
+        if let url = bundle?.url(forResource: "categories", withExtension: "plist"),
+           let data = try? Data(contentsOf: url),
+           let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [[String: String]] {
+            for entry in plist {
+                guard let key = entry["key"], let icon = entry["icon"] else { continue }
+                categories.append(Category(
+                    key: key,
+                    icon: icon,
+                    displayName: SFSymbolCatalog.categoryDisplayName(for: key)
+                ))
+            }
+        }
 
-        case .symbols:
-            return [
-                "checkmark.circle.fill",
-                "xmark.circle.fill",
-                "exclamationmark.triangle.fill",
-                "info.circle.fill",
-                "questionmark.circle.fill",
-                "plus.circle.fill",
-                "minus.circle.fill",
-                "arrow.up.circle.fill",
-                "arrow.down.circle.fill",
-                "arrow.left.circle.fill",
-                "arrow.right.circle.fill",
-                "arrow.clockwise.circle.fill",
-                "heart.fill",
-                "star.fill",
-                "flag.fill",
-                "bell.fill",
-                "tag.fill",
-                "bolt.fill",
-                "magnifyingglass",
-                "gearshape.fill",
-                "slider.horizontal.3",
-                "chart.bar.fill",
-                "chart.pie.fill",
-                "chart.line.uptrend.xyaxis",
-                "percent",
-                "number",
-                "at",
-                "dollarsign.circle.fill",
-                "eurosign.circle.fill",
-                "command",
-                "option",
-                "shield.fill",
-                "checkmark.shield.fill",
-                "person.badge.shield.checkmark.fill"
-            ]
+        // Load symbol → categories mapping
+        var symCats: [String: [String]] = [:]
+        if let url = bundle?.url(forResource: "symbol_categories", withExtension: "plist"),
+           let data = try? Data(contentsOf: url),
+           let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: [String]] {
+            symCats = plist
+        }
+
+        // Load symbol ordering
+        var symbolOrder: [String] = []
+        if let url = bundle?.url(forResource: "symbol_order", withExtension: "plist"),
+           let data = try? Data(contentsOf: url),
+           let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String] {
+            symbolOrder = plist
+        }
+
+        // Load search keywords
+        var searchKw: [String: [String]] = [:]
+        if let url = bundle?.url(forResource: "symbol_search", withExtension: "plist"),
+           let data = try? Data(contentsOf: url),
+           let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: [String]] {
+            searchKw = plist
+        }
+
+        // Build category → ordered symbols mapping
+        // Use symbol_order for consistent ordering, filter out locale variants (.ar, .hi, .th, etc.)
+        let orderSet = Set(symbolOrder)
+        var catSyms: [String: [String]] = [:]
+
+        for symbol in symbolOrder {
+            // Skip locale-specific variants (e.g., "0.circle.ar", "1.lane.hi")
+            if SFSymbolCatalog.isLocaleVariant(symbol) { continue }
+
+            guard let cats = symCats[symbol] else { continue }
+            for cat in cats {
+                catSyms[cat, default: []].append(symbol)
+            }
+        }
+
+        // Also add symbols that are in symCats but not in symbolOrder
+        for (symbol, cats) in symCats {
+            if orderSet.contains(symbol) { continue }
+            if SFSymbolCatalog.isLocaleVariant(symbol) { continue }
+            for cat in cats {
+                catSyms[cat, default: []].append(symbol)
+            }
+        }
+
+        self.symbolToCategories = symCats
+        self.categorySymbols = catSyms
+        self.symbolSearchKeywords = searchKw
+
+        // Filter out meta categories that aren't useful for picking icons
+        let excludedKeys: Set<String> = ["all", "whatsnew", "variable", "multicolor"]
+        self.displayCategories = categories.filter { !excludedKeys.contains($0.key) }
+    }
+
+    func symbols(for categoryKey: String) -> [String] {
+        categorySymbols[categoryKey] ?? []
+    }
+
+    func searchKeywords(for symbol: String) -> [String] {
+        symbolSearchKeywords[symbol] ?? []
+    }
+
+    // MARK: - Helpers
+
+    /// Detect locale-specific symbol variants (e.g., ".ar", ".hi", ".th", ".zh", ".ja", ".ko", ".he")
+    private static func isLocaleVariant(_ name: String) -> Bool {
+        let localeSuffixes: Set<String> = [".ar", ".hi", ".th", ".zh", ".ja", ".ko", ".he", ".km", ".my", ".bn", ".gu", ".kn", ".ml", ".or", ".pa", ".si", ".ta", ".te"]
+        return localeSuffixes.contains(where: { name.hasSuffix($0) })
+    }
+
+    /// Human-readable category names
+    private static func categoryDisplayName(for key: String) -> String {
+        switch key {
+        case "all": return "All"
+        case "whatsnew": return "What's New"
+        case "draw": return "Draw"
+        case "variable": return "Variable"
+        case "multicolor": return "Multicolour"
+        case "communication": return "Communication"
+        case "weather": return "Weather"
+        case "maps": return "Maps"
+        case "objectsandtools": return "Objects & Tools"
+        case "devices": return "Devices"
+        case "cameraandphotos": return "Camera & Photos"
+        case "gaming": return "Gaming"
+        case "connectivity": return "Connectivity"
+        case "transportation": return "Transportation"
+        case "automotive": return "Automotive"
+        case "accessibility": return "Accessibility"
+        case "privacyandsecurity": return "Privacy & Security"
+        case "human": return "Human"
+        case "home": return "Home"
+        case "fitness": return "Fitness"
+        case "nature": return "Nature"
+        case "editing": return "Editing"
+        case "textformatting": return "Text Formatting"
+        case "media": return "Media"
+        case "keyboard": return "Keyboard"
+        case "commerce": return "Commerce"
+        case "time": return "Time"
+        case "health": return "Health"
+        case "shapes": return "Shapes"
+        case "arrows": return "Arrows"
+        case "indices": return "Indices"
+        case "math": return "Maths"
+        default: return key.capitalized
         }
     }
 }
