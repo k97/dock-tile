@@ -1,9 +1,47 @@
 {
   "fill" : {
-    "solid" : "extended-gray:1.00000,1.00000"
+    "solid" : "display-p3:0.92243,0.42076,0.22041,1.00000"
   },
   "groups" : [
     {
+      "blend-mode" : "normal",
+      "blur-material" : 0.5,
+      "hidden-specializations" : [
+        {
+          "idiom" : "square",
+          "value" : false
+        }
+      ],
+      "layers" : [
+        {
+          "blend-mode" : "overlay",
+          "fill" : "automatic",
+          "glass" : true,
+          "image-name" : "icon-dark 4.png",
+          "name" : "icon-dark 4"
+        },
+        {
+          "image-name" : "icon-light 4.png",
+          "name" : "icon-light 4"
+        },
+        {
+          "image-name" : "icon-tinted 4.png",
+          "name" : "icon-tinted 4"
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "hidden" : false,
       "layers" : [
         {
           "blend-mode-specializations" : [
