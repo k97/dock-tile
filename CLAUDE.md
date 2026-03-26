@@ -90,6 +90,34 @@ newField = try container.decodeIfPresent(Bool.self, forKey: .newField)
     ?? ConfigurationDefaults.newField
 ```
 
+### Shared Utilities (Added in Refactoring)
+
+| File | Purpose |
+|------|---------|
+| `Utilities/AppIconLoader.swift` | Shared icon loading with Asset Catalog detection — use instead of inline `getAppIcon()` |
+| `Utilities/AppLauncher.swift` | Shared app/folder launching from `AppItem` — use instead of inline `launchApp()` |
+| `Components/NativeBackgroundViews.swift` | Generic `NSColorBackgroundView` — use `.formGroup` or `.windowBackground` instead of per-file NSViewRepresentable |
+| `Constants/UserDefaultsKeys.swift` | Centralized UserDefaults key constants — never use raw strings for keys |
+
+### Code Reuse Patterns
+
+**App Icon Loading:**
+- ✅ `AppIconLoader.icon(for: item)` — single source of truth with Asset Catalog detection
+- ❌ Never inline `getAppIcon()` / `NSWorkspace.shared.icon(forFile:)` in view structs
+
+**App Launching:**
+- ✅ `AppLauncher.launch(app)` — handles both apps and folders
+- ❌ Never duplicate `NSWorkspace.openApplication` logic in views
+
+**Background Views:**
+- ✅ `NSColorBackgroundView(.quaternarySystemFill)` or `.formGroup` / `.windowBackground`
+- ❌ Never create per-file NSViewRepresentable wrappers for the same NSColor
+- SwiftUI `Color(nsColor:)` doesn't reliably bridge dynamic AppKit colors — always use NSViewRepresentable
+
+**Debounce Pattern:**
+- Use a monotonic `@State` counter as `.task(id:)` identity, not the full struct
+- Full struct equality causes O(n × icon_data_size) comparisons on every keystroke
+
 ### Documentation Workflow
 
 **Update Documentation During (Not After) Implementation:**
@@ -235,9 +263,15 @@ DockTile/
 │   ├── SymbolPickerGrid.swift      # SF Symbol picker with categories
 │   ├── EmojiPickerGrid.swift       # Emoji picker with categories
 │   ├── IconGridOverlay.swift       # Apple icon guide grid overlay
-│   └── ItemRowView.swift           # Row view for app items
+│   ├── ItemRowView.swift           # Row view for app items
+│   └── NativeBackgroundViews.swift # Shared NSViewRepresentable background views
 ├── Utilities/
-│   └── IconGenerator.swift         # Generates .icns files from tint color + emoji
+│   ├── IconGenerator.swift         # Generates .icns files from tint color + emoji
+│   ├── AppIconLoader.swift         # Shared app icon loading with Asset Catalog detection
+│   └── AppLauncher.swift           # Shared app/folder launching from AppItem
+├── Constants/
+│   ├── AppStrings.swift            # Centralized localized string accessors
+│   └── UserDefaultsKeys.swift      # Centralized UserDefaults key constants
 ├── Extensions/
 │   └── ColorExtensions.swift       # Color hex initialization
 └── Resources/
@@ -1006,6 +1040,37 @@ runs-on: macos-26  # ARM64 only, beta status
 ---
 
 ## Recent Changes
+
+### Codebase Refactoring (2026-03)
+
+**Code Reuse — ~200 lines of duplication eliminated:**
+- Extracted `AppIconLoader` (was duplicated 4× across views, also fixed missing Asset Catalog check bug in `AppIconView` and `ItemRowView`)
+- Extracted `AppLauncher` (was duplicated 2× in popover views)
+- Consolidated 4 duplicate `NSViewRepresentable` background structs into generic `NSColorBackgroundView`
+- Removed dead `ControlBackgroundView`
+
+**Code Quality:**
+- `uninstallHelper()` changed from sync `Thread.sleep` to `async Task.sleep` (was blocking main thread 300ms)
+- Magic string `"hasAcknowledgedDockRestart"` → `UserDefaultsKeys` constant
+- Icon generation: 4 identical `generateIcns()` calls → loop over `IconStyle.allCases`
+
+**Efficiency:**
+- Debounce `.task(id:)` uses monotonic counter instead of full struct equality
+- `touchBundle()` replaced 2 `Process("touch")` calls with `FileManager.setAttributes`
+
+**Files Created:**
+- `DockTile/Utilities/AppIconLoader.swift`
+- `DockTile/Utilities/AppLauncher.swift`
+- `DockTile/Components/NativeBackgroundViews.swift`
+- `DockTile/Constants/UserDefaultsKeys.swift`
+
+**Files Modified:**
+- `DockTile/Views/DockTileDetailView.swift` — uses shared utilities, debounce counter
+- `DockTile/UI/NativePopoverViews.swift` — uses shared utilities, added key code docs
+- `DockTile/Views/CustomiseTileView.swift` — uses shared background views
+- `DockTile/Components/ItemRowView.swift` — uses shared AppIconLoader
+- `DockTile/Managers/HelperBundleManager.swift` — icon gen loop, async uninstall, FileManager touch, CFPreferences docs
+- `DockTile/Managers/ConfigurationManager.swift` — async uninstall call, UserDefaultsKeys constant
 
 ### v1.1.0 Release (2026-03-26)
 

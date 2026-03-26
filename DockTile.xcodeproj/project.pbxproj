@@ -39,6 +39,10 @@
 		AAU00001 /* IconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAU00002 /* IconGenerator.swift */; };
 		AASPK001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AASPK002 /* Sparkle */; };
 		AAUPC001 /* UpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUPC002 /* UpdateController.swift */; };
+		AAILB01 /* AppIconLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAILB02 /* AppIconLoader.swift */; };
+		AAALB01 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAALB02 /* AppLauncher.swift */; };
+		AANBV01 /* NativeBackgroundViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AANBV02 /* NativeBackgroundViews.swift */; };
+		AAUDK01 /* UserDefaultsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUDK02 /* UserDefaultsKeys.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,6 +108,10 @@
 		AASPGV01 /* SymbolPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPickerGrid.swift; sourceTree = "<group>"; };
 		AASTR002 /* AppStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStrings.swift; sourceTree = "<group>"; };
 		AAU00002 /* IconGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGenerator.swift; sourceTree = "<group>"; };
+		AAILB02 /* AppIconLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconLoader.swift; sourceTree = "<group>"; };
+		AAALB02 /* AppLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLauncher.swift; sourceTree = "<group>"; };
+		AANBV02 /* NativeBackgroundViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBackgroundViews.swift; sourceTree = "<group>"; };
+		AAUDK02 /* UserDefaultsKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsKeys.swift; sourceTree = "<group>"; };
 		AAXCFG01 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		AAXCFG02 /* Dev.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Dev.xcconfig; sourceTree = "<group>"; };
 		AAXCFG03 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
@@ -237,6 +245,7 @@
 				AAIGOV01 /* IconGridOverlay.swift */,
 				AASPGV01 /* SymbolPickerGrid.swift */,
 				AAEPGV01 /* EmojiPickerGrid.swift */,
+				AANBV02 /* NativeBackgroundViews.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -294,6 +303,7 @@
 			isa = PBXGroup;
 			children = (
 				AASTR002 /* AppStrings.swift */,
+				AAUDK02 /* UserDefaultsKeys.swift */,
 			);
 			path = Constants;
 			sourceTree = "<group>";
@@ -302,6 +312,8 @@
 			isa = PBXGroup;
 			children = (
 				AAU00002 /* IconGenerator.swift */,
+				AAILB02 /* AppIconLoader.swift */,
+				AAALB02 /* AppLauncher.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -503,6 +515,10 @@
 				AAISM001 /* IconStyleManager.swift in Sources */,
 				AASTR001 /* AppStrings.swift in Sources */,
 				AAUPC001 /* UpdateController.swift in Sources */,
+				AAILB01 /* AppIconLoader.swift in Sources */,
+				AAALB01 /* AppLauncher.swift in Sources */,
+				AANBV01 /* NativeBackgroundViews.swift in Sources */,
+				AAUDK01 /* UserDefaultsKeys.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,32 +1,42 @@
 {
   "fill" : {
-    "solid" : "display-p3:0.92243,0.42076,0.22041,1.00000"
+    "automatic-gradient" : "display-p3:0.92243,0.42076,0.22041,1.00000"
   },
   "groups" : [
     {
-      "blend-mode" : "normal",
+      "blend-mode" : "plus-lighter",
       "blur-material" : 0.5,
-      "hidden-specializations" : [
-        {
-          "idiom" : "square",
-          "value" : false
-        }
-      ],
       "layers" : [
         {
-          "blend-mode" : "overlay",
           "fill" : "automatic",
           "glass" : true,
-          "image-name" : "icon-dark 4.png",
-          "name" : "icon-dark 4"
+          "hidden-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : true
+            }
+          ],
+          "image-name" : "icon-dark 3.png",
+          "name" : "icon-dark 3"
         },
         {
-          "image-name" : "icon-light 4.png",
-          "name" : "icon-light 4"
+          "fill" : {
+            "solid" : "display-p3:0.92243,0.42076,0.22041,1.00000"
+          },
+          "image-name-specializations" : [
+            {
+              "value" : "icon-light 3.png"
+            },
+            {
+              "appearance" : "dark",
+              "value" : "icon-light 3.png"
+            }
+          ],
+          "name" : "icon-light 3"
         },
         {
-          "image-name" : "icon-tinted 4.png",
-          "name" : "icon-tinted 4"
+          "image-name" : "icon-tinted 3.png",
+          "name" : "icon-tinted 3"
         }
       ],
       "lighting" : "individual",
@@ -34,65 +44,7 @@
         "kind" : "layer-color",
         "opacity" : 0.5
       },
-      "specular" : true,
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "hidden" : false,
-      "layers" : [
-        {
-          "blend-mode-specializations" : [
-            {
-              "appearance" : "dark",
-              "value" : "normal"
-            }
-          ],
-          "glass" : true,
-          "hidden" : false,
-          "image-name" : "icon-dark.png",
-          "name" : "icon-dark",
-          "position" : {
-            "scale" : 0.92,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
-        },
-        {
-          "fill" : "automatic",
-          "glass" : true,
-          "hidden" : false,
-          "image-name" : "icon-light.png",
-          "name" : "icon-light",
-          "position" : {
-            "scale" : 0.92,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
-        },
-        {
-          "hidden" : false,
-          "image-name" : "icon-tinted.png",
-          "name" : "icon-tinted",
-          "position" : {
-            "scale" : 0.92,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
-        }
-      ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
+      "specular" : false,
       "translucency" : {
         "enabled" : true,
         "value" : 0.5

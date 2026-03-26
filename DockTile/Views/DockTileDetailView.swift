@@ -25,6 +25,10 @@ struct DockTileDetailView: View {
     @State private var hasAppearedOnce = false  // Track if view has fully loaded
     @State private var isCurrentlyInDock = false  // Track actual Dock state
     @FocusState private var isNameFieldFocused: Bool  // Track focus for commit-on-blur
+    /// Monotonic counter incremented on each config edit. Used as the `.task(id:)` identity
+    /// instead of the full `editedConfig` struct, which avoids O(n * icon_data_size) deep equality
+    /// checks on every keystroke. The task cancels/restarts on each increment, providing debounce.
+    @State private var saveGeneration: Int = 0
 
     /// Dynamic button text based on toggle state and actual Dock presence
     private var actionButtonText: String {
@@ -97,27 +101,19 @@ struct DockTileDetailView: View {
         // NOTE: .onChange(of: config.id) removed - parent view uses .id(selectedConfig.id)
         // to force complete view recreation when switching configs, making sync unnecessary
         .onChange(of: editedConfig) { _, _ in
-            // Mark as edited immediately when any field changes (enables + button)
-            // Skip the initial load to avoid immediately marking new tiles as edited
             guard hasAppearedOnce else { return }
-            // Defer to avoid "Publishing changes from within view updates" warning
             DispatchQueue.main.async {
                 configManager.markSelectedConfigAsEdited()
+                saveGeneration += 1
             }
         }
         // NOTE: tileName onChange removed - tileName now syncs to editedConfig.name
         // on every keystroke (see TextField onChange), which triggers this onChange
-        // Debounced auto-save using task(id:) - cancels previous task when editedConfig changes
-        .task(id: editedConfig) {
-            guard hasAppearedOnce else { return }
+        // Debounced auto-save using counter - avoids deep struct equality on every keystroke
+        .task(id: saveGeneration) {
+            guard hasAppearedOnce, saveGeneration > 0 else { return }
 
-            // Wait 300ms before saving (debounce)
             try? await Task.sleep(nanoseconds: 300_000_000)
-
-            // Save editedConfig directly - it already has the correct ID and bundleIdentifier
-            // NOTE: We must NOT use config.id or config.bundleIdentifier here because
-            // when switching between tiles, `config` may be stale while `editedConfig`
-            // has already been updated by the .onChange(of: config.id) handler
             configManager.updateConfiguration(editedConfig)
         }
         .onAppear {
@@ -250,7 +246,7 @@ struct DockTileDetailView: View {
                 }
             }
             .padding(.horizontal, 10)
-            .background(FormGroupBackground())
+            .background(NSColorBackgroundView.formGroup)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -258,6 +254,8 @@ struct DockTileDetailView: View {
 
     // MARK: - Form Row Helper
 
+    /// Renders a single row in a form group with optional bottom separator.
+    /// - Parameter isLast: When `true`, omits the bottom separator (last row in group).
     @ViewBuilder
     private func formRow<Content: View>(isLast: Bool, @ViewBuilder content: () -> Content) -> some View {
         VStack(spacing: 0) {
@@ -362,7 +360,7 @@ struct DockTileDetailView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 0)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(FormGroupBackground())
+        .background(NSColorBackgroundView.formGroup)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
@@ -375,7 +373,7 @@ struct DockTileDetailView: View {
 
     private func handleDockAction() {
         // Check if user has already acknowledged Dock restart
-        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")
+        let hasAcknowledged = UserDefaults.standard.bool(forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
 
         if !hasAcknowledged {
             // Show consent dialog
@@ -469,7 +467,7 @@ struct DockTileDetailView: View {
             // User clicked "Confirm"
             // Check if "Don't show this again" was checked
             if checkbox.state == .on {
-                UserDefaults.standard.set(true, forKey: "hasAcknowledgedDockRestart")
+                UserDefaults.standard.set(true, forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
             }
             // Proceed with dock action
             performDockAction()
@@ -757,49 +755,12 @@ struct AppIconView: View {
     let item: AppItem
 
     // Observe IconStyleManager for icon style changes
-    // This triggers view refresh when system icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
-    private func getAppIcon() -> NSImage? {
-        // For folders, get icon from folder path
-        if item.isFolder, let folderPath = item.folderPath {
-            return NSWorkspace.shared.icon(forFile: folderPath)
-        }
-
-        // Get from bundle identifier - returns style-aware icon from macOS
-        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: item.bundleIdentifier) {
-            return NSWorkspace.shared.icon(forFile: appURL.path)
-        }
-
-        // Try common paths for apps
-        let searchPaths = [
-            "/Applications/\(item.name).app",
-            "/System/Applications/\(item.name).app",
-            "/Applications/Utilities/\(item.name).app",
-            "\(NSHomeDirectory())/Applications/\(item.name).app"
-        ]
-
-        for path in searchPaths {
-            if FileManager.default.fileExists(atPath: path) {
-                return NSWorkspace.shared.icon(forFile: path)
-            }
-        }
-
-        // Fallback to stored icon data if fresh fetch fails
-        if let iconData = item.iconData,
-           let nsImage = NSImage(data: iconData) {
-            return nsImage
-        }
-
-        return nil
-    }
-
     var body: some View {
-        // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
-        // This ensures NSWorkspace returns the correct style-aware icon
         let _ = iconStyleManager.currentStyle
 
-        if let icon = getAppIcon() {
+        if let icon = AppIconLoader.icon(for: item) {
             Image(nsImage: icon)
                 .resizable()
                 .interpolation(.high)
@@ -843,21 +804,7 @@ private struct SubtleButton: View {
     }
 }
 
-// MARK: - Form Group Background (NSViewRepresentable for reliable AppKit color)
-
-private struct FormGroupBackground: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        // Using quaternarySystemFill for opaque quaternary fill (matches Figma FillsOpaqueQuaternary)
-        view.layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        nsView.layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
-    }
-}
+// FormGroupBackground replaced by shared NSColorBackgroundView.formGroup
 
 // MARK: - Preview
 

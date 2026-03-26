@@ -141,59 +141,21 @@ final class HelperBundleManager {
         )
 
         // 2. Generate icons for ALL icon styles (Default/Dark/Clear/Tinted)
-        // NOTE: macOS Tahoe has TWO independent settings:
-        //       - "Appearance" (Light/Dark) - controls window chrome
-        //       - "Icon and widget style" (Default/Dark/Clear/Tinted) - controls icons
-        // We generate icons for each icon style upfront so switching is instant
+        // We generate all styles upfront so switching is instant at runtime
         let resourcesPath = helperPath.appendingPathComponent("Contents/Resources")
 
-        // Generate default style icon (colorful gradient background, white symbol)
-        let defaultIconPath = resourcesPath.appendingPathComponent("AppIcon-default.icns")
-        try IconGenerator.generateIcns(
-            tintColor: config.tintColor,
-            iconType: config.iconType,
-            iconValue: config.iconValue,
-            iconScale: config.iconScale,
-            outputURL: defaultIconPath,
-            iconStyle: .defaultStyle
-        )
-        print("   ✓ Generated default style icon")
-
-        // Generate dark style icon (dark background, tint-colored symbol)
-        let darkIconPath = resourcesPath.appendingPathComponent("AppIcon-dark.icns")
-        try IconGenerator.generateIcns(
-            tintColor: config.tintColor,
-            iconType: config.iconType,
-            iconValue: config.iconValue,
-            iconScale: config.iconScale,
-            outputURL: darkIconPath,
-            iconStyle: .dark
-        )
-        print("   ✓ Generated dark style icon")
-
-        // Generate clear style icon (semi-transparent gray background, tint-colored symbol)
-        let clearIconPath = resourcesPath.appendingPathComponent("AppIcon-clear.icns")
-        try IconGenerator.generateIcns(
-            tintColor: config.tintColor,
-            iconType: config.iconType,
-            iconValue: config.iconValue,
-            iconScale: config.iconScale,
-            outputURL: clearIconPath,
-            iconStyle: .clear
-        )
-        print("   ✓ Generated clear style icon")
-
-        // Generate tinted style icon (muted gradient background, white symbol)
-        let tintedIconPath = resourcesPath.appendingPathComponent("AppIcon-tinted.icns")
-        try IconGenerator.generateIcns(
-            tintColor: config.tintColor,
-            iconType: config.iconType,
-            iconValue: config.iconValue,
-            iconScale: config.iconScale,
-            outputURL: tintedIconPath,
-            iconStyle: .tinted
-        )
-        print("   ✓ Generated tinted style icon")
+        for style in IconStyle.allCases {
+            let iconPath = self.iconPath(for: style, in: resourcesPath)
+            try IconGenerator.generateIcns(
+                tintColor: config.tintColor,
+                iconType: config.iconType,
+                iconValue: config.iconValue,
+                iconScale: config.iconScale,
+                outputURL: iconPath,
+                iconStyle: style
+            )
+            print("   ✓ Generated \(style.rawValue) style icon")
+        }
 
         // Copy appropriate icon to AppIcon.icns based on current icon style
         let currentStyle = IconStyle.current
@@ -318,7 +280,7 @@ final class HelperBundleManager {
     /// - Parameters:
     ///   - config: The configuration to uninstall
     ///   - shouldRestartDock: Whether to restart the Dock after uninstalling (default: true)
-    func uninstallHelper(for config: DockTileConfiguration, restartDock shouldRestartDock: Bool = true) throws {
+    func uninstallHelper(for config: DockTileConfiguration, restartDock shouldRestartDock: Bool = true) async throws {
         print("🗑️ Uninstalling helper for: \(config.name)")
 
         // Find helper by bundle ID (handles renamed helpers)
@@ -327,8 +289,7 @@ final class HelperBundleManager {
         // Quit if running
         if isHelperRunning(bundleId: config.bundleIdentifier) {
             quitHelper(bundleId: config.bundleIdentifier)
-            // Brief pause to let it quit
-            Thread.sleep(forTimeInterval: 0.3)
+            try await Task.sleep(nanoseconds: 300_000_000)
         }
 
         // Remove from Dock plist if it was in the Dock
@@ -567,44 +528,25 @@ final class HelperBundleManager {
 
     /// Touch bundle to invalidate icon cache and re-register with Launch Services
     /// This forces macOS to reload the icon from the .icns file
+    /// Invalidate macOS icon cache and re-register with Launch Services.
+    ///
+    /// Two-step process:
+    /// 1. **Update modification date** — macOS uses mtime to detect when an app bundle has changed.
+    ///    Without this, `iconservicesd` may serve stale cached icons even after the .icns file is replaced.
+    /// 2. **Re-register with Launch Services** (`lsregister -f -R`) — Forces the LS database to
+    ///    re-index the app bundle, picking up the new `CFBundleIconFile` and any plist changes.
+    ///    The `-f` flag forces re-registration even if the bundle appears unchanged.
     private func touchBundle(at helperPath: URL) {
-        // Touch the app bundle to update modification date
-        let touchProcess = Process()
-        touchProcess.executableURL = URL(fileURLWithPath: "/usr/bin/touch")
-        touchProcess.arguments = [helperPath.path]
-        touchProcess.standardOutput = FileHandle.nullDevice
-        touchProcess.standardError = FileHandle.nullDevice
-        try? touchProcess.run()
-        touchProcess.waitUntilExit()
+        let now = Date()
+        let fm = FileManager.default
 
-        // Also touch the icon file specifically
-        let iconPath = helperPath.appendingPathComponent("Contents/Resources/AppIcon.icns")
-        let touchIconProcess = Process()
-        touchIconProcess.executableURL = URL(fileURLWithPath: "/usr/bin/touch")
-        touchIconProcess.arguments = [iconPath.path]
-        touchIconProcess.standardOutput = FileHandle.nullDevice
-        touchIconProcess.standardError = FileHandle.nullDevice
-        try? touchIconProcess.run()
-        touchIconProcess.waitUntilExit()
+        // Step 1: Update modification dates to invalidate icon services cache
+        try? fm.setAttributes([.modificationDate: now], ofItemAtPath: helperPath.path)
+        let iconFilePath = helperPath.appendingPathComponent("Contents/Resources/AppIcon.icns").path
+        try? fm.setAttributes([.modificationDate: now], ofItemAtPath: iconFilePath)
 
-        // Clear icon services cache for this specific app
-        // The cache is stored in /var/folders/*/*/com.apple.iconservices*
-        // We can't delete the whole cache, but we can force a refresh by:
-        // 1. Unregistering the app
-        // 2. Re-registering it
-
+        // Step 2: Re-register with Launch Services to refresh its index
         let lsregisterPath = "/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister"
-
-        // First unregister to clear any cached data
-        let unregisterProcess = Process()
-        unregisterProcess.executableURL = URL(fileURLWithPath: lsregisterPath)
-        unregisterProcess.arguments = ["-u", helperPath.path]
-        unregisterProcess.standardOutput = FileHandle.nullDevice
-        unregisterProcess.standardError = FileHandle.nullDevice
-        try? unregisterProcess.run()
-        unregisterProcess.waitUntilExit()
-
-        // Re-register with Launch Services to refresh icon cache
         let lsProcess = Process()
         lsProcess.executableURL = URL(fileURLWithPath: lsregisterPath)
         lsProcess.arguments = ["-f", "-R", helperPath.path]
@@ -701,8 +643,20 @@ final class HelperBundleManager {
         }
     }
 
+    // MARK: - Dock Plist Operations (CFPreferences API)
+    //
+    // All Dock plist reads/writes use CFPreferences instead of direct file I/O.
+    //
+    // Why CFPreferences?
+    // - Reads from cfprefsd in-memory cache (avoids stale data from disk)
+    // - Writes sync directly to cfprefsd (no cache invalidation issues)
+    // - No privacy prompts (unlike `defaults import` shell command)
+    // - Industry standard: same approach used by dockutil and other Dock tools
+    //
+    // The Dock stores persistent apps in com.apple.dock → "persistent-apps" array.
+    // Each entry has: tile-data → { bundle-identifier, file-data → { _CFURLString } }
+
     /// Check if app is already in Dock (by path)
-    /// Uses CFPreferences API to read from cfprefsd cache (not stale file on disk)
     func isInDock(at appPath: URL) -> Bool {
         let dockAppId = "com.apple.dock" as CFString
         guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {

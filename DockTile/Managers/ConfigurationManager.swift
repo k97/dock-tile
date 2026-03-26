@@ -47,7 +47,7 @@ final class ConfigurationManager: ObservableObject {
     private let decoder = JSONDecoder()
 
     /// UserDefaults key for persisting last selected config
-    private let lastSelectedConfigKey = "lastSelectedConfigId"
+    private let lastSelectedConfigKey = UserDefaultsKeys.lastSelectedConfigId
 
     // MARK: - Dock Sync
 
@@ -162,7 +162,7 @@ final class ConfigurationManager: ObservableObject {
         // Always clean up helper bundle, but only restart Dock if tile was visible
         Task {
             do {
-                try HelperBundleManager.shared.uninstallHelper(
+                try await HelperBundleManager.shared.uninstallHelper(
                     for: config,
                     restartDock: config.isVisibleInDock
                 )

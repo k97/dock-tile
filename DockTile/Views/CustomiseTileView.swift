@@ -40,7 +40,7 @@ struct CustomiseTileView: View {
                 .padding(.bottom, 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(WindowBackgroundView())
+        .background(NSColorBackgroundView.windowBackground)
         .navigationTitle(AppStrings.Navigation.customiseTile)
         .toolbar {
             ToolbarItem(placement: .navigation) {
@@ -123,7 +123,7 @@ struct CustomiseTileView: View {
             tileIconSection
         }
         .padding(.horizontal, 10)
-        .background(FormGroupBackgroundView())
+        .background(NSColorBackgroundView.formGroup)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
@@ -371,21 +371,7 @@ private enum IconPickerTab {
     case emoji
 }
 
-// MARK: - Native Background Views (AppKit Bridged)
-
-/// Window background color using NSViewRepresentable
-private struct WindowBackgroundView: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        nsView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
-    }
-}
+// MARK: - Native Background Views
 
 /// Quaternary system fill for Studio Canvas - semi-transparent gray with vibrancy
 private struct QuaternaryFillView: NSViewRepresentable {
@@ -400,33 +386,8 @@ private struct QuaternaryFillView: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
 
-/// Control background color for inspector card
-private struct ControlBackgroundView: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        nsView.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
-    }
-}
-
-/// Form group background using quaternarySystemFill (matches detail view form groups)
-private struct FormGroupBackgroundView: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        nsView.layer?.backgroundColor = NSColor.quaternarySystemFill.cgColor
-    }
-}
+// WindowBackgroundView, ControlBackgroundView, FormGroupBackgroundView
+// replaced by shared NSColorBackgroundView in NativeBackgroundViews.swift
 
 // MARK: - Color Swatch Button
 
