@@ -10,12 +10,14 @@
 //
 
 import SwiftUI
+import Sparkle
 
 /// Main SwiftUI App - only used by main Dock Tile app, not helpers
 /// Called from main.swift when running as main app
 struct DockTileApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var configManager = ConfigurationManager()
+    @StateObject private var updateController = UpdateController()
 
     // Fixed window dimensions (System Settings style)
     private let windowWidth: CGFloat = 768
@@ -32,6 +34,11 @@ struct DockTileApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: windowWidth, height: 600)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates...") {
+                    updateController.checkForUpdates()
+                }
+            }
             CommandGroup(replacing: .newItem) {
                 Button(AppStrings.Menu.newTile) {
                     configManager.createConfiguration()

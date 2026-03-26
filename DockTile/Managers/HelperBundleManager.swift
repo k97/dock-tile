@@ -534,6 +534,13 @@ final class HelperBundleManager {
             print("   Mode: Ghost Mode (hidden from Cmd+Tab, no context menu)")
         }
 
+        // Remove Sparkle update keys from helper bundles.
+        // Helpers should never check for updates — only the main app does.
+        plist.removeValue(forKey: "SUFeedURL")
+        plist.removeValue(forKey: "SUPublicEDKey")
+        plist.removeValue(forKey: "SUEnableAutomaticChecks")
+        plist.removeValue(forKey: "SUScheduledCheckInterval")
+
         // Write back
         let nsDict = plist as NSDictionary
         guard nsDict.write(to: infoPlistPath, atomically: true) else {
