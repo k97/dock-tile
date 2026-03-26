@@ -47,32 +47,33 @@ if [[ -z "$PUB_DATE" ]]; then
     PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
 fi
 
-# Generate the new item XML
-NEW_ITEM="    <item>
+# Write the new item to a temp file (avoids awk newline issues)
+ITEM_FILE=$(mktemp)
+cat > "$ITEM_FILE" << ITEM_EOF
+    <item>
       <title>Version ${VERSION}</title>
       <sparkle:version>${BUILD}</sparkle:version>
       <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>${MIN_OS}</sparkle:minimumSystemVersion>
       <pubDate>${PUB_DATE}</pubDate>
       <enclosure
-        url=\"${DMG_URL}\"
-        sparkle:edSignature=\"${SIGNATURE}\"
-        length=\"${SIZE}\"
-        type=\"application/octet-stream\" />
-    </item>"
+        url="${DMG_URL}"
+        sparkle:edSignature="${SIGNATURE}"
+        length="${SIZE}"
+        type="application/octet-stream" />
+    </item>
+ITEM_EOF
 
 # Check if the appcast file exists and has items
 if [[ -f "$OUTPUT" ]] && grep -q "</channel>" "$OUTPUT"; then
-    # Insert new item before </channel> (newest first)
-    # Use a temp file for portable sed
+    # Insert new item before </channel> using sed with file read
     TEMP_FILE=$(mktemp)
-    awk -v item="$NEW_ITEM" '
-        /<\/channel>/ { print item; }
-        { print; }
-    ' "$OUTPUT" > "$TEMP_FILE"
+    sed "/<\/channel>/{
+r ${ITEM_FILE}
+}" "$OUTPUT" > "$TEMP_FILE"
     mv "$TEMP_FILE" "$OUTPUT"
 else
-    # Create new appcast
+    # Create new appcast from scratch
     cat > "$OUTPUT" << APPCAST_EOF
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -81,11 +82,13 @@ else
     <link>https://docktile.rkarthik.co/appcast.xml</link>
     <description>Most recent changes with links to updates for DockTile.</description>
     <language>en</language>
-${NEW_ITEM}
+$(cat "$ITEM_FILE")
   </channel>
 </rss>
 APPCAST_EOF
 fi
+
+rm -f "$ITEM_FILE"
 
 echo "Appcast updated: ${OUTPUT}"
 echo "  Version: ${VERSION} (build ${BUILD})"

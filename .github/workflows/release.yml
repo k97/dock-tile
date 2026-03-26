@@ -225,9 +225,8 @@ jobs:
           SIGN_TOOL="/tmp/sparkle/bin/sign_update"
           chmod +x "$SIGN_TOOL"
 
-          # Sign the DMG with EdDSA
-          # Use --ed-key-file - to read key from stdin (no trailing newline via printf)
-          SIGNATURE=$(printf '%s' "$SPARKLE_EDDSA_KEY" | "$SIGN_TOOL" "./$DMG_NAME" --ed-key-file -)
+          # Sign the DMG with EdDSA (-p flag outputs only the signature, no metadata)
+          SIGNATURE=$(printf '%s' "$SPARKLE_EDDSA_KEY" | "$SIGN_TOOL" "./$DMG_NAME" --ed-key-file - -p)
           DMG_SIZE=$(stat -f%z "./$DMG_NAME")
 
           echo "SPARKLE_SIGNATURE=${SIGNATURE}" >> $GITHUB_OUTPUT
