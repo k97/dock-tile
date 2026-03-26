@@ -208,14 +208,20 @@ jobs:
         env:
           SPARKLE_EDDSA_KEY: ${{ secrets.SPARKLE_EDDSA_KEY }}
         run: |
+          set -euxo pipefail
           DMG_NAME="${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
+
+          # Ensure xz is available (may not be on all macOS runners)
+          which xz || brew install xz
 
           # Download Sparkle tools (SPM artifacts don't include CLI tools)
           SPARKLE_VERSION="2.9.0"
           echo "Downloading Sparkle ${SPARKLE_VERSION} tools..."
           curl -sL -o /tmp/sparkle.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+          ls -la /tmp/sparkle.tar.xz
           mkdir -p /tmp/sparkle
           tar -xf /tmp/sparkle.tar.xz -C /tmp/sparkle
+          ls /tmp/sparkle/bin/
           SIGN_TOOL="/tmp/sparkle/bin/sign_update"
           chmod +x "$SIGN_TOOL"
 
