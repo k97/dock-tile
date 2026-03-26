@@ -29,4 +29,16 @@
         length="0" />
     </item>
   </channel>
+    <item>
+      <title>Version 1.1.1</title>
+      <sparkle:version>111</sparkle:version>
+      <sparkle:shortVersionString>1.1.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <pubDate>Thu, 26 Mar 2026 10:57:24 +0000</pubDate>
+      <enclosure
+        url="https://github.com/k97/dock-tile/releases/download/v1.1.1/DockTile-1.1.1.dmg"
+        sparkle:edSignature="m7iyZl78lr0Y8odgJQ+B6mLT+GyCoanu+whxe14y6y7SBcvMck881KhK8kxAaJhYtHyoZ0J5LP3cUuBgkwOpCA=="
+        length="4117426"
+        type="application/octet-stream" />
+    </item>
 </rss>
