@@ -203,6 +203,63 @@ jobs:
           echo "Checksum regenerated after notarization"
           cat "./${DMG_NAME}.sha256"
 
+      - name: Sign update for Sparkle
+        id: sparkle
+        env:
+          SPARKLE_EDDSA_KEY: ${{ secrets.SPARKLE_EDDSA_KEY }}
+        run: |
+          DMG_NAME="${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
+
+          # Find sign_update from Sparkle SPM artifacts
+          SIGN_TOOL=$(find ./build/SourcePackages/artifacts -name "sign_update" -type f 2>/dev/null | head -1)
+
+          if [ -z "$SIGN_TOOL" ]; then
+            echo "sign_update not found in build artifacts, downloading Sparkle tools..."
+            SPARKLE_VERSION="2.9.0"
+            curl -L -o /tmp/sparkle.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+            mkdir -p /tmp/sparkle
+            tar -xf /tmp/sparkle.tar.xz -C /tmp/sparkle
+            SIGN_TOOL="/tmp/sparkle/bin/sign_update"
+            chmod +x "$SIGN_TOOL"
+          fi
+
+          # Sign the DMG with EdDSA
+          SIGNATURE=$(echo "$SPARKLE_EDDSA_KEY" | "$SIGN_TOOL" "./$DMG_NAME")
+          DMG_SIZE=$(stat -f%z "./$DMG_NAME")
+
+          echo "SPARKLE_SIGNATURE=${SIGNATURE}" >> $GITHUB_OUTPUT
+          echo "DMG_SIZE=${DMG_SIZE}" >> $GITHUB_OUTPUT
+          echo "Sparkle EdDSA signature generated (${DMG_SIZE} bytes)"
+
+      - name: Update appcast
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          # Derive build number from version: 1.1.0 → 110, 2.0.0 → 200
+          BUILD_NUMBER=$(echo "$VERSION" | tr -d '.' | sed 's/^0*//')
+          DMG_URL="https://github.com/k97/dock-tile/releases/download/v${VERSION}/${APP_NAME_NO_SPACE}-${VERSION}.dmg"
+          PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
+
+          ./Scripts/generate-appcast-entry.sh \
+            --version "$VERSION" \
+            --build "$BUILD_NUMBER" \
+            --dmg-url "$DMG_URL" \
+            --signature "${{ steps.sparkle.outputs.SPARKLE_SIGNATURE }}" \
+            --size "${{ steps.sparkle.outputs.DMG_SIZE }}" \
+            --pub-date "$PUB_DATE" \
+            --output website/public/appcast.xml
+
+      - name: Commit appcast update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add website/public/appcast.xml
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: update appcast for v${{ steps.version.outputs.VERSION }}"
+            git push origin HEAD:main
+          else
+            echo "No appcast changes to commit"
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:

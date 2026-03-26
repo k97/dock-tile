@@ -262,7 +262,7 @@ struct IconGenerator {
         color: NSColor = .white
     ) {
         // Create SF Symbol configuration
-        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .medium)
+        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .semibold)
 
         // Get the SF Symbol image
         guard let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
@@ -285,7 +285,7 @@ struct IconGenerator {
 
     private static func drawFallbackSymbol(rect: CGRect, fontSize: CGFloat, color: NSColor = .white) {
         // Draw a star as fallback
-        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .medium)
+        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .semibold)
         guard let fallbackImage = NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else {
             return

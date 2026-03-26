@@ -19,6 +19,7 @@
 		AA607EF9 /* DockTileSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA169EDE /* DockTileSidebarView.swift */; };
 		AA732640 /* DockTileConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA12D329 /* DockTileConfigurationView.swift */; };
 		AA7EF687 /* CustomiseTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC45935 /* CustomiseTileView.swift */; };
+		AAAB0001 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAB0002 /* AboutView.swift */; };
 		AAAPM001 /* AppearanceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAPM002 /* AppearanceManager.swift */; };
 		AACFS001 /* ConfigurationSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFS002 /* ConfigurationSchema.swift */; };
 		AAD57BC8 /* DockTileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADDFDF7 /* DockTileDetailView.swift */; };
@@ -36,6 +37,8 @@
 		AASPGV02 /* SymbolPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASPGV01 /* SymbolPickerGrid.swift */; };
 		AASTR001 /* AppStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASTR002 /* AppStrings.swift */; };
 		AAU00001 /* IconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAU00002 /* IconGenerator.swift */; };
+		AASPK001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AASPK002 /* Sparkle */; };
+		AAUPC001 /* UpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUPC002 /* UpdateController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -77,6 +80,7 @@
 		AAAPM002 /* AppearanceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceManager.swift; sourceTree = "<group>"; };
 		AAC2BA1B /* DockTileIconPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileIconPreview.swift; sourceTree = "<group>"; };
 		AAC45935 /* CustomiseTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomiseTileView.swift; sourceTree = "<group>"; };
+		AAAB0002 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		AAC48362 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
 		AAC653A9 /* DockTileConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileConfigurationView.swift; sourceTree = "<group>"; };
 		AAC89BB2 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
@@ -90,6 +94,7 @@
 		AAF32B63 /* ItemRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemRowView.swift; sourceTree = "<group>"; };
 		AAH00002 /* HelperBundleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperBundleManager.swift; sourceTree = "<group>"; };
 		AAHELP02 /* HelperAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperAppDelegate.swift; sourceTree = "<group>"; };
+		AAUPC002 /* UpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateController.swift; sourceTree = "<group>"; };
 		AAICND02 /* AppIcon-Dev.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.icon; path = "AppIcon-Dev.icon"; sourceTree = "<group>"; };
 		AAICON02 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		AAIGOV01 /* IconGridOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGridOverlay.swift; sourceTree = "<group>"; };
@@ -136,6 +141,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AASPK001 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -169,6 +175,7 @@
 				AA0004 /* AppDelegate.swift */,
 				AAHELP02 /* HelperAppDelegate.swift */,
 				AAENV001 /* Environment.swift */,
+				AAUPC002 /* UpdateController.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -237,6 +244,7 @@
 		AA1C0BC3 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				AAAB0002 /* AboutView.swift */,
 				AA12D329 /* DockTileConfigurationView.swift */,
 				AA169EDE /* DockTileSidebarView.swift */,
 				AADDFDF7 /* DockTileDetailView.swift */,
@@ -370,6 +378,9 @@
 			dependencies = (
 			);
 			name = DockTile;
+			packageProductDependencies = (
+				AASPK002 /* Sparkle */,
+			);
 			productName = DockTile;
 			productReference = AA0009 /* Dock Tile Dev.app */;
 			productType = "com.apple.product-type.application";
@@ -405,6 +416,9 @@
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AA0010 /* Products */;
+			packageReferences = (
+				AASPK003 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -473,6 +487,7 @@
 				AA291E3F /* ItemRowView.swift in Sources */,
 				AA0E9A37 /* DockTileIconPreview.swift in Sources */,
 				AA7EF687 /* CustomiseTileView.swift in Sources */,
+				AAAB0001 /* AboutView.swift in Sources */,
 				AAD57BC8 /* DockTileDetailView.swift in Sources */,
 				AA607EF9 /* DockTileSidebarView.swift in Sources */,
 				AA732640 /* DockTileConfigurationView.swift in Sources */,
@@ -487,6 +502,7 @@
 				AAAPM001 /* AppearanceManager.swift in Sources */,
 				AAISM001 /* IconStyleManager.swift in Sources */,
 				AASTR001 /* AppStrings.swift in Sources */,
+				AAUPC001 /* UpdateController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -516,7 +532,7 @@
 				DEVELOPMENT_TEAM = R68RHN3HF5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.karthik.DockTileTests.DockTileTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -539,7 +555,7 @@
 				DEVELOPMENT_TEAM = R68RHN3HF5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.karthik.DockTileTests.DockTileTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -561,7 +577,7 @@
 				DEVELOPMENT_TEAM = R68RHN3HF5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.karthik.DockTileUITests.DockTileUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -582,7 +598,7 @@
 				DEVELOPMENT_TEAM = R68RHN3HF5;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.karthik.DockTileUITests.DockTileUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -814,6 +830,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AASPK003 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AASPK002 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AASPK003 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA0016 /* Project object */;
 }

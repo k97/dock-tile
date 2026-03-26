@@ -120,7 +120,7 @@ struct DockTileIconPreview: View {
             // Default: white symbol on colored gradient
             // Dark: tint-colored symbol on dark background
             Image(systemName: iconValue)
-                .font(.system(size: symbolSize, weight: .medium))
+                .font(.system(size: symbolSize, weight: .semibold))
                 .foregroundColor(styleColors.foreground)
             // NOTE: No text shadow - native macOS icons don't have baked-in text shadows
 
