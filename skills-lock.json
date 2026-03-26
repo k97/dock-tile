@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "macos-developer": {
+      "source": "404kidwiz/claude-supercode-skills",
+      "sourceType": "github",
+      "computedHash": "297ffe07842b283e96c4c23485efe83ff829952358761c0031d4934eb6e7c727"
+    },
+    "macos-development": {
+      "source": "rshankras/claude-code-apple-skills",
+      "sourceType": "github",
+      "computedHash": "ff7fba1c081a1efb29e67526abc4e281fbb482f10e2b364f11fbbe85c2d34e05"
+    },
+    "macos-hig-designer": {
+      "source": "designnotdrum/skills",
+      "sourceType": "github",
+      "computedHash": "c6ee6a329b7de297974252d2ae6e4be1019871b5e7f9b93c52e447aaee4f85e3"
+    },
+    "releasing-macos-apps": {
+      "source": "jamesrochabrun/skills",
+      "sourceType": "github",
+      "computedHash": "614fab9ad9ab1fa2584550c2f800fff992e722306069ef4f5711d3a37a96f57e"
+    }
+  }
+}
