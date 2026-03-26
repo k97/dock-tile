@@ -3,8 +3,8 @@
 // See RELEASE.md for documentation on Dev/Release workflow
 
 // Version
-MARKETING_VERSION = 1.1.0
-CURRENT_PROJECT_VERSION = 2
+MARKETING_VERSION = 1.1.1
+CURRENT_PROJECT_VERSION = 3
 
 // Deployment
 MACOSX_DEPLOYMENT_TARGET = 15.0
