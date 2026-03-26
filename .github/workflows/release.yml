@@ -219,16 +219,10 @@ jobs:
           SIGN_TOOL="/tmp/sparkle/bin/sign_update"
           chmod +x "$SIGN_TOOL"
 
-          # Write EdDSA private key to temp file for sign_update
-          KEY_FILE=$(mktemp)
-          echo "$SPARKLE_EDDSA_KEY" > "$KEY_FILE"
-
           # Sign the DMG with EdDSA
-          SIGNATURE=$("$SIGN_TOOL" "./$DMG_NAME" -f "$KEY_FILE")
+          # Use --ed-key-file - to read key from stdin (no trailing newline via printf)
+          SIGNATURE=$(printf '%s' "$SPARKLE_EDDSA_KEY" | "$SIGN_TOOL" "./$DMG_NAME" --ed-key-file -)
           DMG_SIZE=$(stat -f%z "./$DMG_NAME")
-
-          # Clean up key file
-          rm -f "$KEY_FILE"
 
           echo "SPARKLE_SIGNATURE=${SIGNATURE}" >> $GITHUB_OUTPUT
           echo "DMG_SIZE=${DMG_SIZE}" >> $GITHUB_OUTPUT
