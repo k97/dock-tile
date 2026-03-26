@@ -15,6 +15,29 @@ export default function ReleaseNotesPage() {
           <h1 className="text-2xl md:text-4xl font-display mb-6">Release Notes</h1>
 
           <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8">
+            {/* Version 1.1.1 */}
+            <section>
+              <div className="flex items-baseline gap-3 mb-4">
+                <h2 className="text-2xl font-semibold m-0">Version 1.1.1</h2>
+                <span className="text-sm text-muted-foreground">26 March 2026</span>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Code quality improvements and updated app icon.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Under the Hood</h3>
+                  <ul className="list-disc pl-6 text-muted-foreground space-y-1">
+                    <li>Extracted shared utilities to reduce code duplication (~200 lines removed)</li>
+                    <li>Fixed a bug where some app icons displayed incorrectly in the detail view</li>
+                    <li>Tile uninstall no longer briefly freezes the UI</li>
+                    <li>Faster debounce when editing tile names</li>
+                    <li>Updated development app icon</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
             {/* Version 1.1.0 */}
             <section>
               <div className="flex items-baseline gap-3 mb-4">
