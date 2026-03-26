@@ -33,12 +33,11 @@ struct CustomiseTileView: View {
             // Studio Canvas - Full-width header area with vibrancy
             studioCanvas
 
-            // Inspector Card
+            // Inspector Card — fills remaining vertical space
             inspectorCard
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
-
-            Spacer(minLength: 0)
+                .padding(.bottom, 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowBackgroundView())
@@ -233,7 +232,7 @@ struct CustomiseTileView: View {
     /// Maximum allowed scale value based on icon type (keeps icon within safe area)
     private var maxIconScale: Int {
         // Emoji has +5% offset, so needs lower max to stay within safe area
-        editedConfig.iconType == .emoji ? 16 : 17
+        editedConfig.iconType == .emoji ? 16 : 19
     }
 
     private var tileIconSizeSection: some View {
@@ -276,7 +275,7 @@ struct CustomiseTileView: View {
             // Search field - sticky (outside ScrollView)
             iconSearchField
 
-            // Icon grid with fixed height and internal scrolling
+            // Icon grid — fills remaining space in the inspector card
             ScrollView(.vertical, showsIndicators: false) {
                 Group {
                     switch selectedIconTab {
@@ -325,7 +324,7 @@ struct CustomiseTileView: View {
                 }
                 .frame(maxWidth: .infinity)
             }
-            .frame(height: 280)
+            .frame(maxHeight: .infinity)
         }
         .padding(.vertical, 12)
         .onChange(of: selectedIconTab) { _, _ in

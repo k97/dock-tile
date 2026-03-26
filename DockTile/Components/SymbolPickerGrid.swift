@@ -154,13 +154,13 @@ final class SFSymbolCatalog: @unchecked Sendable {
         }
 
         // Build category → ordered symbols mapping
-        // Use symbol_order for consistent ordering, filter out locale variants (.ar, .hi, .th, etc.)
+        // Use symbol_order for consistent ordering, filter out locale variants and wide symbols
         let orderSet = Set(symbolOrder)
         var catSyms: [String: [String]] = [:]
 
         for symbol in symbolOrder {
-            // Skip locale-specific variants (e.g., "0.circle.ar", "1.lane.hi")
             if SFSymbolCatalog.isLocaleVariant(symbol) { continue }
+            if SFSymbolCatalog.isWideSymbol(symbol) { continue }
 
             guard let cats = symCats[symbol] else { continue }
             for cat in cats {
@@ -172,6 +172,7 @@ final class SFSymbolCatalog: @unchecked Sendable {
         for (symbol, cats) in symCats {
             if orderSet.contains(symbol) { continue }
             if SFSymbolCatalog.isLocaleVariant(symbol) { continue }
+            if SFSymbolCatalog.isWideSymbol(symbol) { continue }
             for cat in cats {
                 catSyms[cat, default: []].append(symbol)
             }
@@ -181,8 +182,8 @@ final class SFSymbolCatalog: @unchecked Sendable {
         self.categorySymbols = catSyms
         self.symbolSearchKeywords = searchKw
 
-        // Filter out meta categories that aren't useful for picking icons
-        let excludedKeys: Set<String> = ["all", "whatsnew", "variable", "multicolor"]
+        // Filter out meta categories and categories that aren't useful for dock tile icons
+        let excludedKeys: Set<String> = ["all", "whatsnew", "variable", "multicolor", "indices", "automotive"]
         self.displayCategories = categories.filter { !excludedKeys.contains($0.key) }
     }
 
@@ -200,6 +201,18 @@ final class SFSymbolCatalog: @unchecked Sendable {
     private static func isLocaleVariant(_ name: String) -> Bool {
         let localeSuffixes: Set<String> = [".ar", ".hi", ".th", ".zh", ".ja", ".ko", ".he", ".km", ".my", ".bn", ".gu", ".kn", ".ml", ".or", ".pa", ".si", ".ta", ".te"]
         return localeSuffixes.contains(where: { name.hasSuffix($0) })
+    }
+
+    /// Detect symbols that render too wide for a square grid cell (e.g., multi-person groups)
+    private static func isWideSymbol(_ name: String) -> Bool {
+        let widePatterns = [
+            "person.2", "person.3",
+            "figure.2.and.child",
+            "person.and.arrow.left.and.arrow.right",
+            "person.line.dotted.person",
+            "figure.seated.side",
+        ]
+        return widePatterns.contains(where: { name.contains($0) })
     }
 
     /// Human-readable category names
