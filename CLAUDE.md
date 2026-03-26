@@ -1007,6 +1007,67 @@ runs-on: macos-26  # ARM64 only, beta status
 
 ## Recent Changes
 
+### v1.1.0 Release (2026-03-26)
+
+**Sparkle Auto-Update Framework**:
+- Integrated Sparkle 2.9.0 via SPM for in-app update checking
+- EdDSA (Ed25519) signing for secure update verification
+- "Check for Updates..." menu item in app menu
+- Automatic daily update checks (`SUScheduledCheckInterval = 86400`)
+- Helper bundles have Sparkle keys stripped to prevent update conflicts
+- Appcast hosted at `https://docktile.rkarthik.co/appcast.xml`
+- Release pipeline updated with EdDSA signing and appcast generation
+- `Scripts/generate-appcast-entry.sh` for CI appcast updates
+- GitHub secret required: `SPARKLE_EDDSA_KEY` (EdDSA private key)
+
+**Custom About Window**:
+- Custom About dialog with app icon, version, copyright, and website link
+- "Check for Updates..." button in About window (standard macOS pattern)
+- Replaces default `NSApp.orderFrontStandardAboutPanel()`
+
+**Version Numbering Fix**:
+- `MARKETING_VERSION` updated from `1.0` to `1.0.0` in `Base.xcconfig`
+- Info.plist now derives version from build settings (`$(MARKETING_VERSION)`, `$(CURRENT_PROJECT_VERSION)`)
+- Single source of truth for version numbers
+
+**SF Symbol Picker Overhaul**:
+- Replaced hardcoded ~170 symbols with dynamic loading from macOS CoreGlyphs bundle (~6,000+ symbols)
+- Reads `symbol_categories.plist`, `symbol_order.plist`, `symbol_search.plist` at runtime
+- 28 categories matching Apple's SF Symbols app (Communication, Weather, Devices, etc.)
+- Keyword-based search from system search data
+- Filtered out wide/fat symbols (person.2, person.3, figure.2.and.child, figure.seated.side)
+- Excluded indices and automotive categories (not useful as dock icons)
+- Locale variants (.ar, .hi, .th, etc.) automatically filtered
+- Always up to date with the user's macOS version
+
+**SF Symbol Rendering Improvements**:
+- Increased max icon scale for SF Symbols from 17 → 19 (emoji stays at 16)
+- Symbol weight bumped from `.medium` → `.semibold` in generator and preview
+- ScrollView height now fills available space instead of fixed 280pt
+
+**Sparkle Error Handling**:
+- `SPUUpdaterDelegate` logs errors gracefully instead of showing error dialogs
+- Debug builds log quietly (expected when no matching appcast entry)
+- Appcast populated with v1.0.0-beta entry for valid feed parsing
+
+**Files Created**:
+- `DockTile/App/UpdateController.swift` - Sparkle wrapper with delegate
+- `DockTile/Views/AboutView.swift` - Custom About window
+- `Scripts/generate-appcast-entry.sh` - Appcast XML generation for CI
+
+**Files Modified**:
+- `DockTile.xcodeproj/project.pbxproj` - Sparkle SPM, AboutView, version updates
+- `DockTile/App/DockTileApp.swift` - About menu + Check for Updates
+- `DockTile/Managers/HelperBundleManager.swift` - Strip Sparkle keys from helpers
+- `DockTile/Resources/Info.plist` - Sparkle config, version variables
+- `DockTile/Config/Base.xcconfig` - MARKETING_VERSION 1.0.0
+- `DockTile/Components/SymbolPickerGrid.swift` - Dynamic system SF Symbols
+- `DockTile/Components/DockTileIconPreview.swift` - Semibold weight
+- `DockTile/Utilities/IconGenerator.swift` - Semibold weight
+- `DockTile/Views/CustomiseTileView.swift` - Scale range, dynamic height
+- `website/public/appcast.xml` - Beta release entry
+- `.github/workflows/release.yml` - EdDSA signing + appcast steps
+
 ### v1.0.0-beta Release (2026-02-08)
 - **Milestone**: First public beta release of DockTile! 🎉
 - **Release**: Published at https://github.com/k97/dock-tile/releases/tag/v1.0.0-beta
@@ -1831,9 +1892,9 @@ DockTileConfigurationView (Main Window)
 
 ---
 
-## Current Project Status (Feb 2026)
+## Current Project Status (Mar 2026)
 
-**🎉 v1.0.0-beta is LIVE! Public beta released on Feb 8, 2026**
+**v1.1.0 release — Sparkle auto-updates, expanded SF Symbols, About window**
 
 ### ✅ What's Complete
 - All Phase 1, 1b, 2, and 3 tasks finished
@@ -1843,35 +1904,22 @@ DockTileConfigurationView (Main Window)
 - CI/CD pipeline (build, sign, notarize, release) - fully automated and working
 - Test infrastructure (unit + integration tests)
 - Website deployed to Vercel with download functionality
-- **v1.0.0-beta**: Public beta release available for download
-
-### 🧪 Beta Testing Phase (Current)
-**Status**: Collecting feedback from early adopters
-
-| Activity | Status | Timeline |
-|----------|--------|----------|
-| **Beta Release** | ✅ Live | Released Feb 8, 2026 |
-| Download page | ✅ Live | https://docktile.rkarthik.co |
-| GitHub Release | ✅ Public | https://github.com/k97/dock-tile/releases/tag/v1.0.0-beta |
-| **Gather Feedback** | 🔄 In Progress | 2-3 weeks |
-| Fix critical issues | 🔲 As needed | Ongoing |
-| **Stable v1.0.0 Release** | 🔲 Planned | After beta period |
-| **ProductHunt Launch** | 🔲 Planned | After stable release |
+- **v1.0.0-beta**: Public beta release (Feb 8, 2026)
+- **v1.1.0**: Sparkle auto-updates, expanded SF Symbol picker, custom About window
 
 ### 📊 Completion Stats
 - **Core Development**: 100% ✅
 - **Testing**: 100% ✅
 - **CI/CD**: 100% ✅
+- **Auto-Updates**: 100% ✅ (Sparkle 2.x integrated)
 - **Documentation**: 100% ✅
 - **Website**: 100% ✅ (download button live)
-- **Distribution**: 100% ✅ (beta released)
-- **Beta Testing**: 10% 🔄 (just started)
+- **Distribution**: 100% ✅
 
 ### 🎯 Next Steps
-1. Monitor beta feedback and GitHub issues
-2. Address any critical bugs or issues
-3. After 2-3 weeks of stable beta: tag v1.0.0 stable
-4. Launch on ProductHunt after stable release
+1. Tag and release v1.1.0
+2. Monitor Sparkle update flow end-to-end
+3. Launch on ProductHunt
 
 ---
 
