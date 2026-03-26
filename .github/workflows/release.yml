@@ -210,22 +210,25 @@ jobs:
         run: |
           DMG_NAME="${APP_NAME_NO_SPACE}-${{ steps.version.outputs.VERSION }}.dmg"
 
-          # Find sign_update from Sparkle SPM artifacts
-          SIGN_TOOL=$(find ./build/SourcePackages/artifacts -name "sign_update" -type f 2>/dev/null | head -1)
+          # Download Sparkle tools (SPM artifacts don't include CLI tools)
+          SPARKLE_VERSION="2.9.0"
+          echo "Downloading Sparkle ${SPARKLE_VERSION} tools..."
+          curl -sL -o /tmp/sparkle.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+          mkdir -p /tmp/sparkle
+          tar -xf /tmp/sparkle.tar.xz -C /tmp/sparkle
+          SIGN_TOOL="/tmp/sparkle/bin/sign_update"
+          chmod +x "$SIGN_TOOL"
 
-          if [ -z "$SIGN_TOOL" ]; then
-            echo "sign_update not found in build artifacts, downloading Sparkle tools..."
-            SPARKLE_VERSION="2.9.0"
-            curl -L -o /tmp/sparkle.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
-            mkdir -p /tmp/sparkle
-            tar -xf /tmp/sparkle.tar.xz -C /tmp/sparkle
-            SIGN_TOOL="/tmp/sparkle/bin/sign_update"
-            chmod +x "$SIGN_TOOL"
-          fi
+          # Write EdDSA private key to temp file for sign_update
+          KEY_FILE=$(mktemp)
+          echo "$SPARKLE_EDDSA_KEY" > "$KEY_FILE"
 
           # Sign the DMG with EdDSA
-          SIGNATURE=$(echo "$SPARKLE_EDDSA_KEY" | "$SIGN_TOOL" "./$DMG_NAME")
+          SIGNATURE=$("$SIGN_TOOL" "./$DMG_NAME" -f "$KEY_FILE")
           DMG_SIZE=$(stat -f%z "./$DMG_NAME")
+
+          # Clean up key file
+          rm -f "$KEY_FILE"
 
           echo "SPARKLE_SIGNATURE=${SIGNATURE}" >> $GITHUB_OUTPUT
           echo "DMG_SIZE=${DMG_SIZE}" >> $GITHUB_OUTPUT
