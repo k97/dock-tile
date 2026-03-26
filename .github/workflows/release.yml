@@ -250,16 +250,29 @@ jobs:
             --pub-date "$PUB_DATE" \
             --output website/public/appcast.xml
 
-      - name: Commit appcast update
+      - name: Update website config
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          DMG_URL="https://github.com/k97/dock-tile/releases/download/v${VERSION}/${APP_NAME_NO_SPACE}-${VERSION}.dmg"
+          RELEASE_URL="https://github.com/k97/dock-tile/releases/tag/v${VERSION}"
+
+          # Update download URL, release notes URL, and version in website config
+          sed -i '' "s|downloadUrl: \".*\"|downloadUrl: \"${DMG_URL}\"|" website/lib/config.ts
+          sed -i '' "s|releaseNotesUrl: \".*\"|releaseNotesUrl: \"${RELEASE_URL}\"|" website/lib/config.ts
+          sed -i '' "s|latestVersion: \".*\"|latestVersion: \"${VERSION}\"|" website/lib/config.ts
+
+          echo "Updated website config to v${VERSION}"
+
+      - name: Commit website updates
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add website/public/appcast.xml
+          git add website/public/appcast.xml website/lib/config.ts
           if ! git diff --staged --quiet; then
-            git commit -m "chore: update appcast for v${{ steps.version.outputs.VERSION }}"
+            git commit -m "chore: update website for v${{ steps.version.outputs.VERSION }}"
             git push origin HEAD:main
           else
-            echo "No appcast changes to commit"
+            echo "No website changes to commit"
           fi
 
       - name: Create Release
