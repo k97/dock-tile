@@ -5,5 +5,28 @@
     <link>https://docktile.rkarthik.co/appcast.xml</link>
     <description>Most recent changes with links to updates for DockTile.</description>
     <language>en</language>
+    <item>
+      <title>Version 1.0.0</title>
+      <pubDate>Sat, 08 Feb 2026 12:00:00 +0000</pubDate>
+      <sparkle:version>1</sparkle:version>
+      <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[
+        <h2>DockTile 1.0.0-beta</h2>
+        <ul>
+          <li>Initial public beta release</li>
+          <li>Create multiple custom dock tiles with independent app lists</li>
+          <li>Customise icons with SF Symbols, emojis, and gradient colours</li>
+          <li>Grid and list layout modes for popovers</li>
+          <li>Ghost Mode and App Mode for dock integration</li>
+          <li>macOS Tahoe icon style support (Default, Dark, Clear, Tinted)</li>
+        </ul>
+      ]]></description>
+      <enclosure
+        url="https://github.com/k97/dock-tile/releases/download/v1.0.0-beta/DockTile-1.0.0-beta.dmg"
+        type="application/octet-stream"
+        length="0"
+      />
+    </item>
   </channel>
 </rss>

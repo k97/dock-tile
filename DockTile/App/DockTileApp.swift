@@ -23,6 +23,8 @@ struct DockTileApp: App {
     private let windowWidth: CGFloat = 768
     private let minWindowHeight: CGFloat = 500
 
+    private let aboutWindowController = AboutWindowController()
+
     var body: some Scene {
         WindowGroup {
             DockTileConfigurationView()
@@ -34,7 +36,13 @@ struct DockTileApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: windowWidth, height: 600)
         .commands {
-            CommandGroup(after: .appInfo) {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Dock Tile") {
+                    aboutWindowController.showAbout {
+                        updateController.checkForUpdates()
+                    }
+                }
+                Divider()
                 Button("Check for Updates...") {
                     updateController.checkForUpdates()
                 }

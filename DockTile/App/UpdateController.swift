@@ -10,22 +10,36 @@ import Foundation
 import Sparkle
 
 @MainActor
-final class UpdateController: ObservableObject {
+final class UpdateController: NSObject, ObservableObject {
     private let updaterController: SPUStandardUpdaterController
+    private let delegate = UpdaterDelegate()
 
     var canCheckForUpdates: Bool {
         updaterController.updater.canCheckForUpdates
     }
 
-    init() {
+    override init() {
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
-            updaterDelegate: nil,
+            updaterDelegate: delegate,
             userDriverDelegate: nil
         )
+        super.init()
     }
 
     func checkForUpdates() {
         updaterController.checkForUpdates(nil)
+    }
+}
+
+// MARK: - Updater Delegate
+
+private final class UpdaterDelegate: NSObject, SPUUpdaterDelegate {
+    func updater(_ updater: SPUUpdater, didAbortWithError error: any Error) {
+        #if DEBUG
+        print("[Sparkle] Update check error (expected in dev builds): \(error.localizedDescription)")
+        #else
+        print("[Sparkle] Update check error: \(error.localizedDescription)")
+        #endif
     }
 }
