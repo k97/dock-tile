@@ -1,50 +1,29 @@
 {
-  "fill" : {
-    "solid" : "extended-gray:1.00000,1.00000"
-  },
+  "fill" : "automatic",
   "groups" : [
     {
+      "blur-material" : null,
       "layers" : [
         {
           "image-name" : "icon-dark.png",
-          "name" : "icon-dark",
-          "position" : {
-            "scale" : 0.92,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
+          "name" : "icon-dark"
         },
         {
           "image-name" : "icon-light.png",
-          "name" : "icon-light",
-          "position" : {
-            "scale" : 0.92,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
+          "name" : "icon-light"
         },
         {
           "image-name" : "icon-tinted.png",
-          "name" : "icon-tinted",
-          "position" : {
-            "scale" : 0.92,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
+          "name" : "icon-tinted"
         }
       ],
       "shadow" : {
-        "kind" : "neutral",
+        "kind" : "layer-color",
         "opacity" : 0.5
       },
+      "specular" : false,
       "translucency" : {
-        "enabled" : true,
+        "enabled" : false,
         "value" : 0.5
       }
     }
