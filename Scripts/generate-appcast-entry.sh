@@ -2,6 +2,7 @@
 #
 # generate-appcast-entry.sh
 # Generates or updates the Sparkle appcast.xml with a new release entry.
+# Inserts newest entry at the TOP of the channel (after <language>).
 #
 # Usage:
 #   ./Scripts/generate-appcast-entry.sh \
@@ -47,7 +48,7 @@ if [[ -z "$PUB_DATE" ]]; then
     PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
 fi
 
-# Write the new item to a temp file (avoids awk newline issues)
+# Write the new item to a temp file
 ITEM_FILE=$(mktemp)
 cat > "$ITEM_FILE" << ITEM_EOF
     <item>
@@ -64,14 +65,19 @@ cat > "$ITEM_FILE" << ITEM_EOF
     </item>
 ITEM_EOF
 
-# Check if the appcast file exists and has items
-if [[ -f "$OUTPUT" ]] && grep -q "</channel>" "$OUTPUT"; then
-    # Insert new item before </channel> using sed with file read
-    TEMP_FILE=$(mktemp)
-    sed "/<\/channel>/{
-r ${ITEM_FILE}
-}" "$OUTPUT" > "$TEMP_FILE"
-    mv "$TEMP_FILE" "$OUTPUT"
+if [[ -f "$OUTPUT" ]] && grep -q "<language>" "$OUTPUT"; then
+    # Insert new item after the <language> line (newest first)
+    # Uses awk with file read to handle multi-line content correctly
+    awk -v itemfile="$ITEM_FILE" '
+        /<language>/ {
+            print
+            while ((getline line < itemfile) > 0) print line
+            close(itemfile)
+            next
+        }
+        { print }
+    ' "$OUTPUT" > "${OUTPUT}.tmp"
+    mv "${OUTPUT}.tmp" "$OUTPUT"
 else
     # Create new appcast from scratch
     cat > "$OUTPUT" << APPCAST_EOF
@@ -89,6 +95,15 @@ APPCAST_EOF
 fi
 
 rm -f "$ITEM_FILE"
+
+# Validate XML structure
+if command -v xmllint &> /dev/null; then
+    if xmllint --noout "$OUTPUT" 2>/dev/null; then
+        echo "XML validation: OK"
+    else
+        echo "WARNING: XML validation failed"
+    fi
+fi
 
 echo "Appcast updated: ${OUTPUT}"
 echo "  Version: ${VERSION} (build ${BUILD})"
