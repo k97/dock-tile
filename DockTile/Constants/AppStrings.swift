@@ -215,6 +215,12 @@ enum AppStrings {
             value: "Options",
             comment: "Section divider in menu"
         )
+
+        static let configureTile = NSLocalizedString(
+            "menu.configureTile",
+            value: "Configure Tile",
+            comment: "Tooltip for gear icon in popover"
+        )
     }
 
     // MARK: - Navigation

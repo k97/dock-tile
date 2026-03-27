@@ -111,6 +111,17 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         currentIconStyle = IconStyle.current
         updateIconForCurrentStyle()
 
+        // Observe configure notification from popover gear icon
+        NotificationCenter.default.addObserver(
+            forName: .openConfigurator,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.openConfigurator()
+            }
+        }
+
         print("✓ Helper app ready")
         // App is now running in Dock - popover will show when user clicks the icon
     }
@@ -251,66 +262,61 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     /// Launch main app with deep link to select this helper's configuration
     private func launchMainAppWithDeepLink() {
-        // Create deep link URL with this helper's bundle ID
-        // docktile://configure?bundleId=com.docktile.XXXXX
-        let deepLinkURL = URL(string: "docktile://configure?bundleId=\(currentBundleId)")!
+        // Build deep link URL safely
+        var components = URLComponents()
+        components.scheme = "docktile"
+        components.host = "configure"
+        components.queryItems = [URLQueryItem(name: "bundleId", value: currentBundleId)]
+        guard let deepLinkURL = components.url else {
+            print("❌ Failed to construct deep link URL")
+            return
+        }
 
         print("🔗 Opening configurator with deep link: \(deepLinkURL)")
 
-        // Try to open via URL scheme first (works if main app is installed)
         let workspace = NSWorkspace.shared
 
-        workspace.open(deepLinkURL, configuration: NSWorkspace.OpenConfiguration()) { _, error in
-            if let error = error {
-                print("⚠️ Deep link failed: \(error.localizedDescription)")
-                // Fallback to direct app launch
-                Task { @MainActor in
-                    self.launchMainAppDirectly()
-                }
-            } else {
-                print("✅ Opened configurator via deep link")
-            }
-        }
-    }
-
-    /// Fallback: Launch main app directly (without deep link)
-    private func launchMainAppDirectly() {
-        let workspace = NSWorkspace.shared
-
-        // Try standard locations
-        let mainAppPaths = [
-            "/Applications/DockTile.app",
-            "\(NSHomeDirectory())/Applications/DockTile.app"
-        ]
-
-        for path in mainAppPaths {
-            if FileManager.default.fileExists(atPath: path) {
-                let url = URL(fileURLWithPath: path)
-                let config = NSWorkspace.OpenConfiguration()
-                workspace.openApplication(at: url, configuration: config) { _, error in
-                    if let error = error {
-                        print("❌ Failed to open main app: \(error.localizedDescription)")
-                    } else {
-                        print("✅ Launched main DockTile.app")
-                    }
-                }
-                return
-            }
-        }
-
-        // Fallback: try to find in DerivedData for development
-        if let derivedDataApp = findDockTileInDerivedData() {
+        // Find the correct main app (dev build in DerivedData, or release in /Applications)
+        if let mainAppURL = findMainApp() {
+            print("   Targeting app at: \(mainAppURL.path)")
             let config = NSWorkspace.OpenConfiguration()
-            workspace.openApplication(at: derivedDataApp, configuration: config) { _, error in
+            workspace.open([deepLinkURL], withApplicationAt: mainAppURL, configuration: config) { _, error in
                 if let error = error {
-                    print("❌ Failed to open main app from DerivedData: \(error.localizedDescription)")
+                    print("⚠️ Targeted deep link failed: \(error.localizedDescription)")
+                    // Fallback to URL scheme routing
+                    workspace.open(deepLinkURL)
                 } else {
-                    print("✅ Launched main DockTile.app from DerivedData")
+                    print("✅ Opened configurator via targeted deep link")
                 }
             }
         } else {
-            print("❌ Could not find main DockTile.app")
+            // Fallback: let macOS route the URL scheme
+            workspace.open(deepLinkURL)
         }
+    }
+
+    /// Find the correct main DockTile.app based on environment
+    private func findMainApp() -> URL? {
+        // Dev builds: check DerivedData first
+        if AppEnvironment.isDev {
+            if let derivedApp = findDockTileInDerivedData() {
+                return derivedApp
+            }
+        }
+
+        // Standard install locations
+        let paths = [
+            "/Applications/DockTile.app",
+            "\(NSHomeDirectory())/Applications/DockTile.app"
+        ]
+        for path in paths {
+            if FileManager.default.fileExists(atPath: path) {
+                return URL(fileURLWithPath: path)
+            }
+        }
+
+        // Dev fallback: check DerivedData even if not flagged as dev
+        return findDockTileInDerivedData()
     }
 
     private func findDockTileInDerivedData() -> URL? {
@@ -322,10 +328,16 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
             includingPropertiesForKeys: nil
         ) else { return nil }
 
+        // Dev build is "Dock Tile Dev.app", Release is "Dock Tile.app"
+        let appNames = ["Dock Tile Dev.app", "Dock Tile.app", "DockTile.app"]
+
         for dir in contents where dir.lastPathComponent.hasPrefix("DockTile-") {
-            let appPath = dir.appendingPathComponent("Build/Products/Debug/DockTile.app")
-            if FileManager.default.fileExists(atPath: appPath.path) {
-                return appPath
+            let productsDir = dir.appendingPathComponent("Build/Products/Debug")
+            for name in appNames {
+                let appPath = productsDir.appendingPathComponent(name)
+                if FileManager.default.fileExists(atPath: appPath.path) {
+                    return appPath
+                }
             }
         }
         return nil

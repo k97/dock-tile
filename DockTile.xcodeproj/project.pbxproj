@@ -27,6 +27,7 @@
 		AAENV002 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAENV001 /* Environment.swift */; };
 		AAEPGV02 /* EmojiPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEPGV01 /* EmojiPickerGrid.swift */; };
 		AAH00001 /* HelperBundleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAH00002 /* HelperBundleManager.swift */; };
+		AAHMM01 /* HelperMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHMM02 /* HelperMigrationManager.swift */; };
 		AAHELP01 /* HelperAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHELP02 /* HelperAppDelegate.swift */; };
 		AAICND01 /* AppIcon-Dev.icon in Resources */ = {isa = PBXBuildFile; fileRef = AAICND02 /* AppIcon-Dev.icon */; };
 		AAICON01 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = AAICON02 /* AppIcon.icon */; };
@@ -97,6 +98,7 @@
 		AAEPGV01 /* EmojiPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerGrid.swift; sourceTree = "<group>"; };
 		AAF32B63 /* ItemRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemRowView.swift; sourceTree = "<group>"; };
 		AAH00002 /* HelperBundleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperBundleManager.swift; sourceTree = "<group>"; };
+		AAHMM02 /* HelperMigrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperMigrationManager.swift; sourceTree = "<group>"; };
 		AAHELP02 /* HelperAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperAppDelegate.swift; sourceTree = "<group>"; };
 		AAUPC002 /* UpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateController.swift; sourceTree = "<group>"; };
 		AAICND02 /* AppIcon-Dev.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.icon; path = "AppIcon-Dev.icon"; sourceTree = "<group>"; };
@@ -293,6 +295,7 @@
 				AAISM002 /* IconStyleManager.swift */,
 				AAC48362 /* ConfigurationManager.swift */,
 				AAH00002 /* HelperBundleManager.swift */,
+				AAHMM02 /* HelperMigrationManager.swift */,
 				AADPW001 /* DockPlistWatcher.swift */,
 				AAC89BB2 /* ConfigurationManager.swift */,
 			);
@@ -495,6 +498,7 @@
 				AANPV01 /* NativePopoverViews.swift in Sources */,
 				AAU00001 /* IconGenerator.swift in Sources */,
 				AAH00001 /* HelperBundleManager.swift in Sources */,
+				AAHMM01 /* HelperMigrationManager.swift in Sources */,
 				AADPW002 /* DockPlistWatcher.swift in Sources */,
 				AA291E3F /* ItemRowView.swift in Sources */,
 				AA0E9A37 /* DockTileIconPreview.swift in Sources */,

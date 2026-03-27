@@ -15,6 +15,7 @@ import SwiftUI
 extension Notification.Name {
     static let dismissLauncher = Notification.Name("dismissLauncher")
     static let enableKeyboardNavigation = Notification.Name("enableKeyboardNavigation")
+    static let openConfigurator = Notification.Name("openConfigurator")
 }
 
 // MARK: - Launcher View (Layout Mode Router)

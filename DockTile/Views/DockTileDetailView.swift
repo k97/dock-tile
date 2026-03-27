@@ -404,6 +404,7 @@ struct DockTileDetailView: View {
                     // Clear lastDockIndex after successful install (position is now live in Dock)
                     try await HelperBundleManager.shared.installHelper(for: configToSave)
                     configToSave.lastDockIndex = nil  // Clear saved position
+                    configToSave.helperAppVersion = HelperBundleManager.currentAppVersion
                     print("✅ Helper installed: \(configToSave.name)")
                     print("   User can open it from: ~/Library/Application Support/DockTile/")
                 } else {

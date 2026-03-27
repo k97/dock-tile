@@ -248,6 +248,11 @@ final class ConfigurationManager: ObservableObject {
 
     // MARK: - Persistence
 
+    /// Save configurations to disk (public access for migration manager)
+    func saveAllConfigurations() {
+        saveConfigurations()
+    }
+
     /// Save all configurations to JSON file
     private func saveConfigurations() {
         do {

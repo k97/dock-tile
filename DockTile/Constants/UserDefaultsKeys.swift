@@ -11,4 +11,5 @@ import Foundation
 enum UserDefaultsKeys {
     static let hasAcknowledgedDockRestart = "hasAcknowledgedDockRestart"
     static let lastSelectedConfigId = "lastSelectedConfigId"
+    static let lastMigratedAppVersion = "lastMigratedAppVersion"
 }

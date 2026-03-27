@@ -212,12 +212,40 @@ struct StackPopoverView: View {
     var body: some View {
         VStack(spacing: 0) {
             // MARK: Anchored Header (Fixed - doesn't scroll)
-            Text(tileName)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .frame(height: headerHeight)
+            HStack {
+                // Invisible spacer to balance the gear icon and keep title centered
+                Color.clear
+                    .frame(width: 28, height: 28)
+
+                Spacer()
+
+                Text(tileName)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                // Settings gear icon — opens main app to configure this tile
+                Button(action: openConfigurator) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(AppStrings.Menu.configureTile)
+                .onHover { hovering in
+                    if hovering {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+            }
+            .padding(.horizontal, 8)
+            .frame(height: headerHeight)
 
             // MARK: Scrollable Grid Content
             if apps.isEmpty {
@@ -326,6 +354,11 @@ struct StackPopoverView: View {
     private func launchAppAt(index: Int) {
         guard index < apps.count else { return }
         AppLauncher.launch(apps[index])
+        onLaunch()
+    }
+
+    private func openConfigurator() {
+        NotificationCenter.default.post(name: .openConfigurator, object: nil)
         onLaunch()
     }
 }
@@ -446,9 +479,9 @@ struct ListPopoverView: View {
             // Utility items
             ListMenuRow(
                 icon: "gearshape",
-                title: AppStrings.Menu.options,
-                hasSubmenu: true,
-                action: { /* Options submenu */ }
+                title: AppStrings.Menu.configure,
+                hasSubmenu: false,
+                action: openConfigurator
             )
 
             ListMenuRow(
@@ -517,6 +550,11 @@ struct ListPopoverView: View {
     private func launchAppAt(index: Int) {
         guard index < apps.count else { return }
         AppLauncher.launch(apps[index])
+        onLaunch()
+    }
+
+    private func openConfigurator() {
+        NotificationCenter.default.post(name: .openConfigurator, object: nil)
         onLaunch()
     }
 

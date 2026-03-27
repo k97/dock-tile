@@ -32,6 +32,11 @@ struct DockTileApp: App {
                 .onAppear {
                     appDelegate.configManager = configManager
                 }
+                .task {
+                    // Migrate stale helper bundles after app launch
+                    let migration = HelperMigrationManager(configManager: configManager)
+                    await migration.migrateIfNeeded()
+                }
         }
         .windowResizability(.contentSize)
         .defaultSize(width: windowWidth, height: 600)

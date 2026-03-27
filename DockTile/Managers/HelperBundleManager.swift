@@ -502,6 +502,10 @@ final class HelperBundleManager {
         plist.removeValue(forKey: "SUEnableAutomaticChecks")
         plist.removeValue(forKey: "SUScheduledCheckInterval")
 
+        // Remove URL scheme registration from helper bundles.
+        // Only the main app should handle docktile:// deep links.
+        plist.removeValue(forKey: "CFBundleURLTypes")
+
         // Write back
         let nsDict = plist as NSDictionary
         guard nsDict.write(to: infoPlistPath, atomically: true) else {
@@ -1040,6 +1044,86 @@ final class HelperBundleManager {
 
         // If we get here, tile is still in plist after max wait
         print("   ⚠️ Tile still in plist after \(maxAttempts) checks (3s)")
+    }
+
+    // MARK: - Migration Support API
+
+    /// Current main app version (marketing version string)
+    static var currentAppVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
+    }
+
+    /// Regenerate a helper bundle in-place WITHOUT Dock operations.
+    /// Used by HelperMigrationManager for batch updates (single Dock restart at end).
+    func regenerateHelperBundle(for config: DockTileConfiguration) async throws {
+        let appName = sanitizeAppName(config.name)
+        let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
+
+        // If existing helper has a different name (was renamed), find by bundle ID
+        let existingHelperPath = findExistingHelper(bundleId: config.bundleIdentifier)
+
+        // If name changed, clean up old path
+        if let existingPath = existingHelperPath, existingPath != helperPath {
+            try? FileManager.default.removeItem(at: existingPath)
+        }
+
+        // 1. Generate helper bundle structure (copy main app)
+        try generateHelperBundle(
+            appName: appName,
+            bundleId: config.bundleIdentifier,
+            helperPath: helperPath,
+            showInAppSwitcher: config.showInAppSwitcher
+        )
+
+        // 2. Generate icons for all styles
+        let resourcesPath = helperPath.appendingPathComponent("Contents/Resources")
+        for style in IconStyle.allCases {
+            let iconDest = self.iconPath(for: style, in: resourcesPath)
+            try IconGenerator.generateIcns(
+                tintColor: config.tintColor,
+                iconType: config.iconType,
+                iconValue: config.iconValue,
+                iconScale: config.iconScale,
+                outputURL: iconDest,
+                iconStyle: style
+            )
+        }
+
+        // Copy current style icon to AppIcon.icns
+        let currentStyle = IconStyle.current
+        let sourceIconPath = iconPath(for: currentStyle, in: resourcesPath)
+        let iconDestPath = resourcesPath.appendingPathComponent("AppIcon.icns")
+        try? FileManager.default.removeItem(at: iconDestPath)
+        try FileManager.default.copyItem(at: sourceIconPath, to: iconDestPath)
+
+        // 3. Code sign
+        try codesignHelper(at: helperPath)
+
+        // 4. Touch bundle to refresh icon cache
+        touchBundle(at: helperPath)
+    }
+
+    /// Quit a helper and wait for termination (public for migration)
+    func quitHelperAndWait(bundleId: String) async {
+        guard isHelperRunning(bundleId: bundleId) else { return }
+        quitHelper(bundleId: bundleId)
+        var waitCount = 0
+        while isHelperRunning(bundleId: bundleId) && waitCount < 20 {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            waitCount += 1
+        }
+    }
+
+    /// Launch helper for a config (public for migration)
+    func launchHelperIfExists(for config: DockTileConfiguration) {
+        if let path = findExistingHelper(bundleId: config.bundleIdentifier) {
+            launchHelper(at: path)
+        }
+    }
+
+    /// Restart Dock (public for migration batch use)
+    func performDockRestart() {
+        restartDock()
     }
 
     // MARK: - Helpers

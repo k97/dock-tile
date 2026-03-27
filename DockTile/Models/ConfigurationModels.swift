@@ -26,6 +26,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     var showInAppSwitcher: Bool  // v2: Show in Cmd+Tab app switcher
     var bundleIdentifier: String  // e.g., "com.docktile.dev"
     var lastDockIndex: Int?  // v5: Saved Dock position for show/hide restoration
+    var helperAppVersion: String?  // v6: App version when helper was last built/updated
 
     // MARK: - Initialization
 
@@ -42,7 +43,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         isVisibleInDock: Bool = ConfigurationDefaults.isVisibleInDock,
         showInAppSwitcher: Bool = ConfigurationDefaults.showInAppSwitcher,
         bundleIdentifier: String? = nil,
-        lastDockIndex: Int? = nil
+        lastDockIndex: Int? = nil,
+        helperAppVersion: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -59,6 +61,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         // Dev: com.docktile.dev.<UUID>  |  Release: com.docktile.<UUID>
         self.bundleIdentifier = bundleIdentifier ?? "\(AppEnvironment.helperBundlePrefix).\(id.uuidString)"
         self.lastDockIndex = lastDockIndex
+        self.helperAppVersion = helperAppVersion
     }
 
     // MARK: - Custom Decoder (backward compatibility)
@@ -95,6 +98,9 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
 
         // v5 fields - last Dock position
         lastDockIndex = try container.decodeIfPresent(Int.self, forKey: .lastDockIndex)
+
+        // v6 fields - helper app version tracking
+        helperAppVersion = try container.decodeIfPresent(String.self, forKey: .helperAppVersion)
     }
 
     // MARK: - Coding Keys
@@ -111,6 +117,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         case iconScale
         // v5 fields
         case lastDockIndex
+        // v6 fields
+        case helperAppVersion
     }
 }
 
