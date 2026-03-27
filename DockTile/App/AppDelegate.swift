@@ -326,10 +326,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func launchMainApp() {
         let workspace = NSWorkspace.shared
 
-        // Try standard locations
+        // Try standard locations (PRODUCT_NAME has a space: "Dock Tile")
         let mainAppPaths = [
-            "/Applications/DockTile.app",
-            "\(NSHomeDirectory())/Applications/DockTile.app"
+            "/Applications/Dock Tile.app",
+            "\(NSHomeDirectory())/Applications/Dock Tile.app"
         ]
 
         for path in mainAppPaths {
@@ -371,10 +371,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             includingPropertiesForKeys: nil
         ) else { return nil }
 
+        let appNames = ["Dock Tile Dev.app", "Dock Tile.app"]
         for dir in contents where dir.lastPathComponent.hasPrefix("DockTile-") {
-            let appPath = dir.appendingPathComponent("Build/Products/Debug/DockTile.app")
-            if FileManager.default.fileExists(atPath: appPath.path) {
-                return appPath
+            let productsDir = dir.appendingPathComponent("Build/Products/Debug")
+            for name in appNames {
+                let appPath = productsDir.appendingPathComponent(name)
+                if FileManager.default.fileExists(atPath: appPath.path) {
+                    return appPath
+                }
             }
         }
         return nil

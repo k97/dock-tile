@@ -295,7 +295,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Find the correct main DockTile.app based on environment
+    /// Find the correct main app based on environment
     private func findMainApp() -> URL? {
         // Dev builds: check DerivedData first
         if AppEnvironment.isDev {
@@ -304,10 +304,10 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Standard install locations
+        // Standard install locations (PRODUCT_NAME has a space: "Dock Tile")
         let paths = [
-            "/Applications/DockTile.app",
-            "\(NSHomeDirectory())/Applications/DockTile.app"
+            "/Applications/Dock Tile.app",
+            "\(NSHomeDirectory())/Applications/Dock Tile.app"
         ]
         for path in paths {
             if FileManager.default.fileExists(atPath: path) {
@@ -315,8 +315,12 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Dev fallback: check DerivedData even if not flagged as dev
-        return findDockTileInDerivedData()
+        // Only fall back to DerivedData for dev builds
+        if AppEnvironment.isDev {
+            return findDockTileInDerivedData()
+        }
+
+        return nil
     }
 
     private func findDockTileInDerivedData() -> URL? {
@@ -329,7 +333,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         ) else { return nil }
 
         // Dev build is "Dock Tile Dev.app", Release is "Dock Tile.app"
-        let appNames = ["Dock Tile Dev.app", "Dock Tile.app", "DockTile.app"]
+        let appNames = ["Dock Tile Dev.app", "Dock Tile.app"]
 
         for dir in contents where dir.lastPathComponent.hasPrefix("DockTile-") {
             let productsDir = dir.appendingPathComponent("Build/Products/Debug")
