@@ -24,7 +24,8 @@ Release Progress:
 - [ ] Step 9: Update appcast.xml with new signature
 - [ ] Step 10: Commit and push changes
 - [ ] Step 11: Update GitHub release assets
-- [ ] Step 12: Verify DMG and version number
+- [ ] Step 12: Publish release & update website (⚠️ CRITICAL)
+- [ ] Step 13: Verify DMG and Sparkle updates
 ```
 
 ## Prerequisites
@@ -310,7 +311,42 @@ gh release upload vX.X.X /tmp/APP.dmg
 gh release view vX.X.X --json assets -q '.assets[] | "\(.name) - \(.size) bytes"'
 ```
 
-## Step 11: Final Verification
+## Step 11: Publish Release & Update Website
+
+⚠️ **CRITICAL**: GitHub releases created by CI are **drafts** (`draft: true`). Draft release assets return **404** for unauthenticated downloads. Sparkle will show "Update Error — An error occurred while downloading the update" until the release is published.
+
+**Publish the release:**
+```bash
+gh release edit vX.X.X --draft=false
+```
+
+**Verify the DMG is publicly downloadable:**
+```bash
+curl -sI -L "https://github.com/USER/REPO/releases/download/vX.X.X/APP-X.X.X.dmg" | grep "HTTP/"
+# Should show: HTTP/2 302 then HTTP/2 200
+```
+
+**Update website config** (`website/lib/config.ts`):
+```typescript
+downloadUrl: "https://github.com/USER/REPO/releases/download/vX.X.X/APP-X.X.X.dmg",
+releaseNotesUrl: "https://github.com/USER/REPO/releases/tag/vX.X.X",
+latestVersion: "X.X.X",
+```
+
+**Update release notes page** (`website/app/release-notes/page.tsx`):
+- Add a new `<section>` block at the top for the new version
+- Include date, summary, and changelog items
+
+**Commit and push website updates:**
+```bash
+git add website/lib/config.ts website/app/release-notes/page.tsx
+git commit -m "chore: Update website for vX.X.X release"
+git push
+```
+
+This triggers a Vercel deploy. The website will reflect the new version within ~60 seconds.
+
+## Step 12: Final Verification
 
 Verify the release is working correctly:
 
@@ -329,8 +365,11 @@ Should show: `X.X.X`
 5. Should open without any "malicious" or security warnings
 
 **Test Sparkle updates:**
-- Users with previous versions should receive automatic update notifications
-- The update should download and install smoothly
+- Open the previous version of the app
+- Click "Check for Updates..." from the app menu
+- The update dialog should show the new version
+- Click "Install Update" — it should download and install without errors
+- If you see "Update Error — An error occurred while downloading", the release is still a **draft** — go back to Step 11
 
 ## Common Issues
 
