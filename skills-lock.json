@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "favicon": {
+      "source": "brianlovin/claude-config",
+      "sourceType": "github",
+      "computedHash": "e4cee5888c1bc9fd3a3811408aeee8acdbee6f038e496ccc89f1507b6e15b7fc"
+    },
     "macos-developer": {
       "source": "404kidwiz/claude-supercode-skills",
       "sourceType": "github",

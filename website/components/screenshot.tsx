@@ -17,17 +17,17 @@ const slides = [
   {
     src: "/assets/stage/dock-tiles.webp",
     alt: "Dock tiles in the macOS Dock",
-    blur: "data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAAAQAgCdASoKAAcABUB8JbACdLoAAnSVIa3gAP3tWc8L7HbL2LVW4fqGXD6o8bjior7eBSOGYAA=",
+    blur: "data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAAAQAgCdASoKAAcABUB8JbACdLoAAzdvGMAAAP3tWY8SVKHR3exKZF+6+L2+zwfFsVwfLAAA",
   },
   {
     src: "/assets/stage/docktile-app.webp",
     alt: "Dock Tile app main view",
-    blur: "data:image/webp;base64,UklGRkoAAABXRUJQVlA4ID4AAAAwAgCdASoKAAcABUB8JbACdLoAAxkufIs8QAD+yaHBU1kTkt0ut2QGf6YEdQy4x8aG0eI1BNpDzmg7z4AAAA==",
+    blur: "data:image/webp;base64,UklGRkoAAABXRUJQVlA4ID4AAAAwAgCdASoKAAcABUB8JbACdLoAAzoAa2VwAAD+yaUMHUBtdR/O4C+GV8cd0vWZqt2LxOdsXgKkRec0DEDQAA==",
   },
   {
     src: "/assets/stage/icon-customiser.webp",
     alt: "Dock Tile icon customiser",
-    blur: "data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAAAwAgCdASoKAAcABUB8JbACdLoAAxkWXIswIAD+yaTPmXkAFpuoFIj865rf+7dK2T4qKvg8gYtPREAAAAA=",
+    blur: "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAAAQAgCdASoKAAcABUB8JbACdLoAAnJGG/0AAP7JpQxyYjsQWAO8Mllpte+82U7WK+gJQoUHsUtk0HevikWznAAA",
   },
 ];
 

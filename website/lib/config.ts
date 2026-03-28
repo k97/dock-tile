@@ -11,7 +11,7 @@ export const siteConfig = {
   latestVersion: "1.2.1",
 
   // Social & External Links
-  githubUrl: "", // Leave empty if repo is private
+  githubUrl: "https://github.com/k97/dock-tile",
 
   // App Info
   appName: "Dock Tile",

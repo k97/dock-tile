@@ -13,7 +13,9 @@ export function Hero() {
   const iconRef = React.useRef<HTMLDivElement>(null);
 
   // Download button state machine
-  const [downloadState, setDownloadState] = React.useState<'ready' | 'downloading' | 'downloaded'>('ready');
+  const [downloadState, setDownloadState] = React.useState<
+    "ready" | "downloading" | "downloaded"
+  >("ready");
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!iconRef.current) return;
@@ -40,24 +42,27 @@ export function Hero() {
     trackDownloadClick();
 
     // Change to downloading state
-    setDownloadState('downloading');
+    setDownloadState("downloading");
 
     // Initiate download
     window.location.href = siteConfig.downloadUrl;
 
     // After 2 seconds, assume download started and show "Downloaded"
     setTimeout(() => {
-      setDownloadState('downloaded');
+      setDownloadState("downloaded");
 
       // After 4 more seconds, reset to ready
       setTimeout(() => {
-        setDownloadState('ready');
+        setDownloadState("ready");
       }, 4000);
     }, 2000);
   };
 
   return (
-    <section id="hero-section" className="flex flex-col items-center text-center px-4 pt-16 pb-8 md:pt-24 md:pb-12">
+    <section
+      id="hero-section"
+      className="flex flex-col items-center text-center px-4 pt-16 pb-8 md:pt-24 md:pb-12"
+    >
       {/* App Icon with 3D tilt effect and macOS glass styling */}
       <div
         ref={iconRef}
@@ -71,7 +76,7 @@ export function Hero() {
           <div className="absolute inset-0 rounded-[22%] bg-gradient-to-b from-white/40 to-transparent dark:from-white/10 dark:to-transparent pointer-events-none" />
 
           {/* SVG Icon centered */}
-          <div className="absolute inset-0 flex items-center justify-center p-5">
+          <div className="absolute inset-0 flex items-center justify-center">
             <Image
               src="/assets/dock-tile-icon-only.svg"
               alt={`${siteConfig.appName} icon`}
@@ -100,26 +105,29 @@ export function Hero() {
       </p>
 
       {/* CTA Buttons */}
-      <div id="hero-cta" className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+      <div
+        id="hero-cta"
+        className="mt-8 flex flex-col sm:flex-row items-center gap-3"
+      >
         <Button
           size="lg"
           onClick={handleDownload}
-          disabled={downloadState !== 'ready'}
+          disabled={downloadState !== "ready"}
           className="gap-2 px-8 py-6 rounded-xl text-md cursor-pointer"
         >
-          {downloadState === 'ready' && (
+          {downloadState === "ready" && (
             <>
               <Download className="h-4 w-4" />
               {content.downloadButton}
             </>
           )}
-          {downloadState === 'downloading' && (
+          {downloadState === "downloading" && (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Downloading...
             </>
           )}
-          {downloadState === 'downloaded' && (
+          {downloadState === "downloaded" && (
             <>
               <Check className="h-4 w-4" />
               Downloaded
@@ -137,7 +145,14 @@ export function Hero() {
         >
           v{siteConfig.latestVersion}
         </a>
-        {" · Free · macOS 26+"}
+        {" · "}<a
+          href={siteConfig.githubUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline underline-offset-4"
+        >
+          GitHub
+        </a>{" · macOS 26+"}
       </p>
     </section>
   );
