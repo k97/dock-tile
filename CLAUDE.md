@@ -27,6 +27,7 @@ Controlled via Info.plist variables (`DTEnvironment`, `DTHelperPrefix`, `DTPrefs
 ## Rules
 
 - [Architecture](/.claude/rules/architecture.md) — Helper bundles, Ghost/App mode, NSPopover, CFPreferences
+- [Dock Lock](/.claude/rules/dock-lock.md) — Pin Dock to one display, CGEvent tap, Accessibility permission
 - [Development](/.claude/rules/development.md) — Code patterns, schema evolution, shared utilities
 - [Testing](/.claude/rules/testing.md) — Swift Testing framework, commands, coverage targets
 - [CI & Release](/.claude/rules/ci-release.md) — GitHub Actions, Sparkle updates, code signing
