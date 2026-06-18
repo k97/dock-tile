@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "spike-3-server",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["server.ts"],
+      "port": 3000,
+      "cwd": "spikes/spike-3-pipeline/tauri-app"
+    },
+    {
+      "name": "spike-3-extension",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["wxt", "dev"],
+      "port": 5173,
+      "cwd": "spikes/spike-3-pipeline/extension"
+    },
+    {
+      "name": "spike-4-extension",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["wxt", "dev"],
+      "port": 5174,
+      "cwd": "spikes/spike-4-crop/extension"
+    }
+  ]
+}

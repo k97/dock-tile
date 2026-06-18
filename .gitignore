@@ -81,7 +81,7 @@ fastlane/test_output
 *.DS_Store
 
 # Claude Code
-.claude/
+# .claude/
 
 # Certificates (sensitive)
 *.p12
