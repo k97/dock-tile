@@ -27,10 +27,17 @@
 		AAENV002 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAENV001 /* Environment.swift */; };
 		AAEPGV02 /* EmojiPickerGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEPGV01 /* EmojiPickerGrid.swift */; };
 		AAH00001 /* HelperBundleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAH00002 /* HelperBundleManager.swift */; };
+		AAANS01 /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAANS02 /* AnalyticsService.swift */; };
 		AAHMM01 /* HelperMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHMM02 /* HelperMigrationManager.swift */; };
+		AALGN01 /* LoginItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AALGN02 /* LoginItemManager.swift */; };
+		AAGSV01 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAGSV02 /* GeneralSettingsView.swift */; };
+		AALTS01 /* LoginTileSpawner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AALTS02 /* LoginTileSpawner.swift */; };
+		AALAR02 /* com.docktile.app.tilelauncher.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = AALAR01 /* com.docktile.app.tilelauncher.plist */; };
+		AALAD02 /* com.docktile.dev.app.tilelauncher.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = AALAD01 /* com.docktile.dev.app.tilelauncher.plist */; };
 		AAHELP01 /* HelperAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHELP02 /* HelperAppDelegate.swift */; };
 		AAICND01 /* AppIcon-Dev.icon in Resources */ = {isa = PBXBuildFile; fileRef = AAICND02 /* AppIcon-Dev.icon */; };
 		AAICON01 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = AAICON02 /* AppIcon.icon */; };
+		AAGSI01 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AAGSI02 /* GoogleService-Info.plist */; };
 		AAIGOV02 /* IconGridOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAIGOV01 /* IconGridOverlay.swift */; };
 		AAISM001 /* IconStyleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAISM002 /* IconStyleManager.swift */; };
 		AAMAIN01 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAMAIN02 /* main.swift */; };
@@ -39,11 +46,15 @@
 		AASTR001 /* AppStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASTR002 /* AppStrings.swift */; };
 		AAU00001 /* IconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAU00002 /* IconGenerator.swift */; };
 		AASPK001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AASPK002 /* Sparkle */; };
+		AAFB020 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAFB010 /* FirebaseAnalytics */; };
+		AAFB021 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAFB011 /* FirebaseCrashlytics */; };
 		AAUPC001 /* UpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUPC002 /* UpdateController.swift */; };
 		AAILB01 /* AppIconLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAILB02 /* AppIconLoader.swift */; };
 		AAALB01 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAALB02 /* AppLauncher.swift */; };
 		AANBV01 /* NativeBackgroundViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AANBV02 /* NativeBackgroundViews.swift */; };
 		AAUDK01 /* UserDefaultsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUDK02 /* UserDefaultsKeys.swift */; };
+		AA2B0DD5 /* DockLockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4D24B5; };
+		AA218BB9 /* DockLockSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4AC606; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,6 +80,7 @@
 		AA0002 /* DockTileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileApp.swift; sourceTree = "<group>"; };
 		AA0004 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AA0008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AAGSI02 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA0009 /* Dock Tile Dev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dock Tile Dev.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0021 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
 		AA0023 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
@@ -98,7 +110,13 @@
 		AAEPGV01 /* EmojiPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerGrid.swift; sourceTree = "<group>"; };
 		AAF32B63 /* ItemRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemRowView.swift; sourceTree = "<group>"; };
 		AAH00002 /* HelperBundleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperBundleManager.swift; sourceTree = "<group>"; };
+		AAANS02 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		AAHMM02 /* HelperMigrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperMigrationManager.swift; sourceTree = "<group>"; };
+		AALGN02 /* LoginItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemManager.swift; sourceTree = "<group>"; };
+		AAGSV02 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		AALTS02 /* LoginTileSpawner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginTileSpawner.swift; sourceTree = "<group>"; };
+		AALAR01 /* com.docktile.app.tilelauncher.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.docktile.app.tilelauncher.plist; sourceTree = "<group>"; };
+		AALAD01 /* com.docktile.dev.app.tilelauncher.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.docktile.dev.app.tilelauncher.plist; sourceTree = "<group>"; };
 		AAHELP02 /* HelperAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperAppDelegate.swift; sourceTree = "<group>"; };
 		AAUPC002 /* UpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateController.swift; sourceTree = "<group>"; };
 		AAICND02 /* AppIcon-Dev.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.icon; path = "AppIcon-Dev.icon"; sourceTree = "<group>"; };
@@ -117,6 +135,8 @@
 		AAXCFG01 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
 		AAXCFG02 /* Dev.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Dev.xcconfig; sourceTree = "<group>"; };
 		AAXCFG03 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		AA4D24B5 /* DockLockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockLockManager.swift; sourceTree = "<group>"; };
+		AA4AC606 /* DockLockSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockLockSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -152,6 +172,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				AASPK001 /* Sparkle in Frameworks */,
+				AAFB020 /* FirebaseAnalytics in Frameworks */,
+				AAFB021 /* FirebaseCrashlytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -184,6 +206,7 @@
 				AA0002 /* DockTileApp.swift */,
 				AA0004 /* AppDelegate.swift */,
 				AAHELP02 /* HelperAppDelegate.swift */,
+				AALTS02 /* LoginTileSpawner.swift */,
 				AAENV001 /* Environment.swift */,
 				AAUPC002 /* UpdateController.swift */,
 			);
@@ -213,8 +236,19 @@
 				AAICON02 /* AppIcon.icon */,
 				AAICND02 /* AppIcon-Dev.icon */,
 				AA0008 /* Info.plist */,
+				AAGSI02 /* GoogleService-Info.plist */,
+				AALI000 /* LoginItems */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		AALI000 /* LoginItems */ = {
+			isa = PBXGroup;
+			children = (
+				AALAR01 /* com.docktile.app.tilelauncher.plist */,
+				AALAD01 /* com.docktile.dev.app.tilelauncher.plist */,
+			);
+			path = LoginItems;
 			sourceTree = "<group>";
 		};
 		AA0010 /* Products */ = {
@@ -256,6 +290,7 @@
 			isa = PBXGroup;
 			children = (
 				AAAB0002 /* AboutView.swift */,
+				AAGSV02 /* GeneralSettingsView.swift */,
 				AA12D329 /* DockTileConfigurationView.swift */,
 				AA169EDE /* DockTileSidebarView.swift */,
 				AADDFDF7 /* DockTileDetailView.swift */,
@@ -264,7 +299,8 @@
 				AA474359 /* DockTileDetailView.swift */,
 				AA05B3C0 /* DockTileSidebarView.swift */,
 				AAC653A9 /* DockTileConfigurationView.swift */,
-			);
+			
+				AA4AC606 /* DockLockSettingsView.swift */,);
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -294,11 +330,14 @@
 				AAAPM002 /* AppearanceManager.swift */,
 				AAISM002 /* IconStyleManager.swift */,
 				AAC48362 /* ConfigurationManager.swift */,
+				AAANS02 /* AnalyticsService.swift */,
 				AAH00002 /* HelperBundleManager.swift */,
 				AAHMM02 /* HelperMigrationManager.swift */,
+				AALGN02 /* LoginItemManager.swift */,
 				AADPW001 /* DockPlistWatcher.swift */,
 				AAC89BB2 /* ConfigurationManager.swift */,
-			);
+			
+				AA4D24B5 /* DockLockManager.swift */,);
 			path = Managers;
 			sourceTree = "<group>";
 		};
@@ -387,6 +426,7 @@
 				AA0014 /* Sources */,
 				AA000A /* Frameworks */,
 				AA0015 /* Resources */,
+				AACOPY01 /* CopyFiles - Login Item Launcher */,
 			);
 			buildRules = (
 			);
@@ -395,6 +435,8 @@
 			name = DockTile;
 			packageProductDependencies = (
 				AASPK002 /* Sparkle */,
+				AAFB010 /* FirebaseAnalytics */,
+				AAFB011 /* FirebaseCrashlytics */,
 			);
 			productName = DockTile;
 			productReference = AA0009 /* Dock Tile Dev.app */;
@@ -433,6 +475,7 @@
 			productRefGroup = AA0010 /* Products */;
 			packageReferences = (
 				AASPK003 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				AAFB003 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			projectDirPath = "";
 			projectRoot = "";
@@ -465,6 +508,7 @@
 			files = (
 				AAICON01 /* AppIcon.icon in Resources */,
 				AAICND01 /* AppIcon-Dev.icon in Resources */,
+				AAGSI01 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -498,6 +542,7 @@
 				AANPV01 /* NativePopoverViews.swift in Sources */,
 				AAU00001 /* IconGenerator.swift in Sources */,
 				AAH00001 /* HelperBundleManager.swift in Sources */,
+				AAANS01 /* AnalyticsService.swift in Sources */,
 				AAHMM01 /* HelperMigrationManager.swift in Sources */,
 				AADPW002 /* DockPlistWatcher.swift in Sources */,
 				AA291E3F /* ItemRowView.swift in Sources */,
@@ -523,10 +568,30 @@
 				AAALB01 /* AppLauncher.swift in Sources */,
 				AANBV01 /* NativeBackgroundViews.swift in Sources */,
 				AAUDK01 /* UserDefaultsKeys.swift in Sources */,
-			);
+				AALGN01 /* LoginItemManager.swift in Sources */,
+				AAGSV01 /* GeneralSettingsView.swift in Sources */,
+				AALTS01 /* LoginTileSpawner.swift in Sources */,
+			
+				AA2B0DD5 /* DockLockManager.swift in Sources */,
+				AA218BB9 /* DockLockSettingsView.swift in Sources */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AACOPY01 /* CopyFiles - Login Item Launcher */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "Contents/Library/LaunchAgents";
+			dstSubfolderSpec = 1;
+			files = (
+				AALAR02 /* com.docktile.app.tilelauncher.plist in CopyFiles */,
+				AALAD02 /* com.docktile.dev.app.tilelauncher.plist in CopyFiles */,
+			);
+			name = "Copy Login Item Launcher";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		25901D9C2F30773B001B32FE /* PBXTargetDependency */ = {
@@ -639,7 +704,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = R68RHN3HF5;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -860,6 +925,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		AAFB003 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -867,6 +940,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AASPK003 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		AAFB010 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAFB003 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		AAFB011 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AAFB003 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

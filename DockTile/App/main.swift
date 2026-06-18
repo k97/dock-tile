@@ -30,11 +30,20 @@ private func isHelperApp() -> Bool {
 }
 
 // Check before any SwiftUI initialization
-if isHelperApp() {
+if CommandLine.arguments.contains(LoginTileSpawner.flag) {
+    // Headless login path: the SMAppService launcher agent started us to warm the
+    // tiles. Launch the visible helpers and exit — never spins up an NSApplication,
+    // so no Dock icon or window appears at login.
+    LoginTileSpawner.run()
+} else if isHelperApp() {
     // Helper app: Pure AppKit, no SwiftUI WindowGroup
     let bundleId = Bundle.main.bundleIdentifier ?? "unknown"
     NSLog("🚀 Starting as helper app (pure AppKit) - Bundle ID: %@", bundleId)
     print("🚀 Starting as helper app (pure AppKit) - Bundle ID: \(bundleId)")
+
+    // Analytics/Crashlytics (helpers report popover usage with app_role=helper).
+    AnalyticsService.shared.configure()
+    AnalyticsService.shared.log(.appLaunched)
 
     // Create autoreleasepool to manage memory properly
     autoreleasepool {
@@ -53,5 +62,10 @@ if isHelperApp() {
 } else {
     // Main app: Use SwiftUI
     print("🚀 Starting as main app (SwiftUI)")
+
+    // Analytics/Crashlytics — configure before SwiftUI spins up.
+    AnalyticsService.shared.configure()
+    AnalyticsService.shared.log(.appLaunched)
+
     DockTileApp.main()
 }

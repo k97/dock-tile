@@ -40,6 +40,23 @@ struct DockTileApp: App {
         }
         .windowResizability(.contentSize)
         .defaultSize(width: windowWidth, height: 600)
+
+        // Native macOS Settings window (⌘,) — hosts app-wide preferences.
+        Settings {
+            TabView {
+                GeneralSettingsView()
+                    .environmentObject(configManager)
+                    .tabItem {
+                        Label(AppStrings.Settings.general, systemImage: "gearshape")
+                    }
+
+                DockLockSettingsView()
+                    .tabItem {
+                        Label(AppStrings.Settings.dockLock, systemImage: "lock.display")
+                    }
+            }
+        }
+
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("About Dock Tile") {

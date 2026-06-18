@@ -402,9 +402,16 @@ struct DockTileDetailView: View {
                 if configToSave.isVisibleInDock {
                     // User wants tile in Dock - install/update
                     // Clear lastDockIndex after successful install (position is now live in Dock)
+                    let wasInDock = isCurrentlyInDock
                     try await HelperBundleManager.shared.installHelper(for: configToSave)
                     configToSave.lastDockIndex = nil  // Clear saved position
                     configToSave.helperAppVersion = HelperBundleManager.currentAppVersion
+
+                    AnalyticsService.shared.log(wasInDock ? .tileUpdated : .tileAddedToDock, [
+                        "layout": configToSave.layoutMode.rawValue,
+                        "app_count": configToSave.appItems.count,
+                        "show_in_app_switcher": configToSave.showInAppSwitcher
+                    ])
                     print("✅ Helper installed: \(configToSave.name)")
                     print("   User can open it from: ~/Library/Application Support/DockTile/")
                 } else {
@@ -416,6 +423,7 @@ struct DockTileDetailView: View {
                         configToSave.lastDockIndex = position
                         print("   📍 Saved Dock position: \(position) for later restoration")
                     }
+                    AnalyticsService.shared.log(.tileHidden, ["app_count": configToSave.appItems.count])
                     print("✅ Tile removed from Dock: \(configToSave.name)")
                 }
 
@@ -436,7 +444,9 @@ struct DockTileDetailView: View {
                 updateDockState()
             } catch {
                 errorMessage = error.localizedDescription
-                print("Dock action failed: \(error)")
+                AnalyticsService.shared.record(error, context: "performDockAction",
+                                               keys: ["bundle_id": editedConfig.bundleIdentifier,
+                                                      "visible": String(editedConfig.isVisibleInDock)])
             }
             isProcessing = false
         }

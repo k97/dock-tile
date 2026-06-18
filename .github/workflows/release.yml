@@ -124,6 +124,24 @@ jobs:
           codesign --verify --deep --strict "$APP_PATH"
           echo "App signed successfully"
 
+      - name: Upload Crashlytics dSYMs
+        # Never block a release on symbol upload — dSYMs can be re-uploaded later if this hiccups.
+        continue-on-error: true
+        run: |
+          GSP="DockTile/Resources/GoogleService-Info.plist"
+          if [ ! -f "$GSP" ]; then
+            echo "No GoogleService-Info.plist found — skipping Crashlytics dSYM upload."
+            exit 0
+          fi
+          UPLOAD=$(find ./build/SourcePackages/checkouts -name upload-symbols -type f | head -1)
+          DSYM=$(find ./build/Build/Products/Release -name '*.app.dSYM' | head -1)
+          if [ -z "$UPLOAD" ] || [ -z "$DSYM" ]; then
+            echo "upload-symbols or dSYM not found (UPLOAD='$UPLOAD' DSYM='$DSYM') — skipping."
+            exit 0
+          fi
+          echo "Uploading dSYM $DSYM via $UPLOAD"
+          "$UPLOAD" -gsp "$GSP" -p mac "$DSYM"
+
       - name: Install create-dmg
         run: brew install create-dmg
 

@@ -38,6 +38,24 @@ enum AppEnvironment {
         Bundle.main.infoDictionary?["DTHelperPrefix"] as? String ?? "com.docktile"
     }()
 
+    /// Whether this process is a helper bundle (a copy of the main app with a per-tile
+    /// bundle ID like `com.docktile.<UUID>`) rather than the main app itself.
+    /// Mirrors the detection in `main.swift`.
+    static let isHelper: Bool = {
+        let mainAppBundleIds: Set<String> = ["com.docktile.app", "com.docktile.dev.app", "com.docktile"]
+        let id = mainAppBundleId
+        if mainAppBundleIds.contains(id) { return false }
+        return id.hasPrefix("com.docktile.")
+    }()
+
+    /// Analytics/Crashlytics role label for the current process.
+    static var appRole: String { isHelper ? "helper" : "main" }
+
+    /// Marketing version string (e.g., "1.2.1").
+    static let appVersion: String = {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+    }()
+
     // MARK: - File Paths
 
     /// Preferences JSON filename (e.g., "com.docktile.configs.json")

@@ -85,6 +85,11 @@ final class HelperMigrationManager {
         // Save and mark migration complete
         configManager.saveAllConfigurations()
         UserDefaults.standard.set(currentVersion, forKey: UserDefaultsKeys.lastMigratedAppVersion)
+        AnalyticsService.shared.log(.helperMigrationRun, [
+            "from_version": lastMigrated ?? "none",
+            "to_version": currentVersion,
+            "stale_count": staleBundleConfigs.count
+        ])
         print("[Migration] Complete for v\(currentVersion)")
     }
 
@@ -103,7 +108,8 @@ final class HelperMigrationManager {
                 regeneratedConfigs.append(config)
                 print("[Migration]   Regenerated '\(config.name)'")
             } catch {
-                print("[Migration]   FAILED '\(config.name)': \(error.localizedDescription)")
+                AnalyticsService.shared.record(error, context: "regenerateHelperBundle",
+                                               keys: ["bundle_id": config.bundleIdentifier])
             }
 
             // Stamp version regardless (avoid retrying broken configs every launch)

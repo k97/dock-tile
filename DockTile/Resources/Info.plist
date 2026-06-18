@@ -57,5 +57,9 @@
 	<integer>86400</integer>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- Firebase is configured manually in main.swift (AppKit, no UIApplication).
+	     Disable delegate swizzling to avoid surprises. -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 </dict>
 </plist>

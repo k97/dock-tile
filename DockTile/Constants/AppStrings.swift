@@ -125,6 +125,12 @@ enum AppStrings {
             value: "Update",
             comment: "Update button when tile is already in Dock"
         )
+
+        static let openLoginItems = NSLocalizedString(
+            "button.openLoginItems",
+            value: "Open Login Items Settings…",
+            comment: "Button that opens System Settings Login Items for approval"
+        )
     }
 
     // MARK: - Labels
@@ -170,6 +176,112 @@ enum AppStrings {
             "label.tileName",
             value: "Tile Name",
             comment: "Label for tile name field"
+        )
+
+        static let startAtLogin = NSLocalizedString(
+            "label.startAtLogin",
+            value: "Start tiles at login",
+            comment: "Label for the start-at-login toggle in Settings"
+        )
+
+        static let startAtLoginDescription = NSLocalizedString(
+            "label.startAtLoginDescription",
+            value: "Keep your tiles ready in the Dock so they respond instantly after you restart your Mac.",
+            comment: "Explanation under the start-at-login toggle"
+        )
+
+        static let shareAnalytics = NSLocalizedString(
+            "label.shareAnalytics",
+            value: "Share anonymous usage data",
+            comment: "Label for the analytics opt-out toggle in Settings"
+        )
+
+        static let shareAnalyticsDescription = NSLocalizedString(
+            "label.shareAnalyticsDescription",
+            value: "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected.",
+            comment: "Explanation under the analytics toggle"
+        )
+    }
+
+    // MARK: - Settings
+
+    enum Settings {
+        static let general = NSLocalizedString(
+            "settings.general",
+            value: "General",
+            comment: "Title of the General settings pane"
+        )
+
+        static let loginRequiresApproval = NSLocalizedString(
+            "settings.login.requiresApproval",
+            value: "Approve Dock Tile in Login Items to finish enabling this.",
+            comment: "Shown when macOS is holding the login item for user approval"
+        )
+
+        static let dockLock = NSLocalizedString(
+            "settings.dockLock",
+            value: "Dock Lock",
+            comment: "Section header for the Dock Lock feature in Settings"
+        )
+
+        static let dockLockToggle = NSLocalizedString(
+            "settings.dockLock.toggle",
+            value: "Lock Dock to one display",
+            comment: "Label for the Dock Lock enable toggle"
+        )
+
+        static let dockLockDescription = NSLocalizedString(
+            "settings.dockLock.description",
+            value: "Stop the Dock from jumping between screens on multi-display setups. It stays on the display you choose.",
+            comment: "Explanation under the Dock Lock toggle"
+        )
+
+        static let dockLockAnchor = NSLocalizedString(
+            "settings.dockLock.anchor",
+            value: "Keep Dock on",
+            comment: "Label for the anchor display picker"
+        )
+
+        static let dockLockMainDisplay = NSLocalizedString(
+            "settings.dockLock.mainDisplay",
+            value: "Main",
+            comment: "Suffix marking the main display in the anchor picker"
+        )
+
+        static let dockLockMoveDock = NSLocalizedString(
+            "settings.dockLock.moveDock",
+            value: "Move Dock to Chosen Display Now",
+            comment: "Button that nudges the Dock onto the anchor display"
+        )
+
+        static let dockLockAccessibilityNeeded = NSLocalizedString(
+            "settings.dockLock.accessibilityNeeded",
+            value: "Accessibility access required",
+            comment: "Status shown when Accessibility permission is missing"
+        )
+
+        static let dockLockAccessibilityNeededDetail = NSLocalizedString(
+            "settings.dockLock.accessibilityNeededDetail",
+            value: "Dock Tile needs Accessibility access to keep the Dock in place. Turn on Dock Tile in System Settings.",
+            comment: "Explanation of why Accessibility access is needed"
+        )
+
+        static let dockLockAccessibilityGranted = NSLocalizedString(
+            "settings.dockLock.accessibilityGranted",
+            value: "Accessibility access granted",
+            comment: "Status shown when Accessibility permission is granted"
+        )
+
+        static let dockLockOpenSettings = NSLocalizedString(
+            "settings.dockLock.openSettings",
+            value: "Open System Settings…",
+            comment: "Button that opens the Accessibility pane in System Settings"
+        )
+
+        static let dockLockNote = NSLocalizedString(
+            "settings.dockLock.note",
+            value: "Works with the Dock at the bottom, left, or right. Keeping it on a screen reserves a few pixels at that edge on your other displays.",
+            comment: "Footnote describing Dock Lock behaviour and trade-off"
         )
     }
 
@@ -330,6 +442,12 @@ enum AppStrings {
             "tooltip.editFirst",
             value: "Edit current tile before creating another",
             comment: "Tooltip when add button is disabled"
+        )
+
+        static let openSettings = NSLocalizedString(
+            "tooltip.openSettings",
+            value: "Settings",
+            comment: "Tooltip for the settings toolbar button"
         )
     }
 

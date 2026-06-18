@@ -123,6 +123,7 @@ final class ConfigurationManager: ObservableObject {
 
         saveConfigurations()
 
+        AnalyticsService.shared.log(.tileCreated)
         print("✅ Created configuration: \(config.name) [\(config.id)]")
         print("   selectedConfigHasBeenEdited = \(selectedConfigHasBeenEdited) (should be false)")
         return config
@@ -168,10 +169,12 @@ final class ConfigurationManager: ObservableObject {
                 )
                 print("🗑️ Removed helper bundle for: \(config.name)")
             } catch {
-                print("⚠️ Failed to remove helper bundle: \(error.localizedDescription)")
+                AnalyticsService.shared.record(error, context: "uninstallHelper",
+                                               keys: ["bundle_id": config.bundleIdentifier])
             }
         }
 
+        AnalyticsService.shared.log(.tileRemoved, ["app_count": config.appItems.count])
         configurations.remove(at: index)
 
         // If deleted config was selected, select another one (or nil if none left)

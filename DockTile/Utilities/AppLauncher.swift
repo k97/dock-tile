@@ -13,6 +13,8 @@ enum AppLauncher {
 
     /// Launch an app or open a folder for the given AppItem
     static func launch(_ app: AppItem) {
+        AnalyticsService.shared.log(.appLaunchedFromTile, ["source": "popover", "is_folder": app.isFolder])
+
         let workspace = NSWorkspace.shared
 
         if app.isFolder, let folderPath = app.folderPath {

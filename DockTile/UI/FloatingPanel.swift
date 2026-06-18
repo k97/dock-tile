@@ -18,6 +18,19 @@ enum DockPosition {
     case right
 }
 
+// MARK: - Panel State
+
+/// Explicit lifecycle state for the popover. Replaces reliance on `NSPopover.isShown`,
+/// which is unreliable mid-animation and races with the async `popoverDidClose` cleanup.
+/// Gating show/hide on this state prevents rapid Dock clicks from stacking multiple
+/// show/close animations (the "flicker" bug after a cold launch).
+enum PanelState {
+    case hidden
+    case showing
+    case shown
+    case hiding
+}
+
 @MainActor
 final class FloatingPanel: NSObject, NSPopoverDelegate {
 
@@ -34,8 +47,13 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
     /// Configuration to display in the launcher
     var configuration: DockTileConfiguration?
 
+    /// Explicit lifecycle state — the single source of truth for visibility.
+    private(set) var state: PanelState = .hidden
+
+    /// True while the popover is on screen or animating in. Callers use this to decide
+    /// whether a Dock click should show or hide.
     var isVisible: Bool {
-        return popover?.isShown ?? false
+        return state == .showing || state == .shown
     }
 
     // MARK: - Dock Detection
@@ -222,10 +240,13 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
     // MARK: - Show/Hide
 
     func show(animated: Bool = true, withKeyboardFocus: Bool = false) {
-        // If already visible, don't recreate
-        if popover?.isShown == true {
+        // Only show from a settled hidden state. Ignore re-entrant calls while we're
+        // already showing/shown, or mid-close — this is what stops click bursts from
+        // stacking animations and flickering the popover.
+        guard state == .hidden else {
             return
         }
+        state = .showing
 
         // Cleanup any stale state
         cleanupPopover()
@@ -241,6 +262,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         guard let popover = popover,
               let anchorWindow = anchorWindow,
               let anchorView = anchorWindow.contentView else {
+            state = .hidden
             return
         }
 
@@ -253,6 +275,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
             of: anchorView,
             preferredEdge: preferredEdge
         )
+        state = .shown
 
         // If keyboard focus requested (Cmd+Tab activation), notify the view
         if withKeyboardFocus {
@@ -291,6 +314,13 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
     }
 
     func hide(animated: Bool = true) {
+        // Only hide from a visible state. Ignore calls while already hiding/hidden so a
+        // queued click can't fire a second close mid-animation.
+        guard state == .showing || state == .shown else {
+            return
+        }
+        state = .hiding
+
         // Remove notification observer first
         if let observer = dismissObserver {
             NotificationCenter.default.removeObserver(observer)
@@ -303,7 +333,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
             clickOutsideMonitor = nil
         }
 
-        // Close popover (delegate will handle final cleanup)
+        // Close popover (delegate will handle final cleanup and reset state to .hidden)
         popover?.close()
     }
 
@@ -348,6 +378,9 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             MainActor.assumeIsolated {
+                // Reset state here so it also covers transient self-dismissals
+                // (click-outside) that never go through hide().
+                self.state = .hidden
                 self.popover = nil
                 self.cleanupAnchorWindow()
                 self.hostingController = nil

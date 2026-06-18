@@ -4,6 +4,10 @@ DerivedData/
 *.dmg
 *.dmg.sha256
 
+# Local dev archives & coverage artifacts (not source)
+docs/dev-files/
+*.profraw
+
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore

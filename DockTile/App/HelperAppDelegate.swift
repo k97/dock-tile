@@ -33,6 +33,19 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// Track if popover was shown due to app activation (Cmd+Tab)
     private var showedPopoverOnActivation = false
 
+    /// True when we auto-presented the popover on a user-initiated cold launch.
+    /// Used to swallow the reopen event macOS may deliver right after launch, so the
+    /// auto-shown popover isn't immediately toggled back off.
+    private var didAutoShowOnLaunch = false
+
+    /// Timestamp of the last handled Dock reopen, used to coalesce click bursts.
+    private var lastReopenTime: CFAbsoluteTime = 0
+
+    /// Reopen events arriving within this window of each other are ignored. After a cold
+    /// start, macOS flushes the queued clicks back-to-back; coalescing collapses that
+    /// burst into a single action instead of show→hide→show→hide flicker.
+    private let reopenCoalesceWindow: CFAbsoluteTime = 0.3
+
     /// Observers for icon style changes (distributed notifications)
     private var iconStyleObservers: [any NSObjectProtocol] = []
 
@@ -122,6 +135,18 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        // Auto-show the popover when the user cold-launched this tile by clicking it in
+        // the Dock. A cold Dock click sends a launch ('oapp') event, NOT a reopen ('rapp')
+        // event, so without this the very first click would just start the process and
+        // show nothing. Background launches (from the main app, or the login LaunchAgent)
+        // pass --background-launch and must stay silent.
+        let isBackgroundLaunch = CommandLine.arguments.contains("--background-launch")
+        if !isBackgroundLaunch {
+            print("🟢 User cold-launch detected — showing popover immediately")
+            didAutoShowOnLaunch = true
+            showPopover(withKeyboardFocus: false)
+        }
+
         print("✓ Helper app ready")
         // App is now running in Dock - popover will show when user clicks the icon
     }
@@ -165,6 +190,25 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         print("🖱️ Helper dock icon clicked (hasVisibleWindows: \(flag))")
         showedPopoverOnActivation = false  // This was a dock click, not Cmd+Tab
+
+        // Swallow the reopen macOS delivers right after a user cold-launch — we already
+        // auto-showed the popover in applicationDidFinishLaunching.
+        if didAutoShowOnLaunch {
+            didAutoShowOnLaunch = false
+            lastReopenTime = CFAbsoluteTimeGetCurrent()
+            print("   Ignoring post-launch reopen (popover already shown)")
+            return true
+        }
+
+        // Coalesce rapid bursts (e.g. queued clicks flushed after a cold start) so they
+        // collapse into a single toggle instead of flickering the popover.
+        let now = CFAbsoluteTimeGetCurrent()
+        if now - lastReopenTime < reopenCoalesceWindow {
+            print("   Ignoring reopen within coalesce window")
+            return true
+        }
+        lastReopenTime = now
+
         togglePopover()
         return true
     }
@@ -188,6 +232,12 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         // Set configuration before showing (panel is lazily created)
         floatingPanel.configuration = config
+
+        AnalyticsService.shared.log(.popoverOpened, [
+            "layout": config?.layoutMode.rawValue ?? "unknown",
+            "app_count": config?.appItems.count ?? 0,
+            "keyboard": withKeyboardFocus
+        ])
 
         // Show popover
         print("   Calling floatingPanel.show()...")
@@ -257,6 +307,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openConfigurator() {
+        AnalyticsService.shared.log(.configureGearTapped)
         launchMainAppWithDeepLink()
     }
 
@@ -349,6 +400,8 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func launchApp(_ sender: NSMenuItem) {
         guard let bundleId = sender.representedObject as? String else { return }
+
+        AnalyticsService.shared.log(.appLaunchedFromTile, ["source": "context_menu"])
 
         let workspace = NSWorkspace.shared
 
@@ -453,6 +506,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         print("🎨 Icon style changed: \(currentIconStyle.rawValue) → \(newStyle.rawValue)")
+        AnalyticsService.shared.log(.iconStyleChanged, ["style": newStyle.rawValue])
         currentIconStyle = newStyle
         updateIconForCurrentStyle()
     }
@@ -465,6 +519,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         print("🎨 Poll detected icon style change: \(currentIconStyle.rawValue) → \(newStyle.rawValue)")
+        AnalyticsService.shared.log(.iconStyleChanged, ["style": newStyle.rawValue])
         currentIconStyle = newStyle
         updateIconForCurrentStyle()
     }

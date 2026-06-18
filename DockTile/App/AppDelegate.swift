@@ -80,6 +80,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Main app: Use regular mode to show dock icon
         NSApp.setActivationPolicy(.regular)
 
+        // Dock Lock: resume the dock-pinning engine if it was previously enabled.
+        // Controls live in the Settings window (⌘,).
+        DockLockManager.shared.startIfEnabled()
+
         // Configure window sizing after a brief delay to ensure window exists
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [self] in
             configureMainWindowSizing()
@@ -201,8 +205,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// Keep helper apps running even when all windows are closed
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         // Helper apps should stay running to respond to dock clicks
-        // Main app can terminate when window is closed
-        return !isHelperApp
+        if isHelperApp { return false }
+        // Main app: stay resident while Dock Lock is active so the event tap keeps
+        // running in the background (controlled from the menu-bar item).
+        return !DockLockManager.shared.isEnabled
     }
 
     // MARK: - Dock Icon Click Handler

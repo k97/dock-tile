@@ -48,7 +48,14 @@ struct DockTileSidebarView: View {
         }
         .navigationTitle(AppStrings.Sidebar.title)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            // Group the gear and + as one native control cluster, sitting beside the
+            // system-provided sidebar toggle.
+            ToolbarItemGroup(placement: .primaryAction) {
+                SettingsLink {
+                    Image(systemName: "gearshape")
+                }
+                .help(AppStrings.Tooltip.openSettings)
+
                 Button(action: {
                     configManager.createConfiguration()
                 }) {

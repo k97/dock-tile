@@ -409,6 +409,54 @@
         }
       }
     },
+    "button.openLoginItems" : {
+      "comment" : "Button that opens System Settings Login Items for approval",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Login Items Settings…"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Login Items Settings…"
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Login Items Settings…"
+          }
+        }
+      }
+    },
+    "settings.login.requiresApproval" : {
+      "comment" : "Shown when macOS is holding the login item for user approval",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approve Dock Tile in Login Items to finish enabling this."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approve Dock Tile in Login Items to finish enabling this."
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approve Dock Tile in Login Items to finish enabling this."
+          }
+        }
+      }
+    },
     "empty.createFirstTile" : {
       "comment" : "Header text for empty state",
       "extractionState" : "manual",
@@ -765,6 +813,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Layout"
+          }
+        }
+      }
+    },
+    "label.shareAnalytics" : {
+      "comment" : "Label for the analytics opt-out toggle in Settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share anonymous usage data"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share anonymous usage data"
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share anonymous usage data"
+          }
+        }
+      }
+    },
+    "label.shareAnalyticsDescription" : {
+      "comment" : "Explanation under the analytics toggle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
+          }
+        },
+        "en-US" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
           }
         }
       }

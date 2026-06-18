@@ -51,6 +51,20 @@ struct AppStringsTests {
         #expect(!AppStrings.Label.tileIcon.isEmpty)
         #expect(!AppStrings.Label.tileIconSize.isEmpty)
         #expect(!AppStrings.Label.tileName.isEmpty)
+        #expect(!AppStrings.Label.startAtLogin.isEmpty)
+        #expect(!AppStrings.Label.startAtLoginDescription.isEmpty)
+        #expect(!AppStrings.Label.shareAnalytics.isEmpty)
+        #expect(!AppStrings.Label.shareAnalyticsDescription.isEmpty)
+
+        // Settings
+        #expect(!AppStrings.Settings.general.isEmpty)
+        #expect(!AppStrings.Settings.loginRequiresApproval.isEmpty)
+
+        // Tooltips
+        #expect(!AppStrings.Tooltip.openSettings.isEmpty)
+
+        // Login items
+        #expect(!AppStrings.Button.openLoginItems.isEmpty)
 
         // Layout options
         #expect(!AppStrings.Layout.grid.isEmpty)

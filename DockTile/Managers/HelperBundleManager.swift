@@ -74,6 +74,11 @@ final class HelperBundleManager {
         print("🔧 Installing helper for: \(config.name)")
         print("   Bundle ID: \(config.bundleIdentifier)")
 
+        // Crashlytics breadcrumb: which step of the fragile install flow we're in, so a
+        // crash here is attributable. Cleared at the end of a successful install.
+        AnalyticsService.shared.setBreadcrumb(config.bundleIdentifier, for: "installing_bundle_id")
+        AnalyticsService.shared.setBreadcrumb("start", for: "install_step")
+
         let appName = sanitizeAppName(config.name)
         let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
 
@@ -133,6 +138,7 @@ final class HelperBundleManager {
         }
 
         // 1. Generate helper bundle structure (copy main app)
+        AnalyticsService.shared.setBreadcrumb("bundle_copy", for: "install_step")
         try generateHelperBundle(
             appName: appName,
             bundleId: config.bundleIdentifier,
@@ -166,6 +172,7 @@ final class HelperBundleManager {
         print("   ✓ Set active icon (style: \(currentStyle.rawValue))")
 
         // 3. Code sign the bundle
+        AnalyticsService.shared.setBreadcrumb("codesign", for: "install_step")
         try codesignHelper(at: helperPath)
         print("   ✓ Code signed")
 
@@ -178,6 +185,7 @@ final class HelperBundleManager {
         addToDock(at: helperPath, atIndex: originalDockIndex)
 
         // 6. Restart Dock to apply changes
+        AnalyticsService.shared.setBreadcrumb("dock_restart", for: "install_step")
         restartDock()
 
         // 7. Wait for Dock to fully restart and stabilize
@@ -203,6 +211,7 @@ final class HelperBundleManager {
         }
 
         // 9. Launch the helper app (Dock doesn't auto-launch persistent apps)
+        AnalyticsService.shared.setBreadcrumb("launch", for: "install_step")
         if !isHelperRunning(bundleId: config.bundleIdentifier) {
             print("   Launching helper app...")
             launchHelper(at: helperPath)
@@ -223,6 +232,7 @@ final class HelperBundleManager {
             print("   ✓ Helper already running")
         }
 
+        AnalyticsService.shared.setBreadcrumb("done", for: "install_step")
         print("✅ Helper installed at: \(helperPath.path)")
     }
 
@@ -266,6 +276,9 @@ final class HelperBundleManager {
         let config = NSWorkspace.OpenConfiguration()
         config.activates = false  // Don't bring to foreground
         config.addsToRecentItems = false
+        // Mark this as a background (programmatic) launch so the helper does NOT auto-show
+        // its popover. Only a real user Dock/Finder cold-launch (no argument) auto-shows.
+        config.arguments = ["--background-launch"]
 
         NSWorkspace.shared.openApplication(at: helperPath, configuration: config) { app, error in
             if let error = error {
