@@ -76,8 +76,16 @@ final class ConfigurationManager: ObservableObject {
         // Restore last selected config (or auto-select first if configs exist)
         restoreOrAutoSelectConfig()
 
-        // Sync dock visibility on launch
-        syncDockVisibility()
+        // Dock visibility is the MAIN app's responsibility only. Helper processes also
+        // construct a ConfigurationManager (see HelperAppDelegate) purely to read their own
+        // tile's config for the popover — they must NOT watch or reconcile the Dock, or every
+        // running helper would redundantly sync and race the main app on the shared config
+        // file and the Dock plist.
+        guard !AppEnvironment.isHelper else { return }
+
+        // Sync dock visibility on launch — reconcile both directions, including removing
+        // any tiles left stuck in the Dock that the config says should be hidden.
+        syncDockVisibility(reconcileDockedHiddenTiles: true)
 
         // Start watching for Dock changes
         startDockWatcher()
@@ -348,26 +356,38 @@ final class ConfigurationManager: ObservableObject {
 
     // MARK: - Dock Visibility Sync
 
-    /// Sync configuration visibility with actual Dock state
-    /// If a tile was removed from Dock, set isVisibleInDock to false
-    func syncDockVisibility() {
-        print("🔄 Syncing Dock visibility...")
+    /// Sync configuration visibility with actual Dock state, in both directions:
+    ///
+    /// 1. Config says **visible** but the tile is **absent** from the Dock → flip the
+    ///    config to hidden (the user removed it manually via the Dock).
+    /// 2. Config says **hidden** but the tile is still **present** in the Dock → actually
+    ///    remove it (a previous hide didn't fully take — e.g. clobbered by another
+    ///    instance or interrupted), so reality matches the user's stored intent.
+    ///
+    /// - Parameter reconcileDockedHiddenTiles: when `true`, direction 2 actively removes
+    ///   stuck tiles from the Dock. This restarts the Dock, so it is only enabled for the
+    ///   one-shot launch sync — NOT the live `DockPlistWatcher` path, where repeatedly
+    ///   removing could fight the user or spin the Dock in a restart loop.
+    func syncDockVisibility(reconcileDockedHiddenTiles: Bool = false) {
+        print("🔄 Syncing Dock visibility (reconcile=\(reconcileDockedHiddenTiles))...")
 
         var hasChanges = false
+        var stuckHiddenConfigs: [DockTileConfiguration] = []
 
         for index in configurations.indices {
             let config = configurations[index]
-
-            // Only check configs that think they're visible
-            guard config.isVisibleInDock else { continue }
-
-            // Check if actually in Dock
             let isActuallyInDock = HelperBundleManager.shared.findInDock(bundleId: config.bundleIdentifier) != nil
 
-            if !isActuallyInDock {
+            if config.isVisibleInDock, !isActuallyInDock {
+                // Direction 1: visible config, but gone from the Dock → mark hidden.
                 print("   ⚠️ '\(config.name)' was removed from Dock - updating visibility")
                 configurations[index].isVisibleInDock = false
                 hasChanges = true
+            } else if !config.isVisibleInDock, isActuallyInDock {
+                // Direction 2: hidden config, but still in the Dock → remove it for real.
+                guard reconcileDockedHiddenTiles else { continue }
+                print("   ⚠️ '\(config.name)' is hidden but still in Dock - removing to match config")
+                stuckHiddenConfigs.append(config)
             }
         }
 
@@ -376,6 +396,19 @@ final class ConfigurationManager: ObservableObject {
             print("   ✓ Dock visibility synced")
         } else {
             print("   ✓ All tiles in sync")
+        }
+
+        // Remove stuck tiles after the loop. removeFromDock guards against double-removal
+        // via its own in-flight set, and once removed findInDock returns nil so a
+        // subsequent sync is a no-op — no restart loop.
+        for config in stuckHiddenConfigs {
+            Task {
+                do {
+                    try await HelperBundleManager.shared.removeFromDock(for: config)
+                } catch {
+                    print("   ⚠️ Failed to remove stuck hidden tile '\(config.name)': \(error.localizedDescription)")
+                }
+            }
         }
     }
 

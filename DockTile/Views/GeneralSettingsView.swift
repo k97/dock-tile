@@ -35,6 +35,11 @@ struct GeneralSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .onChange(of: startAtLoginOn) { _, enabled in
+                    // `refreshLoginState` writes this @State to mirror the system; ignore those
+                    // syncs and act only on a genuine user toggle, so we never re-register in a loop.
+                    let manager = LoginItemManager.shared
+                    let systemOn = manager.isEnabled || manager.requiresApproval
+                    guard enabled != systemOn else { return }
                     applyLoginSetting(enabled)
                 }
 
@@ -76,8 +81,12 @@ struct GeneralSettingsView: View {
 
     /// Read the current SMAppService status into the toggle (system is source of truth).
     private func refreshLoginState() {
-        startAtLoginOn = LoginItemManager.shared.isEnabled
-        loginRequiresApproval = LoginItemManager.shared.requiresApproval
+        let manager = LoginItemManager.shared
+        // Show the toggle ON whenever the user wants it on — including when macOS is holding
+        // the agent for approval (common right after a Sparkle update). Rendering it OFF there
+        // would look like the setting silently reset itself.
+        startAtLoginOn = manager.isEnabled || manager.requiresApproval
+        loginRequiresApproval = manager.requiresApproval
     }
 
     /// Register/unregister the launcher agent to match the toggle. On failure, revert the

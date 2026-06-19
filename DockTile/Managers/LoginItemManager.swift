@@ -43,19 +43,50 @@ final class LoginItemManager {
     /// True when macOS is holding the item for user approval in System Settings.
     var requiresApproval: Bool { service.status == .requiresApproval }
 
+    // MARK: - Persisted choice (opt-out, ON by default)
+
+    /// Whether the user has explicitly turned start-at-login OFF. Persisted locally so it survives
+    /// bundle replacement — a Sparkle update can demote the SMAppService agent, and SMAppService's
+    /// `status` alone can't tell "user turned it off" from "macOS dropped it". Default false → the
+    /// feature is ON by default; `reconcileOnLaunch` enables it unless the user opted out.
+    var userOptedOut: Bool {
+        get { UserDefaults.standard.bool(forKey: UserDefaultsKeys.startAtLoginOptedOut) }
+        set { UserDefaults.standard.set(newValue, forKey: UserDefaultsKeys.startAtLoginOptedOut) }
+    }
+
+    /// Whether start-at-login should be active given the user's choice (ON unless opted out).
+    var shouldBeEnabled: Bool { !userOptedOut }
+
     // MARK: - Toggle
 
-    /// Register the launcher agent so visible tiles warm at login.
+    /// Register the launcher agent so visible tiles warm at login. Clears the opt-out flag.
     func enable() throws {
         cleanupLegacyPerTileAgents()
         try service.register()
+        userOptedOut = false
         print("✅ LoginItem: launcher agent registered (status: \(statusDescription))")
     }
 
-    /// Unregister the launcher agent.
+    /// Unregister the launcher agent and record the user's opt-out so we don't re-enable it.
     func disable() throws {
         try service.unregister()
+        userOptedOut = true
         print("✅ LoginItem: launcher agent unregistered (status: \(statusDescription))")
+    }
+
+    /// Bring the registration in line with the user's choice on app launch. Because start-at-login
+    /// is ON by default (opt-out), this enables it for new users AND re-asserts it after a Sparkle
+    /// update demotes the agent — unless the user explicitly turned it off. No-op when already
+    /// enabled. If macOS insists on re-approval the status stays `.requiresApproval` and the
+    /// Settings pane surfaces the approval prompt — we never silently fail or lie about the state.
+    func reconcileOnLaunch() {
+        guard shouldBeEnabled, service.status != .enabled else { return }
+        do {
+            try service.register()
+            print("🔁 LoginItem: reconciled on launch → \(statusDescription)")
+        } catch {
+            print("⚠️ LoginItem: reconcile register failed: \(error.localizedDescription)")
+        }
     }
 
     /// Open System Settings → Login Items so the user can approve a held item.
