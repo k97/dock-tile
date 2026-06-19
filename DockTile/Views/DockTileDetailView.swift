@@ -114,7 +114,19 @@ struct DockTileDetailView: View {
             guard hasAppearedOnce, saveGeneration > 0 else { return }
 
             try? await Task.sleep(nanoseconds: 300_000_000)
-            configManager.updateConfiguration(editedConfig)
+
+            // Visibility is owned EXCLUSIVELY by performDockAction (gated on the Dock op
+            // actually completing). The debounced auto-save persists edits to name, layout,
+            // icon, app list, etc. — but must NOT commit the Show Tile toggle's transient
+            // isVisibleInDock. Otherwise a hide whose un-pin never runs (dropped/interrupted
+            // action, busy main thread at login) leaves a permanent "hidden in config but
+            // still pinned in the Dock" desync. Preserve the stored visibility here.
+            var toSave = editedConfig
+            if let stored = configManager.configuration(for: editedConfig.id) {
+                toSave.isVisibleInDock = stored.isVisibleInDock
+                toSave.lastDockIndex = stored.lastDockIndex
+            }
+            configManager.updateConfiguration(toSave)
         }
         .onAppear {
             // Check actual Dock state on appear
@@ -467,23 +479,31 @@ struct DockTileDetailView: View {
 
         alert.accessoryView = checkbox
 
-        // Show alert modally
-        let response = alert.runModal()
+        // Handle the user's response (shared by both the sheet and modal paths).
+        let handleResponse: (NSApplication.ModalResponse) -> Void = { response in
+            // Reset state
+            showDockRestartConsent = false
 
-        // Reset state
-        showDockRestartConsent = false
-
-        // Handle response
-        if response == .alertFirstButtonReturn {
-            // User clicked "Confirm"
-            // Check if "Don't show this again" was checked
-            if checkbox.state == .on {
-                UserDefaults.standard.set(true, forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
+            if response == .alertFirstButtonReturn {
+                // User clicked "Confirm"
+                // Check if "Don't show this again" was checked
+                if checkbox.state == .on {
+                    UserDefaults.standard.set(true, forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
+                }
+                // Proceed with dock action
+                performDockAction()
             }
-            // Proceed with dock action
-            performDockAction()
+            // If user clicked "Cancel", do nothing
         }
-        // If user clicked "Cancel", do nothing
+
+        // Anchor the alert to the app window as a sheet so it appears centred on the
+        // window instead of detached in the middle of the screen. Fall back to a modal
+        // alert if no window is available (e.g. all windows closed but app still resident).
+        if let window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first(where: { $0.isVisible }) {
+            alert.beginSheetModal(for: window, completionHandler: handleResponse)
+        } else {
+            handleResponse(alert.runModal())
+        }
     }
 
     private func deleteTile() {
