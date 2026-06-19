@@ -13,8 +13,13 @@ enum UserDefaultsKeys {
     static let lastSelectedConfigId = "lastSelectedConfigId"
     static let lastMigratedAppVersion = "lastMigratedAppVersion"
 
-    // Note: "Start tiles at login" has no UserDefaults key — its state lives in
-    // SMAppService (see LoginItemManager), which is the system source of truth.
+    // "Start tiles at login" is ON by default (opt-out). SMAppService is the source of truth for
+    // the *current* status, but a Sparkle update replaces the app bundle and can silently demote
+    // the registration. We persist the user's opt-out below so the main app can re-assert
+    // registration on launch (see LoginItemManager.reconcileOnLaunch) unless the user turned it off.
+    /// True only when the user has explicitly turned start-at-login OFF. Absent/false = ON by
+    /// default. Main-app domain only (dev and release have separate bundle IDs / agents).
+    static let startAtLoginOptedOut = "startAtLoginOptedOut"
 
     // Dock Lock: keep the Dock pinned to one display
     static let dockLockEnabled = "dockLockEnabled"

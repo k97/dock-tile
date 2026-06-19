@@ -84,6 +84,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Controls live in the Settings window (⌘,).
         DockLockManager.shared.startIfEnabled()
 
+        // Start-at-login is ON by default (opt-out). Enable it on launch for new users and
+        // re-assert it after a Sparkle update demotes the SMAppService agent — unless the user
+        // explicitly turned it off in Settings.
+        LoginItemManager.shared.reconcileOnLaunch()
+
         // Configure window sizing after a brief delay to ensure window exists
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [self] in
             configureMainWindowSizing()
