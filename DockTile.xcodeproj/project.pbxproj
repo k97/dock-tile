@@ -55,6 +55,7 @@
 		AAUDK01 /* UserDefaultsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUDK02 /* UserDefaultsKeys.swift */; };
 		AA2B0DD5 /* DockLockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4D24B5; };
 		AA218BB9 /* DockLockSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4AC606; };
+		AAA2155B /* DiagnosticsLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE6EC9F; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -137,6 +138,7 @@
 		AAXCFG03 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		AA4D24B5 /* DockLockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockLockManager.swift; sourceTree = "<group>"; };
 		AA4AC606 /* DockLockSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockLockSettingsView.swift; sourceTree = "<group>"; };
+		AAE6EC9F /* DiagnosticsLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsLog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -337,7 +339,8 @@
 				AADPW001 /* DockPlistWatcher.swift */,
 				AAC89BB2 /* ConfigurationManager.swift */,
 			
-				AA4D24B5 /* DockLockManager.swift */,);
+				AA4D24B5 /* DockLockManager.swift */,
+				AAE6EC9F /* DiagnosticsLog.swift */,);
 			path = Managers;
 			sourceTree = "<group>";
 		};
@@ -573,7 +576,8 @@
 				AALTS01 /* LoginTileSpawner.swift in Sources */,
 			
 				AA2B0DD5 /* DockLockManager.swift in Sources */,
-				AA218BB9 /* DockLockSettingsView.swift in Sources */,);
+				AA218BB9 /* DockLockSettingsView.swift in Sources */,
+				AAA2155B /* DiagnosticsLog.swift in Sources */,);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */

@@ -76,6 +76,11 @@ struct DockTileApp: App {
                 .keyboardShortcut("n", modifiers: .command)
                 .disabled(!configManager.selectedConfigHasBeenEdited)
             }
+            CommandGroup(after: .newItem) {
+                Button(AppStrings.Menu.copyDiagnostics) {
+                    DiagnosticsLog.shared.copyToPasteboard()
+                }
+            }
         }
     }
 }
