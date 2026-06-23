@@ -1037,6 +1037,11 @@ final class HelperBundleManager {
         try? process.run()
         process.waitUntilExit()
         print("   ✓ Dock restarted")
+
+        // Let Dock Lock re-assert the anchor: a relaunched Dock can come back on a different
+        // display, and the clamp only prevents drift — it doesn't relocate. Posted on the main
+        // actor (this type is @MainActor); the handler no-ops unless the Dock actually drifted.
+        NotificationCenter.default.post(name: .dockDidRestart, object: nil)
     }
 
     /// Wait for Dock to fully restart and plist to update after tile removal

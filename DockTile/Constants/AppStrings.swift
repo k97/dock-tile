@@ -248,10 +248,85 @@ enum AppStrings {
             comment: "Suffix marking the main display in the anchor picker"
         )
 
-        static let dockLockMoveDock = NSLocalizedString(
-            "settings.dockLock.moveDock",
-            value: "Move Dock to Chosen Display Now",
-            comment: "Button that nudges the Dock onto the anchor display"
+        static let dockLockDefaultDisplay = NSLocalizedString(
+            "settings.dockLock.defaultDisplay",
+            value: "Default (follow macOS)",
+            comment: "First option in the anchor picker — no lock, macOS default behaviour"
+        )
+
+        /// Format string; `%@` is the display name. Confirms which screen the Dock is pinned to.
+        static let dockLockLockedToFormat = NSLocalizedString(
+            "settings.dockLock.lockedTo",
+            value: "Dock is locked to %@",
+            comment: "Indicator confirming the display the Dock is pinned to"
+        )
+
+        static func dockLockLockedTo(_ name: String) -> String {
+            String(format: dockLockLockedToFormat, name)
+        }
+
+        /// Format string; `%@` is the display name. Shown with a spinner while relocating.
+        static let dockLockMovingFormat = NSLocalizedString(
+            "settings.dockLock.moving",
+            value: "Moving Dock to %@…",
+            comment: "Progress message shown while the Dock is being relocated"
+        )
+
+        static func dockLockMoving(_ name: String) -> String {
+            String(format: dockLockMovingFormat, name)
+        }
+
+        /// Format string; `%@` is the display name. Shown when the relocation didn't take.
+        static let dockLockMoveFailedFormat = NSLocalizedString(
+            "settings.dockLock.moveFailed",
+            value: "Couldn't move the Dock to %@. Make sure that display isn't mirrored, then try again.",
+            comment: "Error shown when the Dock could not be relocated"
+        )
+
+        static func dockLockMoveFailed(_ name: String) -> String {
+            String(format: dockLockMoveFailedFormat, name)
+        }
+
+        static let dockLockRetry = NSLocalizedString(
+            "settings.dockLock.retry",
+            value: "Try Again",
+            comment: "Button to retry a failed Dock relocation"
+        )
+
+        static let dockLockSingleDisplay = NSLocalizedString(
+            "settings.dockLock.singleDisplay",
+            value: "Connect a second display to use Dock Lock. With one screen the Dock stays exactly where macOS puts it.",
+            comment: "Note shown when only one display is connected"
+        )
+
+        static let dockLockPrimerTitle = NSLocalizedString(
+            "settings.dockLock.primer.title",
+            value: "Allow Accessibility Access",
+            comment: "Title of the permission primer shown before requesting Accessibility"
+        )
+
+        static let dockLockPrimerBody = NSLocalizedString(
+            "settings.dockLock.primer.body",
+            value: "Dock Lock keeps the Dock on the display you choose. To do that, Dock Tile needs Accessibility access so it can stop macOS from moving the Dock to your other screens.",
+            comment: "Explanation in the permission primer"
+        )
+
+        static let dockLockPrimerReassurance = NSLocalizedString(
+            "settings.dockLock.primer.reassurance",
+            value: "Next, macOS will ask you to turn on Dock Tile in System Settings. You can turn this off any time.",
+            comment: "Reassurance line in the permission primer about what happens next"
+        )
+
+        static let dockLockPrimerContinue = NSLocalizedString(
+            "settings.dockLock.primer.continue",
+            value: "Continue",
+            comment: "Primary button in the permission primer that triggers the macOS dialog"
+        )
+
+        static let dockLockPrimerNotNow = NSLocalizedString(
+            "settings.dockLock.primer.notNow",
+            value: "Not Now",
+            comment: "Secondary button in the permission primer that cancels enabling Dock Lock"
         )
 
         static let dockLockAccessibilityNeeded = NSLocalizedString(
