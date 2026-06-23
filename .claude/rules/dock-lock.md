@@ -28,6 +28,18 @@ via `didBecomeActive` + the `com.apple.accessibility.api` notification + the pan
 ## UI & lifecycle
 
 - Controls live in the Settings window (⌘,) → **Dock Lock** tab (`DockLockSettingsView`).
+- Toggle on → permission UX → an anchor **picker** appears. First option is **Default** (`id 0`,
+  no clamping, Dock follows macOS); the rest are the connected displays. Selecting one is
+  **real-time**: `selectAnchor(_:)` persists, recomputes zones, and `moveDockToAnchor()` nudges
+  the Dock onto it immediately (cursor warp to the Dock edge — the only available "move" hook).
+  A `lock.fill` indicator confirms the locked display. No separate "Move Dock" button.
+- `apply()` re-asserts the Dock onto the anchor on enable / permission grant / **relaunch** (so a
+  reboot that drifted the Dock self-heals); no-op for Default.
 - The main app stays resident while the lock is enabled (`AppDelegate`
   `applicationShouldTerminateAfterLastWindowClosed`) so the tap survives closing the window.
-- Persisted via `UserDefaultsKeys.dockLock*`.
+- **Anchor persisted by display UUID** (`dockLockAnchorUUID`, via `CGDisplayCreateUUIDFromDisplayID`),
+  NOT the raw `CGDirectDisplayID` — IDs reshuffle across reboot/sleep/replug. `anchorDisplayID` is
+  the live resolved value (`private(set)`, `0` when the chosen display is absent); the stored UUID
+  is the durable intent. Legacy `dockLockAnchorDisplay` int is migrated once then dropped.
+  `resolveAnchorFromPersisted()` re-derives the live ID on `didChangeScreenParameters` without
+  forgetting the choice — unplug → Default, replug → re-anchors and re-nudges.

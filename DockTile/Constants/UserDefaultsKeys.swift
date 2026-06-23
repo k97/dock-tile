@@ -23,7 +23,12 @@ enum UserDefaultsKeys {
 
     // Dock Lock: keep the Dock pinned to one display
     static let dockLockEnabled = "dockLockEnabled"
+    /// Legacy: anchor stored as a raw CGDirectDisplayID. Unstable across reboots/reconnects —
+    /// migrated to `dockLockAnchorUUID` on first launch. Read once for migration, then unused.
     static let dockLockAnchorDisplay = "dockLockAnchorDisplay"
+    /// Anchor display persisted by its stable UUID (`CGDisplayCreateUUIDFromDisplayID`) so the
+    /// user's choice survives reboots, sleep/wake, and unplug/replug. Absent = "Default".
+    static let dockLockAnchorUUID = "dockLockAnchorUUID"
 
     /// Analytics & Crashlytics consent (opt-out, default ON).
     /// Stored in the SHARED suite below — NOT the per-app default domain — because helper
