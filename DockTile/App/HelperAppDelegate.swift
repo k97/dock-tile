@@ -112,8 +112,12 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         if let config = getCurrentConfiguration() {
             print("✓ Loaded config: \(config.name) with \(config.appItems.count) apps")
+            // Tag this process in the shared diagnostics log with the tile name.
+            DiagnosticsLog.shared.setLabel("helper:\(config.name)")
+            DiagnosticsLog.shared.log("helper", "Ready — \(config.appItems.count) app(s), mode=\(config.showInAppSwitcher ? "app" : "ghost"), bundle=\(currentBundleId)")
         } else {
             print("⚠️ No configuration found for bundle ID: \(currentBundleId)")
+            DiagnosticsLog.shared.log("helper", "No configuration found for bundle \(currentBundleId)")
         }
 
         // Set up icon style observation for dynamic icon switching
@@ -144,6 +148,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         if !isBackgroundLaunch {
             print("🟢 User cold-launch detected — showing popover immediately")
             didAutoShowOnLaunch = true
+            DiagnosticsLog.shared.log("helper", "Cold-launch (Dock click) — auto-showing popover")
             showPopover(withKeyboardFocus: false)
         }
 
@@ -243,11 +248,13 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         print("   Calling floatingPanel.show()...")
         floatingPanel.show(animated: true, withKeyboardFocus: withKeyboardFocus)
         print("   Popover show complete")
+        DiagnosticsLog.shared.log("helper", "Popover shown — \(config?.appItems.count ?? 0) app(s), layout=\(config?.layoutMode.rawValue ?? "?"), keyboard=\(withKeyboardFocus)")
     }
 
     private func hidePopover() {
         print("🚫 Hiding popover")
         floatingPanel.hide(animated: true)
+        DiagnosticsLog.shared.log("helper", "Popover hidden", verbose: true)
     }
 
     // MARK: - Context Menu (Right-Click)
@@ -308,6 +315,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openConfigurator() {
         AnalyticsService.shared.log(.configureGearTapped)
+        DiagnosticsLog.shared.log("helper", "Configure gear tapped — launching main app via deep link")
         launchMainAppWithDeepLink()
     }
 
@@ -410,10 +418,14 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
             workspace.openApplication(at: appURL, configuration: config) { _, error in
                 if let error = error {
                     print("❌ Failed to launch app: \(error.localizedDescription)")
+                    DiagnosticsLog.shared.log("helper", "App launch FAILED (context menu) \(bundleId): \(error.localizedDescription)")
+                } else {
+                    DiagnosticsLog.shared.log("helper", "Launched app (context menu) \(bundleId)")
                 }
             }
         } else {
             print("❌ Could not find application with bundle ID: \(bundleId)")
+            DiagnosticsLog.shared.log("helper", "App not found (context menu) \(bundleId)")
         }
     }
 
@@ -531,8 +543,10 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         if success {
             print("   ✓ Switched dock icon to \(currentIconStyle.rawValue) style")
+            DiagnosticsLog.shared.log("helper", "Switched dock icon to \(currentIconStyle.rawValue) style")
         } else {
             print("   ⚠️ Failed to switch dock icon")
+            DiagnosticsLog.shared.log("helper", "FAILED to switch dock icon to \(currentIconStyle.rawValue)")
         }
     }
 

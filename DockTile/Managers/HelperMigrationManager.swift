@@ -79,6 +79,7 @@ final class HelperMigrationManager {
         // Regenerate stale helpers
         if !staleBundleConfigs.isEmpty {
             print("[Migration] Regenerating \(staleBundleConfigs.count) helper(s)...")
+            DiagnosticsLog.shared.log("migration", "Regenerating \(staleBundleConfigs.count) stale helper(s) for v\(currentVersion)")
             await regenerateBatch(staleBundleConfigs, currentVersion: currentVersion)
         }
 
@@ -108,6 +109,7 @@ final class HelperMigrationManager {
                 regeneratedConfigs.append(config)
                 print("[Migration]   Regenerated '\(config.name)'")
             } catch {
+                DiagnosticsLog.shared.log("migration", "FAILED to regenerate '\(config.name)': \(error.localizedDescription)")
                 AnalyticsService.shared.record(error, context: "regenerateHelperBundle",
                                                keys: ["bundle_id": config.bundleIdentifier])
             }

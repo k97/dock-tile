@@ -396,11 +396,13 @@ final class DockLockManager: ObservableObject {
             AnalyticsService.shared.setBreadcrumb("succeeded", for: "dock_lock_move")
             AnalyticsService.shared.log(.dockLockMoveSucceeded, ["reason": reason, "already": false])
             NSLog("✓ DockLock move: Dock now on \"\(name)\"")
+            DiagnosticsLog.shared.log("docklock", "Relocated Dock onto '\(name)' (reason: \(reason))")
         } else {
             moveState = .failed(displayName: name)
             AnalyticsService.shared.setBreadcrumb("failed", for: "dock_lock_move")
             AnalyticsService.shared.log(.dockLockMoveFailed, ["reason": reason, "edge": "\(edge)"])
             NSLog("⚠️ DockLock move: Dock did not relocate onto \"\(name)\" within timeout")
+            DiagnosticsLog.shared.log("docklock", "FAILED to relocate Dock onto '\(name)' within timeout (reason: \(reason), edge: \(edge))")
         }
     }
 
@@ -564,6 +566,7 @@ final class DockLockManager: ObservableObject {
             userInfo: userInfo
         ) else {
             NSLog("⚠️ DockLock: failed to create event tap (Accessibility not granted?)")
+            DiagnosticsLog.shared.log("docklock", "FAILED to create event tap (Accessibility not granted?)")
             return
         }
 
@@ -580,6 +583,7 @@ final class DockLockManager: ObservableObject {
         dockWatcher.startWatching()
 
         NSLog("✓ DockLock: event tap installed")
+        DiagnosticsLog.shared.log("docklock", "Event tap installed (Dock Lock active)")
     }
 
     private func removeTap() {

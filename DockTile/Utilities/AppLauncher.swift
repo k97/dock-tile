@@ -18,10 +18,19 @@ enum AppLauncher {
         let workspace = NSWorkspace.shared
 
         if app.isFolder, let folderPath = app.folderPath {
+            DiagnosticsLog.shared.log("launch", "Opening folder from tile: \(app.name)")
             workspace.open(URL(fileURLWithPath: folderPath))
         } else if let appURL = workspace.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
             let config = NSWorkspace.OpenConfiguration()
-            workspace.openApplication(at: appURL, configuration: config) { _, _ in }
+            workspace.openApplication(at: appURL, configuration: config) { _, error in
+                if let error {
+                    DiagnosticsLog.shared.log("launch", "App launch FAILED from tile: \(app.name) (\(app.bundleIdentifier)): \(error.localizedDescription)")
+                } else {
+                    DiagnosticsLog.shared.log("launch", "Launched \(app.name) (\(app.bundleIdentifier)) from tile")
+                }
+            }
+        } else {
+            DiagnosticsLog.shared.log("launch", "App not found from tile: \(app.name) (\(app.bundleIdentifier))")
         }
     }
 }

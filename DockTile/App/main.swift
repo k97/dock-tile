@@ -45,6 +45,8 @@ if CommandLine.arguments.contains(LoginTileSpawner.flag) {
     AnalyticsService.shared.configure()
     AnalyticsService.shared.log(.appLaunched)
 
+    DiagnosticsLog.shared.log("lifecycle", "Helper launched — \(bundleId)")
+
     // Create autoreleasepool to manage memory properly
     autoreleasepool {
         let app = NSApplication.shared
@@ -67,6 +69,7 @@ if CommandLine.arguments.contains(LoginTileSpawner.flag) {
     AnalyticsService.shared.configure()
     AnalyticsService.shared.log(.appLaunched)
 
+    DiagnosticsLog.shared.prepareOnLaunch()  // main-app-only: trim shared log to the last hour
     DiagnosticsLog.shared.log("lifecycle", "Main app launched — v\(AppEnvironment.appVersion) (\(AppEnvironment.current))")
 
     DockTileApp.main()

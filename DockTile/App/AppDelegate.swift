@@ -168,6 +168,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private func handleDeepLink(_ url: URL) {
         print("🔗 Handling deep link: \(url)")
+        DiagnosticsLog.shared.log("deeplink", "Received \(url.absoluteString)")
 
         guard url.scheme == "docktile" else {
             print("   ⚠️ Unknown URL scheme: \(url.scheme ?? "nil")")

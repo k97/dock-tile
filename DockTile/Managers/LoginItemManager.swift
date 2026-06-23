@@ -65,6 +65,7 @@ final class LoginItemManager {
         try service.register()
         userOptedOut = false
         print("✅ LoginItem: launcher agent registered (status: \(statusDescription))")
+        DiagnosticsLog.shared.log("login", "Start-at-login enabled — registered (status: \(statusDescription))")
     }
 
     /// Unregister the launcher agent and record the user's opt-out so we don't re-enable it.
@@ -72,6 +73,7 @@ final class LoginItemManager {
         try service.unregister()
         userOptedOut = true
         print("✅ LoginItem: launcher agent unregistered (status: \(statusDescription))")
+        DiagnosticsLog.shared.log("login", "Start-at-login disabled — unregistered (status: \(statusDescription))")
     }
 
     /// Bring the registration in line with the user's choice on app launch. Because start-at-login
@@ -84,8 +86,10 @@ final class LoginItemManager {
         do {
             try service.register()
             print("🔁 LoginItem: reconciled on launch → \(statusDescription)")
+            DiagnosticsLog.shared.log("login", "Reconciled on launch → \(statusDescription)")
         } catch {
             print("⚠️ LoginItem: reconcile register failed: \(error.localizedDescription)")
+            DiagnosticsLog.shared.log("login", "Reconcile register FAILED: \(error.localizedDescription)")
         }
     }
 

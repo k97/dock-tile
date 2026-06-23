@@ -350,12 +350,14 @@ final class HelperBundleManager {
         // Prevent double-removal if this bundle is already being removed
         guard !removingBundleIds.contains(config.bundleIdentifier) else {
             print("⚠️ Skipping remove - already in progress for: \(config.name)")
+            DiagnosticsLog.shared.log("dock", "removeFromDock SKIPPED (remove already in progress) — '\(config.name)'")
             return nil
         }
 
         // Also prevent removal while installation is in progress
         guard !installingBundleIds.contains(config.bundleIdentifier) else {
             print("⚠️ Skipping remove - installation in progress for: \(config.name)")
+            DiagnosticsLog.shared.log("dock", "removeFromDock SKIPPED (install in progress) — '\(config.name)'")
             return nil
         }
 
@@ -401,8 +403,10 @@ final class HelperBundleManager {
         // Final verification (should always succeed now)
         if findInDock(bundleId: config.bundleIdentifier) == nil {
             print("   ✓ Verified tile removed from Dock")
+            DiagnosticsLog.shared.log("dock", "Removed '\(config.name)' from Dock (verified)")
         } else {
             print("   ⚠️ Tile still in Dock after restart - this shouldn't happen")
+            DiagnosticsLog.shared.log("dock", "'\(config.name)' STILL in Dock after restart — removal did not take")
         }
 
         print("✅ Removed from Dock: \(config.name)")
@@ -539,6 +543,7 @@ final class HelperBundleManager {
         process.waitUntilExit()
 
         guard process.terminationStatus == 0 else {
+            DiagnosticsLog.shared.log("dock", "codesign FAILED (status \(process.terminationStatus)) for \(helperPath.lastPathComponent)")
             throw HelperBundleError.codesignFailed
         }
     }

@@ -272,6 +272,7 @@ final class ConfigurationManager: ObservableObject {
             print("💾 Saved \(configurations.count) configuration(s) to \(storageURL.lastPathComponent)")
         } catch {
             print("❌ Failed to save configurations: \(error.localizedDescription)")
+            DiagnosticsLog.shared.log("config", "FAILED to save configurations: \(error.localizedDescription)")
         }
     }
 
@@ -290,6 +291,7 @@ final class ConfigurationManager: ObservableObject {
         } catch {
             print("❌ Failed to load configurations: \(error.localizedDescription)")
             print("   Starting with empty configuration list")
+            DiagnosticsLog.shared.log("config", "FAILED to load/decode configurations (starting empty): \(error.localizedDescription)")
             configurations = []
         }
     }
@@ -381,10 +383,12 @@ final class ConfigurationManager: ObservableObject {
             if config.isVisibleInDock, !isActuallyInDock {
                 // Direction 1: visible config, but gone from the Dock → mark hidden.
                 print("   ⚠️ '\(config.name)' was removed from Dock - updating visibility")
+                DiagnosticsLog.shared.log("sync", "'\(config.name)' gone from Dock → marking hidden")
                 configurations[index].isVisibleInDock = false
                 hasChanges = true
             } else if !config.isVisibleInDock, isActuallyInDock {
                 // Direction 2: hidden config, but still in the Dock → remove it for real.
+                DiagnosticsLog.shared.log("sync", "'\(config.name)' hidden in config but still pinned in Dock (reconcile=\(reconcileDockedHiddenTiles))")
                 guard reconcileDockedHiddenTiles else { continue }
                 print("   ⚠️ '\(config.name)' is hidden but still in Dock - removing to match config")
                 stuckHiddenConfigs.append(config)
@@ -407,6 +411,7 @@ final class ConfigurationManager: ObservableObject {
                     try await HelperBundleManager.shared.removeFromDock(for: config)
                 } catch {
                     print("   ⚠️ Failed to remove stuck hidden tile '\(config.name)': \(error.localizedDescription)")
+                    DiagnosticsLog.shared.log("sync", "FAILED to remove stuck hidden tile '\(config.name)': \(error.localizedDescription)")
                 }
             }
         }
