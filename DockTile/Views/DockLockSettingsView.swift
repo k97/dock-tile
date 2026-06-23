@@ -29,6 +29,7 @@ struct DockLockSettingsView: View {
                 }
                 .onChange(of: manager.isEnabled) { _, enabled in
                     AnalyticsService.shared.log(.settingChanged, ["setting": "dock_lock", "enabled": enabled])
+                    DiagnosticsLog.shared.log("docklock", "Dock Lock toggled \(enabled ? "ON" : "OFF")")
                     // Turning the feature on without permission: explain first, prompt later.
                     if enabled && !manager.isAccessibilityTrusted {
                         showingPrimer = true

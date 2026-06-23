@@ -137,9 +137,22 @@ struct DockTileDetailView: View {
                 hasAppearedOnce = true
             }
         }
-        .onChange(of: editedConfig.isVisibleInDock) { _, _ in
+        .onChange(of: editedConfig.isVisibleInDock) { _, newValue in
             // Update button text when toggle changes
             updateDockState()
+            // The actual Dock add/remove is logged in performDockAction; this records the
+            // user's toggle intent (verbose — the outcome is what matters in prod reports).
+            if hasAppearedOnce {
+                DiagnosticsLog.shared.log("tile", "Show Tile toggled \(newValue ? "ON" : "OFF") for '\(editedConfig.name)' (applies on action)", verbose: true)
+            }
+        }
+        .onChange(of: editedConfig.layoutMode) { _, newValue in
+            guard hasAppearedOnce else { return }
+            DiagnosticsLog.shared.log("tile", "Layout changed to \(newValue.rawValue) for '\(editedConfig.name)'")
+        }
+        .onChange(of: editedConfig.showInAppSwitcher) { _, newValue in
+            guard hasAppearedOnce else { return }
+            DiagnosticsLog.shared.log("tile", "Mode changed to \(newValue ? "App" : "Ghost") for '\(editedConfig.name)'")
         }
         .onChange(of: configManager.configurations) { _, newConfigs in
             // Sync editedConfig when underlying configuration changes (e.g., from CustomiseTileView)
@@ -518,8 +531,10 @@ struct DockTileDetailView: View {
     private func removeSelectedApp() {
         // Remove all selected apps
         guard !selectedAppIDs.isEmpty else { return }
+        let removedNames = editedConfig.appItems.filter { selectedAppIDs.contains($0.id) }.map(\.name)
         editedConfig.appItems.removeAll { selectedAppIDs.contains($0.id) }
         selectedAppIDs.removeAll()
+        DiagnosticsLog.shared.log("tile", "Removed \(removedNames.count) item(s) from '\(editedConfig.name)': \(removedNames.joined(separator: ", "))")
     }
 
     private func addItem() {
@@ -546,6 +561,7 @@ struct DockTileDetailView: View {
                 }
                 if let folderItem = AppItem.from(folderURL: url) {
                     editedConfig.appItems.append(folderItem)
+                    DiagnosticsLog.shared.log("tile", "Added folder '\(folderItem.name)' to '\(editedConfig.name)' (\(editedConfig.appItems.count) item(s))")
                 }
             } else {
                 // It's an application
@@ -557,6 +573,7 @@ struct DockTileDetailView: View {
                 }
                 if let appItem = AppItem.from(appURL: url) {
                     editedConfig.appItems.append(appItem)
+                    DiagnosticsLog.shared.log("tile", "Added app '\(appItem.name)' to '\(editedConfig.name)' (\(editedConfig.appItems.count) item(s))")
                 }
             }
         }

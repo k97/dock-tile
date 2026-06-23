@@ -132,6 +132,7 @@ final class ConfigurationManager: ObservableObject {
         saveConfigurations()
 
         AnalyticsService.shared.log(.tileCreated)
+        DiagnosticsLog.shared.log("tile", "Created tile '\(config.name)'")
         print("✅ Created configuration: \(config.name) [\(config.id)]")
         print("   selectedConfigHasBeenEdited = \(selectedConfigHasBeenEdited) (should be false)")
         return config
@@ -183,6 +184,7 @@ final class ConfigurationManager: ObservableObject {
         }
 
         AnalyticsService.shared.log(.tileRemoved, ["app_count": config.appItems.count])
+        DiagnosticsLog.shared.log("tile", "Deleted tile '\(config.name)' (\(config.appItems.count) app(s), visible=\(config.isVisibleInDock))")
         configurations.remove(at: index)
 
         // If deleted config was selected, select another one (or nil if none left)
@@ -212,6 +214,7 @@ final class ConfigurationManager: ObservableObject {
 
         saveConfigurations()
 
+        DiagnosticsLog.shared.log("tile", "Duplicated tile '\(config.name)' → '\(duplicate.name)' (\(duplicate.appItems.count) app(s))")
         print("📋 Duplicated configuration: \(config.name) → \(duplicate.name)")
         return duplicate
     }
@@ -228,6 +231,7 @@ final class ConfigurationManager: ObservableObject {
         configurations[index].appItems.append(item)
         saveConfigurations()
 
+        DiagnosticsLog.shared.log("tile", "Added \(item.isFolder ? "folder" : "app") '\(item.name)' to '\(configurations[index].name)' (\(configurations[index].appItems.count) item(s))")
         print("➕ Added app '\(item.name)' to configuration: \(configurations[index].name)")
     }
 
@@ -238,9 +242,11 @@ final class ConfigurationManager: ObservableObject {
             return
         }
 
+        let removed = configurations[configIndex].appItems.first { $0.id == itemId }
         configurations[configIndex].appItems.removeAll { $0.id == itemId }
         saveConfigurations()
 
+        DiagnosticsLog.shared.log("tile", "Removed item '\(removed?.name ?? "unknown")' from '\(configurations[configIndex].name)' (\(configurations[configIndex].appItems.count) item(s) left)")
         print("➖ Removed app from configuration: \(configurations[configIndex].name)")
     }
 
@@ -254,6 +260,7 @@ final class ConfigurationManager: ObservableObject {
         configurations[configIndex].appItems.move(fromOffsets: source, toOffset: destination)
         saveConfigurations()
 
+        DiagnosticsLog.shared.log("tile", "Reordered items in '\(configurations[configIndex].name)'", verbose: true)
         print("🔄 Reordered apps in configuration: \(configurations[configIndex].name)")
     }
 

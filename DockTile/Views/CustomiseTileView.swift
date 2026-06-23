@@ -65,6 +65,17 @@ struct CustomiseTileView: View {
                 }
             }
         }
+        // Per-control diagnostics. Colour and size change continuously (colour-panel drag /
+        // stepper repeat) so they're verbose; icon selection is a discrete click.
+        .onChange(of: editedConfig.tintColor) { _, newValue in
+            DiagnosticsLog.shared.log("tile", "Colour changed for '\(editedConfig.name)' → \(newValue)", verbose: true)
+        }
+        .onChange(of: editedConfig.iconScale) { _, newValue in
+            DiagnosticsLog.shared.log("tile", "Icon size changed to \(newValue) for '\(editedConfig.name)'", verbose: true)
+        }
+        .onChange(of: editedConfig.iconValue) { _, newValue in
+            DiagnosticsLog.shared.log("tile", "Icon changed to \(editedConfig.iconType == .emoji ? "emoji" : "symbol") '\(newValue)' for '\(editedConfig.name)'")
+        }
     }
 
     // MARK: - Studio Canvas (Hero Section)

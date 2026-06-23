@@ -69,6 +69,7 @@ struct GeneralSettingsView: View {
                 .onChange(of: analyticsEnabled) { _, enabled in
                     AnalyticsService.shared.setConsent(enabled)
                     AnalyticsService.shared.log(.settingChanged, ["setting": "analytics", "enabled": enabled])
+                    DiagnosticsLog.shared.log("settings", "Share analytics toggled \(enabled ? "ON" : "OFF")")
                 }
             }
         }
