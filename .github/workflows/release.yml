@@ -301,7 +301,7 @@ jobs:
           files: |
             ./${{ env.APP_NAME_NO_SPACE }}-${{ steps.version.outputs.VERSION }}.dmg
             ./${{ env.APP_NAME_NO_SPACE }}-${{ steps.version.outputs.VERSION }}.dmg.sha256
-          draft: true
+          draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
