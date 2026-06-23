@@ -426,6 +426,7 @@ struct DockTileDetailView: View {
                     ])
                     print("✅ Helper installed: \(configToSave.name)")
                     print("   User can open it from: ~/Library/Application Support/DockTile/")
+                    DiagnosticsLog.shared.log("dock", "\(wasInDock ? "Updated" : "Added") tile '\(configToSave.name)' in Dock")
                 } else {
                     // User wants tile removed - save position before removal
                     // Remove from Dock plist regardless of whether bundle exists
@@ -437,6 +438,7 @@ struct DockTileDetailView: View {
                     }
                     AnalyticsService.shared.log(.tileHidden, ["app_count": configToSave.appItems.count])
                     print("✅ Tile removed from Dock: \(configToSave.name)")
+                    DiagnosticsLog.shared.log("dock", "Removed tile '\(configToSave.name)' from Dock (savedIndex=\(savedPosition.map(String.init) ?? "nil"))")
                 }
 
                 // Save configuration changes (including lastDockIndex)
@@ -456,6 +458,7 @@ struct DockTileDetailView: View {
                 updateDockState()
             } catch {
                 errorMessage = error.localizedDescription
+                DiagnosticsLog.shared.log("dock", "Dock action FAILED for '\(editedConfig.name)' (visible=\(editedConfig.isVisibleInDock)): \(error.localizedDescription)")
                 AnalyticsService.shared.record(error, context: "performDockAction",
                                                keys: ["bundle_id": editedConfig.bundleIdentifier,
                                                       "visible": String(editedConfig.isVisibleInDock)])

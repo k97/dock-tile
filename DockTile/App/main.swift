@@ -67,5 +67,7 @@ if CommandLine.arguments.contains(LoginTileSpawner.flag) {
     AnalyticsService.shared.configure()
     AnalyticsService.shared.log(.appLaunched)
 
+    DiagnosticsLog.shared.log("lifecycle", "Main app launched — v\(AppEnvironment.appVersion) (\(AppEnvironment.current))")
+
     DockTileApp.main()
 }

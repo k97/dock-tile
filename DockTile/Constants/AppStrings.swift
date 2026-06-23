@@ -316,6 +316,12 @@ enum AppStrings {
             comment: "Menu item to create a new tile"
         )
 
+        static let copyDiagnostics = NSLocalizedString(
+            "menu.copyDiagnostics",
+            value: "Copy Diagnostics",
+            comment: "File menu item that copies recent diagnostic logs to the clipboard"
+        )
+
         static let openInFinder = NSLocalizedString(
             "menu.openInFinder",
             value: "Open in Finder",
