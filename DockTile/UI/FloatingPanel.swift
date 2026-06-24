@@ -50,6 +50,12 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
     /// Explicit lifecycle state — the single source of truth for visibility.
     private(set) var state: PanelState = .hidden
 
+    /// When the popover most recently began hiding (explicit hide or transient self-dismiss).
+    /// The Dock reopen handler uses this to distinguish "click to dismiss" from "click to
+    /// open": the same Dock click that dismisses the popover also delivers a reopen, and we
+    /// must not let that reopen immediately bounce the popover back open.
+    private(set) var lastHiddenAt: CFAbsoluteTime = 0
+
     /// True while the popover is on screen or animating in. Callers use this to decide
     /// whether a Dock click should show or hide.
     var isVisible: Bool {
@@ -320,6 +326,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
             return
         }
         state = .hiding
+        lastHiddenAt = CFAbsoluteTimeGetCurrent()
 
         // Remove notification observer first
         if let observer = dismissObserver {
@@ -381,6 +388,9 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
                 // Reset state here so it also covers transient self-dismissals
                 // (click-outside) that never go through hide().
                 self.state = .hidden
+                // Stamp the dismissal time for transient closes that bypass hide(), so the
+                // Dock reopen handler can suppress an immediate same-click reshow.
+                self.lastHiddenAt = CFAbsoluteTimeGetCurrent()
                 self.popover = nil
                 self.cleanupAnchorWindow()
                 self.hostingController = nil

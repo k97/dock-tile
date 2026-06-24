@@ -46,6 +46,12 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// burst into a single action instead of show→hide→show→hide flicker.
     private let reopenCoalesceWindow: CFAbsoluteTime = 0.3
 
+    /// A Dock click that dismisses an open popover ALSO delivers a reopen. If the popover
+    /// became hidden within this window, treat the reopen as the tail of that dismissing
+    /// click and suppress the reshow — otherwise the popover bounces straight back open and
+    /// can never be closed from the Dock.
+    private let dismissReshowGuard: CFAbsoluteTime = 0.25
+
     /// Observers for icon style changes (distributed notifications)
     private var iconStyleObservers: [any NSObjectProtocol] = []
 
@@ -214,19 +220,21 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         }
         lastReopenTime = now
 
-        togglePopover()
+        if floatingPanel.isVisible {
+            // Popover is up → this Dock click toggles it closed.
+            hidePopover()
+        } else if now - floatingPanel.lastHiddenAt < dismissReshowGuard {
+            // The popover was open a moment ago and the SAME Dock click just dismissed it
+            // (transient close + global click monitor). Don't bounce it back open.
+            print("   Dock click dismissed popover — suppressing immediate reshow")
+            DiagnosticsLog.shared.log("helper", "Dock click dismissed popover (no reshow)", verbose: true)
+        } else {
+            showPopover(withKeyboardFocus: false)
+        }
         return true
     }
 
     // MARK: - UI Management
-
-    private func togglePopover() {
-        if floatingPanel.isVisible {
-            hidePopover()
-        } else {
-            showPopover(withKeyboardFocus: false)
-        }
-    }
 
     private func showPopover(withKeyboardFocus: Bool) {
         print("📍 Showing popover for helper tile (keyboard focus: \(withKeyboardFocus))")
