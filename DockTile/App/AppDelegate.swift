@@ -18,7 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     /// Scene identifier for the single main configuration `Window` (shared with `DockTileApp`
     /// and stamped onto the `NSWindow` by `WindowAccessor` so we can find it again).
-    static let configurationWindowID = "com.docktile.configuration"
+    /// `nonisolated` so the pure `shouldReuseConfigurationWindow` seam can read it off the actor.
+    nonisolated static let configurationWindowID = "com.docktile.configuration"
 
     /// SwiftUI's `openWindow` action, captured by the scene. Used to recreate the configuration
     /// window when it has been fully closed while the app stayed resident (e.g. Dock Lock on).
@@ -144,19 +145,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         return NSSize(width: fixedWindowWidth, height: max(frameSize.height, minWindowHeight))
     }
 
+    /// Reopen decision for the single main configuration window (Dock-icon click /
+    /// `docktile://configure` deep link / Spotlight / Mission Control all funnel here).
+    ///
+    /// Returns `true` when a configuration window is already on screen and can be brought to the
+    /// front; `false` when none is open and SwiftUI must recreate it. Guards the duplicate-window
+    /// regression: with `WindowGroup` + a title-based heuristic, every reopen spawned a *fresh*
+    /// window in the same process. A single `Window` keyed off `configurationWindowID` means we
+    /// reuse whenever that identifier is already present.
+    nonisolated static func shouldReuseConfigurationWindow(openWindowIdentifiers identifiers: [String?]) -> Bool {
+        identifiers.contains(configurationWindowID)
+    }
+
     private func showConfigurationWindow() {
         // Activate app and show configuration window
         NSApp.activate(ignoringOtherApps: true)
 
-        // With a single `Window` scene there is at most one configuration window.
-        // Bring it forward if it still exists; otherwise ask SwiftUI to recreate it (it may
-        // have been closed while the app stayed resident for Dock Lock). The old code looped
-        // over `NSApp.windows` with a loose heuristic, which — combined with `WindowGroup` —
-        // let a fresh duplicate window get created on every reopen / deep link.
-        if let window = NSApp.windows.first(where: {
-            $0.identifier?.rawValue == Self.configurationWindowID
-        }) {
-            window.makeKeyAndOrderFront(nil)
+        // With a single `Window` scene there is at most one configuration window. Reuse it if
+        // it's open; otherwise ask SwiftUI to recreate it (it may have been closed while the app
+        // stayed resident for Dock Lock). The reuse rule lives in the testable seam above.
+        let identifiers = NSApp.windows.map { $0.identifier?.rawValue }
+        if Self.shouldReuseConfigurationWindow(openWindowIdentifiers: identifiers) {
+            NSApp.windows
+                .first { $0.identifier?.rawValue == Self.configurationWindowID }?
+                .makeKeyAndOrderFront(nil)
         } else {
             openConfigurationWindow?()
         }
