@@ -26,6 +26,27 @@ export const localisedContent = {
     downloadButton: "Download for macOS",
     systemRequirements: "Requires macOS 26 or later",
 
+    // Features
+    featuresTitle: "Made for your Dock",
+    featuresSubtitle: "Native, fast, and out of your way.",
+    features: [
+      {
+        title: "One click to everything",
+        description:
+          "Tuck a group of apps and folders behind a single Dock tile, then open them all with one click.",
+      },
+      {
+        title: "Dock Lock",
+        description:
+          "Pin the Dock to one display so it stops hopping between screens on a multi-monitor setup.",
+      },
+      {
+        title: "Custom tile icons",
+        description:
+          "Design each tile with colour gradients, SF Symbols or emoji. Four icon styles follow Light, Dark, Clear and Tinted appearance.",
+      },
+    ],
+
     // FAQ
     faq: [
       {
@@ -108,6 +129,27 @@ export const localisedContent = {
     downloadButton: "Download for macOS",
     systemRequirements: "Requires macOS 26 or later",
 
+    // Features
+    featuresTitle: "Made for your Dock",
+    featuresSubtitle: "Native, fast, and out of your way.",
+    features: [
+      {
+        title: "One click to everything",
+        description:
+          "Tuck a group of apps and folders behind a single Dock tile, then open them all with one click.",
+      },
+      {
+        title: "Dock Lock",
+        description:
+          "Pin the Dock to one display so it stops hopping between screens on a multi-monitor setup.",
+      },
+      {
+        title: "Custom tile icons",
+        description:
+          "Design each tile with colour gradients, SF Symbols or emoji. Four icon styles follow Light, Dark, Clear and Tinted appearance.",
+      },
+    ],
+
     // FAQ
     faq: [
       {
@@ -189,6 +231,27 @@ export const localisedContent = {
       "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders.",
     downloadButton: "Download for macOS",
     systemRequirements: "Requires macOS 26 or later",
+
+    // Features
+    featuresTitle: "Made for your Dock",
+    featuresSubtitle: "Native, fast, and out of your way.",
+    features: [
+      {
+        title: "One click to everything",
+        description:
+          "Tuck a group of apps and folders behind a single Dock tile, then open them all with one click.",
+      },
+      {
+        title: "Dock Lock",
+        description:
+          "Pin the Dock to one display so it stops hopping between screens on a multi-monitor setup.",
+      },
+      {
+        title: "Custom tile icons",
+        description:
+          "Design each tile with color gradients, SF Symbols or emoji. Four icon styles follow Light, Dark, Clear and Tinted appearance.",
+      },
+    ],
 
     // FAQ
     faq: [

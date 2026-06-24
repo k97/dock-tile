@@ -12,6 +12,7 @@ type DownloadState = "ready" | "downloading" | "downloaded";
 
 const navLinks = [
   { label: "Home", href: "/" },
+  { label: "Features", href: "/#features" },
   { label: "FAQ", href: "/faq" },
 ];
 
