@@ -26,12 +26,20 @@ struct DockTileApp: App {
     private let aboutWindowController = AboutWindowController()
 
     var body: some Scene {
-        WindowGroup {
+        // `Window` (not `WindowGroup`) — the configuration UI is a single, unique window.
+        // WindowGroup let every Dock-icon click / `docktile://configure` deep link spawn a
+        // *duplicate* window in the same process; `Window` guarantees exactly one instance.
+        Window(AppStrings.appName, id: AppDelegate.configurationWindowID) {
             DockTileConfigurationView()
                 .environmentObject(configManager)
                 .onAppear {
                     appDelegate.configManager = configManager
                 }
+                // Hand SwiftUI's openWindow action to the AppDelegate so AppKit-side code
+                // (deep links, Dock-icon reopen) can recreate this window after it's closed.
+                .modifier(CaptureOpenWindow { action in
+                    appDelegate.openConfigurationWindow = action
+                })
                 .task {
                     // Migrate stale helper bundles after app launch
                     let migration = HelperMigrationManager(configManager: configManager)
@@ -41,23 +49,15 @@ struct DockTileApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: windowWidth, height: 600)
 
-        // Native macOS Settings window (⌘,) — hosts app-wide preferences.
-        Settings {
-            TabView {
-                GeneralSettingsView()
-                    .environmentObject(configManager)
-                    .tabItem {
-                        Label(AppStrings.Settings.general, systemImage: "gearshape")
-                    }
-
-                DockLockSettingsView()
-                    .tabItem {
-                        Label(AppStrings.Settings.dockLock, systemImage: "lock.display")
-                    }
-            }
-        }
-
         .commands {
+            // Settings now live inline in the main window's sidebar (not a detached ⌘, window).
+            // Re-point the standard Settings menu item / ⌘, at the inline General pane.
+            CommandGroup(replacing: .appSettings) {
+                Button(AppStrings.Menu.settings) {
+                    NotificationCenter.default.post(name: .openSettingsPane, object: SettingsPane.general)
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
             CommandGroup(replacing: .appInfo) {
                 Button("About Dock Tile") {
                     aboutWindowController.showAbout {
@@ -81,6 +81,24 @@ struct DockTileApp: App {
                     DiagnosticsLog.shared.copyToPasteboard()
                 }
             }
+        }
+    }
+}
+
+/// Captures SwiftUI's `openWindow` action and hands it to the `AppDelegate`.
+///
+/// AppKit-side entry points (the `docktile://configure` deep link and the Dock-icon reopen
+/// handler) need to bring up the configuration window even after the user has fully closed it
+/// — at which point there is no live SwiftUI view to read `@Environment(\.openWindow)`. The
+/// captured `OpenWindowAction` stays valid for the app's lifetime, so storing it once lets
+/// those handlers recreate the single window on demand.
+private struct CaptureOpenWindow: ViewModifier {
+    let store: (@escaping () -> Void) -> Void
+    @Environment(\.openWindow) private var openWindow
+
+    func body(content: Content) -> some View {
+        content.onAppear {
+            store { openWindow(id: AppDelegate.configurationWindowID) }
         }
     }
 }

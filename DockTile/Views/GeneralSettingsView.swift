@@ -74,8 +74,6 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460)
-        .fixedSize(horizontal: false, vertical: true)
         .navigationTitle(AppStrings.Settings.general)
         .onAppear(perform: refreshLoginState)
     }

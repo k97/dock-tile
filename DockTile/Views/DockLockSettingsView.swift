@@ -77,8 +77,6 @@ struct DockLockSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460)
-        .fixedSize(horizontal: false, vertical: true)
         .navigationTitle(AppStrings.Settings.dockLock)
         // Re-check trust when the pane appears (covers the case where the user
         // granted access while this window was already open).

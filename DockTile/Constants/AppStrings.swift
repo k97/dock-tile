@@ -385,6 +385,12 @@ enum AppStrings {
             comment: "Menu item to configure tile (opens main app)"
         )
 
+        static let settings = NSLocalizedString(
+            "menu.settings",
+            value: "Settings…",
+            comment: "App menu item that opens the inline Settings pane (⌘,)"
+        )
+
         static let newTile = NSLocalizedString(
             "menu.newTile",
             value: "New Dock Tile",
@@ -433,6 +439,18 @@ enum AppStrings {
             "sidebar.title",
             value: "Dock Tile",
             comment: "Navigation title for sidebar"
+        )
+
+        static let tilesSection = NSLocalizedString(
+            "sidebar.section.tiles",
+            value: "Tiles",
+            comment: "Sidebar section header for the list of dock tiles"
+        )
+
+        static let settingsSection = NSLocalizedString(
+            "sidebar.section.settings",
+            value: "Settings",
+            comment: "Sidebar section header for the inline app settings panes"
         )
     }
 

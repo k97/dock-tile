@@ -16,6 +16,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     // Configuration manager (set by DockTileApp on launch)
     var configManager: ConfigurationManager?
 
+    /// Scene identifier for the single main configuration `Window` (shared with `DockTileApp`
+    /// and stamped onto the `NSWindow` by `WindowAccessor` so we can find it again).
+    static let configurationWindowID = "com.docktile.configuration"
+
+    /// SwiftUI's `openWindow` action, captured by the scene. Used to recreate the configuration
+    /// window when it has been fully closed while the app stayed resident (e.g. Dock Lock on).
+    var openConfigurationWindow: (() -> Void)?
+
     // Fixed window dimensions (System Settings style)
     private let fixedWindowWidth: CGFloat = 768
     private let minWindowHeight: CGFloat = 500
@@ -140,14 +148,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Activate app and show configuration window
         NSApp.activate(ignoringOtherApps: true)
 
-        // Find and show the configuration window
-        for window in NSApp.windows {
-            if window.contentViewController is NSHostingController<AnyView> ||
-               window.title.contains(AppStrings.appName) ||
-               window.windowNumber > 0 {
-                window.makeKeyAndOrderFront(nil)
-                break
-            }
+        // With a single `Window` scene there is at most one configuration window.
+        // Bring it forward if it still exists; otherwise ask SwiftUI to recreate it (it may
+        // have been closed while the app stayed resident for Dock Lock). The old code looped
+        // over `NSApp.windows` with a loose heuristic, which — combined with `WindowGroup` —
+        // let a fresh duplicate window get created on every reopen / deep link.
+        if let window = NSApp.windows.first(where: {
+            $0.identifier?.rawValue == Self.configurationWindowID
+        }) {
+            window.makeKeyAndOrderFront(nil)
+        } else {
+            openConfigurationWindow?()
         }
     }
 

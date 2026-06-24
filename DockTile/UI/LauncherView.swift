@@ -16,6 +16,9 @@ extension Notification.Name {
     static let dismissLauncher = Notification.Name("dismissLauncher")
     static let enableKeyboardNavigation = Notification.Name("enableKeyboardNavigation")
     static let openConfigurator = Notification.Name("openConfigurator")
+    /// Posted by the ⌘, menu command to select an inline Settings pane in the main window.
+    /// `object` is an optional `SettingsPane` (defaults to `.general`).
+    static let openSettingsPane = Notification.Name("openSettingsPane")
 }
 
 // MARK: - Launcher View (Layout Mode Router)

@@ -8,9 +8,27 @@
 
 import SwiftUI
 
+/// One of the inline Settings panes, hosted in the detail column instead of a detached window.
+enum SettingsPane: Hashable, CaseIterable {
+    case general
+    case dockLock
+}
+
+/// What the sidebar currently has selected — either a tile or an inline Settings pane.
+/// A single selection type lets the native `List(selection:)` drive the whole detail column.
+enum SidebarSelection: Hashable {
+    case tile(UUID)
+    case settings(SettingsPane)
+}
+
 struct DockTileConfigurationView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
     @State private var isDrilledDown = false
+
+    /// Single source of truth for what the sidebar has selected and what fills the detail
+    /// column — a tile or an inline Settings pane. Kept in sync with `configManager`'s tile
+    /// selection (the rest of the app still reads `selectedConfigId`) via `onChange` below.
+    @State private var selection: SidebarSelection?
 
     // Fixed window dimensions (System Settings style)
     private let windowWidth: CGFloat = 768
@@ -18,46 +36,11 @@ struct DockTileConfigurationView: View {
 
     var body: some View {
         NavigationSplitView {
-            // Sidebar with configuration list
-            DockTileSidebarView()
+            // Sidebar with tiles + inline Settings, accordion-style sections
+            DockTileSidebarView(selection: $selection)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
-            if let selectedConfig = configManager.selectedConfiguration {
-                ZStack {
-                    if !isDrilledDown {
-                        // Detail view (Screen 3)
-                        // IMPORTANT: Use .id() to force view recreation when config changes
-                        // Without this, SwiftUI may reuse the view and editedConfig gets stale
-                        DockTileDetailView(
-                            config: selectedConfig,
-                            onCustomise: {
-                                isDrilledDown = true
-                            }
-                        )
-                        .id(selectedConfig.id)
-                        .transition(.move(edge: .leading))
-                    }
-
-                    if isDrilledDown {
-                        // Drill-down view (Screen 4)
-                        // IMPORTANT: Use .id() to force view recreation when config changes
-                        CustomiseTileView(
-                            config: selectedConfig,
-                            onBack: {
-                                isDrilledDown = false
-                            }
-                        )
-                        .id(selectedConfig.id)
-                        .transition(.move(edge: .trailing))
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .background(Color(nsColor: .windowBackgroundColor))
-                .animation(.easeInOut(duration: 0.3), value: isDrilledDown)
-            } else {
-                // Empty state
-                EmptyConfigurationView()
-            }
+            detailColumn
         }
         .navigationSplitViewStyle(.balanced)
         // Strict frame enforcement: fixed width, flexible height
@@ -69,6 +52,92 @@ struct DockTileConfigurationView: View {
             maxHeight: .infinity
         )
         .background(WindowAccessor(isCustomising: isDrilledDown))
+        .onAppear {
+            // Restore the persisted tile selection on first launch.
+            if selection == nil, let id = configManager.selectedConfigId {
+                selection = .tile(id)
+            }
+        }
+        // Selecting a tile in the sidebar drives the manager (which the rest of the app reads).
+        .onChange(of: selection) { _, newValue in
+            if case .tile(let id) = newValue, configManager.selectedConfigId != id {
+                configManager.selectedConfigId = id
+            }
+        }
+        // External changes (create / delete / duplicate) jump the sidebar to that tile,
+        // pulling focus out of a Settings pane if one was open.
+        .onChange(of: configManager.selectedConfigId) { _, newId in
+            if let id = newId, selection != .tile(id) {
+                selection = .tile(id)
+            }
+        }
+        // ⌘, (and the Settings menu item) route here instead of opening a detached window.
+        .onReceive(NotificationCenter.default.publisher(for: .openSettingsPane)) { note in
+            selection = .settings((note.object as? SettingsPane) ?? .general)
+        }
+    }
+
+    @ViewBuilder
+    private var detailColumn: some View {
+        switch selection {
+        case .settings(let pane):
+            settingsDetail(pane)
+        case .tile, .none:
+            tileDetail
+        }
+    }
+
+    /// Hosts a Settings pane inside the detail column. The grouped Forms fill the column and
+    /// supply their own native insets — System Settings layout, no extra padding needed.
+    @ViewBuilder
+    private func settingsDetail(_ pane: SettingsPane) -> some View {
+        switch pane {
+        case .general:
+            GeneralSettingsView()
+                .environmentObject(configManager)
+        case .dockLock:
+            DockLockSettingsView()
+        }
+    }
+
+    @ViewBuilder
+    private var tileDetail: some View {
+        if let selectedConfig = configManager.selectedConfiguration {
+            ZStack {
+                if !isDrilledDown {
+                    // Detail view (Screen 3)
+                    // IMPORTANT: Use .id() to force view recreation when config changes
+                    // Without this, SwiftUI may reuse the view and editedConfig gets stale
+                    DockTileDetailView(
+                        config: selectedConfig,
+                        onCustomise: {
+                            isDrilledDown = true
+                        }
+                    )
+                    .id(selectedConfig.id)
+                    .transition(.move(edge: .leading))
+                }
+
+                if isDrilledDown {
+                    // Drill-down view (Screen 4)
+                    // IMPORTANT: Use .id() to force view recreation when config changes
+                    CustomiseTileView(
+                        config: selectedConfig,
+                        onBack: {
+                            isDrilledDown = false
+                        }
+                    )
+                    .id(selectedConfig.id)
+                    .transition(.move(edge: .trailing))
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color(nsColor: .windowBackgroundColor))
+            .animation(.easeInOut(duration: 0.3), value: isDrilledDown)
+        } else {
+            // Empty state
+            EmptyConfigurationView()
+        }
     }
 }
 
@@ -101,6 +170,12 @@ private struct WindowAccessor: NSViewRepresentable {
     }
 
     private func configureWindow(_ window: NSWindow, animated: Bool) {
+        // Tag the window so AppDelegate can reliably find this single configuration window
+        // (for Dock-icon reopen / deep-link bring-to-front) instead of guessing by title.
+        if window.identifier?.rawValue != AppDelegate.configurationWindowID {
+            window.identifier = NSUserInterfaceItemIdentifier(AppDelegate.configurationWindowID)
+        }
+
         let minHeight = isCustomising ? customiseMinHeight : defaultMinHeight
 
         // Lock horizontal size, allow vertical resize
