@@ -25,6 +25,12 @@
       "source": "jamesrochabrun/skills",
       "sourceType": "github",
       "computedHash": "614fab9ad9ab1fa2584550c2f800fff992e722306069ef4f5711d3a37a96f57e"
+    },
+    "remotion-best-practices": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/remotion/SKILL.md",
+      "computedHash": "14e4caa85e5c91d629e53397f94c9e8bb81460e93cafa31b278d14f5e9f640b7"
     }
   }
 }
