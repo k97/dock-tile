@@ -85,7 +85,7 @@ export function Header() {
         {/* Brand */}
         <Link
           href="/"
-          className="flex items-center gap-2 pl-2 pr-1 md:pr-3 py-1.5 rounded-full hover:bg-accent/60 transition-colors"
+          className="flex items-center gap-2 pl-2 pr-1 md:pr-3 py-1.5 rounded-full hover:bg-accent/60 transition-colors shrink-0"
         >
           <Image
             src="/assets/dock-tile-icon-only.svg"
@@ -94,7 +94,7 @@ export function Header() {
             height={24}
             className="w-6 h-6 shrink-0"
           />
-          <span className="hidden md:inline text-sm font-semibold tracking-tight">
+          <span className="hidden md:inline text-sm font-semibold tracking-tight whitespace-nowrap">
             {siteConfig.appName}
           </span>
         </Link>
