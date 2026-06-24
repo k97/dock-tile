@@ -57,6 +57,18 @@ final class LoginItemManager {
     /// Whether start-at-login should be active given the user's choice (ON unless opted out).
     var shouldBeEnabled: Bool { !userOptedOut }
 
+    /// Pure decision seam for `reconcileOnLaunch`: re-register the agent only when the user has
+    /// NOT opted out AND the system isn't already `.enabled`. This is what re-asserts the agent
+    /// after a Sparkle update demotes it to `.requiresApproval`/`.notRegistered`, while honouring
+    /// a genuine opt-out. Extracted so the Sparkle-update scenario is unit-testable without
+    /// SMAppService. See rules/login-items.md "Reconcile on launch (Sparkle fix)".
+    nonisolated static func shouldReregisterOnLaunch(
+        userOptedOut: Bool,
+        status: SMAppService.Status
+    ) -> Bool {
+        !userOptedOut && status != .enabled
+    }
+
     // MARK: - Toggle
 
     /// Register the launcher agent so visible tiles warm at login. Clears the opt-out flag.
@@ -82,7 +94,7 @@ final class LoginItemManager {
     /// enabled. If macOS insists on re-approval the status stays `.requiresApproval` and the
     /// Settings pane surfaces the approval prompt — we never silently fail or lie about the state.
     func reconcileOnLaunch() {
-        guard shouldBeEnabled, service.status != .enabled else { return }
+        guard Self.shouldReregisterOnLaunch(userOptedOut: userOptedOut, status: service.status) else { return }
         do {
             try service.register()
             print("🔁 LoginItem: reconciled on launch → \(statusDescription)")

@@ -23,26 +23,25 @@ struct ConfigurationManagerTests {
 
     // MARK: - Unique Name Generation
 
-    @Test("generateUniqueName returns base name when no conflicts")
+    @Test("uniqueName returns base name when no conflicts")
     func uniqueNameNoConflict() {
-        // Test the logic directly on the DockTileConfiguration
-        let existingNames: Set<String> = ["Tile A", "Tile B"]
-        let baseName = "New Tile"
-
-        // The name should be used as-is if not in the set
-        #expect(!existingNames.contains(baseName))
+        // Exercise the REAL algorithm, not Set behaviour.
+        let name = ConfigurationManager.uniqueName(base: "New Tile", existing: ["Tile A", "Tile B"])
+        #expect(name == "New Tile")
     }
 
-    @Test("generateUniqueName appends number when base name exists")
+    @Test("uniqueName appends the lowest free number when base name exists")
     func uniqueNameWithConflict() {
-        // Test the naming convention
-        let existingNames: Set<String> = ["New Tile", "New Tile 1"]
-        let baseName = "New Tile"
+        #expect(ConfigurationManager.uniqueName(base: "New Tile", existing: ["New Tile"]) == "New Tile 1")
+        #expect(ConfigurationManager.uniqueName(base: "New Tile", existing: ["New Tile", "New Tile 1"]) == "New Tile 2")
+    }
 
-        // If "New Tile" and "New Tile 1" exist, next should be "New Tile 2"
-        #expect(existingNames.contains(baseName))
-        #expect(existingNames.contains("\(baseName) 1"))
-        #expect(!existingNames.contains("\(baseName) 2"))
+    @Test("uniqueName fills the first gap rather than always counting from the max")
+    func uniqueNameFillsGap() {
+        // "New Tile 1" is taken but "New Tile" itself is free → base wins.
+        #expect(ConfigurationManager.uniqueName(base: "New Tile", existing: ["New Tile 1", "New Tile 2"]) == "New Tile")
+        // base + " 1" free even though " 2" taken.
+        #expect(ConfigurationManager.uniqueName(base: "New Tile", existing: ["New Tile", "New Tile 2"]) == "New Tile 1")
     }
 
     // MARK: - Configuration Lookup
@@ -87,14 +86,14 @@ struct ConfigurationManagerTests {
         #expect(result == false)
     }
 
-    @Test("selectedConfiguration returns nil when no selection")
+    @Test("selectedConfiguration returns nil for an unknown selected id")
     func selectedConfigurationNoSelection() {
         let manager = createTestManager()
 
-        // If no configs exist, selection should be nil
-        if manager.configurations.isEmpty {
-            #expect(manager.selectedConfiguration == nil)
-        }
+        // Drive the actual code path rather than skipping when configs happen to exist:
+        // select an id that isn't present, and require the lookup to return nil.
+        manager.selectedConfigId = UUID()
+        #expect(manager.selectedConfiguration == nil)
     }
 
     // MARK: - Edited Flag
@@ -256,22 +255,32 @@ struct ConfigurationDataTests {
 @Suite("Configuration JSON Persistence Tests")
 struct ConfigurationJSONPersistenceTests {
 
-    @Test("Configurations encode to JSON")
+    @Test("Configurations encode to JSON with the expected keys and values")
     func encodeToJSON() throws {
         let configs = [
             DockTileConfiguration(name: "Tile 1", tintColor: .blue),
             DockTileConfiguration(name: "Tile 2", tintColor: .red)
         ]
 
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try JSONEncoder().encode(configs)
 
-        let data = try encoder.encode(configs)
-        let jsonString = String(data: data, encoding: .utf8)
+        // Parse structurally rather than substring-matching the blob — a substring check passes
+        // even if "Tile 1" leaked into the wrong field or a required key was dropped.
+        let parsed = try #require(JSONSerialization.jsonObject(with: data) as? [[String: Any]])
+        #expect(parsed.count == 2)
 
-        #expect(jsonString != nil)
-        #expect(jsonString!.contains("Tile 1"))
-        #expect(jsonString!.contains("Tile 2"))
+        // Every element must carry the v1 required keys; a dropped key is a future decode crash.
+        let requiredKeys = ["id", "name", "tintColor", "symbolEmoji", "layoutMode",
+                            "appItems", "isVisibleInDock", "bundleIdentifier"]
+        for element in parsed {
+            for key in requiredKeys {
+                #expect(element[key] != nil, "encoded config missing '\(key)'")
+            }
+        }
+
+        // Values land in the correct field, in order.
+        #expect(parsed[0]["name"] as? String == "Tile 1")
+        #expect(parsed[1]["name"] as? String == "Tile 2")
     }
 
     @Test("Configurations decode from JSON")

@@ -16,7 +16,7 @@ final class DockPlistWatcher {
 
     private var fileDescriptor: Int32 = -1
     private var dispatchSource: DispatchSourceFileSystemObject?
-    private var debounceWorkItem: DispatchWorkItem?
+    private lazy var debouncer = Debouncer(interval: debounceInterval)
 
     /// Callback when Dock plist changes
     var onDockChanged: (() -> Void)?
@@ -90,8 +90,7 @@ final class DockPlistWatcher {
 
     /// Stop watching the Dock plist
     func stopWatching() {
-        debounceWorkItem?.cancel()
-        debounceWorkItem = nil
+        debouncer.cancel()
 
         dispatchSource?.cancel()
         dispatchSource = nil
@@ -102,19 +101,41 @@ final class DockPlistWatcher {
     // MARK: - Private Methods
 
     private func handleFileChange() {
-        // Cancel any pending debounced call
-        debounceWorkItem?.cancel()
-
-        // Create new debounced work item
-        let workItem = DispatchWorkItem { [weak self] in
+        // The Dock can write its plist several times in quick succession; coalesce those into a
+        // single sync so we don't fire `onDockChanged` repeatedly (and restart-loop the Dock).
+        debouncer.call { [weak self] in
             guard let self = self else { return }
             print("🔄 Dock plist changed - triggering sync")
             self.onDockChanged?()
         }
+    }
+}
 
-        debounceWorkItem = workItem
+// MARK: - Debouncer
 
-        // Schedule after debounce interval
-        DispatchQueue.main.asyncAfter(deadline: .now() + debounceInterval, execute: workItem)
+/// Coalesces rapid calls into a single trailing invocation: each `call` cancels the previous
+/// pending work, so only the last call within `interval` actually runs. Extracted so the
+/// coalescing behaviour is unit-testable (it previously lived inline and had no real test).
+@MainActor
+final class Debouncer {
+    private let interval: TimeInterval
+    private var workItem: DispatchWorkItem?
+
+    init(interval: TimeInterval) {
+        self.interval = interval
+    }
+
+    /// Schedule `action` after `interval`, cancelling any still-pending call first.
+    func call(_ action: @escaping () -> Void) {
+        workItem?.cancel()
+        let item = DispatchWorkItem(block: action)
+        workItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + interval, execute: item)
+    }
+
+    /// Cancel any pending call without firing it.
+    func cancel() {
+        workItem?.cancel()
+        workItem = nil
     }
 }

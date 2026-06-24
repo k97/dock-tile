@@ -396,11 +396,17 @@ struct DockTileDetailView: View {
         isCurrentlyInDock = HelperBundleManager.shared.findInDock(bundleId: editedConfig.bundleIdentifier) != nil
     }
 
+    /// Pure consent decision: the one-time Dock-restart dialog shows only until the user has
+    /// acknowledged it. Extracted so the rule is testable without UserDefaults or the view layer.
+    nonisolated static func shouldShowDockRestartConsent(hasAcknowledged: Bool) -> Bool {
+        !hasAcknowledged
+    }
+
     private func handleDockAction() {
         // Check if user has already acknowledged Dock restart
         let hasAcknowledged = UserDefaults.standard.bool(forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
 
-        if !hasAcknowledged {
+        if Self.shouldShowDockRestartConsent(hasAcknowledged: hasAcknowledged) {
             // Show consent dialog
             showDockRestartConsent = true
         } else {

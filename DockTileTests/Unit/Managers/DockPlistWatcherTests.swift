@@ -132,28 +132,52 @@ struct DebounceLogicTests {
         #expect(expectedDebounceInterval == 0.5)
     }
 
-    @Test("Multiple rapid calls should coalesce")
+    @Test("Debouncer coalesces rapid calls into a single trailing invocation")
+    @MainActor
     func debounceCoalesces() async throws {
-        // This tests the concept: multiple rapid file changes should result in
-        // only one callback after the debounce interval
-
-        // We can't easily test this without mocking, so we just verify the concept
+        let debouncer = Debouncer(interval: 0.05)
         var callCount = 0
-        let callback = {
-            callCount += 1
-        }
 
-        // Simulating what the debounce should do:
-        // Multiple rapid calls...
+        // 10 rapid calls — each cancels the previous pending one.
         for _ in 0..<10 {
-            callback()  // In real usage, these would be debounced
+            debouncer.call { callCount += 1 }
         }
 
-        // Without debouncing, we get 10 calls
-        #expect(callCount == 10)
+        // Before the interval elapses, nothing has fired yet.
+        #expect(callCount == 0)
 
-        // With proper debouncing (as implemented), we'd get 1 call
-        // This test documents the expected behavior
+        // After the interval, exactly ONE invocation should have run (not 10).
+        try await Task.sleep(nanoseconds: 200_000_000)  // 0.2s > 0.05s interval
+        #expect(callCount == 1)
+    }
+
+    @Test("Debouncer.cancel prevents a pending call from firing")
+    @MainActor
+    func debounceCancelStopsPendingCall() async throws {
+        let debouncer = Debouncer(interval: 0.05)
+        var callCount = 0
+
+        debouncer.call { callCount += 1 }
+        debouncer.cancel()
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+        #expect(callCount == 0)  // cancelled before it could fire
+    }
+
+    @Test("Debouncer fires again after a settled call (separate windows)")
+    @MainActor
+    func debounceFiresAgainAfterSettling() async throws {
+        let debouncer = Debouncer(interval: 0.05)
+        var callCount = 0
+
+        debouncer.call { callCount += 1 }
+        try await Task.sleep(nanoseconds: 200_000_000)
+        #expect(callCount == 1)
+
+        // A new burst after the first settled → a second independent invocation.
+        debouncer.call { callCount += 1 }
+        try await Task.sleep(nanoseconds: 200_000_000)
+        #expect(callCount == 2)
     }
 }
 

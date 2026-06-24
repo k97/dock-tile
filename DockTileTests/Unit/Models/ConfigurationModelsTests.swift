@@ -228,6 +228,140 @@ struct DockTileConfigurationTests {
         #expect(config.lastDockIndex == nil)  // v5 default
     }
 
+    /// v5 added `lastDockIndex`. The prior tests only assert it *defaults to nil when absent*;
+    /// this guards that it is actually READ when present (regression: a decode that ignores it
+    /// would silently lose Dock position across show/hide, a documented past pain point).
+    @Test("v5 JSON: lastDockIndex is decoded when present")
+    func v5LastDockIndexDecoded() throws {
+        let v5JSON = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "name": "V5 Tile",
+            "tintColor": {"type": "preset", "value": "blue"},
+            "symbolEmoji": "star",
+            "layoutMode": "grid",
+            "appItems": [],
+            "isVisibleInDock": true,
+            "bundleIdentifier": "com.v5.tile",
+            "showInAppSwitcher": false,
+            "iconType": "sfSymbol",
+            "iconValue": "folder.fill",
+            "iconScale": 14,
+            "lastDockIndex": 3
+        }
+        """
+
+        let config = try JSONDecoder().decode(DockTileConfiguration.self, from: v5JSON.data(using: .utf8)!)
+
+        #expect(config.lastDockIndex == 3)        // Preserved from JSON
+        #expect(config.helperAppVersion == nil)   // v6 default
+    }
+
+    /// v6 added `helperAppVersion` — the migration stamp. It was previously UNTESTED in either
+    /// direction. A broken decode here makes every helper look pre-migration (`nil`) and thrash
+    /// the migration pipeline on every launch.
+    @Test("v6 JSON: helperAppVersion defaults to nil when absent and is decoded when present")
+    func v6HelperAppVersionDecoded() throws {
+        let base = """
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "V6 Tile",
+        "tintColor": {"type": "preset", "value": "blue"},
+        "symbolEmoji": "star",
+        "layoutMode": "grid",
+        "appItems": [],
+        "isVisibleInDock": true,
+        "bundleIdentifier": "com.v6.tile"
+        """
+
+        let absent = try JSONDecoder().decode(
+            DockTileConfiguration.self, from: "{\(base)}".data(using: .utf8)!)
+        #expect(absent.helperAppVersion == nil)
+
+        let present = try JSONDecoder().decode(
+            DockTileConfiguration.self,
+            from: "{\(base), \"helperAppVersion\": \"1.4.1\"}".data(using: .utf8)!)
+        #expect(present.helperAppVersion == "1.4.1")
+    }
+
+    /// The decoder migrates a legacy `symbolEmoji` into `iconValue` only when `iconValue` is
+    /// absent. This isolates the edge where `iconType` IS present but `iconValue` is NOT — the
+    /// fallback must still fire (decoder line: `iconValue = decodeIfPresent(...) ?? symbolEmoji`).
+    @Test("iconValue falls back to symbolEmoji when iconType present but iconValue absent")
+    func iconValueFallbackWhenOnlyTypePresent() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "name": "Partial Icon Tile",
+            "tintColor": "blue",
+            "symbolEmoji": "gamecontroller.fill",
+            "layoutMode": "grid",
+            "appItems": [],
+            "isVisibleInDock": true,
+            "bundleIdentifier": "com.partial.tile",
+            "iconType": "sfSymbol"
+        }
+        """
+
+        let config = try JSONDecoder().decode(DockTileConfiguration.self, from: json.data(using: .utf8)!)
+
+        #expect(config.iconType == .sfSymbol)
+        #expect(config.iconValue == "gamecontroller.fill")  // migrated from symbolEmoji
+    }
+
+    /// Contract guard: the v1 *required* fields must remain required. If a future change drops
+    /// a field from JSON (or someone makes a required field truly optional without a migration
+    /// path), decode must FAIL LOUDLY rather than silently produce a half-built config. This is
+    /// the exact failure mode flagged as "crashes the app on launch / loses all tiles".
+    @Test("Missing a required v1 field throws rather than decoding silently", arguments: [
+        "id", "name", "tintColor", "symbolEmoji", "layoutMode", "appItems",
+        "isVisibleInDock", "bundleIdentifier"
+    ])
+    func missingRequiredFieldThrows(_ omittedKey: String) throws {
+        // A complete, valid v6 object…
+        let fields: [String: String] = [
+            "id": "\"550e8400-e29b-41d4-a716-446655440000\"",
+            "name": "\"Complete Tile\"",
+            "tintColor": "\"blue\"",
+            "symbolEmoji": "\"star\"",
+            "layoutMode": "\"grid\"",
+            "appItems": "[]",
+            "isVisibleInDock": "true",
+            "bundleIdentifier": "\"com.complete.tile\""
+        ]
+        // …with exactly one required key removed.
+        let body = fields
+            .filter { $0.key != omittedKey }
+            .map { "\"\($0.key)\": \($0.value)" }
+            .joined(separator: ", ")
+        let data = "{\(body)}".data(using: .utf8)!
+
+        #expect(throws: (any Error).self) {
+            _ = try JSONDecoder().decode(DockTileConfiguration.self, from: data)
+        }
+    }
+
+    /// Full forward round-trip: encoding then decoding a fully-populated v6 config must preserve
+    /// the two newest fields exactly (they are the ones most recently added and least covered).
+    @Test("Full v6 config round-trips lastDockIndex and helperAppVersion exactly")
+    func fullV6RoundTripPreservesNewFields() throws {
+        let original = DockTileConfiguration(
+            name: "Round Trip",
+            iconType: .sfSymbol,
+            iconValue: "bolt.fill",
+            iconScale: 17,
+            lastDockIndex: 5,
+            helperAppVersion: "1.4.1"
+        )
+
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(DockTileConfiguration.self, from: data)
+
+        #expect(decoded.lastDockIndex == 5)
+        #expect(decoded.helperAppVersion == "1.4.1")
+        #expect(decoded.iconScale == 17)
+        #expect(decoded.iconValue == "bolt.fill")
+    }
+
     // MARK: - Hashable/Equatable
 
     @Test("Configurations with same ID are equal")

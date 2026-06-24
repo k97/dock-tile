@@ -48,6 +48,14 @@ enum IconStyle: String, CaseIterable, Sendable {
     /// - "ClearAutomatic" = Clear
     /// - "TintedAutomatic" = Tinted
     static func from(preferencesValue: String?) -> IconStyle {
+        from(preferencesValue: preferencesValue, isDarkMode: systemAppearanceIsDark)
+    }
+
+    /// Pure mapping seam: resolves the `AppleIconAppearanceTheme` string to an `IconStyle` with
+    /// the system appearance INJECTED, so the Automatic-follows-appearance behaviour (the Tahoe
+    /// default, and the most regression-prone case) is unit-testable without CFPreferences.
+    /// The argument-less `systemAppearanceIsDark` is read only at the call site above.
+    static func from(preferencesValue: String?, isDarkMode: Bool) -> IconStyle {
         guard let value = preferencesValue else {
             return .defaultStyle // Key not set = Default
         }
@@ -57,7 +65,7 @@ enum IconStyle: String, CaseIterable, Sendable {
         // appearance — dark icons in Dark mode, colourful default in Light mode.
         // This is the Tahoe default, so it MUST be handled or dark mode never applies.
         case "RegularAutomatic", "Automatic":
-            return systemAppearanceIsDark ? .dark : .defaultStyle
+            return isDarkMode ? .dark : .defaultStyle
         // Dark style (explicit)
         case "RegularDark", "Dark":
             return .dark

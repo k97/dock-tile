@@ -2,8 +2,11 @@
 //  DockRestartConsentTests.swift
 //  DockTileTests
 //
-//  Integration tests for Dock restart consent dialog
-//  Swift Testing framework
+//  Guards the one-time Dock-restart consent rule. Previously these tests wrote to the SHARED
+//  UserDefaults.standard (corrupting the real preference and racing on the key) and merely
+//  re-implemented `!bool(forKey:)` instead of exercising production code. They now drive the
+//  pure `DockTileDetailView.shouldShowDockRestartConsent(...)` seam and verify persistence
+//  semantics against an ISOLATED MockUserDefaults — zero real-defaults mutation.
 //
 
 import Testing
@@ -13,63 +16,38 @@ import Foundation
 @Suite("Dock Restart Consent Tests", .serialized)
 struct DockRestartConsentTests {
 
-    @Test("First time shows consent dialog")
-    func firstTimeShowsDialog() {
-        // Reset preference
-        UserDefaults.standard.removeObject(forKey: "hasAcknowledgedDockRestart")
+    // MARK: - Decision rule (production seam)
 
-        let shouldShow = !UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")
-        #expect(shouldShow == true)
+    @Test("Consent dialog shows until acknowledged")
+    func showsUntilAcknowledged() {
+        #expect(DockTileDetailView.shouldShowDockRestartConsent(hasAcknowledged: false) == true)
+        #expect(DockTileDetailView.shouldShowDockRestartConsent(hasAcknowledged: true) == false)
     }
 
-    @Test("After acknowledgment, dialog is suppressed")
-    func afterAcknowledgmentSuppressed() {
-        // Simulate user checking "Don't show this again"
-        UserDefaults.standard.set(true, forKey: "hasAcknowledgedDockRestart")
+    // MARK: - Persistence semantics (isolated mock — no real UserDefaults touched)
 
-        let shouldShow = !UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")
-        #expect(shouldShow == false)
-
-        // Cleanup
-        UserDefaults.standard.removeObject(forKey: "hasAcknowledgedDockRestart")
+    @Test("Unacknowledged default reads false → dialog should show")
+    func defaultIsUnacknowledged() {
+        let defaults = MockUserDefaults()
+        let hasAcknowledged = defaults.bool(forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
+        #expect(hasAcknowledged == false)
+        #expect(DockTileDetailView.shouldShowDockRestartConsent(hasAcknowledged: hasAcknowledged) == true)
     }
 
-    @Test("Cancel preserves unchecked state")
-    func cancelPreservesState() {
-        // Reset preference
-        UserDefaults.standard.removeObject(forKey: "hasAcknowledgedDockRestart")
+    @Test("Acknowledging persists true → dialog suppressed thereafter")
+    func acknowledgingSuppresses() {
+        let defaults = MockUserDefaults()
+        defaults.set(true, forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
 
-        // User clicks Cancel without checking box
-        // (no preference saved)
-
-        let shouldShow = !UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")
-        #expect(shouldShow == true)  // Should still show next time
-    }
-
-    @Test("Confirm with checkbox saves preference")
-    func confirmWithCheckboxSavesPreference() {
-        // Reset preference
-        UserDefaults.standard.removeObject(forKey: "hasAcknowledgedDockRestart")
-
-        // Simulate user checking box and clicking Confirm
-        UserDefaults.standard.set(true, forKey: "hasAcknowledgedDockRestart")
-
-        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")
+        let hasAcknowledged = defaults.bool(forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
         #expect(hasAcknowledged == true)
-
-        // Cleanup
-        UserDefaults.standard.removeObject(forKey: "hasAcknowledgedDockRestart")
+        #expect(DockTileDetailView.shouldShowDockRestartConsent(hasAcknowledged: hasAcknowledged) == false)
     }
 
-    @Test("Confirm without checkbox does not save preference")
-    func confirmWithoutCheckboxDoesNotSave() {
-        // Reset preference
-        UserDefaults.standard.removeObject(forKey: "hasAcknowledgedDockRestart")
-
-        // Simulate user clicking Confirm without checking box
-        // (no preference saved)
-
-        let hasAcknowledged = UserDefaults.standard.bool(forKey: "hasAcknowledgedDockRestart")
-        #expect(hasAcknowledged == false)  // Preference not saved
+    @Test("Not acknowledging leaves the preference unset (Cancel / Confirm-without-checkbox)")
+    func notAcknowledgingLeavesUnset() {
+        let defaults = MockUserDefaults()
+        // User cancels or confirms without ticking the box → nothing written.
+        #expect(defaults.bool(forKey: UserDefaultsKeys.hasAcknowledgedDockRestart) == false)
     }
 }

@@ -161,27 +161,23 @@ struct ColorExtensionTests {
 
     // MARK: - Lighter Shade
 
-    @Test("lighterShade increases brightness")
-    func lighterShadeIncreasesBrightness() {
+    @Test("lighterShade raises brightness by exactly the requested amount")
+    func lighterShadeIncreasesBrightness() throws {
+        // #336699 has HSB brightness 0.6 (max channel 0x99/255). +0.2 → 0.8, no clamping.
         let original = Color(hex: "#336699")
         let lighter = original.lighterShade(by: 0.2)
 
-        let nsOriginal = NSColor(original)
-        let nsLighter = NSColor(lighter)
-
-        guard let rgbOriginal = nsOriginal.usingColorSpace(.deviceRGB),
-              let rgbLighter = nsLighter.usingColorSpace(.deviceRGB) else {
-            Issue.record("Could not convert to RGB color space")
-            return
-        }
+        let rgbOriginal = try #require(NSColor(original).usingColorSpace(.deviceRGB))
+        let rgbLighter = try #require(NSColor(lighter).usingColorSpace(.deviceRGB))
 
         var origBrightness: CGFloat = 0
         var lightBrightness: CGFloat = 0
-
         rgbOriginal.getHue(nil, saturation: nil, brightness: &origBrightness, alpha: nil)
         rgbLighter.getHue(nil, saturation: nil, brightness: &lightBrightness, alpha: nil)
 
-        #expect(lightBrightness > origBrightness)
+        // Magnitude, not just direction: brightness should rise by ~0.2 (the requested amount).
+        #expect(abs(origBrightness - 0.6) < 0.01)
+        #expect(abs(lightBrightness - (origBrightness + 0.2)) < 0.01)
     }
 
     @Test("lighterShade decreases saturation")
@@ -204,7 +200,9 @@ struct ColorExtensionTests {
         rgbOriginal.getHue(nil, saturation: &origSaturation, brightness: nil, alpha: nil)
         rgbLighter.getHue(nil, saturation: &lightSaturation, brightness: nil, alpha: nil)
 
-        #expect(lightSaturation < origSaturation)
+        // Pure red has saturation 1.0; lighterShade drops it by amount * 0.3 = 0.06 → 0.94.
+        #expect(abs(origSaturation - 1.0) < 0.01)
+        #expect(abs(lightSaturation - (origSaturation - 0.06)) < 0.01)
     }
 
     @Test("lighterShade with zero amount returns similar color")

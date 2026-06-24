@@ -308,14 +308,18 @@ final class ConfigurationManager: ObservableObject {
 
     /// Generate a unique name by appending numbers if needed
     private func generateUniqueName(base: String) -> String {
-        let existingNames = Set(configurations.map { $0.name })
+        Self.uniqueName(base: base, existing: Set(configurations.map { $0.name }))
+    }
 
-        if !existingNames.contains(base) {
+    /// Pure name-deduplication seam: returns `base` if free, else `base N` for the lowest free N.
+    /// Extracted so the actual algorithm is unit-testable (the prior tests only exercised `Set`).
+    nonisolated static func uniqueName(base: String, existing: Set<String>) -> String {
+        if !existing.contains(base) {
             return base
         }
 
         var counter = 1
-        while existingNames.contains("\(base) \(counter)") {
+        while existing.contains("\(base) \(counter)") {
             counter += 1
         }
 
@@ -388,30 +392,35 @@ final class ConfigurationManager: ObservableObject {
             let config = configurations[index]
             let isActuallyInDock = HelperBundleManager.shared.findInDock(bundleId: config.bundleIdentifier) != nil
 
-            if config.isVisibleInDock, !isActuallyInDock {
-                // Direction 1: visible config, but gone from the Dock → mark hidden.
-                //
-                // BUT only for tiles that were actually pinned at some point. A brand-new tile
-                // defaults to isVisibleInDock=true yet has no helper bundle on disk — it is
-                // "absent from the Dock" simply because the user hasn't clicked Add to Dock yet.
-                // Marking it hidden here strands the in-progress tile: the button degrades from
-                // "Add to Dock" to "Done" and the add never takes. (Regression surfaced in #5,
-                // which stopped the editor's auto-save from re-asserting visibility, so this
-                // premature hide now sticks instead of being bounced back.) A tile that was
-                // genuinely pinned and then removed still has its helper bundle on disk
-                // (removeFromDock keeps the bundle), so this guard only spares never-pinned tiles.
-                guard HelperBundleManager.shared.helperExists(for: config) else {
-                    DiagnosticsLog.shared.log("sync", "'\(config.name)' visible but never pinned (no helper bundle) — not hiding", verbose: true)
-                    continue
-                }
+            // `helperExists` touches the filesystem; only the direction-1 guard needs it, so
+            // compute it lazily exactly as before (keeps the frequent watcher path cheap).
+            let helperExists = (config.isVisibleInDock && !isActuallyInDock)
+                ? HelperBundleManager.shared.helperExists(for: config)
+                : false
+
+            switch Self.resolveDockVisibility(
+                isVisibleInConfig: config.isVisibleInDock,
+                isActuallyInDock: isActuallyInDock,
+                helperExists: helperExists,
+                reconcileDockedHiddenTiles: reconcileDockedHiddenTiles
+            ) {
+            case .inSync:
+                break
+
+            case .skipNeverPinned:
+                DiagnosticsLog.shared.log("sync", "'\(config.name)' visible but never pinned (no helper bundle) — not hiding", verbose: true)
+
+            case .markHidden:
                 print("   ⚠️ '\(config.name)' was removed from Dock - updating visibility")
                 DiagnosticsLog.shared.log("sync", "'\(config.name)' gone from Dock → marking hidden")
                 configurations[index].isVisibleInDock = false
                 hasChanges = true
-            } else if !config.isVisibleInDock, isActuallyInDock {
-                // Direction 2: hidden config, but still in the Dock → remove it for real.
+
+            case .keepStuckPinned:
                 DiagnosticsLog.shared.log("sync", "'\(config.name)' hidden in config but still pinned in Dock (reconcile=\(reconcileDockedHiddenTiles))")
-                guard reconcileDockedHiddenTiles else { continue }
+
+            case .removeFromDock:
+                DiagnosticsLog.shared.log("sync", "'\(config.name)' hidden in config but still pinned in Dock (reconcile=\(reconcileDockedHiddenTiles))")
                 print("   ⚠️ '\(config.name)' is hidden but still in Dock - removing to match config")
                 stuckHiddenConfigs.append(config)
             }
@@ -436,6 +445,40 @@ final class ConfigurationManager: ObservableObject {
                     DiagnosticsLog.shared.log("sync", "FAILED to remove stuck hidden tile '\(config.name)': \(error.localizedDescription)")
                 }
             }
+        }
+    }
+
+    /// The outcome of reconciling one tile's stored visibility against the live Dock. Pure data,
+    /// no side effects, so the two reconciliation directions — and crucially the **never-pinned
+    /// guard** (a brand-new visible tile with no helper bundle must NOT be flipped hidden) and
+    /// the **reconcile-only destructive removal** — are unit-testable in isolation. See the
+    /// "Visibility ownership" / "Never-pinned guard" invariants in rules/architecture.md.
+    enum DockVisibilityResolution: Equatable {
+        case inSync             // stored visibility already matches the Dock — do nothing
+        case markHidden         // direction 1: was pinned, now absent → persist hidden
+        case skipNeverPinned    // direction 1 guarded: visible-by-default but never pinned
+        case removeFromDock     // direction 2: hidden but still pinned, and reconcile is ON
+        case keepStuckPinned    // direction 2 observed but reconcile is OFF → leave as-is
+    }
+
+    /// Pure reconciliation rule for a single tile. Mirrors the loop in `syncDockVisibility`.
+    nonisolated static func resolveDockVisibility(
+        isVisibleInConfig: Bool,
+        isActuallyInDock: Bool,
+        helperExists: Bool,
+        reconcileDockedHiddenTiles: Bool
+    ) -> DockVisibilityResolution {
+        if isVisibleInConfig, !isActuallyInDock {
+            // Direction 1: stored as visible but gone from the Dock. Only mark hidden if the
+            // tile was actually pinned at some point (its helper bundle is on disk). A
+            // never-pinned new tile is "absent" only because the user hasn't clicked Add yet.
+            return helperExists ? .markHidden : .skipNeverPinned
+        } else if !isVisibleInConfig, isActuallyInDock {
+            // Direction 2: stored hidden but still pinned. Destructive removal restarts the
+            // Dock, so it runs only on the one-shot launch sync (reconcile = true).
+            return reconcileDockedHiddenTiles ? .removeFromDock : .keepStuckPinned
+        } else {
+            return .inSync
         }
     }
 

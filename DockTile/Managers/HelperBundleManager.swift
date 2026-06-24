@@ -448,86 +448,100 @@ final class HelperBundleManager {
         )
         print("   ✓ Updated Info.plist")
 
-        // Remove existing icon files (will be replaced with generated ones)
-        let existingIconPath = helperPath.appendingPathComponent("Contents/Resources/AppIcon.icns")
-        try? FileManager.default.removeItem(at: existingIconPath)
-
-        // CRITICAL: Remove Assets.car to prevent macOS from using the main app's icons
-        // macOS icon priority: Assets.car (asset catalog) > CFBundleIconFile (.icns)
-        // Without removing this, helper tiles would show the main DockTile app icon
-        // instead of their custom generated icons
-        let assetsCarPath = helperPath.appendingPathComponent("Contents/Resources/Assets.car")
-        try? FileManager.default.removeItem(at: assetsCarPath)
+        // CRITICAL: strip the main app's baked icons (Assets.car + the stale AppIcon.icns, which
+        // is replaced by the generated one). macOS icon priority is Assets.car > CFBundleIconFile,
+        // so without removing the asset catalog the helper shows the main DockTile icon instead of
+        // its custom generated one.
+        Self.stripMainAppIcons(inBundle: helperPath)
         print("   ✓ Removed main app icon assets (Assets.car)")
 
         // Note: We keep the full binary copy (no symlink) because codesign
         // requires the main executable to be a regular file, not a symlink
     }
 
+    /// Remove the main app's baked icon assets from a freshly-copied helper bundle: the asset
+    /// catalog (`Assets.car`) AND the template `AppIcon.icns` (replaced by the generated icon).
+    /// macOS resolves icons `Assets.car` > `CFBundleIconFile`, so the catalog MUST go or the
+    /// helper renders the main app icon. Returns what was present (for logging/tests). Missing
+    /// files are not an error — a no-op is fine.
+    @discardableResult
+    nonisolated static func stripMainAppIcons(inBundle helperPath: URL) -> (assetsCar: Bool, icns: Bool) {
+        let resources = helperPath.appendingPathComponent("Contents/Resources")
+        let assetsCar = resources.appendingPathComponent("Assets.car")
+        let icns = resources.appendingPathComponent("AppIcon.icns")
+
+        let hadAssetsCar = FileManager.default.fileExists(atPath: assetsCar.path)
+        let hadIcns = FileManager.default.fileExists(atPath: icns.path)
+
+        try? FileManager.default.removeItem(at: icns)
+        try? FileManager.default.removeItem(at: assetsCar)
+
+        return (hadAssetsCar, hadIcns)
+    }
+
     private func updateInfoPlist(at helperPath: URL, bundleId: String, appName: String, showInAppSwitcher: Bool) throws {
         let infoPlistPath = helperPath.appendingPathComponent("Contents/Info.plist")
 
-        guard var plist = NSDictionary(contentsOf: infoPlistPath) as? [String: Any] else {
+        guard let base = NSDictionary(contentsOf: infoPlistPath) as? [String: Any] else {
             throw HelperBundleError.infoPlistReadFailed
         }
 
-        // Update bundle metadata
-        plist["CFBundleIdentifier"] = bundleId
-        plist["CFBundleName"] = appName
-        plist["CFBundleDisplayName"] = appName
-
-        // CRITICAL: Set CFBundleIconFile so macOS uses our generated icon
-        // The icon file is placed at Contents/Resources/AppIcon.icns
-        plist["CFBundleIconFile"] = "AppIcon"
-
-        // HELPER MODE ARCHITECTURE:
-        // We support two modes based on user preference (showInAppSwitcher toggle):
-        //
-        // MODE A: "Ghost Mode" (showInAppSwitcher = false, DEFAULT)
-        //   - LSUIElement = true in Info.plist
-        //   - Helper uses .accessory activation policy at runtime
-        //   - Result: Dock icon visible (via Dock plist), hidden from Cmd+Tab
-        //   - Trade-off: Right-click context menu (applicationDockMenu) won't work
-        //   - Use case: Users who want minimal UI footprint
-        //
-        // MODE B: "App Mode" (showInAppSwitcher = true)
-        //   - LSUIElement NOT set (removed from Info.plist)
-        //   - Helper uses .regular activation policy at runtime
-        //   - Result: Dock icon visible, visible in Cmd+Tab, context menu works
-        //   - Use case: Users who want full Dock integration with right-click menu
-        //
-        // WHY THIS ARCHITECTURE:
-        // macOS fundamentally links Dock icon visibility with Cmd+Tab visibility.
-        // There's no supported way to have a Dock icon while hiding from Cmd+Tab
-        // AND having applicationDockMenu work. This is an OS-level constraint.
-        // We give users the choice of which trade-off they prefer.
-
-        if showInAppSwitcher {
-            // MODE B: App Mode - remove LSUIElement for full Dock integration
-            plist.removeValue(forKey: "LSUIElement")
-            print("   Mode: App Mode (visible in Cmd+Tab, context menu enabled)")
-        } else {
-            // MODE A: Ghost Mode - set LSUIElement for Cmd+Tab hiding
-            plist["LSUIElement"] = true
-            print("   Mode: Ghost Mode (hidden from Cmd+Tab, no context menu)")
-        }
-
-        // Remove Sparkle update keys from helper bundles.
-        // Helpers should never check for updates — only the main app does.
-        plist.removeValue(forKey: "SUFeedURL")
-        plist.removeValue(forKey: "SUPublicEDKey")
-        plist.removeValue(forKey: "SUEnableAutomaticChecks")
-        plist.removeValue(forKey: "SUScheduledCheckInterval")
-
-        // Remove URL scheme registration from helper bundles.
-        // Only the main app should handle docktile:// deep links.
-        plist.removeValue(forKey: "CFBundleURLTypes")
+        let plist = Self.helperInfoPlist(
+            from: base,
+            bundleId: bundleId,
+            appName: appName,
+            showInAppSwitcher: showInAppSwitcher
+        )
 
         // Write back
         let nsDict = plist as NSDictionary
         guard nsDict.write(to: infoPlistPath, atomically: true) else {
             throw HelperBundleError.infoPlistWriteFailed
         }
+    }
+
+    /// Pure transform from the copied main-app Info.plist to a helper's Info.plist. Centralises
+    /// the helper invariants so they are unit-testable without a real bundle on disk:
+    ///   • `CFBundleIconFile = "AppIcon"` — so macOS uses the generated `.icns` (paired with the
+    ///     `Assets.car` removal in `stripMainAppIcons`).
+    ///   • Ghost vs App mode via `LSUIElement` (set when hidden from Cmd+Tab, removed otherwise).
+    ///   • Strip Sparkle keys — helpers must never self-update; only the main app does.
+    ///   • Strip `CFBundleURLTypes` — only the main app handles `docktile://` deep links.
+    nonisolated static func helperInfoPlist(
+        from base: [String: Any],
+        bundleId: String,
+        appName: String,
+        showInAppSwitcher: Bool
+    ) -> [String: Any] {
+        var plist = base
+
+        // Bundle metadata
+        plist["CFBundleIdentifier"] = bundleId
+        plist["CFBundleName"] = appName
+        plist["CFBundleDisplayName"] = appName
+
+        // CRITICAL: use the generated icon at Contents/Resources/AppIcon.icns.
+        plist["CFBundleIconFile"] = "AppIcon"
+
+        // Ghost Mode (default): LSUIElement hides the helper from Cmd+Tab.
+        // App Mode: LSUIElement removed so the helper is a regular Cmd+Tab app with a context menu.
+        // (macOS links Dock-icon visibility to Cmd+Tab visibility — this is the supported trade-off.)
+        if showInAppSwitcher {
+            plist.removeValue(forKey: "LSUIElement")
+        } else {
+            plist["LSUIElement"] = true
+        }
+
+        // Helpers must never check for updates — strip Sparkle keys.
+        plist.removeValue(forKey: "SUFeedURL")
+        plist.removeValue(forKey: "SUPublicEDKey")
+        plist.removeValue(forKey: "SUEnableAutomaticChecks")
+        plist.removeValue(forKey: "SUScheduledCheckInterval")
+
+        // Only the main app should claim the docktile:// URL scheme.
+        plist.removeValue(forKey: "CFBundleURLTypes")
+
+        return plist
     }
 
     private func codesignHelper(at helperPath: URL) throws {
