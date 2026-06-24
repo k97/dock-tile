@@ -35,14 +35,18 @@ macOS Tahoe has an independent "Icon and widget style" setting (separate from Li
 | Style | UserDefaults Value | Design |
 |-------|-------------------|--------|
 | Default | `nil` | Colorful gradient, white symbol |
-| Dark | `"RegularDark"` | Dark gray, tint-coloured symbol |
+| Automatic | `"RegularAutomatic"` | **Follows system appearance** — `.dark` in Dark mode, `.defaultStyle` in Light. This is the Tahoe default; `IconStyle.from()` MUST map it or dark icons never apply in Automatic mode |
+| Dark | `"RegularDark"` | Darkened shade of the tile's own tint (brightness-capped via `darkenedForDarkMode`, hue preserved), white symbol |
 | Clear | `"ClearAutomatic"` | Light gray, dark gray symbol (grayscale only) |
 | Tinted | `"TintedAutomatic"` | Medium gray, white symbol (grayscale only) |
+
+`IconStyle.from()` resolves `"RegularAutomatic"`/`"Automatic"` via `systemAppearanceIsDark` (reads `AppleInterfaceStyle` through CFPreferences, no `NSApplication` dependency). Because `IconStyle.current` resolves dynamically, the 2-second poll also catches a Light↔Dark appearance toggle while in Automatic mode (the enum flips, `switchIcon` fires).
 
 - Single `IconStyleManager.shared` with 2-second polling (notifications unreliable)
 - All 4 variants generated upfront during `installHelper()` (~200-400ms)
 - Style switching is instant file copy, no regeneration
 - Reference `iconStyleManager.currentStyle` in view body with `let _ =` to trigger re-renders
+- **Dark variant rationale + HIG sources**: [docs/dark-mode-icon-rendering.md](../../docs/dark-mode-icon-rendering.md) (darkened-own-tint background + white symbol, and why)
 
 ## App Icon Loading
 

@@ -82,4 +82,33 @@ extension Color {
         // Fallback: return original color
         return self
     }
+
+    /// Returns a darkened version of the colour suitable for a dark-mode icon background.
+    /// Keeps hue and saturation (preserving the tile's colour identity) but *caps*
+    /// brightness, so light tints darken while already-dark tints stay dark.
+    /// - Parameter maxBrightness: The brightness ceiling (0.0-1.0), e.g. 0.22.
+    func darkenedForDarkMode(maxBrightness: CGFloat) -> Color {
+        let nsColor = NSColor(self)
+
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        if let hsbColor = nsColor.usingColorSpace(.deviceRGB) {
+            hsbColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+
+            let darkenedNSColor = NSColor(
+                hue: hue,
+                saturation: saturation,
+                brightness: min(brightness, maxBrightness),
+                alpha: 1.0
+            )
+
+            return Color(darkenedNSColor)
+        }
+
+        // Fallback: return original color
+        return self
+    }
 }

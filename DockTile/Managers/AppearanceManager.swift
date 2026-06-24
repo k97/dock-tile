@@ -203,6 +203,31 @@ extension NSColor {
         return self
     }
 
+    /// Returns a darkened version of the colour suitable for a dark-mode icon background.
+    /// Keeps hue and saturation (so the tile's colour identity is preserved) but *caps*
+    /// brightness, so light tints (e.g. amber) darken while already-dark tints stay dark.
+    /// HIG: the Dark icon variant keeps the original hue on a darkened background.
+    /// - Parameter maxBrightness: The brightness ceiling (0.0-1.0), e.g. 0.22.
+    func darkenedForDarkMode(maxBrightness: CGFloat) -> NSColor {
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        if let hsbColor = self.usingColorSpace(.deviceRGB) {
+            hsbColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+            return NSColor(
+                hue: hue,
+                saturation: saturation,
+                brightness: min(brightness, maxBrightness),
+                alpha: 1.0  // Always full opacity
+            )
+        }
+
+        // Fallback: return original color if conversion fails
+        return self
+    }
+
     convenience init?(hex: String) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")

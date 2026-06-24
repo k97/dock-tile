@@ -42,7 +42,9 @@ enum IconStyle: String, CaseIterable, Sendable {
     /// Convert from UserDefaults value to IconStyle
     /// Known macOS Tahoe values (as of 2026-02):
     /// - nil or not set = Default (colorful)
-    /// - "RegularDark" = Dark
+    /// - "RegularAutomatic" = Automatic — follows system appearance (Dark → dark icons)
+    /// - "RegularDark" = Dark (explicit)
+    /// - "RegularLight" = Light/Default (explicit)
     /// - "ClearAutomatic" = Clear
     /// - "TintedAutomatic" = Tinted
     static func from(preferencesValue: String?) -> IconStyle {
@@ -51,9 +53,17 @@ enum IconStyle: String, CaseIterable, Sendable {
         }
 
         switch value {
-        // Dark style
+        // Automatic: the "Regular" (non-clear/tinted) style that follows the system
+        // appearance — dark icons in Dark mode, colourful default in Light mode.
+        // This is the Tahoe default, so it MUST be handled or dark mode never applies.
+        case "RegularAutomatic", "Automatic":
+            return systemAppearanceIsDark ? .dark : .defaultStyle
+        // Dark style (explicit)
         case "RegularDark", "Dark":
             return .dark
+        // Light/Default style (explicit)
+        case "RegularLight", "Light":
+            return .defaultStyle
         // Clear style (semi-transparent gray)
         case "ClearAutomatic", "Clear", "RegularClear":
             return .clear
@@ -65,6 +75,17 @@ enum IconStyle: String, CaseIterable, Sendable {
             print("[IconStyleManager] Unknown AppleIconAppearanceTheme value: \(value)")
             return .defaultStyle
         }
+    }
+
+    /// Whether the system is currently in Dark appearance.
+    /// Read via CFPreferences (mirrors how the icon-style value is read) so it works in
+    /// the main app and helper processes without depending on a live `NSApplication`.
+    static var systemAppearanceIsDark: Bool {
+        let style = CFPreferencesCopyAppValue(
+            "AppleInterfaceStyle" as CFString,
+            kCFPreferencesAnyApplication
+        ) as? String
+        return style == "Dark"
     }
 
     /// Display name for UI
@@ -198,10 +219,12 @@ extension TintColor {
             return (colorTop, colorBottom, .white)
 
         case .dark:
-            // Dark: dark gray background, tint-colored foreground
-            let darkTop = Color(hex: "#2C2C2E")  // System dark gray
-            let darkBottom = Color(hex: "#1C1C1E")  // Deeper dark
-            return (darkTop, darkBottom, color)
+            // Dark: a darkened shade of the tile's OWN tint as the background, white symbol.
+            // Preserves each tile's colour identity (light tints darken instead of going grey)
+            // while keeping the symbol legible. HIG: keep the hue, darken the background.
+            let darkTop = colorTop.darkenedForDarkMode(maxBrightness: 0.22)
+            let darkBottom = colorBottom.darkenedForDarkMode(maxBrightness: 0.13)
+            return (darkTop, darkBottom, .white)
 
         case .clear:
             // Clear: light gray background, dark gray symbol
@@ -231,10 +254,12 @@ extension TintColor {
             return (nsColorTop, nsColorBottom, .white)
 
         case .dark:
-            // Dark: dark gray background, tint-colored symbol
-            let darkTop = NSColor(red: 0.173, green: 0.173, blue: 0.180, alpha: 1.0)  // #2C2C2E
-            let darkBottom = NSColor(red: 0.110, green: 0.110, blue: 0.118, alpha: 1.0)  // #1C1C1E
-            return (darkTop, darkBottom, nsColor)
+            // Dark: a darkened shade of the tile's OWN tint as the background, white symbol.
+            // Preserves each tile's colour identity (light tints darken instead of going grey)
+            // while keeping the symbol legible. HIG: keep the hue, darken the background.
+            let darkTop = nsColorTop.darkenedForDarkMode(maxBrightness: 0.22)
+            let darkBottom = nsColorBottom.darkenedForDarkMode(maxBrightness: 0.13)
+            return (darkTop, darkBottom, .white)
 
         case .clear:
             // Clear: light gray background, dark gray symbol
