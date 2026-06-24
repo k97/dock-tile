@@ -142,6 +142,7 @@ final class ConfigurationManager: ObservableObject {
     func updateConfiguration(_ config: DockTileConfiguration) {
         guard let index = configurations.firstIndex(where: { $0.id == config.id }) else {
             print("⚠️ Configuration not found: \(config.id)")
+            DiagnosticsLog.shared.log("config", "updateConfiguration NO-OP — '\(config.name)' [\(config.id)] not in list (\(configurations.count) configs, \(config.appItems.count) app(s) dropped)")
             return
         }
 
@@ -389,6 +390,20 @@ final class ConfigurationManager: ObservableObject {
 
             if config.isVisibleInDock, !isActuallyInDock {
                 // Direction 1: visible config, but gone from the Dock → mark hidden.
+                //
+                // BUT only for tiles that were actually pinned at some point. A brand-new tile
+                // defaults to isVisibleInDock=true yet has no helper bundle on disk — it is
+                // "absent from the Dock" simply because the user hasn't clicked Add to Dock yet.
+                // Marking it hidden here strands the in-progress tile: the button degrades from
+                // "Add to Dock" to "Done" and the add never takes. (Regression surfaced in #5,
+                // which stopped the editor's auto-save from re-asserting visibility, so this
+                // premature hide now sticks instead of being bounced back.) A tile that was
+                // genuinely pinned and then removed still has its helper bundle on disk
+                // (removeFromDock keeps the bundle), so this guard only spares never-pinned tiles.
+                guard HelperBundleManager.shared.helperExists(for: config) else {
+                    DiagnosticsLog.shared.log("sync", "'\(config.name)' visible but never pinned (no helper bundle) — not hiding", verbose: true)
+                    continue
+                }
                 print("   ⚠️ '\(config.name)' was removed from Dock - updating visibility")
                 DiagnosticsLog.shared.log("sync", "'\(config.name)' gone from Dock → marking hidden")
                 configurations[index].isVisibleInDock = false
