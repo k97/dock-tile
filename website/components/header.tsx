@@ -81,11 +81,11 @@ export function Header() {
           : "opacity-0 -translate-y-4 pointer-events-none"
       }`}
     >
-      <nav className="flex items-center gap-4 md:gap-8 px-1.5 py-1.5 rounded-full bg-background/70 backdrop-blur-xl border border-border/50 shadow-[0_2px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_20px_rgba(0,0,0,0.3)]">
+      <nav className="flex items-center gap-2 md:gap-8 px-1.5 py-1.5 rounded-full bg-background/70 backdrop-blur-xl border border-border/50 shadow-[0_2px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_20px_rgba(0,0,0,0.3)]">
         {/* Brand */}
         <Link
           href="/"
-          className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full hover:bg-accent/60 transition-colors"
+          className="flex items-center gap-2 pl-2 pr-1 md:pr-3 py-1.5 rounded-full hover:bg-accent/60 transition-colors"
         >
           <Image
             src="/assets/dock-tile-icon-only.svg"
@@ -112,7 +112,7 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 onClick={(e) => handleClick(e, link.href)}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                className={`px-2 md:px-3 py-1.5 rounded-full text-sm transition-colors ${
                   isActive
                     ? "text-foreground font-medium"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
@@ -128,7 +128,7 @@ export function Header() {
             <a
               href={`mailto:${siteConfig.contactEmail}`}
               onClick={trackContactClick}
-              className="px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors inline-block"
+              className="px-2 md:px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors inline-block"
             >
               Support
             </a>
@@ -145,7 +145,7 @@ export function Header() {
         <button
           onClick={handleDownload}
           disabled={downloadState !== "ready"}
-          className={`flex items-center gap-1.5 px-4 py-1.5 ml-1 rounded-full text-sm font-medium transition-colors ${
+          className={`flex items-center gap-1.5 px-3 md:px-4 py-1.5 ml-0 md:ml-1 rounded-full text-sm font-medium transition-colors ${
             downloadState === "ready"
               ? "bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
               : "bg-primary/70 text-primary-foreground cursor-default"
