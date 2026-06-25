@@ -1,1494 +1,1662 @@
 {
-  "sourceLanguage" : "en-GB",
-  "strings" : {
-    "alert.restartDock.checkbox" : {
-      "comment" : "Checkbox label to suppress future Dock restart alerts",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Don't show this again"
+  "sourceLanguage": "en-GB",
+  "strings": {
+    "alert.restartDock.checkbox": {
+      "comment": "Checkbox label to suppress future Dock restart alerts",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't show this again"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Don't show this again"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't show this again"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Don't show this again"
-          }
-        }
-      }
-    },
-    "alert.restartDock.message" : {
-      "comment" : "Alert message explaining Dock restart",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected."
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected."
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected."
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't show this again"
           }
         }
       }
     },
-    "alert.restartDock.title" : {
-      "comment" : "Alert title when Dock restart is required",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Restart Required"
+    "alert.restartDock.message": {
+      "comment": "Alert message explaining Dock restart",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected."
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Restart Required"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected."
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Restart Required"
-          }
-        }
-      }
-    },
-    "app.name" : {
-      "comment" : "App display name",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected."
           }
         }
       }
     },
-    "button.add" : {
-      "comment" : "Add button label in file picker",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add"
+    "alert.restartDock.title": {
+      "comment": "Alert title when Dock restart is required",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Restart Required"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Restart Required"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add"
-          }
-        }
-      }
-    },
-    "button.addToDock" : {
-      "comment" : "Button to add tile to Dock",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Dock"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Dock"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Dock"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Restart Required"
           }
         }
       }
     },
-    "button.back" : {
-      "comment" : "Back button label",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
+    "app.name": {
+      "comment": "App display name",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
-          }
-        }
-      }
-    },
-    "button.cancel" : {
-      "comment" : "Cancel button in alerts",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
           }
         }
       }
     },
-    "button.confirm" : {
-      "comment" : "Confirm button for alert dialogs",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirm"
+    "button.add": {
+      "comment": "Add button label in file picker",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirm"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirm"
-          }
-        }
-      }
-    },
-    "button.customise" : {
-      "comment" : "Button to open customization view",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customise"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customise"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customize"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
           }
         }
       }
     },
-    "button.delete" : {
-      "comment" : "Delete button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
+    "button.addToDock": {
+      "comment": "Button to add tile to Dock",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Dock"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Dock"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
-          }
-        }
-      }
-    },
-    "button.done" : {
-      "comment" : "Done button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to Dock"
           }
         }
       }
     },
-    "button.duplicate" : {
-      "comment" : "Duplicate button in context menu",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duplicate"
+    "button.back": {
+      "comment": "Back button label",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duplicate"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duplicate"
-          }
-        }
-      }
-    },
-    "button.newTile" : {
-      "comment" : "Button to create first tile on empty state",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Tile"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Tile"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
           }
         }
       }
     },
-    "button.remove" : {
-      "comment" : "Remove button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove"
+    "button.cancel": {
+      "comment": "Cancel button in alerts",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove"
-          }
-        }
-      }
-    },
-    "button.removeFromDock" : {
-      "comment" : "Button to remove tile from Dock",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from Dock"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from Dock"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from Dock"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         }
       }
     },
-    "button.update" : {
-      "comment" : "Update button when tile is already in Dock",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Update"
+    "button.checkForUpdates": {
+      "comment": "Button that triggers a manual Sparkle update check",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Updates…"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Update"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Updates…"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Update"
-          }
-        }
-      }
-    },
-    "button.openLoginItems" : {
-      "comment" : "Button that opens System Settings Login Items for approval",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Login Items Settings…"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Login Items Settings…"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Login Items Settings…"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Updates…"
           }
         }
       }
     },
-    "settings.login.requiresApproval" : {
-      "comment" : "Shown when macOS is holding the login item for user approval",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Approve Dock Tile in Login Items to finish enabling this."
+    "button.confirm": {
+      "comment": "Confirm button for alert dialogs",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Approve Dock Tile in Login Items to finish enabling this."
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Approve Dock Tile in Login Items to finish enabling this."
-          }
-        }
-      }
-    },
-    "empty.createFirstTile" : {
-      "comment" : "Header text for empty state",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create Your First Tile"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create Your First Tile"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create Your First Tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm"
           }
         }
       }
     },
-    "empty.detail" : {
-      "comment" : "Placeholder text in detail view",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detail"
+    "button.customise": {
+      "comment": "Button to open customization view",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customise"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detail"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customise"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detail"
-          }
-        }
-      }
-    },
-    "empty.noApps" : {
-      "comment" : "Empty state text when no apps configured",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No apps configured"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No apps configured"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No apps configured"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customize"
           }
         }
       }
     },
-    "empty.noItemsAdded" : {
-      "comment" : "Empty state text in apps table",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No items added yet"
+    "button.delete": {
+      "comment": "Delete button",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No items added yet"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No items added yet"
-          }
-        }
-      }
-    },
-    "empty.noTiles" : {
-      "comment" : "Empty state text in sidebar",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Tiles"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Tiles"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Tiles"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
           }
         }
       }
     },
-    "error.failedToCodeSign" : {
-      "comment" : "Error when code signing fails",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to code sign helper bundle"
+    "button.done": {
+      "comment": "Done button",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to code sign helper bundle"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to code sign helper bundle"
-          }
-        }
-      }
-    },
-    "error.failedToCopyBundle" : {
-      "comment" : "Error when bundle copy fails",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to copy bundle"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to copy bundle"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to copy bundle"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         }
       }
     },
-    "error.failedToReadInfoPlist" : {
-      "comment" : "Error when Info.plist cannot be read",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to read Info.plist"
+    "button.duplicate": {
+      "comment": "Duplicate button in context menu",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to read Info.plist"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to read Info.plist"
-          }
-        }
-      }
-    },
-    "error.failedToWriteInfoPlist" : {
-      "comment" : "Error when Info.plist cannot be written",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to write Info.plist"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to write Info.plist"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to write Info.plist"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicate"
           }
         }
       }
     },
-    "error.mainAppNotFound" : {
-      "comment" : "Error when main app bundle cannot be found",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Main Dock Tile.app not found"
+    "button.newTile": {
+      "comment": "Button to create first tile on empty state",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Tile"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Main Dock Tile.app not found"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Tile"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Main Dock Tile.app not found"
-          }
-        }
-      }
-    },
-    "filePicker.message" : {
-      "comment" : "Message in file picker dialog",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select an application or folder to add"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select an application or folder to add"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select an application or folder to add"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Tile"
           }
         }
       }
     },
-    "kind.application" : {
-      "comment" : "Kind value for applications",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Application"
+    "button.openLoginItems": {
+      "comment": "Button that opens System Settings Login Items for approval",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Login Items Settings…"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Application"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Login Items Settings…"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Application"
-          }
-        }
-      }
-    },
-    "kind.folder" : {
-      "comment" : "Kind value for folders",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folder"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folder"
-          }
-        },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folder"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Login Items Settings…"
           }
         }
       }
     },
-    "label.colour" : {
-      "comment" : "Label for colour picker section",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Colour"
+    "button.remove": {
+      "comment": "Remove button",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Colour"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Color"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
           }
         }
       }
     },
-    "label.layout" : {
-      "comment" : "Label for layout picker",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Layout"
+    "button.removeFromDock": {
+      "comment": "Button to remove tile from Dock",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Dock"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Layout"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Dock"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Layout"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from Dock"
           }
         }
       }
     },
-    "label.shareAnalytics" : {
-      "comment" : "Label for the analytics opt-out toggle in Settings",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share anonymous usage data"
+    "button.update": {
+      "comment": "Update button when tile is already in Dock",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share anonymous usage data"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share anonymous usage data"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
           }
         }
       }
     },
-    "label.shareAnalyticsDescription" : {
-      "comment" : "Explanation under the analytics toggle",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
+    "empty.createFirstTile": {
+      "comment": "Header text for empty state",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Your First Tile"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Your First Tile"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create Your First Tile"
           }
         }
       }
     },
-    "label.showInAppSwitcher" : {
-      "comment" : "Label for app switcher toggle",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show in App Switcher"
+    "empty.detail": {
+      "comment": "Placeholder text in detail view",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detail"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show in App Switcher"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detail"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show in App Switcher"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detail"
           }
         }
       }
     },
-    "label.showTile" : {
-      "comment" : "Label for show tile toggle",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show Tile"
+    "empty.noApps": {
+      "comment": "Empty state text when no apps configured",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No apps configured"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show Tile"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No apps configured"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show Tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No apps configured"
           }
         }
       }
     },
-    "label.tileIcon" : {
-      "comment" : "Label for tile icon section",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Icon"
+    "empty.noItemsAdded": {
+      "comment": "Empty state text in apps table",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No items added yet"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Icon"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No items added yet"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Icon"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No items added yet"
           }
         }
       }
     },
-    "label.tileIconSize" : {
-      "comment" : "Label for tile icon size",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Icon Size"
+    "empty.noTiles": {
+      "comment": "Empty state text in sidebar",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Tiles"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Icon Size"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Tiles"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Icon Size"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Tiles"
           }
         }
       }
     },
-    "label.tileName" : {
-      "comment" : "Label for tile name field",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Name"
+    "error.failedToCodeSign": {
+      "comment": "Error when code signing fails",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to code sign helper bundle"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Name"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to code sign helper bundle"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tile Name"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to code sign helper bundle"
           }
         }
       }
     },
-    "layout.grid" : {
-      "comment" : "Grid layout option",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grid"
+    "error.failedToCopyBundle": {
+      "comment": "Error when bundle copy fails",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to copy bundle"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grid"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to copy bundle"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grid"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to copy bundle"
           }
         }
       }
     },
-    "layout.list" : {
-      "comment" : "List layout option",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "List"
+    "error.failedToReadInfoPlist": {
+      "comment": "Error when Info.plist cannot be read",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to read Info.plist"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "List"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to read Info.plist"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "List"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to read Info.plist"
           }
         }
       }
     },
-    "menu.configure" : {
-      "comment" : "Menu item to configure tile (opens main app)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure..."
+    "error.failedToWriteInfoPlist": {
+      "comment": "Error when Info.plist cannot be written",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to write Info.plist"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure..."
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to write Info.plist"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure..."
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to write Info.plist"
           }
         }
       }
     },
-    "menu.newTile" : {
-      "comment" : "Menu item to create a new tile",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Dock Tile"
+    "error.mainAppNotFound": {
+      "comment": "Error when main app bundle cannot be found",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main Dock Tile.app not found"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Dock Tile"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main Dock Tile.app not found"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Dock Tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main Dock Tile.app not found"
           }
         }
       }
     },
-    "menu.openInFinder" : {
-      "comment" : "Menu item to open in Finder",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open in Finder"
+    "filePicker.message": {
+      "comment": "Message in file picker dialog",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an application or folder to add"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open in Finder"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an application or folder to add"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open in Finder"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an application or folder to add"
           }
         }
       }
     },
-    "menu.options" : {
-      "comment" : "Section divider in menu",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Options"
+    "kind.application": {
+      "comment": "Kind value for applications",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Options"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Options"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Application"
           }
         }
       }
     },
-    "navigation.customiseTile" : {
-      "comment" : "Navigation title for customise tile view",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customise Tile"
+    "kind.folder": {
+      "comment": "Kind value for folders",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customise Tile"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customize Tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder"
           }
         }
       }
     },
-    "search.emojis" : {
-      "comment" : "Search placeholder for emojis",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search emojis"
+    "label.colour": {
+      "comment": "Label for colour picker section",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Colour"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search emojis"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Colour"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search emojis"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Color"
           }
         }
       }
     },
-    "search.symbols" : {
-      "comment" : "Search placeholder for symbols",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search symbols"
+    "label.iconSize": {
+      "comment": "Compact label for the icon size stepper (side-by-side with icon weight)",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon Size"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search symbols"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon Size"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search symbols"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon Size"
           }
         }
       }
     },
-    "section.selectedItems" : {
-      "comment" : "Section header for selected items",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selected Items"
+    "label.iconWeight": {
+      "comment": "Label for the SF Symbol weight picker",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon Weight"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selected Items"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon Weight"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selected Items"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon Weight"
           }
         }
       }
     },
-    "sidebar.title" : {
-      "comment" : "Navigation title for sidebar",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile"
+    "label.iconWeightInfo": {
+      "comment": "Popover/help note explaining that the icon weight setting affects symbols but not emoji",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight applies to symbols only. Emoji aren’t affected."
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight applies to symbols only. Emoji aren’t affected."
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weight applies to symbols only. Emoji aren’t affected."
           }
         }
       }
     },
-    "subtitle.chooseColour" : {
-      "comment" : "Subtitle for colour picker section",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a background colour for your tile"
+    "label.iconWeightInfo.accessibility": {
+      "comment": "VoiceOver label for the icon weight info button",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Icon Weight"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a background colour for your tile"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Icon Weight"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a background color for your tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Icon Weight"
           }
         }
       }
     },
-    "subtitle.configureToAdd" : {
-      "comment" : "Subtitle in empty state (grid view only)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure to add apps"
+    "label.layout": {
+      "comment": "Label for layout picker",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layout"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure to add apps"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layout"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure to add apps"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Layout"
           }
         }
       }
     },
-    "subtitle.iconSize" : {
-      "comment" : "Subtitle for icon size section",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adjust the size of your icon within the tile"
+    "label.shareAnalytics": {
+      "comment": "Label for the analytics opt-out toggle in Settings",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share anonymous usage data"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adjust the size of your icon within the tile"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share anonymous usage data"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adjust the size of your icon within the tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share anonymous usage data"
           }
         }
       }
     },
-    "tab.emoji" : {
-      "comment" : "Emoji tab label",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emoji"
+    "label.shareAnalyticsDescription": {
+      "comment": "Explanation under the analytics toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emoji"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emoji"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected."
           }
         }
       }
     },
-    "tab.symbol" : {
-      "comment" : "Symbol tab label",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Symbol"
+    "label.showInAppSwitcher": {
+      "comment": "Label for app switcher toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in App Switcher"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Symbol"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in App Switcher"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Symbol"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in App Switcher"
           }
         }
       }
     },
-    "table.item" : {
-      "comment" : "Table column header for item",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Item"
+    "label.showTile": {
+      "comment": "Label for show tile toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Tile"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Item"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Tile"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Item"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Tile"
           }
         }
       }
     },
-    "table.kind" : {
-      "comment" : "Table column header for kind",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kind"
+    "label.softwareUpdate": {
+      "comment": "Title of the software-update row in General settings",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Software Update"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kind"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Software Update"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kind"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Software Update"
           }
         }
       }
     },
-    "title.deleteTile" : {
-      "comment" : "Alert title for delete confirmation",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Tile"
+    "label.softwareUpdateDescription": {
+      "comment": "Description under the software-update row; %@ is the current version",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re using version %@. Dock Tile checks for updates automatically."
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Tile"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re using version %@. Dock Tile checks for updates automatically."
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re using version %@. Dock Tile checks for updates automatically."
           }
         }
       }
     },
-    "tooltip.createNewTile" : {
-      "comment" : "Tooltip when add button is enabled",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create new tile"
+    "label.tileIcon": {
+      "comment": "Label for tile icon section",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Icon"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create new tile"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Icon"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create new tile"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Icon"
           }
         }
       }
     },
-    "tooltip.editFirst" : {
-      "comment" : "Tooltip when add button is disabled",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en-AU" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit current tile before creating another"
+    "label.tileIconSize": {
+      "comment": "Label for tile icon size",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Icon Size"
           }
         },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit current tile before creating another"
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Icon Size"
           }
         },
-        "en-US" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit current tile before creating another"
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Icon Size"
+          }
+        }
+      }
+    },
+    "label.tileName": {
+      "comment": "Label for tile name field",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Name"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Name"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tile Name"
+          }
+        }
+      }
+    },
+    "layout.grid": {
+      "comment": "Grid layout option",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grid"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grid"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grid"
+          }
+        }
+      }
+    },
+    "layout.list": {
+      "comment": "List layout option",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List"
+          }
+        }
+      }
+    },
+    "menu.configure": {
+      "comment": "Menu item to configure tile (opens main app)",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure..."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure..."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure..."
+          }
+        }
+      }
+    },
+    "menu.newTile": {
+      "comment": "Menu item to create a new tile",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Dock Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Dock Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Dock Tile"
+          }
+        }
+      }
+    },
+    "menu.openInFinder": {
+      "comment": "Menu item to open in Finder",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Finder"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Finder"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in Finder"
+          }
+        }
+      }
+    },
+    "menu.options": {
+      "comment": "Section divider in menu",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Options"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Options"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Options"
+          }
+        }
+      }
+    },
+    "navigation.customiseTile": {
+      "comment": "Navigation title for customise tile view",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customise Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customise Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customize Tile"
+          }
+        }
+      }
+    },
+    "search.emojis": {
+      "comment": "Search placeholder for emojis",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search emojis"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search emojis"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search emojis"
+          }
+        }
+      }
+    },
+    "search.symbols": {
+      "comment": "Search placeholder for symbols",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search symbols"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search symbols"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search symbols"
+          }
+        }
+      }
+    },
+    "section.selectedItems": {
+      "comment": "Section header for selected items",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected Items"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected Items"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected Items"
+          }
+        }
+      }
+    },
+    "settings.login.requiresApproval": {
+      "comment": "Shown when macOS is holding the login item for user approval",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve Dock Tile in Login Items to finish enabling this."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve Dock Tile in Login Items to finish enabling this."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve Dock Tile in Login Items to finish enabling this."
+          }
+        }
+      }
+    },
+    "sidebar.title": {
+      "comment": "Navigation title for sidebar",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
+          }
+        }
+      }
+    },
+    "subtitle.chooseColour": {
+      "comment": "Subtitle for colour picker section",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a background colour for your tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a background colour for your tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a background color for your tile"
+          }
+        }
+      }
+    },
+    "subtitle.configureToAdd": {
+      "comment": "Subtitle in empty state (grid view only)",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure to add apps"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure to add apps"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure to add apps"
+          }
+        }
+      }
+    },
+    "subtitle.iconSize": {
+      "comment": "Subtitle for icon size section",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust the size of your icon within the tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust the size of your icon within the tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjust the size of your icon within the tile"
+          }
+        }
+      }
+    },
+    "tab.emoji": {
+      "comment": "Emoji tab label",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emoji"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emoji"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emoji"
+          }
+        }
+      }
+    },
+    "tab.symbol": {
+      "comment": "Symbol tab label",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbol"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbol"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbol"
+          }
+        }
+      }
+    },
+    "table.item": {
+      "comment": "Table column header for item",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        }
+      }
+    },
+    "table.kind": {
+      "comment": "Table column header for kind",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        }
+      }
+    },
+    "title.deleteTile": {
+      "comment": "Alert title for delete confirmation",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Tile"
+          }
+        }
+      }
+    },
+    "tooltip.createNewTile": {
+      "comment": "Tooltip when add button is enabled",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create new tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create new tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create new tile"
+          }
+        }
+      }
+    },
+    "tooltip.editFirst": {
+      "comment": "Tooltip when add button is disabled",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit current tile before creating another"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit current tile before creating another"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit current tile before creating another"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

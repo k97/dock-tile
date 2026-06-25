@@ -21,6 +21,7 @@ struct DockTileIconPreview: View {
     let iconType: IconType
     let iconValue: String
     let iconScale: Int  // 10-20 range, default 14
+    let iconWeight: IconWeight  // SF Symbol stroke weight (ignored for emojis)
     let size: CGFloat
 
     // Observe IconStyleManager for icon style changes (single source of truth)
@@ -42,6 +43,7 @@ struct DockTileIconPreview: View {
         self.iconType = .emoji
         self.iconValue = symbol
         self.iconScale = ConfigurationDefaults.iconScale
+        self.iconWeight = ConfigurationDefaults.iconWeight
         self.size = size
     }
 
@@ -51,15 +53,24 @@ struct DockTileIconPreview: View {
         self.iconType = iconType
         self.iconValue = iconValue
         self.iconScale = ConfigurationDefaults.iconScale
+        self.iconWeight = ConfigurationDefaults.iconWeight
         self.size = size
     }
 
-    // Full initializer with icon scale
-    init(tintColor: TintColor, iconType: IconType, iconValue: String, iconScale: Int, size: CGFloat) {
+    // Full initializer with icon scale and weight
+    init(
+        tintColor: TintColor,
+        iconType: IconType,
+        iconValue: String,
+        iconScale: Int,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
+        size: CGFloat
+    ) {
         self.tintColor = tintColor
         self.iconType = iconType
         self.iconValue = iconValue
         self.iconScale = iconScale
+        self.iconWeight = iconWeight
         self.size = size
     }
 
@@ -138,7 +149,7 @@ struct DockTileIconPreview: View {
                     .foregroundColor(styleColors.foreground)
             } else {
                 Image(systemName: iconValue)
-                    .font(.system(size: symbolSize, weight: .semibold))
+                    .font(.system(size: symbolSize, weight: iconWeight.fontWeight))
                     .foregroundColor(styleColors.foreground)
             }
             // NOTE: No text shadow - native macOS icons don't have baked-in text shadows
@@ -187,6 +198,7 @@ extension DockTileIconPreview {
             iconType: config.iconType,
             iconValue: config.iconValue,
             iconScale: config.iconScale,
+            iconWeight: config.iconWeight,
             size: size
         )
     }

@@ -9,6 +9,7 @@
 
 import Foundation
 import SwiftUI
+import AppKit
 
 // MARK: - DockTile Configuration
 
@@ -20,6 +21,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     var iconType: IconType  // v3: Distinguishes between SF Symbol and Emoji
     var iconValue: String  // v3: The actual symbol name or emoji character
     var iconScale: Int  // v4: Icon size scale (10-20 range, affects symbol/emoji size)
+    var iconWeight: IconWeight  // v7: SF Symbol stroke weight (ignored for emojis)
     var layoutMode: LayoutMode
     var appItems: [AppItem]
     var isVisibleInDock: Bool
@@ -38,6 +40,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         iconType: IconType = ConfigurationDefaults.iconType,
         iconValue: String = ConfigurationDefaults.iconValue,
         iconScale: Int = ConfigurationDefaults.iconScale,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
         layoutMode: LayoutMode = ConfigurationDefaults.layoutMode,
         appItems: [AppItem] = [],
         isVisibleInDock: Bool = ConfigurationDefaults.isVisibleInDock,
@@ -53,6 +56,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         self.iconType = iconType
         self.iconValue = iconValue
         self.iconScale = iconScale
+        self.iconWeight = iconWeight
         self.layoutMode = layoutMode
         self.appItems = appItems
         self.isVisibleInDock = isVisibleInDock
@@ -96,6 +100,10 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         iconScale = try container.decodeIfPresent(Int.self, forKey: .iconScale)
             ?? ConfigurationDefaults.iconScale
 
+        // v7 fields - icon weight (old configs default to .medium)
+        iconWeight = try container.decodeIfPresent(IconWeight.self, forKey: .iconWeight)
+            ?? ConfigurationDefaults.iconWeight
+
         // v5 fields - last Dock position
         lastDockIndex = try container.decodeIfPresent(Int.self, forKey: .lastDockIndex)
 
@@ -115,6 +123,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         case iconType, iconValue
         // v4 fields
         case iconScale
+        // v7 fields
+        case iconWeight
         // v5 fields
         case lastDockIndex
         // v6 fields
@@ -128,6 +138,58 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
 enum IconType: String, Codable, Hashable {
     case sfSymbol = "sfSymbol"
     case emoji = "emoji"
+}
+
+// MARK: - Icon Weight
+
+/// Curated SF Symbol stroke weights selectable per tile (v7).
+///
+/// Applies to SF Symbols only — emojis are colour glyphs and ignore weight, so the
+/// renderers (`IconGenerator`, `DockTileIconPreview`) never apply it to emoji content.
+/// The curated set drops the extremes (ultralight/thin/black) that read poorly at
+/// tile size. `displayName` is intentionally not localised (mirrors `LayoutMode`).
+enum IconWeight: String, Codable, CaseIterable, Hashable {
+    case light
+    case regular
+    case medium
+    case semibold
+    case bold
+    case heavy
+
+    var displayName: String {
+        switch self {
+        case .light: return "Light"
+        case .regular: return "Regular"
+        case .medium: return "Medium"
+        case .semibold: return "Semibold"
+        case .bold: return "Bold"
+        case .heavy: return "Heavy"
+        }
+    }
+
+    /// SwiftUI font weight — used by the live preview and the symbol picker grid.
+    var fontWeight: Font.Weight {
+        switch self {
+        case .light: return .light
+        case .regular: return .regular
+        case .medium: return .medium
+        case .semibold: return .semibold
+        case .bold: return .bold
+        case .heavy: return .heavy
+        }
+    }
+
+    /// AppKit font weight — used by the baked `.icns` via `NSImage.SymbolConfiguration`.
+    var nsFontWeight: NSFont.Weight {
+        switch self {
+        case .light: return .light
+        case .regular: return .regular
+        case .medium: return .medium
+        case .semibold: return .semibold
+        case .bold: return .bold
+        case .heavy: return .heavy
+        }
+    }
 }
 
 // MARK: - Tint Color

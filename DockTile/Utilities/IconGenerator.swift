@@ -71,6 +71,7 @@ struct IconGenerator {
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
         size: CGSize,
         iconStyle: IconStyle = IconStyle.current
     ) -> NSImage {
@@ -149,6 +150,7 @@ struct IconGenerator {
                 symbolName: iconValue,
                 rect: rect,
                 fontSize: fontSize,
+                weight: iconWeight.nsFontWeight,
                 color: colors.foreground
             )
         case .emoji:
@@ -265,23 +267,25 @@ struct IconGenerator {
         symbolName: String,
         rect: CGRect,
         fontSize: CGFloat,
+        weight: NSFont.Weight = .medium,
         color: NSColor = .white
     ) {
         // The DockTile brand logo lives alongside SF Symbols but is rendered
-        // from a bundled template image rather than a system symbol.
+        // from a bundled template image rather than a system symbol. The brand
+        // glyph is a fixed-weight raster, so symbol weight does not apply to it.
         if symbolName == SFSymbolCatalog.brandSymbolName, let glyph = SFSymbolCatalog.brandGlyph {
             drawBrandGlyph(glyph, rect: rect, fontSize: fontSize, color: color)
             return
         }
 
         // Create SF Symbol configuration
-        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .semibold)
+        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: weight)
 
         // Get the SF Symbol image
         guard let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else {
             // Fallback to a default symbol if the requested one doesn't exist
-            drawFallbackSymbol(rect: rect, fontSize: fontSize, color: color)
+            drawFallbackSymbol(rect: rect, fontSize: fontSize, weight: weight, color: color)
             return
         }
 
@@ -296,9 +300,9 @@ struct IconGenerator {
         tintedImage.draw(in: drawRect)
     }
 
-    private static func drawFallbackSymbol(rect: CGRect, fontSize: CGFloat, color: NSColor = .white) {
+    private static func drawFallbackSymbol(rect: CGRect, fontSize: CGFloat, weight: NSFont.Weight = .medium, color: NSColor = .white) {
         // Draw a star as fallback
-        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .semibold)
+        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: weight)
         guard let fallbackImage = NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else {
             return
@@ -382,6 +386,7 @@ struct IconGenerator {
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
         outputURL: URL,
         iconStyle: IconStyle = IconStyle.current
     ) throws {
@@ -402,6 +407,7 @@ struct IconGenerator {
                 iconType: iconType,
                 iconValue: iconValue,
                 iconScale: iconScale,
+                iconWeight: iconWeight,
                 size: CGSize(width: baseSize, height: baseSize),
                 iconStyle: iconStyle
             )
@@ -414,6 +420,7 @@ struct IconGenerator {
                 iconType: iconType,
                 iconValue: iconValue,
                 iconScale: iconScale,
+                iconWeight: iconWeight,
                 size: CGSize(width: baseSize * 2, height: baseSize * 2),
                 iconStyle: iconStyle
             )
@@ -485,6 +492,7 @@ struct IconGenerator {
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
         size: CGFloat = 80,
         iconStyle: IconStyle = IconStyle.current
     ) -> NSImage {
@@ -493,6 +501,7 @@ struct IconGenerator {
             iconType: iconType,
             iconValue: iconValue,
             iconScale: iconScale,
+            iconWeight: iconWeight,
             size: CGSize(width: size, height: size),
             iconStyle: iconStyle
         )

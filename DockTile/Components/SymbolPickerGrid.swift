@@ -15,6 +15,7 @@ import SwiftUI
 struct SymbolPickerGrid: View {
     @Binding var selectedSymbol: String
     @Binding var searchText: String
+    let iconWeight: IconWeight
     let onSelect: (String) -> Void
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
@@ -50,7 +51,8 @@ struct SymbolPickerGrid: View {
                                 SymbolButton(
                                     symbolName: symbol,
                                     isSelected: selectedSymbol == symbol,
-                                    size: symbolSize
+                                    size: symbolSize,
+                                    weight: iconWeight
                                 ) {
                                     selectedSymbol = symbol
                                     onSelect(symbol)
@@ -70,6 +72,7 @@ private struct SymbolButton: View {
     let symbolName: String
     let isSelected: Bool
     let size: CGFloat
+    let weight: IconWeight
     let onTap: () -> Void
 
     var body: some View {
@@ -98,7 +101,7 @@ private struct SymbolButton: View {
                 .frame(width: size, height: size)
         } else {
             Image(systemName: symbolName)
-                .font(.system(size: size))
+                .font(.system(size: size, weight: weight.fontWeight))
         }
     }
 }
@@ -325,6 +328,7 @@ final class SFSymbolCatalog: @unchecked Sendable {
         SymbolPickerGrid(
             selectedSymbol: .constant("star.fill"),
             searchText: .constant(""),
+            iconWeight: .medium,
             onSelect: { _ in }
         )
         .padding()

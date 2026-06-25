@@ -204,6 +204,7 @@ struct DockTileDetailView: View {
                     iconType: editedConfig.iconType,
                     iconValue: editedConfig.iconValue,
                     iconScale: editedConfig.iconScale,
+                    iconWeight: editedConfig.iconWeight,
                     size: 118
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 118 * 0.225, style: .continuous))

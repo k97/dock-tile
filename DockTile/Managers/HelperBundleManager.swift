@@ -157,6 +157,7 @@ final class HelperBundleManager {
                 iconType: config.iconType,
                 iconValue: config.iconValue,
                 iconScale: config.iconScale,
+                iconWeight: config.iconWeight,
                 outputURL: iconPath,
                 iconStyle: style
             )
@@ -1121,6 +1122,7 @@ final class HelperBundleManager {
                 iconType: config.iconType,
                 iconValue: config.iconValue,
                 iconScale: config.iconScale,
+                iconWeight: config.iconWeight,
                 outputURL: iconDest,
                 iconStyle: style
             )
