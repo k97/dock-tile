@@ -32,6 +32,7 @@ struct DockTileApp: App {
         Window(AppStrings.appName, id: AppDelegate.configurationWindowID) {
             DockTileConfigurationView()
                 .environmentObject(configManager)
+                .environmentObject(updateController)
                 .onAppear {
                     appDelegate.configManager = configManager
                 }

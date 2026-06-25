@@ -252,4 +252,5 @@ struct EmptyConfigurationView: View {
 #Preview {
     DockTileConfigurationView()
         .environmentObject(ConfigurationManager())
+        .environmentObject(UpdateController())
 }

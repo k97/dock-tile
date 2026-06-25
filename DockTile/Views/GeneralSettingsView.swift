@@ -13,6 +13,7 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
+    @EnvironmentObject private var updateController: UpdateController
 
     /// Mirrors SMAppService status — the system is the source of truth, not local
     /// storage. Synced in `.onAppear` so it reflects changes the user makes in
@@ -27,55 +28,89 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
+            // All general preferences live in a single grouped container (System Settings style):
+            // Start at login → Software update → Share analytics.
             Section {
-                Toggle(isOn: $startAtLoginOn) {
-                    Text(AppStrings.Label.startAtLogin)
-                    Text(AppStrings.Label.startAtLoginDescription)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .onChange(of: startAtLoginOn) { _, enabled in
-                    // `refreshLoginState` writes this @State to mirror the system; ignore those
-                    // syncs and act only on a genuine user toggle, so we never re-register in a loop.
-                    let manager = LoginItemManager.shared
-                    let systemOn = manager.isEnabled || manager.requiresApproval
-                    guard enabled != systemOn else { return }
-                    applyLoginSetting(enabled)
-                }
+                startAtLoginRow
 
-                // Shown when macOS is holding the launcher item for user approval.
-                if loginRequiresApproval {
-                    HStack(spacing: 8) {
-                        Text(AppStrings.Settings.loginRequiresApproval)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Button(AppStrings.Button.openLoginItems) {
-                            LoginItemManager.shared.openLoginItemsSettings()
-                        }
-                        .controlSize(.small)
-                    }
-                }
-            }
+                softwareUpdateRow
 
-            // Privacy: opt-out analytics. Disabling stops all Analytics + Crashlytics collection.
-            Section {
-                Toggle(isOn: $analyticsEnabled) {
-                    Text(AppStrings.Label.shareAnalytics)
-                    Text(AppStrings.Label.shareAnalyticsDescription)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .onChange(of: analyticsEnabled) { _, enabled in
-                    AnalyticsService.shared.setConsent(enabled)
-                    AnalyticsService.shared.log(.settingChanged, ["setting": "analytics", "enabled": enabled])
-                    DiagnosticsLog.shared.log("settings", "Share analytics toggled \(enabled ? "ON" : "OFF")")
-                }
+                analyticsRow
             }
         }
         .formStyle(.grouped)
         .navigationTitle(AppStrings.Settings.general)
         .onAppear(perform: refreshLoginState)
+    }
+
+    // MARK: - Rows
+
+    private var startAtLoginRow: some View {
+        Group {
+            Toggle(isOn: $startAtLoginOn) {
+                Text(AppStrings.Label.startAtLogin)
+                Text(AppStrings.Label.startAtLoginDescription)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .onChange(of: startAtLoginOn) { _, enabled in
+                // `refreshLoginState` writes this @State to mirror the system; ignore those
+                // syncs and act only on a genuine user toggle, so we never re-register in a loop.
+                let manager = LoginItemManager.shared
+                let systemOn = manager.isEnabled || manager.requiresApproval
+                guard enabled != systemOn else { return }
+                applyLoginSetting(enabled)
+            }
+
+            // Shown when macOS is holding the launcher item for user approval.
+            if loginRequiresApproval {
+                HStack(spacing: 8) {
+                    Text(AppStrings.Settings.loginRequiresApproval)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button(AppStrings.Button.openLoginItems) {
+                        LoginItemManager.shared.openLoginItemsSettings()
+                    }
+                    .controlSize(.small)
+                }
+            }
+        }
+    }
+
+    /// Manual update check (Sparkle). Sits between login and analytics. The trailing button
+    /// disables itself while a check/install session is already running.
+    private var softwareUpdateRow: some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(AppStrings.Label.softwareUpdate)
+                Text(AppStrings.Label.softwareUpdateDescription(AppEnvironment.appVersion))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Button(AppStrings.Button.checkForUpdates) {
+                updateController.checkForUpdates()
+            }
+            .disabled(!updateController.canCheckForUpdates)
+        }
+    }
+
+    // Privacy: opt-out analytics. Disabling stops all Analytics + Crashlytics collection.
+    private var analyticsRow: some View {
+        Toggle(isOn: $analyticsEnabled) {
+            Text(AppStrings.Label.shareAnalytics)
+            Text(AppStrings.Label.shareAnalyticsDescription)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .onChange(of: analyticsEnabled) { _, enabled in
+            AnalyticsService.shared.setConsent(enabled)
+            AnalyticsService.shared.log(.settingChanged, ["setting": "analytics", "enabled": enabled])
+            DiagnosticsLog.shared.log("settings", "Share analytics toggled \(enabled ? "ON" : "OFF")")
+        }
     }
 
     /// Read the current SMAppService status into the toggle (system is source of truth).
