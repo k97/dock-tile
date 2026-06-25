@@ -28,6 +28,21 @@
 
 Max ratio: 0.60 of icon size. Stepper capped at 17 (SF Symbols) / 16 (emojis).
 
+## Icon Weight (v7)
+
+Per-tile SF Symbol stroke weight (`DockTileConfiguration.iconWeight`, default `.medium`). `IconWeight`
+(in `ConfigurationModels.swift`) is a **curated** set of 6 — light, regular, medium, semibold, bold,
+heavy — dropping the extremes that read poorly at tile size. It exposes both `fontWeight` (SwiftUI,
+for `DockTileIconPreview` + `SymbolPickerGrid`) and `nsFontWeight` (AppKit, for the baked `.icns` via
+`NSImage.SymbolConfiguration(pointSize:weight:)`). **The two mappings must agree** — guarded by
+`IconWeightTests` — or a tile looks one way in the customiser and another in the Dock.
+
+- **Emoji**: weight is **ignored** (emoji are colour glyphs); the Customise UI keeps the picker visible
+  but the renderers never apply weight to emoji content. The brand logo (a raster) also ignores it.
+- **Whole picker grid** redraws at the selected weight, not just the large preview.
+- **Existing tiles**: like any icon change, helpers re-bake at the new weight via the migration
+  pipeline on the next version bump (`helperAppVersion` mismatch).
+
 ## DockTile Brand Logo
 
 The rising-sun logo is offered as the **first** symbol-picker option (its own "DockTile"
