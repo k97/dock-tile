@@ -38,6 +38,7 @@
 		AAICND01 /* AppIcon-Dev.icon in Resources */ = {isa = PBXBuildFile; fileRef = AAICND02 /* AppIcon-Dev.icon */; };
 		AAICON01 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = AAICON02 /* AppIcon.icon */; };
 		AAGSI01 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AAGSI02 /* GoogleService-Info.plist */; };
+		AADTG01 /* DockTileGlyph.png in Resources */ = {isa = PBXBuildFile; fileRef = AADTG02 /* DockTileGlyph.png */; };
 		AAIGOV02 /* IconGridOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAIGOV01 /* IconGridOverlay.swift */; };
 		AAISM001 /* IconStyleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAISM002 /* IconStyleManager.swift */; };
 		AAMAIN01 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAMAIN02 /* main.swift */; };
@@ -82,6 +83,7 @@
 		AA0004 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AA0008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AAGSI02 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		AADTG02 /* DockTileGlyph.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = DockTileGlyph.png; sourceTree = "<group>"; };
 		AA0009 /* Dock Tile Dev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dock Tile Dev.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0021 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
 		AA0023 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
@@ -239,6 +241,7 @@
 				AAICND02 /* AppIcon-Dev.icon */,
 				AA0008 /* Info.plist */,
 				AAGSI02 /* GoogleService-Info.plist */,
+				AADTG02 /* DockTileGlyph.png */,
 				AALI000 /* LoginItems */,
 			);
 			path = Resources;
@@ -512,6 +515,7 @@
 				AAICON01 /* AppIcon.icon in Resources */,
 				AAICND01 /* AppIcon-Dev.icon in Resources */,
 				AAGSI01 /* GoogleService-Info.plist in Resources */,
+				AADTG01 /* DockTileGlyph.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -133,8 +133,14 @@ struct IconGenerator {
         let strokeOpacity: CGFloat = iconStyle == .dark ? 0.2 : 0.5
         drawBeveledStroke(context: context, path: squirclePath, size: size, strokeOpacity: strokeOpacity)
 
-        // Calculate font size based on icon scale
-        let fontSize = size.width * iconRatio(for: iconScale, iconType: iconType)
+        // Calculate font size based on icon scale.
+        // The brand logo uses its own curve/ceiling (not the 0.60 SF-Symbol cap)
+        // so the stepper can scale it up within the tile's safe area.
+        let isBrandLogo = iconType == .sfSymbol && iconValue == SFSymbolCatalog.brandSymbolName
+        let sizeRatio = isBrandLogo
+            ? SFSymbolCatalog.brandRatio(forScale: iconScale)
+            : iconRatio(for: iconScale, iconType: iconType)
+        let fontSize = size.width * sizeRatio
 
         // Draw icon (SF Symbol or emoji) with appearance-aware colors
         switch iconType {
@@ -261,6 +267,13 @@ struct IconGenerator {
         fontSize: CGFloat,
         color: NSColor = .white
     ) {
+        // The DockTile brand logo lives alongside SF Symbols but is rendered
+        // from a bundled template image rather than a system symbol.
+        if symbolName == SFSymbolCatalog.brandSymbolName, let glyph = SFSymbolCatalog.brandGlyph {
+            drawBrandGlyph(glyph, rect: rect, fontSize: fontSize, color: color)
+            return
+        }
+
         // Create SF Symbol configuration
         let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .semibold)
 
@@ -298,6 +311,28 @@ struct IconGenerator {
 
         let tintedImage = fallbackImage.tinted(with: color)
         tintedImage.draw(in: drawRect)
+    }
+
+    /// Draw the bundled DockTile logo, tinted to the appearance-aware foreground.
+    /// The logo renders larger than a same-scale SF Symbol (boost) and is allowed
+    /// to exceed the standard safe-area cap, since the thin-stroke ring can fill
+    /// more of the tile without crowding. This is the brand logo only.
+    private static func drawBrandGlyph(
+        _ glyph: NSImage,
+        rect: CGRect,
+        fontSize: CGFloat,
+        color: NSColor
+    ) {
+        // `fontSize` already encodes the brand size ratio for the current Icon
+        // Scale (see generateIcon), so draw the logo as a square of that side.
+        let side = fontSize
+        let drawRect = CGRect(
+            x: (rect.width - side) / 2,
+            y: (rect.height - side) / 2,
+            width: side,
+            height: side
+        )
+        glyph.tinted(with: color).draw(in: drawRect)
     }
 
     // MARK: - Emoji Drawing
