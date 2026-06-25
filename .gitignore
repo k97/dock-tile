@@ -89,3 +89,7 @@ fastlane/test_output
 *.certSigningRequest
 *.cer
 *.key
+
+
+promo-video/node_modules/**
+promo-video/**
