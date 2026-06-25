@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: List available Xcode versions
         run: ls -la /Applications/ | grep Xcode || true
@@ -125,7 +125,7 @@ jobs:
 
       - name: Upload Build Log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-logs
           path: |
@@ -134,7 +134,7 @@ jobs:
 
       - name: Upload build artifact
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: DockTile-Debug
           path: ./build/Build/Products/Debug/Dock Tile*.app
