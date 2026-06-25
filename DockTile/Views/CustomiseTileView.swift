@@ -19,6 +19,7 @@ struct CustomiseTileView: View {
     @State private var selectedIconTab: IconPickerTab = .symbol
     @State private var customColor: Color = .blue
     @State private var searchText: String = ""
+    @State private var showWeightInfo: Bool = false
 
     init(config: DockTileConfiguration, onBack: @escaping () -> Void) {
         self.config = config
@@ -36,7 +37,7 @@ struct CustomiseTileView: View {
             // Inspector Card — fills remaining vertical space
             inspectorCard
                 .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.top, 8)
                 .padding(.bottom, 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -89,12 +90,13 @@ struct CustomiseTileView: View {
                     iconType: editedConfig.iconType,
                     iconValue: editedConfig.iconValue,
                     iconScale: editedConfig.iconScale,
-                    size: 120
+                    iconWeight: editedConfig.iconWeight,
+                    size: 100
                 )
 
                 // Apple icon guide grid overlay (adaptive color based on background)
                 IconGridOverlay(
-                    size: 120,
+                    size: 100,
                     backgroundColor: editedConfig.tintColor
                 )
             }
@@ -105,8 +107,8 @@ struct CustomiseTileView: View {
                 .foregroundColor(.primary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
-        .padding(.top, 28) // Extra padding to account for toolbar area
+        .padding(.bottom, 12)
+        .padding(.top, 4) // Tight offset to clear the toolbar area
         .background(QuaternaryFillView().ignoresSafeArea(edges: .top))
     }
 
@@ -142,15 +144,9 @@ struct CustomiseTileView: View {
 
     private var colourSection: some View {
         HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(AppStrings.Label.colour)
-                    .font(.system(size: 13))
-                    .foregroundColor(.primary)
-
-                Text(AppStrings.Subtitle.chooseColour)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-            }
+            Text(AppStrings.Label.colour)
+                .font(.system(size: 13))
+                .foregroundColor(.primary)
 
             Spacer()
 
@@ -246,27 +242,81 @@ struct CustomiseTileView: View {
         editedConfig.iconType == .emoji ? 16 : 19
     }
 
+    /// Combined row: Icon Size stepper on the left, Icon Weight pull-down on the
+    /// right, split by a vertical divider (matches the inspector design).
     private var tileIconSizeSection: some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(AppStrings.Label.tileIconSize)
+        HStack(spacing: 12) {
+            // Icon Size (left half)
+            HStack(spacing: 8) {
+                Text(AppStrings.Label.iconSize)
                     .font(.system(size: 13))
                     .foregroundColor(.primary)
 
-                Text(AppStrings.Subtitle.iconSize)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-            }
+                Spacer(minLength: 8)
 
-            Spacer()
-
-            Stepper(value: $editedConfig.iconScale, in: 10...maxIconScale) {
-                Text("\(editedConfig.iconScale)")
-                    .monospacedDigit()
-                    .frame(width: 24, alignment: .trailing)
+                Stepper(value: $editedConfig.iconScale, in: 10...maxIconScale) {
+                    Text("\(editedConfig.iconScale)")
+                        .monospacedDigit()
+                        .frame(width: 24, alignment: .trailing)
+                }
             }
+            .frame(maxWidth: .infinity)
+
+            Divider()
+                .frame(height: 28)
+
+            // Icon Weight (right half)
+            HStack(spacing: 6) {
+                Text(AppStrings.Label.iconWeight)
+                    .font(.system(size: 13))
+                    .foregroundColor(.primary)
+
+                iconWeightInfoButton
+
+                Spacer(minLength: 8)
+
+                iconWeightPicker
+            }
+            .frame(maxWidth: .infinity)
         }
         .frame(height: 52)
+    }
+
+    /// Small info affordance next to the Icon Weight label. Click reveals a popover
+    /// explaining the setting's scope (Apple's pattern for a note too minor for a
+    /// persistent subtitle); hover shows the same text as a help tag for accessibility.
+    private var iconWeightInfoButton: some View {
+        Button {
+            showWeightInfo.toggle()
+        } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .help(AppStrings.Label.iconWeightInfo)
+        .accessibilityLabel(AppStrings.Label.iconWeightInfoAccessibility)
+        .popover(isPresented: $showWeightInfo, arrowEdge: .bottom) {
+            Text(AppStrings.Label.iconWeightInfo)
+                .font(.callout)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: 220, alignment: .leading)
+                .padding(12)
+        }
+    }
+
+    /// Native macOS pull-down (pop-up button) for choosing the SF Symbol weight.
+    /// Stays enabled for emojis — the renderers simply ignore weight for emoji content.
+    private var iconWeightPicker: some View {
+        Picker("", selection: $editedConfig.iconWeight) {
+            ForEach(IconWeight.allCases, id: \.self) { weight in
+                Text(weight.displayName).tag(weight)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .fixedSize()
     }
 
     // MARK: - Tile Icon Section
@@ -304,6 +354,7 @@ struct CustomiseTileView: View {
                                 }
                             ),
                             searchText: $searchText,
+                            iconWeight: editedConfig.iconWeight,
                             onSelect: { symbol in
                                 editedConfig.iconType = .sfSymbol
                                 editedConfig.iconValue = symbol

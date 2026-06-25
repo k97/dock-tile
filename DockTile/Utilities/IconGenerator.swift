@@ -71,6 +71,7 @@ struct IconGenerator {
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
         size: CGSize,
         iconStyle: IconStyle = IconStyle.current
     ) -> NSImage {
@@ -133,8 +134,14 @@ struct IconGenerator {
         let strokeOpacity: CGFloat = iconStyle == .dark ? 0.2 : 0.5
         drawBeveledStroke(context: context, path: squirclePath, size: size, strokeOpacity: strokeOpacity)
 
-        // Calculate font size based on icon scale
-        let fontSize = size.width * iconRatio(for: iconScale, iconType: iconType)
+        // Calculate font size based on icon scale.
+        // The brand logo uses its own curve/ceiling (not the 0.60 SF-Symbol cap)
+        // so the stepper can scale it up within the tile's safe area.
+        let isBrandLogo = iconType == .sfSymbol && iconValue == SFSymbolCatalog.brandSymbolName
+        let sizeRatio = isBrandLogo
+            ? SFSymbolCatalog.brandRatio(forScale: iconScale)
+            : iconRatio(for: iconScale, iconType: iconType)
+        let fontSize = size.width * sizeRatio
 
         // Draw icon (SF Symbol or emoji) with appearance-aware colors
         switch iconType {
@@ -143,6 +150,7 @@ struct IconGenerator {
                 symbolName: iconValue,
                 rect: rect,
                 fontSize: fontSize,
+                weight: iconWeight.nsFontWeight,
                 color: colors.foreground
             )
         case .emoji:
@@ -259,16 +267,25 @@ struct IconGenerator {
         symbolName: String,
         rect: CGRect,
         fontSize: CGFloat,
+        weight: NSFont.Weight = .medium,
         color: NSColor = .white
     ) {
+        // The DockTile brand logo lives alongside SF Symbols but is rendered
+        // from a bundled template image rather than a system symbol. The brand
+        // glyph is a fixed-weight raster, so symbol weight does not apply to it.
+        if symbolName == SFSymbolCatalog.brandSymbolName, let glyph = SFSymbolCatalog.brandGlyph {
+            drawBrandGlyph(glyph, rect: rect, fontSize: fontSize, color: color)
+            return
+        }
+
         // Create SF Symbol configuration
-        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .semibold)
+        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: weight)
 
         // Get the SF Symbol image
         guard let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else {
             // Fallback to a default symbol if the requested one doesn't exist
-            drawFallbackSymbol(rect: rect, fontSize: fontSize, color: color)
+            drawFallbackSymbol(rect: rect, fontSize: fontSize, weight: weight, color: color)
             return
         }
 
@@ -283,9 +300,9 @@ struct IconGenerator {
         tintedImage.draw(in: drawRect)
     }
 
-    private static func drawFallbackSymbol(rect: CGRect, fontSize: CGFloat, color: NSColor = .white) {
+    private static func drawFallbackSymbol(rect: CGRect, fontSize: CGFloat, weight: NSFont.Weight = .medium, color: NSColor = .white) {
         // Draw a star as fallback
-        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: .semibold)
+        let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: weight)
         guard let fallbackImage = NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else {
             return
@@ -298,6 +315,28 @@ struct IconGenerator {
 
         let tintedImage = fallbackImage.tinted(with: color)
         tintedImage.draw(in: drawRect)
+    }
+
+    /// Draw the bundled DockTile logo, tinted to the appearance-aware foreground.
+    /// The logo renders larger than a same-scale SF Symbol (boost) and is allowed
+    /// to exceed the standard safe-area cap, since the thin-stroke ring can fill
+    /// more of the tile without crowding. This is the brand logo only.
+    private static func drawBrandGlyph(
+        _ glyph: NSImage,
+        rect: CGRect,
+        fontSize: CGFloat,
+        color: NSColor
+    ) {
+        // `fontSize` already encodes the brand size ratio for the current Icon
+        // Scale (see generateIcon), so draw the logo as a square of that side.
+        let side = fontSize
+        let drawRect = CGRect(
+            x: (rect.width - side) / 2,
+            y: (rect.height - side) / 2,
+            width: side,
+            height: side
+        )
+        glyph.tinted(with: color).draw(in: drawRect)
     }
 
     // MARK: - Emoji Drawing
@@ -347,6 +386,7 @@ struct IconGenerator {
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
         outputURL: URL,
         iconStyle: IconStyle = IconStyle.current
     ) throws {
@@ -367,6 +407,7 @@ struct IconGenerator {
                 iconType: iconType,
                 iconValue: iconValue,
                 iconScale: iconScale,
+                iconWeight: iconWeight,
                 size: CGSize(width: baseSize, height: baseSize),
                 iconStyle: iconStyle
             )
@@ -379,6 +420,7 @@ struct IconGenerator {
                 iconType: iconType,
                 iconValue: iconValue,
                 iconScale: iconScale,
+                iconWeight: iconWeight,
                 size: CGSize(width: baseSize * 2, height: baseSize * 2),
                 iconStyle: iconStyle
             )
@@ -450,6 +492,7 @@ struct IconGenerator {
         iconType: IconType,
         iconValue: String,
         iconScale: Int = ConfigurationDefaults.iconScale,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
         size: CGFloat = 80,
         iconStyle: IconStyle = IconStyle.current
     ) -> NSImage {
@@ -458,6 +501,7 @@ struct IconGenerator {
             iconType: iconType,
             iconValue: iconValue,
             iconScale: iconScale,
+            iconWeight: iconWeight,
             size: CGSize(width: size, height: size),
             iconStyle: iconStyle
         )

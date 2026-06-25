@@ -21,6 +21,7 @@ struct DockTileIconPreview: View {
     let iconType: IconType
     let iconValue: String
     let iconScale: Int  // 10-20 range, default 14
+    let iconWeight: IconWeight  // SF Symbol stroke weight (ignored for emojis)
     let size: CGFloat
 
     // Observe IconStyleManager for icon style changes (single source of truth)
@@ -42,6 +43,7 @@ struct DockTileIconPreview: View {
         self.iconType = .emoji
         self.iconValue = symbol
         self.iconScale = ConfigurationDefaults.iconScale
+        self.iconWeight = ConfigurationDefaults.iconWeight
         self.size = size
     }
 
@@ -51,15 +53,24 @@ struct DockTileIconPreview: View {
         self.iconType = iconType
         self.iconValue = iconValue
         self.iconScale = ConfigurationDefaults.iconScale
+        self.iconWeight = ConfigurationDefaults.iconWeight
         self.size = size
     }
 
-    // Full initializer with icon scale
-    init(tintColor: TintColor, iconType: IconType, iconValue: String, iconScale: Int, size: CGFloat) {
+    // Full initializer with icon scale and weight
+    init(
+        tintColor: TintColor,
+        iconType: IconType,
+        iconValue: String,
+        iconScale: Int,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
+        size: CGFloat
+    ) {
         self.tintColor = tintColor
         self.iconType = iconType
         self.iconValue = iconValue
         self.iconScale = iconScale
+        self.iconWeight = iconWeight
         self.size = size
     }
 
@@ -71,8 +82,17 @@ struct DockTileIconPreview: View {
         // Base ratio: maps iconScale 10-20 to approximately 0.30-0.65
         let baseRatio = 0.30 + (CGFloat(iconScale - 10) * 0.035)
 
-        // Emoji gets +5% offset for visual weight
-        let ratio = iconType == .emoji ? baseRatio + 0.05 : baseRatio
+        let ratio: CGFloat
+        if iconType == .emoji {
+            // Emoji gets +5% offset for visual weight
+            ratio = baseRatio + 0.05
+        } else if iconValue == SFSymbolCatalog.brandSymbolName {
+            // Brand logo scales with the stepper on its own curve, capped in the
+            // safe area. Mirrors IconGenerator.brandRatio(forScale:).
+            ratio = SFSymbolCatalog.brandRatio(forScale: iconScale)
+        } else {
+            ratio = baseRatio
+        }
 
         return size * ratio
     }
@@ -119,9 +139,19 @@ struct DockTileIconPreview: View {
             // SF Symbol with icon style-aware color
             // Default: white symbol on colored gradient
             // Dark: tint-colored symbol on dark background
-            Image(systemName: iconValue)
-                .font(.system(size: symbolSize, weight: .semibold))
-                .foregroundColor(styleColors.foreground)
+            if iconValue == SFSymbolCatalog.brandSymbolName, let logo = SFSymbolCatalog.brandGlyph {
+                // The DockTile brand logo is a bundled template image, not a system symbol.
+                Image(nsImage: logo)
+                    .resizable()
+                    .renderingMode(.template)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: symbolSize, height: symbolSize)
+                    .foregroundColor(styleColors.foreground)
+            } else {
+                Image(systemName: iconValue)
+                    .font(.system(size: symbolSize, weight: iconWeight.fontWeight))
+                    .foregroundColor(styleColors.foreground)
+            }
             // NOTE: No text shadow - native macOS icons don't have baked-in text shadows
 
         case .emoji:
@@ -168,6 +198,7 @@ extension DockTileIconPreview {
             iconType: config.iconType,
             iconValue: config.iconValue,
             iconScale: config.iconScale,
+            iconWeight: config.iconWeight,
             size: size
         )
     }

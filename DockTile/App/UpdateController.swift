@@ -7,16 +7,19 @@
 //
 
 import Foundation
+import Combine
 import Sparkle
 
 @MainActor
 final class UpdateController: NSObject, ObservableObject {
     private let updaterController: SPUStandardUpdaterController
     private let delegate = UpdaterDelegate()
+    private var canCheckObservation: AnyCancellable?
 
-    var canCheckForUpdates: Bool {
-        updaterController.updater.canCheckForUpdates
-    }
+    /// Mirrors `SPUUpdater.canCheckForUpdates`. Published so a "Check for Updates" button can
+    /// disable itself while a check/install session is already in flight (Sparkle's recommended
+    /// pattern — observe the KVO-compliant property rather than reading it once).
+    @Published private(set) var canCheckForUpdates = false
 
     override init() {
         updaterController = SPUStandardUpdaterController(
@@ -25,7 +28,15 @@ final class UpdateController: NSObject, ObservableObject {
             userDriverDelegate: nil
         )
         super.init()
-        DiagnosticsLog.shared.log("update", "Updater started (canCheck=\(updaterController.updater.canCheckForUpdates))")
+        canCheckForUpdates = updaterController.updater.canCheckForUpdates
+        canCheckObservation = updaterController.updater
+            .publisher(for: \.canCheckForUpdates)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] value in
+                // Delivered on the main run loop above, so we are on the main actor here.
+                MainActor.assumeIsolated { self?.canCheckForUpdates = value }
+            }
+        DiagnosticsLog.shared.log("update", "Updater started (canCheck=\(canCheckForUpdates))")
     }
 
     func checkForUpdates() {

@@ -9,11 +9,13 @@
 //  Swift 6 - Strict Concurrency
 //
 
+import AppKit
 import SwiftUI
 
 struct SymbolPickerGrid: View {
     @Binding var selectedSymbol: String
     @Binding var searchText: String
+    let iconWeight: IconWeight
     let onSelect: (String) -> Void
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
@@ -49,7 +51,8 @@ struct SymbolPickerGrid: View {
                                 SymbolButton(
                                     symbolName: symbol,
                                     isSelected: selectedSymbol == symbol,
-                                    size: symbolSize
+                                    size: symbolSize,
+                                    weight: iconWeight
                                 ) {
                                     selectedSymbol = symbol
                                     onSelect(symbol)
@@ -69,12 +72,12 @@ private struct SymbolButton: View {
     let symbolName: String
     let isSelected: Bool
     let size: CGFloat
+    let weight: IconWeight
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            Image(systemName: symbolName)
-                .font(.system(size: size))
+            glyph
                 .foregroundColor(isSelected ? .white : .primary)
                 .frame(width: 40, height: 40)
                 .background(
@@ -84,7 +87,22 @@ private struct SymbolButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(symbolName)
+        .help(symbolName == SFSymbolCatalog.brandSymbolName ? "DockTile" : symbolName)
+    }
+
+    /// Renders the bundled DockTile logo for the brand symbol, otherwise the SF Symbol.
+    @ViewBuilder
+    private var glyph: some View {
+        if symbolName == SFSymbolCatalog.brandSymbolName, let logo = SFSymbolCatalog.brandGlyph {
+            Image(nsImage: logo)
+                .resizable()
+                .renderingMode(.template)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: size, height: size)
+        } else {
+            Image(systemName: symbolName)
+                .font(.system(size: size, weight: weight.fontWeight))
+        }
     }
 }
 
@@ -92,6 +110,42 @@ private struct SymbolButton: View {
 
 final class SFSymbolCatalog: @unchecked Sendable {
     static let shared = SFSymbolCatalog()
+
+    /// Sentinel `iconValue` for the bundled DockTile brand logo. Stored as an
+    /// `.sfSymbol` icon type but rendered from the `DockTileGlyph` resource
+    /// instead of the system symbol set (see `brandGlyph`).
+    static let brandSymbolName = "docktile.logo"
+
+    /// Synthetic category key that hosts the brand logo at the top of the picker.
+    static let brandCategoryKey = "docktile"
+
+    /// The bundled DockTile logo, loaded once as a tintable template image.
+    static let brandGlyph: NSImage? = {
+        guard let image = Bundle.main.image(forResource: NSImage.Name("DockTileGlyph")) else {
+            return nil
+        }
+        image.isTemplate = true
+        return image
+    }()
+
+    /// Size boost the brand logo gets over a same-scale SF Symbol, as an icon-size
+    /// ratio. Small, so the default scale lands at a tasteful ~0.55 of the tile.
+    static let brandSizeBoostRatio: CGFloat = 0.11
+
+    /// Upper bound on the brand logo's size so the Icon Scale stepper can grow it
+    /// but never push the ring past the tile's safe area. The brand uses its own
+    /// (higher) ceiling than the 0.60 SF-Symbol cap because the thin ring fills
+    /// more cleanly — but well short of the tile edge.
+    static let brandMaxSafeRatio: CGFloat = 0.78
+
+    /// Fill-of-tile ratio for the brand logo at a given Icon Scale value. Scales
+    /// with the stepper (like SF Symbols) but on the brand curve, capped so it
+    /// stays inside the safe area. Used by both the renderer and the live preview.
+    static func brandRatio(forScale iconScale: Int) -> CGFloat {
+        // Same 0.035/point slope as the SF-Symbol mapping.
+        let base = 0.30 + (CGFloat(iconScale - 10) * 0.035)
+        return min(base + brandSizeBoostRatio, brandMaxSafeRatio)
+    }
 
     struct Category {
         let key: String
@@ -184,15 +238,27 @@ final class SFSymbolCatalog: @unchecked Sendable {
 
         // Filter out meta categories and categories that aren't useful for dock tile icons
         let excludedKeys: Set<String> = ["all", "whatsnew", "variable", "multicolor", "indices", "automotive"]
-        self.displayCategories = categories.filter { !excludedKeys.contains($0.key) }
+        // Pin the DockTile brand logo as the very first option in the picker.
+        let brandCategory = Category(
+            key: SFSymbolCatalog.brandCategoryKey,
+            icon: "sun.horizon.fill",
+            displayName: "DockTile"
+        )
+        self.displayCategories = [brandCategory] + categories.filter { !excludedKeys.contains($0.key) }
     }
 
     func symbols(for categoryKey: String) -> [String] {
-        categorySymbols[categoryKey] ?? []
+        if categoryKey == SFSymbolCatalog.brandCategoryKey {
+            return [SFSymbolCatalog.brandSymbolName]
+        }
+        return categorySymbols[categoryKey] ?? []
     }
 
     func searchKeywords(for symbol: String) -> [String] {
-        symbolSearchKeywords[symbol] ?? []
+        if symbol == SFSymbolCatalog.brandSymbolName {
+            return ["docktile", "dock", "tile", "logo", "brand", "sun", "sunrise", "sunset", "horizon"]
+        }
+        return symbolSearchKeywords[symbol] ?? []
     }
 
     // MARK: - Helpers
@@ -262,6 +328,7 @@ final class SFSymbolCatalog: @unchecked Sendable {
         SymbolPickerGrid(
             selectedSymbol: .constant("star.fill"),
             searchText: .constant(""),
+            iconWeight: .medium,
             onSelect: { _ in }
         )
         .padding()

@@ -28,6 +28,41 @@
 
 Max ratio: 0.60 of icon size. Stepper capped at 17 (SF Symbols) / 16 (emojis).
 
+## Icon Weight (v7)
+
+Per-tile SF Symbol stroke weight (`DockTileConfiguration.iconWeight`, default `.medium`). `IconWeight`
+(in `ConfigurationModels.swift`) is a **curated** set of 6 — light, regular, medium, semibold, bold,
+heavy — dropping the extremes that read poorly at tile size. It exposes both `fontWeight` (SwiftUI,
+for `DockTileIconPreview` + `SymbolPickerGrid`) and `nsFontWeight` (AppKit, for the baked `.icns` via
+`NSImage.SymbolConfiguration(pointSize:weight:)`). **The two mappings must agree** — guarded by
+`IconWeightTests` — or a tile looks one way in the customiser and another in the Dock.
+
+- **Emoji**: weight is **ignored** (emoji are colour glyphs); the Customise UI keeps the picker visible
+  but the renderers never apply weight to emoji content. The brand logo (a raster) also ignores it.
+- **Whole picker grid** redraws at the selected weight, not just the large preview.
+- **Existing tiles**: like any icon change, helpers re-bake at the new weight via the migration
+  pipeline on the next version bump (`helperAppVersion` mismatch).
+
+## DockTile Brand Logo
+
+The rising-sun logo is offered as the **first** symbol-picker option (its own "DockTile"
+category, pinned ahead of the SF Symbol categories in `SFSymbolCatalog`). It is stored like an
+SF Symbol — `iconType = .sfSymbol`, `iconValue = SFSymbolCatalog.brandSymbolName` (`"docktile.logo"`,
+a sentinel that is **not** a real system symbol) — but rendered from a bundled template image,
+not the system symbol set.
+
+- **Asset**: `Resources/DockTileGlyph.png` — a tintable (`isTemplate`) white-on-transparent raster
+  of the brand SVG, with the inner sun scaled up so it nearly kisses the outer ring (the source SVG
+  has the sun floating small inside the ring). No asset catalog exists, so it's a loose resource with
+  manual `project.pbxproj` entries (mirrors `GoogleService-Info.plist`).
+- **Render**: `IconGenerator.drawBrandGlyph` (baked `.icns`) and `DockTileIconPreview` (live preview)
+  both special-case the sentinel and draw the tinted glyph; the picker cell renders it via
+  `Image(nsImage:).renderingMode(.template)`. Tinted to the appearance-aware foreground like any symbol.
+- **Sizing**: logo-only — `SFSymbolCatalog.brandRatio(forScale:)` scales with the Icon Scale stepper
+  on a brand curve (~0.55 of the tile at the default scale) but caps at `brandMaxSafeRatio` (0.78),
+  its **own** ceiling above the 0.60 SF-Symbol cap, so it can fill more than a symbol yet never
+  reach the tile edge. SF Symbols and emojis are unchanged.
+
 ## Icon Style Manager (macOS Tahoe)
 
 macOS Tahoe has an independent "Icon and widget style" setting (separate from Light/Dark appearance), read from `AppleIconAppearanceTheme` in UserDefaults.

@@ -27,6 +27,9 @@ enum ConfigurationDefaults {
     // v4: Icon scale (10-20 range, affects symbol/emoji size relative to icon bounds)
     static let iconScale = 14
 
+    // v7: SF Symbol stroke weight (ignored for emojis)
+    static let iconWeight: IconWeight = .medium
+
     // Visibility
     static let isVisibleInDock = true  // Show in Dock by default
     static let showInAppSwitcher = false  // Hidden from Cmd+Tab by default

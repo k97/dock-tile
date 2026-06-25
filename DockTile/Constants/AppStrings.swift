@@ -131,6 +131,12 @@ enum AppStrings {
             value: "Open Login Items Settings…",
             comment: "Button that opens System Settings Login Items for approval"
         )
+
+        static let checkForUpdates = NSLocalizedString(
+            "button.checkForUpdates",
+            value: "Check for Updates…",
+            comment: "Button that triggers a manual Sparkle update check"
+        )
     }
 
     // MARK: - Labels
@@ -138,7 +144,7 @@ enum AppStrings {
     enum Label {
         static let colour = NSLocalizedString(
             "label.colour",
-            value: "Colour",
+            value: "Tile Colour",
             comment: "Label for colour picker section"
         )
 
@@ -172,11 +178,52 @@ enum AppStrings {
             comment: "Label for tile icon size"
         )
 
+        static let iconSize = NSLocalizedString(
+            "label.iconSize",
+            value: "Icon Size",
+            comment: "Compact label for the icon size stepper (side-by-side with icon weight)"
+        )
+
+        static let iconWeight = NSLocalizedString(
+            "label.iconWeight",
+            value: "Icon Weight",
+            comment: "Label for the SF Symbol weight picker"
+        )
+
+        static let iconWeightInfo = NSLocalizedString(
+            "label.iconWeightInfo",
+            value: "Weight applies to symbols only. Emoji aren’t affected.",
+            comment: "Popover/help note explaining that the icon weight setting affects symbols but not emoji"
+        )
+
+        static let iconWeightInfoAccessibility = NSLocalizedString(
+            "label.iconWeightInfo.accessibility",
+            value: "About Icon Weight",
+            comment: "VoiceOver label for the icon weight info button"
+        )
+
         static let tileName = NSLocalizedString(
             "label.tileName",
             value: "Tile Name",
             comment: "Label for tile name field"
         )
+
+        static let softwareUpdate = NSLocalizedString(
+            "label.softwareUpdate",
+            value: "Software Update",
+            comment: "Title of the software-update row in General settings"
+        )
+
+        /// Format string; `%@` is the current app version. Mirrors Apple's update-pane phrasing.
+        static let softwareUpdateDescriptionFormat = NSLocalizedString(
+            "label.softwareUpdateDescription",
+            value: "You’re using version %@. Dock Tile checks for updates automatically.",
+            comment: "Description under the software-update row; %@ is the current version"
+        )
+
+        static func softwareUpdateDescription(_ version: String) -> String {
+            String(format: softwareUpdateDescriptionFormat, version)
+        }
 
         static let startAtLogin = NSLocalizedString(
             "label.startAtLogin",
