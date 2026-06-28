@@ -106,12 +106,8 @@ enum AppIconLoader {
 enum AppInstallStatus: Equatable {
     /// Resolved on disk (live bundle, last-known path, or a common search path).
     case installed
-    /// Confirmed gone — flag it in the UI and offer to remove it. NOT shown with the stale icon.
+    /// Not resolvable — flag it in the UI and offer to remove it. NOT shown with the stale icon.
     case missing
-    /// Can't be sure (pre-v8 config with a cached icon but no path, and the bundle ID didn't
-    /// resolve right now). Rendered with the cached icon; never auto-flagged, to avoid false
-    /// positives on legacy data or a transiently-unregistered Launch Services entry.
-    case unknown
 }
 
 /// Determines whether the app behind an `AppItem` is still installed.
@@ -152,38 +148,30 @@ enum AppInstallChecker {
 
         let status = classifyInstallStatus(
             bundleResolves: bundleURL != nil,
-            hasLastKnownPath: item.lastKnownPath != nil,
-            onDiskPathExists: onDiskPath != nil,
-            hasCachedIcon: item.iconData != nil
+            onDiskPathExists: onDiskPath != nil
         )
 
         return Resolution(status: status, resolvedPath: bundleURL?.path ?? onDiskPath)
     }
 
     /// Pure decision seam — given installation signals, classify the item. No I/O.
-    /// - bundleResolves: Launch Services found an app for the bundle ID right now.
-    /// - hasLastKnownPath: the item carries a stored `lastKnownPath` (i.e. it's a v8+ entry).
-    /// - onDiskPathExists: an app bundle exists at the last-known path or a common search path.
-    /// - hasCachedIcon: the item has serialized `iconData` to fall back on.
+    ///
+    /// An item is `installed` when Launch Services resolves its bundle ID OR an app bundle exists
+    /// on disk (last-known path or a common install dir); otherwise it is `missing`.
+    ///
+    /// A cached `iconData` does NOT count as an installation signal — it's DockTile's own snapshot,
+    /// not evidence the app is on disk. An earlier version treated "no live bundle + no path + has
+    /// cached icon" as an `unknown` legacy-safety case and left it unflagged. But every pre-v8
+    /// entry (added before `lastKnownPath` existed) carries a cached icon and no path, so any app
+    /// uninstalled *before* upgrading was permanently exempted — it kept showing its stale icon and
+    /// never appeared in the removal prompt. Detection is non-destructive (a dimmed badge + a
+    /// dismissible Remove/Keep prompt), so the right call is to flag it; a rare transient miss
+    /// self-heals on the next scan once Launch Services re-resolves the bundle.
     nonisolated static func classifyInstallStatus(
         bundleResolves: Bool,
-        hasLastKnownPath: Bool,
-        onDiskPathExists: Bool,
-        hasCachedIcon: Bool
+        onDiskPathExists: Bool
     ) -> AppInstallStatus {
-        // Either signal present → definitely installed.
-        if bundleResolves || onDiskPathExists {
-            return .installed
-        }
-        // Bundle ID doesn't resolve and nothing is on disk where we expect it.
-        // We had a concrete path on record and it's now gone → confidently missing.
-        if hasLastKnownPath {
-            return .missing
-        }
-        // Pre-v8 entry with no path on record: if it still has a cached icon we can't be sure
-        // it's gone (LS may just be momentarily stale), so stay `unknown` rather than flag it.
-        // With no path AND no cached icon, there's nothing left to point at → missing.
-        return hasCachedIcon ? .unknown : .missing
+        (bundleResolves || onDiskPathExists) ? .installed : .missing
     }
 
     /// Common locations to probe for an app bundle by display name.

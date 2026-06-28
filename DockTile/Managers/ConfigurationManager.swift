@@ -310,8 +310,6 @@ final class ConfigurationManager: ObservableObject {
                         configurations[configIndex].appItems[itemIndex].lastKnownPath = path
                         didHealPaths = true
                     }
-                case .unknown:
-                    break  // legacy entry we can't be sure about — leave it alone
                 }
             }
         }

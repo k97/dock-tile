@@ -12,14 +12,12 @@ struct AppInstallCheckerTests {
 
     // MARK: - Installed (either positive signal wins)
 
-    @Test("Bundle ID resolving means installed, regardless of other signals")
+    @Test("Bundle ID resolving means installed")
     func bundleResolvesIsInstalled() {
         #expect(
             AppInstallChecker.classifyInstallStatus(
                 bundleResolves: true,
-                hasLastKnownPath: false,
-                onDiskPathExists: false,
-                hasCachedIcon: false
+                onDiskPathExists: false
             ) == .installed
         )
     }
@@ -30,51 +28,36 @@ struct AppInstallCheckerTests {
         #expect(
             AppInstallChecker.classifyInstallStatus(
                 bundleResolves: false,
-                hasLastKnownPath: true,
-                onDiskPathExists: true,
-                hasCachedIcon: false
+                onDiskPathExists: true
             ) == .installed
         )
     }
 
-    // MARK: - Missing (confident)
+    // MARK: - Missing
 
-    @Test("A recorded path that is now gone, with no live bundle, is confidently missing")
-    func recordedPathGoneIsMissing() {
+    @Test("No live bundle and nothing on disk is missing")
+    func noSignalsIsMissing() {
         #expect(
             AppInstallChecker.classifyInstallStatus(
                 bundleResolves: false,
-                hasLastKnownPath: true,
-                onDiskPathExists: false,
-                hasCachedIcon: true   // cached icon must NOT rescue a confirmed-missing app
+                onDiskPathExists: false
             ) == .missing
         )
     }
 
-    @Test("No bundle, no path on record, and no cached icon leaves nothing to point at — missing")
-    func noSignalsAtAllIsMissing() {
+    // MARK: - Regression: pre-v8 legacy entries must still be flagged
+
+    @Test("A legacy entry (no path, has cached icon) that no longer resolves is missing, not exempt")
+    func legacyUninstalledAppIsMissing() {
+        // Regression guard for the production miss: an app uninstalled BEFORE the lastKnownPath
+        // field existed carries a cached icon and no path. It must be flagged missing — a cached
+        // icon is DockTile's own snapshot, not proof the app is installed. The classifier no
+        // longer takes hasCachedIcon, so "doesn't resolve + not on disk" is unambiguously missing.
         #expect(
             AppInstallChecker.classifyInstallStatus(
                 bundleResolves: false,
-                hasLastKnownPath: false,
-                onDiskPathExists: false,
-                hasCachedIcon: false
+                onDiskPathExists: false
             ) == .missing
-        )
-    }
-
-    // MARK: - Unknown (legacy safety)
-
-    @Test("Pre-v8 entry (no path) with a cached icon stays unknown, never flagged")
-    func legacyCachedIconIsUnknown() {
-        // Avoids false positives on legacy data / a transiently-unregistered LS entry.
-        #expect(
-            AppInstallChecker.classifyInstallStatus(
-                bundleResolves: false,
-                hasLastKnownPath: false,
-                onDiskPathExists: false,
-                hasCachedIcon: true
-            ) == .unknown
         )
     }
 

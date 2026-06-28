@@ -85,10 +85,14 @@ opacity**, hiding the "app is gone" state. Detection now flags those apps instea
   second installation signal beside the bundle ID. Distinguishes a real uninstall from a
   transiently-unregistered Launch Services entry, and lets a **moved/updated** app self-heal by
   re-resolving rather than being flagged.
-- **Pure seam**: `AppInstallChecker.classifyInstallStatus(...)` → `.installed` / `.missing` /
-  `.unknown` (in `AppIconLoader.swift`, unit-tested). **`.unknown` is the legacy guard**: a pre-v8
-  entry (no path) that still has a cached icon is never flagged — avoids false positives on old
-  data / momentarily-stale LS. Only confirmed-gone apps become `.missing`.
+- **Pure seam**: `AppInstallChecker.classifyInstallStatus(bundleResolves:onDiskPathExists:)` →
+  `.installed` / `.missing` (in `AppIconLoader.swift`, unit-tested). Installed = LS resolves the
+  bundle ID **or** an app bundle exists on disk (last-known path / common dir); else missing. A
+  cached `iconData` is **not** an install signal — it's DockTile's own snapshot. (An earlier
+  `.unknown` case exempted pre-v8 entries that had a cached icon but no path; since *every* legacy
+  entry fits that shape, any app uninstalled before upgrading was permanently un-flagged and kept
+  its stale icon. Removed — detection is non-destructive, so flag it; a rare transient miss
+  self-heals next scan.)
 - **Sweep**: `ConfigurationManager.scanForMissingApps()` runs **once per session** on window launch
   (after migration), throttled like `lastMigratedAppVersion`. Cheap — LS lookups + `stat()`, no
   icon rasterisation. **Main-app only** (`AppEnvironment.isHelper` guard), heals paths, publishes
