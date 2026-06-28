@@ -75,6 +75,30 @@ Helper bundles have `CFBundleURLTypes` stripped from Info.plist (prevents helper
 
 **Edge cases**: Missing bundle on disk → stamp and skip. Not in Dock → stamp and skip. Regeneration fails → log error, stamp version anyway (no retry loop). Already migrated → immediate return.
 
+## Missing App Detection
+
+Tiles reference apps by `bundleIdentifier` (+ `lastKnownPath`, v8). When an app is uninstalled,
+`AppIconLoader` used to fall back to the cached `iconData` and paint the **stale icon at full
+opacity**, hiding the "app is gone" state. Detection now flags those apps instead.
+
+- **Two-signal check**: `AppItem.lastKnownPath` (v8 field, stamped on add, healed on scan) is a
+  second installation signal beside the bundle ID. Distinguishes a real uninstall from a
+  transiently-unregistered Launch Services entry, and lets a **moved/updated** app self-heal by
+  re-resolving rather than being flagged.
+- **Pure seam**: `AppInstallChecker.classifyInstallStatus(...)` → `.installed` / `.missing` /
+  `.unknown` (in `AppIconLoader.swift`, unit-tested). **`.unknown` is the legacy guard**: a pre-v8
+  entry (no path) that still has a cached icon is never flagged — avoids false positives on old
+  data / momentarily-stale LS. Only confirmed-gone apps become `.missing`.
+- **Sweep**: `ConfigurationManager.scanForMissingApps()` runs **once per session** on window launch
+  (after migration), throttled like `lastMigratedAppVersion`. Cheap — LS lookups + `stat()`, no
+  icon rasterisation. **Main-app only** (`AppEnvironment.isHelper` guard), heals paths, publishes
+  `missingAppIDs`.
+- **UX is non-destructive** (critical): missing apps render a distinct `questionmark.app.dashed`
+  placeholder (dimmed + "Not installed"), never the stale icon. A consolidated **Remove / Keep**
+  alert is the *only* path that deletes — detection flakiness must never cause silent data loss.
+  Helper popovers resolve status **synchronously** in the view body so a deleted app never flashes
+  its stale icon before the placeholder.
+
 ## User Consent for Dock Modifications
 
 One-time consent dialog (NSAlert) before any Dock-modifying action. Preference stored as `UserDefaultsKeys.hasAcknowledgedDockRestart`. Covers add, update, show, hide, and remove operations.

@@ -35,7 +35,8 @@ touching real CFPreferences/FileManager — untestable, so unguarded. When a reg
 plain `static` on an already-`@MainActor` type) taking plain values, delegate the call site to
 it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resolveDockVisibility`,
 `IconStyle.from(…isDarkMode:)`, `shouldReregisterOnLaunch`, `classifyForMigration`,
-`runRegenerationBatch`, `helperInfoPlist` / `stripMainAppIcons`, `Debouncer`.
+`runRegenerationBatch`, `helperInfoPlist` / `stripMainAppIcons`, `Debouncer`,
+`AppInstallChecker.classifyInstallStatus`.
 
 Assertion rules: prefer `#require` over `if`-guarded `#expect`; assert exact values/magnitudes,
 not `!=nil` / `.isValid` / `a>b`; never write `UserDefaults.standard` in tests — use
