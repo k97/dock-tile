@@ -75,6 +75,21 @@ struct DockTileConfigurationView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openSettingsPane)) { note in
             selection = .settings((note.object as? SettingsPane) ?? .general)
         }
+        // Non-destructive prompt raised by the launch scan when tiles reference uninstalled apps.
+        // "Keep" just dismisses — the rows stay flagged inline so the user can act later.
+        .alert(
+            AppStrings.Alert.missingAppsTitle,
+            isPresented: $configManager.showMissingAppsPrompt
+        ) {
+            Button(AppStrings.Button.remove, role: .destructive) {
+                configManager.removeMissingApps()
+            }
+            Button(AppStrings.Button.keep, role: .cancel) {
+                configManager.showMissingAppsPrompt = false
+            }
+        } message: {
+            Text(AppStrings.Alert.missingAppsMessage)
+        }
     }
 
     @ViewBuilder

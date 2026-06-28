@@ -1,6 +1,54 @@
 {
   "sourceLanguage": "en-GB",
   "strings": {
+    "alert.missingApps.message": {
+      "comment": "Alert message offering to remove uninstalled apps from tiles",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some apps in your tiles can't be found on this Mac. Remove them from your tiles?"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some apps in your tiles can't be found on this Mac. Remove them from your tiles?"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some apps in your tiles can't be found on this Mac. Remove them from your tiles?"
+          }
+        }
+      }
+    },
+    "alert.missingApps.title": {
+      "comment": "Alert title when apps referenced by tiles can't be found on disk",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some apps are no longer installed"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some apps are no longer installed"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some apps are no longer installed"
+          }
+        }
+      }
+    },
     "alert.restartDock.checkbox": {
       "comment": "Checkbox label to suppress future Dock restart alerts",
       "extractionState": "manual",
@@ -333,6 +381,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Duplicate"
+          }
+        }
+      }
+    },
+    "button.keep": {
+      "comment": "Button to keep uninstalled apps in tiles (dismiss the removal prompt)",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep"
           }
         }
       }
@@ -909,6 +981,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Layout"
+          }
+        }
+      }
+    },
+    "label.notInstalled": {
+      "comment": "Badge/kind text shown for an app whose bundle is no longer on disk",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not installed"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not installed"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not installed"
           }
         }
       }

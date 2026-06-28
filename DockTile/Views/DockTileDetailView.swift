@@ -313,7 +313,8 @@ struct DockTileDetailView: View {
                 // Table content (grows naturally with items)
                 NativeAppsTableView(
                     items: $editedConfig.appItems,
-                    selection: $selectedAppIDs
+                    selection: $selectedAppIDs,
+                    missingAppIDs: configManager.missingAppIDs
                 )
 
                 // Separator between table and toolbar
@@ -592,6 +593,8 @@ struct DockTileDetailView: View {
 struct NativeAppsTableView: View {
     @Binding var items: [AppItem]
     @Binding var selection: Set<AppItem.ID>
+    /// IDs of apps the install scan flagged as uninstalled — rendered dimmed with a placeholder.
+    var missingAppIDs: Set<UUID> = []
 
     private let rowHeight: CGFloat = 28
 
@@ -642,6 +645,7 @@ struct NativeAppsTableView: View {
             } else {
                 // Item rows - grows naturally with content
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    let isMissing = missingAppIDs.contains(item.id)
                     VStack(spacing: 0) {
                         HStack(spacing: 0) {
                             // Drag handle (grip lines)
@@ -659,19 +663,21 @@ struct NativeAppsTableView: View {
 
                             // Item column
                             HStack(spacing: 8) {
-                                AppIconView(item: item)
+                                AppIconView(item: item, isMissing: isMissing)
                                     .frame(width: 16, height: 16)
 
                                 Text(item.name)
                                     .lineLimit(1)
+                                    .foregroundStyle(isMissing ? .secondary : .primary)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
 
-                            // Kind column
-                            Text(itemKind(for: item))
+                            // Kind column — surfaces the uninstalled state inline
+                            Text(isMissing ? AppStrings.Label.notInstalled : itemKind(for: item))
                                 .foregroundStyle(.secondary)
                                 .frame(width: 100, alignment: .leading)
                         }
+                        .opacity(isMissing ? 0.7 : 1.0)
                         .padding(.horizontal, 10)
                         .frame(height: rowHeight)
                         .background(
@@ -811,6 +817,9 @@ struct AppItemDropDelegate: DropDelegate {
 
 struct AppIconView: View {
     let item: AppItem
+    /// When the underlying app/folder is no longer installed, show a distinct "missing"
+    /// placeholder instead of the stale cached icon (matches the Dock's "?" for deleted apps).
+    var isMissing: Bool = false
 
     // Observe IconStyleManager for icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
@@ -818,7 +827,11 @@ struct AppIconView: View {
     var body: some View {
         let _ = iconStyleManager.currentStyle
 
-        if let icon = AppIconLoader.icon(for: item) {
+        if isMissing {
+            Image(systemName: "questionmark.app.dashed")
+                .resizable()
+                .foregroundStyle(.secondary)
+        } else if let icon = AppIconLoader.icon(for: item) {
             Image(nsImage: icon)
                 .resizable()
                 .interpolation(.high)

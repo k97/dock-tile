@@ -416,6 +416,12 @@ struct AppItem: Identifiable, Codable, Hashable {
     var iconData: Data?  // Serialized NSImage as PNG/TIFF data
     var isFolder: Bool  // v2: Distinguishes folders from applications
     var folderPath: String?  // v2: Path to folder (only set when isFolder is true)
+    /// v8: Last on-disk path the app was resolved at. A second installation signal alongside
+    /// `bundleIdentifier` — lets the install checker (a) distinguish a genuinely-uninstalled app
+    /// from a transiently-unregistered Launch Services entry and (b) self-heal an app that merely
+    /// moved/updated by re-resolving instead of flagging it missing. Stamped on add and refreshed
+    /// by `ConfigurationManager.scanForMissingApps()`. `nil` = pre-v8 config (treated as unknown).
+    var lastKnownPath: String?
 
     init(
         id: UUID = UUID(),
@@ -423,7 +429,8 @@ struct AppItem: Identifiable, Codable, Hashable {
         name: String,
         iconData: Data? = nil,
         isFolder: Bool = false,
-        folderPath: String? = nil
+        folderPath: String? = nil,
+        lastKnownPath: String? = nil
     ) {
         self.id = id
         self.bundleIdentifier = bundleIdentifier
@@ -431,6 +438,7 @@ struct AppItem: Identifiable, Codable, Hashable {
         self.iconData = iconData
         self.isFolder = isFolder
         self.folderPath = folderPath
+        self.lastKnownPath = lastKnownPath
     }
 
     // MARK: - Custom Decoder (backward compatibility)
@@ -446,11 +454,15 @@ struct AppItem: Identifiable, Codable, Hashable {
         // v2 fields - optional with defaults
         isFolder = try container.decodeIfPresent(Bool.self, forKey: .isFolder) ?? false
         folderPath = try container.decodeIfPresent(String.self, forKey: .folderPath)
+
+        // v8 field - optional, nil for pre-v8 configs
+        lastKnownPath = try container.decodeIfPresent(String.self, forKey: .lastKnownPath)
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, bundleIdentifier, name, iconData
         case isFolder, folderPath
+        case lastKnownPath
     }
 
     /// Create AppItem from .app bundle URL
@@ -476,7 +488,8 @@ struct AppItem: Identifiable, Codable, Hashable {
             name: appName,
             iconData: iconData,
             isFolder: false,
-            folderPath: nil
+            folderPath: nil,
+            lastKnownPath: appURL.path  // stamp the resolved path so missing-app detection has two signals
         )
     }
 

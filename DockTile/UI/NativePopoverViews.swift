@@ -403,7 +403,13 @@ struct StackAppItem: View {
 
     @ViewBuilder
     private var appIconView: some View {
-        if let nsImage = AppIconLoader.icon(for: app) {
+        // Resolved synchronously (no @State/onAppear) so a deleted app never flashes its stale
+        // cached icon before the placeholder appears.
+        if AppInstallChecker.resolve(app).status == .missing {
+            Image(systemName: "questionmark.app.dashed")
+                .font(.system(size: 32))
+                .foregroundStyle(.secondary)
+        } else if let nsImage = AppIconLoader.icon(for: app) {
             Image(nsImage: nsImage)
                 .resizable()
                 .interpolation(.high)
@@ -616,7 +622,12 @@ struct ListAppRow: View {
 
     @ViewBuilder
     private var appIconView: some View {
-        if let nsImage = AppIconLoader.icon(for: app) {
+        // Resolved synchronously so a deleted app shows the placeholder, not its stale icon.
+        if AppInstallChecker.resolve(app).status == .missing {
+            Image(systemName: "questionmark.app.dashed")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+        } else if let nsImage = AppIconLoader.icon(for: app) {
             Image(nsImage: nsImage)
                 .resizable()
                 .interpolation(.high)

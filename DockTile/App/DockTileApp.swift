@@ -45,6 +45,10 @@ struct DockTileApp: App {
                     // Migrate stale helper bundles after app launch
                     let migration = HelperMigrationManager(configManager: configManager)
                     await migration.migrateIfNeeded()
+
+                    // Then flag any apps that have been uninstalled since last launch. Cheap,
+                    // throttled to once per session, and heals moved-app paths along the way.
+                    configManager.scanForMissingApps()
                 }
         }
         .windowResizability(.contentSize)

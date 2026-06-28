@@ -22,6 +22,21 @@ final class ConfigurationManager: ObservableObject {
     /// Internal flag to prevent didSet from overriding selectedConfigHasBeenEdited during creation
     private var isCreatingNewConfig: Bool = false
 
+    /// IDs of `AppItem`s whose underlying app/folder is no longer installed on this Mac.
+    /// Runtime-only (never persisted) — installation status is environment-dependent. Populated by
+    /// `scanForMissingApps()`; views read it to dim the row + show a "Not installed" placeholder
+    /// instead of the stale cached icon.
+    @Published private(set) var missingAppIDs: Set<UUID> = []
+
+    /// Set true once a launch scan finds missing apps and the user hasn't yet acted on the prompt.
+    /// Drives the consolidated "some apps are no longer installed" alert in the main window.
+    @Published var showMissingAppsPrompt: Bool = false
+
+    /// Throttle guard — the full sweep runs once per app session (window-appear), not on every
+    /// activation. `scanForMissingApps(force:)` bypasses it for explicit re-checks (e.g. after a
+    /// remove). Mirrors the `lastMigratedAppVersion` once-per-launch guard.
+    private var hasScannedForMissingApps = false
+
     @Published var selectedConfigId: UUID? {
         didSet {
             // Persist selection whenever it changes
@@ -263,6 +278,75 @@ final class ConfigurationManager: ObservableObject {
 
         DiagnosticsLog.shared.log("tile", "Reordered items in '\(configurations[configIndex].name)'", verbose: true)
         print("🔄 Reordered apps in configuration: \(configurations[configIndex].name)")
+    }
+
+    // MARK: - Missing App Detection
+
+    /// Sweep every tile's apps and flag the ones whose underlying app/folder is no longer
+    /// installed. Cheap (Launch Services lookups + `stat()`, no icon rendering) and throttled to
+    /// once per app session unless `force` is passed. Also self-heals `lastKnownPath` for apps
+    /// that merely moved/updated, and raises the consolidated removal prompt when anything is gone.
+    func scanForMissingApps(force: Bool = false) {
+        // The main app owns this sweep — helpers only read their own config for the popover.
+        guard !AppEnvironment.isHelper else { return }
+        guard force || !hasScannedForMissingApps else { return }
+        hasScannedForMissingApps = true
+
+        var missing: Set<UUID> = []
+        var didHealPaths = false
+
+        for configIndex in configurations.indices {
+            for itemIndex in configurations[configIndex].appItems.indices {
+                let item = configurations[configIndex].appItems[itemIndex]
+                let resolution = AppInstallChecker.resolve(item)
+
+                switch resolution.status {
+                case .missing:
+                    missing.insert(item.id)
+                case .installed:
+                    // Keep the recorded path current so a future uninstall is detected reliably
+                    // and a moved app keeps resolving.
+                    if let path = resolution.resolvedPath, !item.isFolder, item.lastKnownPath != path {
+                        configurations[configIndex].appItems[itemIndex].lastKnownPath = path
+                        didHealPaths = true
+                    }
+                case .unknown:
+                    break  // legacy entry we can't be sure about — leave it alone
+                }
+            }
+        }
+
+        missingAppIDs = missing
+        if didHealPaths {
+            saveConfigurations()
+        }
+
+        if !missing.isEmpty {
+            showMissingAppsPrompt = true
+            DiagnosticsLog.shared.log("apps", "Missing-app scan found \(missing.count) uninstalled app(s) across tiles")
+        }
+    }
+
+    /// Remove every flagged-missing app from all tiles (the prompt's "Remove" action). Destructive
+    /// but confirmed by the user; clears the flags afterwards.
+    func removeMissingApps() {
+        guard !missingAppIDs.isEmpty else {
+            showMissingAppsPrompt = false
+            return
+        }
+
+        let toRemove = missingAppIDs
+        var removedCount = 0
+        for configIndex in configurations.indices {
+            let before = configurations[configIndex].appItems.count
+            configurations[configIndex].appItems.removeAll { toRemove.contains($0.id) }
+            removedCount += before - configurations[configIndex].appItems.count
+        }
+
+        saveConfigurations()
+        missingAppIDs = []
+        showMissingAppsPrompt = false
+        DiagnosticsLog.shared.log("apps", "Removed \(removedCount) uninstalled app(s) from tiles (user confirmed)")
     }
 
     // MARK: - Persistence

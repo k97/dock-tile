@@ -43,6 +43,18 @@ enum AppStrings {
             value: "Don't show this again",
             comment: "Checkbox label to suppress future Dock restart alerts"
         )
+
+        static let missingAppsTitle = NSLocalizedString(
+            "alert.missingApps.title",
+            value: "Some apps are no longer installed",
+            comment: "Alert title when apps referenced by tiles can't be found on disk"
+        )
+
+        static let missingAppsMessage = NSLocalizedString(
+            "alert.missingApps.message",
+            value: "Some apps in your tiles can't be found on this Mac. Remove them from your tiles?",
+            comment: "Alert message offering to remove uninstalled apps from tiles"
+        )
     }
 
     // MARK: - Buttons
@@ -114,6 +126,12 @@ enum AppStrings {
             comment: "Remove button"
         )
 
+        static let keep = NSLocalizedString(
+            "button.keep",
+            value: "Keep",
+            comment: "Button to keep uninstalled apps in tiles (dismiss the removal prompt)"
+        )
+
         static let removeFromDock = NSLocalizedString(
             "button.removeFromDock",
             value: "Remove from Dock",
@@ -146,6 +164,12 @@ enum AppStrings {
             "label.colour",
             value: "Tile Colour",
             comment: "Label for colour picker section"
+        )
+
+        static let notInstalled = NSLocalizedString(
+            "label.notInstalled",
+            value: "Not installed",
+            comment: "Badge/kind text shown for an app whose bundle is no longer on disk"
         )
 
         static let layout = NSLocalizedString(
