@@ -49,6 +49,78 @@
         }
       }
     },
+    "alert.missingAppsScan.foundMessage": {
+      "comment": "Intro line of the manual scan results dialog; a list of tiles/apps follows",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These apps can't be found on this Mac:"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These apps can't be found on this Mac:"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These apps can't be found on this Mac:"
+          }
+        }
+      }
+    },
+    "alert.missingAppsScan.noneMessage": {
+      "comment": "Message of the manual scan dialog when nothing is missing",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every app in your tiles is currently installed."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every app in your tiles is currently installed."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every app in your tiles is currently installed."
+          }
+        }
+      }
+    },
+    "alert.missingAppsScan.noneTitle": {
+      "comment": "Title of the manual scan dialog when every tile app is installed",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Missing Apps"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Missing Apps"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Missing Apps"
+          }
+        }
+      }
+    },
     "alert.restartDock.checkbox": {
       "comment": "Checkbox label to suppress future Dock restart alerts",
       "extractionState": "manual",
@@ -481,6 +553,30 @@
         }
       }
     },
+    "button.removeAll": {
+      "comment": "Button to remove all missing apps from tiles at once",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove All"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove All"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove All"
+          }
+        }
+      }
+    },
     "button.removeFromDock": {
       "comment": "Button to remove tile from Dock",
       "extractionState": "manual",
@@ -501,6 +597,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove from Dock"
+          }
+        }
+      }
+    },
+    "button.reviewInTiles": {
+      "comment": "Button that navigates to the first tile containing a missing app",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review in Tiles"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review in Tiles"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review in Tiles"
+          }
+        }
+      }
+    },
+    "button.scanForMissingApps": {
+      "comment": "Settings button that scans tiles for moved/uninstalled apps",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan…"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan…"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan…"
           }
         }
       }
@@ -981,6 +1125,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "Layout"
+          }
+        }
+      }
+    },
+    "label.missingAppsScan": {
+      "comment": "Settings row title for the missing-app scan",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing Apps"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing Apps"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing Apps"
+          }
+        }
+      }
+    },
+    "label.missingAppsScanDescription": {
+      "comment": "Settings row description for the missing-app scan",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your tiles for apps that have been moved or uninstalled."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your tiles for apps that have been moved or uninstalled."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your tiles for apps that have been moved or uninstalled."
           }
         }
       }

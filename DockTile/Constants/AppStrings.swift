@@ -55,6 +55,24 @@ enum AppStrings {
             value: "Some apps in your tiles can't be found on this Mac. Remove them from your tiles?",
             comment: "Alert message offering to remove uninstalled apps from tiles"
         )
+
+        static let missingAppsScanFoundMessage = NSLocalizedString(
+            "alert.missingAppsScan.foundMessage",
+            value: "These apps can't be found on this Mac:",
+            comment: "Intro line of the manual scan results dialog; a list of tiles/apps follows"
+        )
+
+        static let missingAppsNoneTitle = NSLocalizedString(
+            "alert.missingAppsScan.noneTitle",
+            value: "No Missing Apps",
+            comment: "Title of the manual scan dialog when every tile app is installed"
+        )
+
+        static let missingAppsNoneMessage = NSLocalizedString(
+            "alert.missingAppsScan.noneMessage",
+            value: "Every app in your tiles is currently installed.",
+            comment: "Message of the manual scan dialog when nothing is missing"
+        )
     }
 
     // MARK: - Buttons
@@ -132,6 +150,24 @@ enum AppStrings {
             comment: "Button to keep uninstalled apps in tiles (dismiss the removal prompt)"
         )
 
+        static let scanForMissingApps = NSLocalizedString(
+            "button.scanForMissingApps",
+            value: "Scan…",
+            comment: "Settings button that scans tiles for moved/uninstalled apps"
+        )
+
+        static let reviewInTiles = NSLocalizedString(
+            "button.reviewInTiles",
+            value: "Review in Tiles",
+            comment: "Button that navigates to the first tile containing a missing app"
+        )
+
+        static let removeAll = NSLocalizedString(
+            "button.removeAll",
+            value: "Remove All",
+            comment: "Button to remove all missing apps from tiles at once"
+        )
+
         static let removeFromDock = NSLocalizedString(
             "button.removeFromDock",
             value: "Remove from Dock",
@@ -170,6 +206,18 @@ enum AppStrings {
             "label.notInstalled",
             value: "Not installed",
             comment: "Badge/kind text shown for an app whose bundle is no longer on disk"
+        )
+
+        static let missingAppsScan = NSLocalizedString(
+            "label.missingAppsScan",
+            value: "Missing Apps",
+            comment: "Settings row title for the missing-app scan"
+        )
+
+        static let missingAppsScanDescription = NSLocalizedString(
+            "label.missingAppsScanDescription",
+            value: "Check your tiles for apps that have been moved or uninstalled.",
+            comment: "Settings row description for the missing-app scan"
         )
 
         static let layout = NSLocalizedString(

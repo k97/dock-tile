@@ -285,8 +285,12 @@ final class ConfigurationManager: ObservableObject {
     /// Sweep every tile's apps and flag the ones whose underlying app/folder is no longer
     /// installed. Cheap (Launch Services lookups + `stat()`, no icon rendering) and throttled to
     /// once per app session unless `force` is passed. Also self-heals `lastKnownPath` for apps
-    /// that merely moved/updated, and raises the consolidated removal prompt when anything is gone.
-    func scanForMissingApps(force: Bool = false) {
+    /// that merely moved/updated.
+    ///
+    /// - raiseLaunchPrompt: when `true` (the automatic launch sweep) it raises the consolidated
+    ///   Remove/Keep prompt if anything is gone. The manual Settings "Scan…" passes `false` and
+    ///   presents its own results dialog from `missingAppIDs` / `tilesWithMissingApps` instead.
+    func scanForMissingApps(force: Bool = false, raiseLaunchPrompt: Bool = true) {
         // The main app owns this sweep — helpers only read their own config for the popover.
         guard !AppEnvironment.isHelper else { return }
         guard force || !hasScannedForMissingApps else { return }
@@ -320,8 +324,19 @@ final class ConfigurationManager: ObservableObject {
         }
 
         if !missing.isEmpty {
-            showMissingAppsPrompt = true
             DiagnosticsLog.shared.log("apps", "Missing-app scan found \(missing.count) uninstalled app(s) across tiles")
+            if raiseLaunchPrompt {
+                showMissingAppsPrompt = true
+            }
+        }
+    }
+
+    /// Tiles that currently contain flagged-missing apps, paired with those apps — drives the
+    /// manual Settings scan's results dialog ("• Tile — App, App"). Empty when nothing is missing.
+    var tilesWithMissingApps: [(config: DockTileConfiguration, apps: [AppItem])] {
+        configurations.compactMap { config in
+            let gone = config.appItems.filter { missingAppIDs.contains($0.id) }
+            return gone.isEmpty ? nil : (config, gone)
         }
     }
 
