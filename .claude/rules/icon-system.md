@@ -85,9 +85,20 @@ macOS Tahoe has an independent "Icon and widget style" setting (separate from Li
 
 ## App Icon Loading
 
-- Apps WITH `Assets.car`: Use `NSWorkspace.shared.icon(forFile:)` (respects icon style)
-- Apps WITHOUT `Assets.car`: Load `.icns` directly (avoids unwanted dark tinting)
-- Detection via `AppIconLoader` checking for `Contents/Resources/Assets.car`
+`AppIconLoader` resolves **third-party** app icons (the apps a user adds to a tile — never
+DockTile's own helper tile faces) through `NSWorkspace.shared.icon(forFile:)` for **all** apps.
+That returns the icon IconServices renders for the Dock / Finder / Mission Control, including
+macOS Tahoe's system-generated dark / clear / tinted treatment — even for apps that ship only a
+single light `.icns` with no `Assets.car` (e.g. VS Code, most Electron apps).
+
+- **Do NOT** branch on `Assets.car` to load the raw `.icns` directly. That older heuristic
+  ("avoid unwanted dark tinting") suppressed the *correct* system treatment, leaving non-Assets.car
+  apps stuck on their light icon while the Dock showed them dark. `iconFromAppURL` keeps a direct
+  `.icns` read only as a defensive fallback when `NSWorkspace` returns an empty image.
+- Safe because `AppIconLoader` never loads helper tile faces — those get their own dark variant
+  from `IconGenerator` / `IconStyleManager`, so there's no double-treatment.
+- Popover/list views re-render on icon-style changes via their `.id("\(app.id)-\(style)")`
+  composites, so the variant tracks Light↔Dark and theme switches live.
 
 ## Helper Bundle Icon Priority
 

@@ -13,8 +13,8 @@ import AppKit
 enum AppIconLoader {
 
     /// Load the appropriate icon for an AppItem.
-    /// - Asset Catalog-aware: apps without Assets.car load .icns directly
-    ///   to avoid macOS applying unwanted dark tinting.
+    /// - Resolves through `NSWorkspace` so the icon matches what the Dock / Finder / Mission
+    ///   Control show — including macOS Tahoe's system-applied dark / clear / tinted treatment.
     /// - Falls back to common paths, then stored icon data.
     static func icon(for item: AppItem) -> NSImage? {
         // For folders, get icon from folder path
@@ -53,26 +53,31 @@ enum AppIconLoader {
 
     // MARK: - Private Helpers
 
-    /// Load icon from an app URL, using Asset Catalog detection
+    /// Load an app's icon the same way the system surfaces it everywhere else.
+    ///
+    /// `NSWorkspace.icon(forFile:)` returns the icon IconServices renders for the Dock, Finder and
+    /// Mission Control — which on macOS Tahoe includes the system-generated dark / clear / tinted
+    /// treatment even for apps that ship only a single light `.icns` and no `Assets.car` (e.g. VS
+    /// Code, most Electron apps). A previous version bypassed this for non-Assets.car apps and read
+    /// the raw `.icns` directly to "avoid unwanted dark tinting" — but that suppressed the *correct*
+    /// system treatment, so those apps were stuck showing their light icon while the Dock showed
+    /// them dark. We now always go through `NSWorkspace`; the popover/list re-render on icon-style
+    /// changes via their `.id(...)` composites, so the variant tracks live.
+    ///
+    /// NOTE: this only ever loads *third-party* app icons (the apps a user adds to a tile). It is
+    /// never used for DockTile's own helper tile faces — those are generated with their own dark
+    /// variant by `IconGenerator` / `IconStyleManager` — so there's no risk of double-treatment.
     private static func iconFromAppURL(_ appURL: URL) -> NSImage {
-        // Apps WITHOUT Assets.car don't support icon variants, so load directly from .icns
-        // to avoid macOS applying unwanted dark tinting
-        if !appHasAssetCatalog(atPath: appURL.path) {
-            if let icon = loadIconDirectlyFromBundle(atPath: appURL.path) {
-                return icon
-            }
+        let workspaceIcon = NSWorkspace.shared.icon(forFile: appURL.path)
+        if !workspaceIcon.representations.isEmpty {
+            return workspaceIcon
         }
-        // App has Asset Catalog - use NSWorkspace which respects icon style
-        return NSWorkspace.shared.icon(forFile: appURL.path)
+        // Defensive fallback: if NSWorkspace somehow returns an empty image, read the bundle's
+        // declared `.icns` directly rather than handing back a blank icon.
+        return loadIconDirectlyFromBundle(atPath: appURL.path) ?? workspaceIcon
     }
 
-    /// Check if app bundle has an Asset Catalog (Assets.car)
-    private static func appHasAssetCatalog(atPath path: String) -> Bool {
-        let assetCatalogPath = path + "/Contents/Resources/Assets.car"
-        return FileManager.default.fileExists(atPath: assetCatalogPath)
-    }
-
-    /// Load icon directly from app bundle's .icns file
+    /// Load icon directly from app bundle's .icns file (defensive fallback only)
     private static func loadIconDirectlyFromBundle(atPath path: String) -> NSImage? {
         let infoPlistURL = URL(fileURLWithPath: path)
             .appendingPathComponent("Contents/Info.plist")
