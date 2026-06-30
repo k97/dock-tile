@@ -96,6 +96,18 @@ enum AppStrings {
             comment: "Back button label"
         )
 
+        static let resetToDefaults = NSLocalizedString(
+            "button.resetToDefaults",
+            value: "Reset to Defaults",
+            comment: "Button that restores popover appearance settings to their defaults"
+        )
+
+        static let openAccessibilitySettings = NSLocalizedString(
+            "button.openAccessibilitySettings",
+            value: "Open Accessibility Settings…",
+            comment: "Button that opens the Accessibility pane in System Settings (Reduce Motion)"
+        )
+
         static let cancel = NSLocalizedString(
             "button.cancel",
             value: "Cancel",
@@ -200,6 +212,56 @@ enum AppStrings {
             "label.colour",
             value: "Tile Colour",
             comment: "Label for colour picker section"
+        )
+
+        // MARK: Popover Appearance controls
+
+        static let popoverLayout = NSLocalizedString(
+            "label.popover.layout",
+            value: "Layout",
+            comment: "Label for the Grid/List preview toggle in popover settings"
+        )
+
+        static let popoverSize = NSLocalizedString(
+            "label.popover.size",
+            value: "Popover Size",
+            comment: "Label for the popover size segmented control"
+        )
+
+        static let tileSizeInPopover = NSLocalizedString(
+            "label.popover.tileSize",
+            value: "Tile Size",
+            comment: "Label for the icon/cell size control inside the popover"
+        )
+
+        static let popoverAnimation = NSLocalizedString(
+            "label.popover.animation",
+            value: "Animation",
+            comment: "Label for the popover animation segmented control"
+        )
+
+        static let popoverSpacing = NSLocalizedString(
+            "label.popover.spacing",
+            value: "Spacing",
+            comment: "Label for the popover item spacing segmented control"
+        )
+
+        static let showLabels = NSLocalizedString(
+            "label.popover.showLabels",
+            value: "Show Labels",
+            comment: "Toggle label — show app names under grid icons"
+        )
+
+        static let highlightOnHover = NSLocalizedString(
+            "label.popover.highlightOnHover",
+            value: "Highlight on Hover",
+            comment: "Toggle label — show a background fill on the hovered item"
+        )
+
+        static let listAlwaysLabelled = NSLocalizedString(
+            "label.popover.listAlwaysLabelled",
+            value: "List view always shows labels",
+            comment: "Hint shown beside the disabled Show Labels control when previewing List"
         )
 
         static let notInstalled = NSLocalizedString(
@@ -477,6 +539,44 @@ enum AppStrings {
             value: "Works with the Dock at the bottom, left, or right. Keeping it on a screen reserves a few pixels at that edge on your other displays.",
             comment: "Footnote describing Dock Lock behaviour and trade-off"
         )
+
+        // MARK: Popover Appearance
+
+        static let popover = NSLocalizedString(
+            "settings.popover",
+            value: "Popover",
+            comment: "Section header and pane title for popover appearance settings"
+        )
+
+        static let popoverAppearance = NSLocalizedString(
+            "settings.popover.appearance",
+            value: "Popover Appearance",
+            comment: "Title of the drill-down row in General that opens popover settings"
+        )
+
+        static let popoverAppearanceSubtitle = NSLocalizedString(
+            "settings.popover.appearance.subtitle",
+            value: "Layout, size, spacing and labels for every tile's popover",
+            comment: "Subtitle under the Popover Appearance drill-down row"
+        )
+
+        static let popoverSectionTiles = NSLocalizedString(
+            "settings.popover.section.tiles",
+            value: "Tiles",
+            comment: "Section header for the per-item controls inside the popover settings"
+        )
+
+        static let popoverFooter = NSLocalizedString(
+            "settings.popover.footer",
+            value: "These settings apply to every tile's popover. List view always shows labels. Animation follows your system Reduce Motion setting.",
+            comment: "Explanatory footer under the popover settings form"
+        )
+
+        static let popoverReduceMotionNote = NSLocalizedString(
+            "settings.popover.reduceMotion",
+            value: "Animation is off because Reduce Motion is on in System Settings.",
+            comment: "Caption shown under Animation when the system Reduce Motion setting forces it off"
+        )
     }
 
     // MARK: - Layout Options
@@ -493,6 +593,56 @@ enum AppStrings {
             value: "List",
             comment: "List layout option"
         )
+    }
+
+    // MARK: - Popover Appearance Options
+
+    /// Segmented-control option labels for the popover appearance pickers.
+    enum PopoverOption {
+        static let small = NSLocalizedString(
+            "popover.option.small", value: "Small", comment: "Size tier — small")
+        static let medium = NSLocalizedString(
+            "popover.option.medium", value: "Medium", comment: "Size tier — medium")
+        static let large = NSLocalizedString(
+            "popover.option.large", value: "Large", comment: "Size tier — large")
+
+        static let animationNone = NSLocalizedString(
+            "popover.option.animation.none", value: "None", comment: "Animation tier — none")
+        static let animationDefault = NSLocalizedString(
+            "popover.option.animation.default", value: "Default", comment: "Animation tier — default")
+        static let animationFast = NSLocalizedString(
+            "popover.option.animation.fast", value: "Fast", comment: "Animation tier — fast")
+
+        static let compact = NSLocalizedString(
+            "popover.option.compact", value: "Compact", comment: "Spacing tier — compact")
+        static let comfortable = NSLocalizedString(
+            "popover.option.comfortable", value: "Comfortable", comment: "Spacing tier — comfortable")
+        static let spacious = NSLocalizedString(
+            "popover.option.spacious", value: "Spacious", comment: "Spacing tier — spacious")
+
+        static func size(_ tier: PopoverSizeTier) -> String {
+            switch tier {
+            case .small: return small
+            case .medium: return medium
+            case .large: return large
+            }
+        }
+
+        static func animation(_ tier: PopoverAnimationTier) -> String {
+            switch tier {
+            case .none: return animationNone
+            case .default: return animationDefault
+            case .fast: return animationFast
+            }
+        }
+
+        static func spacing(_ tier: PopoverSpacingTier) -> String {
+            switch tier {
+            case .compact: return compact
+            case .comfortable: return comfortable
+            case .spacious: return spacious
+            }
+        }
     }
 
     // MARK: - Menu Items

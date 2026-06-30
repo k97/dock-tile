@@ -109,7 +109,7 @@ struct CustomiseTileView: View {
         .frame(maxWidth: .infinity)
         .padding(.bottom, 12)
         .padding(.top, 4) // Tight offset to clear the toolbar area
-        .background(QuaternaryFillView().ignoresSafeArea(edges: .top))
+        .background(StudioCanvasBackgroundView().ignoresSafeArea(edges: .top))
     }
 
     // MARK: - Inspector Card
@@ -435,18 +435,8 @@ private enum IconPickerTab {
 
 // MARK: - Native Background Views
 
-/// Quaternary system fill for Studio Canvas - semi-transparent gray with vibrancy
-private struct QuaternaryFillView: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = .underWindowBackground
-        view.blendingMode = .behindWindow
-        view.state = .active
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
-}
+// Studio Canvas background now lives in NativeBackgroundViews.swift as the shared
+// `StudioCanvasBackgroundView`, reused by the Popover Appearance preview hero.
 
 // WindowBackgroundView, ControlBackgroundView, FormGroupBackgroundView
 // replaced by shared NSColorBackgroundView in NativeBackgroundViews.swift

@@ -106,3 +106,33 @@ opacity**, hiding the "app is gone" state. Detection now flags those apps instea
 ## User Consent for Dock Modifications
 
 One-time consent dialog (NSAlert) before any Dock-modifying action. Preference stored as `UserDefaultsKeys.hasAcknowledgedDockRestart`. Covers add, update, show, hide, and remove operations.
+
+## Popover Appearance (global settings)
+
+Six **app-wide** settings tune every tile's Dock popover (Grid + List): Popover Size, Tile Size,
+Animation, Spacing, Show Labels, Highlight on Hover. Reached via **Settings → General → Popover
+Appearance** — a `NavigationStack` drill-down inside `GeneralSettingsView` (NOT a separate sidebar
+pane), titled "Popover" with a "‹ General" back. Per-tile Grid/List still lives on Tile Detail.
+
+- **Persistence**: all six keys live in the **shared suite** (`com.docktile.shared`, like analytics
+  consent), so HELPER processes — which actually render the popover — read the same values. Defaults
+  in `PopoverSettings.default` keep absent keys roomy. Model: [PopoverAppearance.swift](../../DockTile/Models/PopoverAppearance.swift).
+- **Pure metrics seam** (`PopoverMetrics`, `PopoverSettings.resolve`): the single source of truth
+  mapping tiers → concrete sizes. Drives BOTH the live preview and the real `StackPopoverView` /
+  `ListPopoverView`, so they can't drift. Unit-tested (`PopoverMetricsTests`). Popover Size = grid
+  column count (Small 4 / Medium 5 / Large 6) **capped at the app count** so few-app tiles stay tight
+  — meaning Popover Size is a visual no-op for a tile with ≤4 apps (the preview uses 6 sample apps so
+  all three tiers differ). Animation is forced to 0 when system Reduce Motion is on.
+- **Live preview = the real panels** (critical): the hero embeds the actual `StackPopoverView` /
+  `ListPopoverView` (not a mock) for true 1:1 fidelity, re-`.id()`'d on every control change so they
+  re-read `PopoverSettings.load()`. Two view flags keep this safe (both default to shipping
+  behaviour): `showsBackground:false` lets the preview supply its own popover chrome (NSPopover's
+  rounded surface is lost when embedding the bare content view — reproduce it with the `.popover`
+  material `withinWindow` + ~14pt continuous corner + shadow); `isPreview:true` keeps the panel
+  interactive for hover yet neutralises every action (clicks never launch apps / open the
+  configurator). The preview hero sits on the shared `StudioCanvasBackgroundView` (same
+  `underWindowBackground` treatment as the Customise-Tile studio).
+- **Hover highlight**: mouse hover uses the subtle Liquid-Glass `.quaternary` fill (the Tahoe
+  treatment), NOT the bold accent — the accent is reserved for keyboard-focus selection. Applies to
+  the real popover too. The preview scales with `.scaleEffect` (a *fixed* per-layout fit, not a
+  width-refill, so Spacing changes stay visible); `.scaleEffect` preserves `.onHover` hit-testing.

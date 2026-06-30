@@ -32,22 +32,37 @@ struct GeneralSettingsView: View {
     @AppStorage(UserDefaultsKeys.analyticsEnabled, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
     private var analyticsEnabled = true
 
+    /// Mirrors the persisted Popover Size only to render the drill-down row's trailing summary.
+    @AppStorage(UserDefaultsKeys.popoverSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
+    private var popoverSize: PopoverSizeTier = .medium
+
     var body: some View {
-        Form {
-            // All general preferences live in a single grouped container (System Settings style):
-            // Start at login → Software update → Share analytics.
-            Section {
-                startAtLoginRow
+        NavigationStack {
+            Form {
+                // All general preferences live in a single grouped container (System Settings style):
+                // Start at login → Software update → Share analytics.
+                Section {
+                    startAtLoginRow
 
-                softwareUpdateRow
+                    softwareUpdateRow
 
-                missingAppsRow
+                    missingAppsRow
 
-                analyticsRow
+                    analyticsRow
+                }
+
+                // Popover appearance lives one level down — a grouped Form with a live preview.
+                Section(AppStrings.Settings.popover) {
+                    NavigationLink {
+                        PopoverAppearanceView()
+                    } label: {
+                        popoverAppearanceRow
+                    }
+                }
             }
+            .formStyle(.grouped)
+            .navigationTitle(AppStrings.Settings.general)
         }
-        .formStyle(.grouped)
-        .navigationTitle(AppStrings.Settings.general)
         .onAppear(perform: refreshLoginState)
         .alert(
             scanFoundMissing ? AppStrings.Alert.missingAppsTitle : AppStrings.Alert.missingAppsNoneTitle,
@@ -153,6 +168,27 @@ struct GeneralSettingsView: View {
             AnalyticsService.shared.setConsent(enabled)
             AnalyticsService.shared.log(.settingChanged, ["setting": "analytics", "enabled": enabled])
             DiagnosticsLog.shared.log("settings", "Share analytics toggled \(enabled ? "ON" : "OFF")")
+        }
+    }
+
+    /// Drill-down row into the Popover Appearance sub-pane. Indigo `macwindow.on.rectangle`
+    /// badge + title/subtitle, with the current Popover Size as a trailing summary.
+    private var popoverAppearanceRow: some View {
+        HStack(spacing: 11) {
+            SettingsBadgeIcon(systemName: "macwindow.on.rectangle", tint: .indigo, size: 28)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(AppStrings.Settings.popoverAppearance)
+                Text(AppStrings.Settings.popoverAppearanceSubtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Text(AppStrings.PopoverOption.size(popoverSize))
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
         }
     }
 
