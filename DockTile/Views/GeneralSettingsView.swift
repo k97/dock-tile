@@ -174,12 +174,10 @@ struct GeneralSettingsView: View {
         }
     }
 
-    /// Drill-down row into the Popover Appearance sub-pane. Indigo `macwindow.on.rectangle`
-    /// badge + title/subtitle, with the current Popover Size as a trailing summary.
+    /// Drill-down row into the Popover Appearance sub-pane. Title/subtitle with the current
+    /// per-layout Popover Size as a trailing summary.
     private var popoverAppearanceRow: some View {
         HStack(spacing: 11) {
-            SettingsBadgeIcon(systemName: "macwindow.on.rectangle", tint: .indigo, size: 28)
-
             VStack(alignment: .leading, spacing: 1) {
                 Text(AppStrings.Settings.popoverAppearance)
                 Text(AppStrings.Settings.popoverAppearanceSubtitle)
