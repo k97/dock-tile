@@ -117,6 +117,16 @@ pane), titled "Popover" with a "‹ General" back. Per-tile Grid/List still live
 - **Persistence**: all six keys live in the **shared suite** (`com.docktile.shared`, like analytics
   consent), so HELPER processes — which actually render the popover — read the same values. Defaults
   in `PopoverSettings.default` keep absent keys roomy. Model: [PopoverAppearance.swift](../../DockTile/Models/PopoverAppearance.swift).
+- **Explicit save (draft/commit), NOT auto-save**: the pane is no longer `@AppStorage`-backed.
+  Edits stage into a `@State draft: PopoverSettings`; only the **Save** toolbar button writes them to
+  the shared suite via `PopoverSettings.persist()` (the symmetric counterpart to `load()`). A
+  `savedBaseline` drives dirty state. **Reset to Defaults** stages `.default` into the draft (still
+  needs Save to commit). HIG toolbar placement (`.primaryAction`): Reset is a secondary **icon-only**
+  button (`arrow.counterclockwise`, `.bordered`, `.labelStyle(.iconOnly)`) with a `.help("Reset to
+  Defaults")` tooltip + accessibility label; Save is the trailing primary (`.borderedProminent`, ⌘S).
+  Save disables when not dirty, Reset when already at defaults. The live preview renders the **draft** (not the shared suite) via a new
+  `settingsOverride: PopoverSettings?` param on `StackPopoverView`/`ListPopoverView` (nil in the real
+  popover, which always loads saved values), so unsaved edits preview without persisting.
 - **Pure metrics seam** (`PopoverMetrics`, `PopoverSettings.resolve`): the single source of truth
   mapping tiers → concrete sizes. Drives BOTH the live preview and the real `StackPopoverView` /
   `ListPopoverView`, so they can't drift. Unit-tested (`PopoverMetricsTests`). Popover Size = grid

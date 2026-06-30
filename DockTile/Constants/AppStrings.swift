@@ -102,6 +102,12 @@ enum AppStrings {
             comment: "Button that restores popover appearance settings to their defaults"
         )
 
+        static let save = NSLocalizedString(
+            "button.save",
+            value: "Save",
+            comment: "Primary toolbar button that commits the popover appearance settings"
+        )
+
         static let openAccessibilitySettings = NSLocalizedString(
             "button.openAccessibilitySettings",
             value: "Open Accessibility Settings…",

@@ -79,6 +79,21 @@ struct PopoverSettings: Equatable {
         )
     }
 
+    /// Write these values to the shared suite — the explicit counterpart to `load()`. The Settings
+    /// pane stages edits in a draft and calls this only when the user presses **Save**, so helper
+    /// popovers pick up a coherent set on their next open (not mid-edit).
+    func persist(
+        to defaults: UserDefaults? = UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName)
+    ) {
+        guard let d = defaults else { return }
+        d.set(popoverSize.rawValue, forKey: UserDefaultsKeys.popoverSize)
+        d.set(tileSize.rawValue, forKey: UserDefaultsKeys.popoverTileSize)
+        d.set(animation.rawValue, forKey: UserDefaultsKeys.popoverAnimation)
+        d.set(spacing.rawValue, forKey: UserDefaultsKeys.popoverSpacing)
+        d.set(showLabels, forKey: UserDefaultsKeys.popoverShowLabels)
+        d.set(highlightOnHover, forKey: UserDefaultsKeys.popoverHighlightOnHover)
+    }
+
     /// Pure mapping from raw stored values → settings, with the spec defaults as the fallback for
     /// any absent or unrecognised value. The tested seam (`PopoverMetricsTests`).
     nonisolated static func resolve(

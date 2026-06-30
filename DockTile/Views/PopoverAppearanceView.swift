@@ -16,19 +16,35 @@ import SwiftUI
 import AppKit
 
 struct PopoverAppearanceView: View {
-    // Shared-suite persistence — helpers (which render the popover) read the same keys.
-    @AppStorage(UserDefaultsKeys.popoverSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var popoverSize: PopoverSizeTier = .medium
-    @AppStorage(UserDefaultsKeys.popoverTileSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var tileSize: PopoverSizeTier = .medium
-    @AppStorage(UserDefaultsKeys.popoverAnimation, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var animation: PopoverAnimationTier = .default
-    @AppStorage(UserDefaultsKeys.popoverSpacing, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var spacing: PopoverSpacingTier = .comfortable
-    @AppStorage(UserDefaultsKeys.popoverShowLabels, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var showLabels: Bool = true
-    @AppStorage(UserDefaultsKeys.popoverHighlightOnHover, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var highlightOnHover: Bool = true
+    /// Edits are staged here and only written to the shared suite on **Save** (draft/commit model),
+    /// so helper popovers never read a half-applied change. The live preview renders this draft.
+    @State private var draft: PopoverSettings
+    /// The last-saved baseline, used to drive the Save button's dirty state and to revert on close.
+    @State private var savedBaseline: PopoverSettings
+
+    /// Seed both draft and baseline from the persisted (shared-suite) values so the preview opens on
+    /// what's actually live, with no first-render flash through the defaults.
+    init() {
+        let loaded = PopoverSettings.load()
+        _draft = State(initialValue: loaded)
+        _savedBaseline = State(initialValue: loaded)
+    }
+
+    /// Convenience bindings into the draft for each control. `animation` is built explicitly because
+    /// `$draft.animation` would resolve to SwiftUI's `Binding.animation(_:)` method, not the field.
+    private var popoverSize: Binding<PopoverSizeTier> { $draft.popoverSize }
+    private var tileSize: Binding<PopoverSizeTier> { $draft.tileSize }
+    private var animation: Binding<PopoverAnimationTier> {
+        Binding(get: { draft.animation }, set: { draft.animation = $0 })
+    }
+    private var spacing: Binding<PopoverSpacingTier> { $draft.spacing }
+    private var showLabels: Binding<Bool> { $draft.showLabels }
+    private var highlightOnHover: Binding<Bool> { $draft.highlightOnHover }
+
+    /// Save is enabled only when the draft differs from what's persisted; Reset only when the draft
+    /// isn't already the spec defaults.
+    private var isDirty: Bool { draft != savedBaseline }
+    private var isAtDefaults: Bool { draft == .default }
 
     /// Which layout the *preview* shows. Preview-only — the real per-tile Grid/List choice still
     /// lives on the Tile Detail screen, so flipping this never touches any tile's config.
@@ -39,15 +55,15 @@ struct PopoverAppearanceView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var motionDuration: Double {
-        PopoverMetrics.animationDuration(animation, reduceMotion: reduceMotion)
+        PopoverMetrics.animationDuration(draft.animation, reduceMotion: reduceMotion)
     }
 
     /// A signature of every value the real popover reads — changing it forces the embedded panel to
     /// re-init and re-read `PopoverSettings.load()` from the shared suite (the @AppStorage writes
     /// land there first), so the preview always mirrors the shipped rendering 1:1.
     private var previewSignature: String {
-        [popoverSize.rawValue, tileSize.rawValue, spacing.rawValue, animation.rawValue,
-         showLabels ? "L" : "l", highlightOnHover ? "H" : "h", previewLayout.rawValue]
+        [draft.popoverSize.rawValue, draft.tileSize.rawValue, draft.spacing.rawValue, draft.animation.rawValue,
+         draft.showLabels ? "L" : "l", draft.highlightOnHover ? "H" : "h", previewLayout.rawValue]
             .joined(separator: "-")
     }
 
@@ -65,6 +81,25 @@ struct PopoverAppearanceView: View {
         }
         .background(NSColorBackgroundView.windowBackground)
         .navigationTitle(AppStrings.Settings.popover)
+        .toolbar {
+            // HIG: window-level actions live in the toolbar. Reset is the secondary (plain bordered)
+            // button; Save is the primary (accent-tinted, prominent) action on the trailing edge.
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button(action: resetToDefaults) {
+                    Label(AppStrings.Button.resetToDefaults, systemImage: "arrow.counterclockwise")
+                }
+                .buttonStyle(.bordered)
+                .labelStyle(.iconOnly)
+                .help(AppStrings.Button.resetToDefaults)
+                .disabled(isAtDefaults)
+
+                Button(AppStrings.Button.save, action: save)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.accentColor)
+                    .keyboardShortcut("s", modifiers: .command)
+                    .disabled(!isDirty)
+            }
+        }
     }
 
     // MARK: - Live preview hero
@@ -81,8 +116,12 @@ struct PopoverAppearanceView: View {
     private var heroPreview: some View {
         GeometryReader { proxy in
             let worst = worstCasePanelSize(for: previewLayout)
-            // The −0.06 margin pulls it in a touch so it doesn't kiss the edges (the "zoom out").
-            let scale = min(0.94, (proxy.size.width - 56) / worst.width, (heroHeight - 44) / worst.height)
+            // Fit the worst-case panel with a comfortable margin, then zoom in ~10% so the panel
+            // reads larger on the canvas. `rawFit` (a near-flush fit) clamps the boosted scale so the
+            // extra zoom can never clip the panel against the hero edges.
+            let fit = min((proxy.size.width - 56) / worst.width, (heroHeight - 44) / worst.height)
+            let rawFit = min((proxy.size.width - 8) / worst.width, (heroHeight - 8) / worst.height)
+            let scale = min(rawFit, fit * 1.10, 1.04)
             ZStack {
                 popoverChrome
                     .fixedSize()
@@ -139,10 +178,12 @@ struct PopoverAppearanceView: View {
         Group {
             if previewLayout == .grid {
                 StackPopoverView(configuration: PreviewAppCatalog.sampleConfiguration,
-                                 onLaunch: {}, showsBackground: false, isPreview: true)
+                                 onLaunch: {}, showsBackground: false, isPreview: true,
+                                 settingsOverride: draft)
             } else {
                 ListPopoverView(configuration: PreviewAppCatalog.sampleConfiguration,
-                                onLaunch: {}, showsBackground: false, isPreview: true)
+                                onLaunch: {}, showsBackground: false, isPreview: true,
+                                settingsOverride: draft)
             }
         }
         .id(previewSignature)
@@ -172,11 +213,11 @@ struct PopoverAppearanceView: View {
                     $0.displayName
                 }
                 divider
-                segmentedRow(AppStrings.Label.popoverSize, selection: $popoverSize, options: PopoverSizeTier.allCases) {
+                segmentedRow(AppStrings.Label.popoverSize, selection: popoverSize, options: PopoverSizeTier.allCases) {
                     AppStrings.PopoverOption.size($0)
                 }
                 divider
-                segmentedRow(AppStrings.Label.tileSizeInPopover, selection: $tileSize, options: PopoverSizeTier.allCases) {
+                segmentedRow(AppStrings.Label.tileSizeInPopover, selection: tileSize, options: PopoverSizeTier.allCases) {
                     AppStrings.PopoverOption.size($0)
                 }
                 divider
@@ -186,13 +227,13 @@ struct PopoverAppearanceView: View {
             sectionHeader(AppStrings.Settings.popoverSectionTiles)
                 .padding(.top, 18)
             card {
-                segmentedRow(AppStrings.Label.popoverSpacing, selection: $spacing, options: PopoverSpacingTier.allCases) {
+                segmentedRow(AppStrings.Label.popoverSpacing, selection: spacing, options: PopoverSpacingTier.allCases) {
                     AppStrings.PopoverOption.spacing($0)
                 }
                 divider
                 showLabelsRow
                 divider
-                toggleRow(AppStrings.Label.highlightOnHover, isOn: $highlightOnHover)
+                toggleRow(AppStrings.Label.highlightOnHover, isOn: highlightOnHover)
             }
 
             Text(AppStrings.Settings.popoverFooter)
@@ -200,13 +241,6 @@ struct PopoverAppearanceView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
                 .padding(.top, 6)
-
-            HStack {
-                Spacer()
-                Button(AppStrings.Button.resetToDefaults, action: resetToDefaults)
-                    .controlSize(.regular)
-            }
-            .padding(.top, 16)
         }
     }
 
@@ -218,7 +252,7 @@ struct PopoverAppearanceView: View {
                     .font(.system(size: 13))
                     .foregroundStyle(reduceMotion ? .secondary : .primary)
                 Spacer()
-                Picker("", selection: reduceMotion ? .constant(PopoverAnimationTier.none) : $animation) {
+                Picker("", selection: reduceMotion ? .constant(PopoverAnimationTier.none) : animation) {
                     ForEach(PopoverAnimationTier.allCases, id: \.self) { tier in
                         Text(AppStrings.PopoverOption.animation(tier)).tag(tier)
                     }
@@ -259,7 +293,7 @@ struct PopoverAppearanceView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             } else {
-                Toggle("", isOn: $showLabels)
+                Toggle("", isOn: showLabels)
                     .labelsHidden()
                     .toggleStyle(.switch)
                     .controlSize(.small)
@@ -333,15 +367,21 @@ struct PopoverAppearanceView: View {
 
     // MARK: - Actions
 
+    /// Commit the staged draft to the shared suite. Helpers pick it up on their next popover open.
+    private func save() {
+        draft.persist()
+        savedBaseline = draft
+        AnalyticsService.shared.log(.settingChanged, ["setting": "popover_appearance", "saved": true])
+        DiagnosticsLog.shared.log("settings", "Popover appearance saved")
+    }
+
+    /// Stage the spec defaults into the draft (previewed live). The user still presses **Save** to
+    /// commit — consistent with the explicit-save model.
     private func resetToDefaults() {
-        let d = PopoverSettings.default
-        popoverSize = d.popoverSize
-        tileSize = d.tileSize
-        animation = d.animation
-        spacing = d.spacing
-        showLabels = d.showLabels
-        highlightOnHover = d.highlightOnHover
-        DiagnosticsLog.shared.log("settings", "Popover appearance reset to defaults")
+        withAnimation(.easeInOut(duration: max(0.18, motionDuration))) {
+            draft = .default
+        }
+        DiagnosticsLog.shared.log("settings", "Popover appearance reset to defaults (staged)")
     }
 
     private func openAccessibilitySettings() {

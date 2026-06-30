@@ -175,6 +175,10 @@ struct StackPopoverView: View {
     /// When true (Settings preview), the panel stays interactive for hover but performs NO actions —
     /// clicks never launch apps or open the configurator. The real popover leaves this false.
     var isPreview: Bool = false
+    /// When set (Settings preview), the panel renders these *draft* settings instead of reading the
+    /// shared suite — so the live preview reflects unsaved edits without persisting them. nil in the
+    /// real popover, which always loads the saved values.
+    var settingsOverride: PopoverSettings? = nil
 
     @State private var selectedIndex: Int? = nil
     @State private var keyboardNavigationEnabled = false
@@ -183,10 +187,13 @@ struct StackPopoverView: View {
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
-    /// Global popover-appearance settings, read once from the shared suite when this popover is
-    /// built. Helpers render the popover, so this picks up the main app's Settings → Popover values
-    /// on the next open (matches the icon-style propagation model).
-    private let settings = PopoverSettings.load()
+    /// Saved popover-appearance values, read once from the shared suite when this popover is built.
+    /// Helpers render the popover, so this picks up the main app's Settings → Popover values on the
+    /// next open (matches the icon-style propagation model). The preview overrides it with a draft.
+    private let loadedSettings = PopoverSettings.load()
+
+    /// Draft override (preview) wins over the saved values; nil → the real loaded settings.
+    private var settings: PopoverSettings { settingsOverride ?? loadedSettings }
 
     private var metrics: PopoverGridMetrics {
         PopoverMetrics.grid(
@@ -479,6 +486,9 @@ struct ListPopoverView: View {
     var showsBackground: Bool = true
     /// When true (Settings preview), the panel stays interactive for hover but performs no actions.
     var isPreview: Bool = false
+    /// When set (Settings preview), renders these *draft* settings instead of the shared suite, so
+    /// the live preview reflects unsaved edits without persisting them. nil in the real popover.
+    var settingsOverride: PopoverSettings? = nil
 
     @State private var selectedIndex: Int? = nil
     @State private var keyboardNavigationEnabled = false
@@ -487,8 +497,11 @@ struct ListPopoverView: View {
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
-    /// Global popover-appearance settings, read once when the popover is built (see StackPopoverView).
-    private let settings = PopoverSettings.load()
+    /// Saved popover-appearance values, read once when the popover is built (see StackPopoverView).
+    private let loadedSettings = PopoverSettings.load()
+
+    /// Draft override (preview) wins over the saved values; nil → the real loaded settings.
+    private var settings: PopoverSettings { settingsOverride ?? loadedSettings }
 
     private var metrics: PopoverListMetrics {
         PopoverMetrics.list(
