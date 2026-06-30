@@ -49,3 +49,23 @@ extension NSColorBackgroundView {
         NSColorBackgroundView(NSColor.windowBackgroundColor)
     }
 }
+
+// MARK: - Studio Canvas Background
+
+/// The "studio canvas" backdrop used behind a live preview hero — a vibrant, semi-transparent
+/// frosted surface (`underWindowBackground`). Shared by the Customise-Tile icon studio and the
+/// Popover Appearance preview so both hero previews sit on the identical treatment.
+///
+/// `behindWindow` lets the desktop bleed through for the Liquid Glass look; `active` keeps the
+/// vibrancy alive even when the app isn't frontmost (otherwise it flattens to grey).
+struct StudioCanvasBackgroundView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .underWindowBackground
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+}

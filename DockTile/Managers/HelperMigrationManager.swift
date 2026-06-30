@@ -90,6 +90,25 @@ final class HelperMigrationManager {
         print("[Migration] Complete for v\(currentVersion)")
     }
 
+    /// On-demand rebuild + relaunch of the given helpers with a single Dock restart. Used when the
+    /// user saves global Popover Appearance settings and chooses to apply them to running tiles now:
+    /// regenerating each visible bundle redeploys the current binary, whose popover then reads the
+    /// freshly-saved shared-suite values on its next open. Reuses the launch-time batch, so the same
+    /// stamp-on-failure + single-restart invariants hold. Filters to tiles that are actually pinned
+    /// with a bundle on disk; stamps them current so the launch migration won't redo the work.
+    func reapply(_ configs: [DockTileConfiguration]) async {
+        let targets = configs.filter {
+            $0.isVisibleInDock && HelperBundleManager.shared.helperExists(for: $0)
+        }
+        guard !targets.isEmpty else {
+            DiagnosticsLog.shared.log("settings", "Apply popover appearance: no visible helpers to update")
+            return
+        }
+        DiagnosticsLog.shared.log("settings", "Apply popover appearance: rebuilding \(targets.count) helper(s)")
+        await regenerateBatch(targets, currentVersion: HelperBundleManager.currentAppVersion)
+        AnalyticsService.shared.log(.settingChanged, ["setting": "popover_apply", "count": targets.count])
+    }
+
     // MARK: - Private
 
     private func regenerateBatch(_ configs: [DockTileConfiguration], currentVersion: String) async {

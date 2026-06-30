@@ -10,6 +10,10 @@ import Foundation
 
 enum UserDefaultsKeys {
     static let hasAcknowledgedDockRestart = "hasAcknowledgedDockRestart"
+    /// One-time consent for the "apply Popover Appearance to running tiles" action, which rebuilds
+    /// helpers and briefly restarts the Dock. Separate from `hasAcknowledgedDockRestart` so the user
+    /// gets one tailored heads-up for this specific action; remembered after the first confirm.
+    static let hasAcknowledgedPopoverApplyRestart = "hasAcknowledgedPopoverApplyRestart"
     static let lastSelectedConfigId = "lastSelectedConfigId"
     static let lastMigratedAppVersion = "lastMigratedAppVersion"
 
@@ -35,7 +39,27 @@ enum UserDefaultsKeys {
     /// bundles run under their own bundle IDs and must read the same value as the main app.
     static let analyticsEnabled = "analyticsEnabled"
 
+    // Popover Appearance — per-layout defaults for every tile's Dock popover. Grid and List are
+    // stored INDEPENDENTLY (a grid tile reads the grid keys, a list tile the list keys), all in the
+    // SHARED suite so HELPER bundles (which render the popover) read the same values as the main app.
+    // Absent → the defaults in `PopoverSettings.default`. Keys are resolved per layout by
+    // `PopoverSettings.keys(for:)`; the two size keys are exposed for the General summary row.
+    /// Grid popover size (column count). `PopoverSizeTier` rawValue. Default "medium".
+    static let popoverGridSize = "popover.grid.size"
+    static let popoverGridTileSize = "popover.grid.tileSize"
+    static let popoverGridAnimation = "popover.grid.animation"
+    static let popoverGridSpacing = "popover.grid.spacing"
+    /// Grid only: show app names under icons. Bool, default ON (absent = ON). (List always labels.)
+    static let popoverGridShowLabels = "popover.grid.showLabels"
+    static let popoverGridHighlightOnHover = "popover.grid.highlightOnHover"
+    /// List popover size (width). `PopoverSizeTier` rawValue. Default "medium".
+    static let popoverListSize = "popover.list.size"
+    static let popoverListTileSize = "popover.list.tileSize"
+    static let popoverListAnimation = "popover.list.animation"
+    static let popoverListSpacing = "popover.list.spacing"
+    static let popoverListHighlightOnHover = "popover.list.highlightOnHover"
+
     /// Shared UserDefaults suite readable by the main app and every helper bundle.
-    /// Used for cross-process settings like analytics consent.
+    /// Used for cross-process settings like analytics consent and popover appearance.
     static let sharedSuiteName = "com.docktile.shared"
 }

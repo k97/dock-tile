@@ -145,6 +145,17 @@ extension VisualEffectView {
             state: .active
         )
     }
+
+    /// Same `.popover` Liquid Glass material as the real popover, but blended `.withinWindow` so it
+    /// stays vibrant when embedded INSIDE a window (e.g. the Settings → Popover live preview, where
+    /// `.behindWindow` would flatten to grey). Use to reproduce the popover surface in-app.
+    static var popoverSurfaceInWindow: VisualEffectView {
+        VisualEffectView(
+            material: .popover,
+            blendingMode: .withinWindow,
+            state: .active
+        )
+    }
 }
 
 // MARK: - Stack (Grid) Popover View
@@ -158,6 +169,16 @@ extension VisualEffectView {
 struct StackPopoverView: View {
     let configuration: DockTileConfiguration?
     let onLaunch: () -> Void
+    /// When false, the view skips its own Liquid Glass background — the host supplies the surface
+    /// (used by the Settings preview, which wraps it in popover chrome). Real popover keeps it ON.
+    var showsBackground: Bool = true
+    /// When true (Settings preview), the panel stays interactive for hover but performs NO actions —
+    /// clicks never launch apps or open the configurator. The real popover leaves this false.
+    var isPreview: Bool = false
+    /// When set (Settings preview), the panel renders these *draft* settings instead of reading the
+    /// shared suite — so the live preview reflects unsaved edits without persisting them. nil in the
+    /// real popover, which always loads the saved values.
+    var settingsOverride: PopoverSettings? = nil
 
     @State private var selectedIndex: Int? = nil
     @State private var keyboardNavigationEnabled = false
@@ -165,6 +186,24 @@ struct StackPopoverView: View {
     // Observe IconStyleManager for icon style changes
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
+    /// Saved **Grid** popover-appearance values, read once from the shared suite when this popover is
+    /// built. Helpers render the popover, so this picks up the main app's Settings → Popover (Grid
+    /// panel) values on the next open (matches the icon-style propagation model). The preview
+    /// overrides it with a draft.
+    private let loadedSettings = PopoverSettings.load(layout: .grid)
+
+    /// Draft override (preview) wins over the saved values; nil → the real loaded settings.
+    private var settings: PopoverSettings { settingsOverride ?? loadedSettings }
+
+    private var metrics: PopoverGridMetrics {
+        PopoverMetrics.grid(
+            popoverSize: settings.popoverSize,
+            tileSize: settings.tileSize,
+            spacing: settings.spacing,
+            showLabels: settings.showLabels
+        )
+    }
 
     private var apps: [AppItem] {
         configuration?.appItems ?? []
@@ -176,29 +215,20 @@ struct StackPopoverView: View {
 
     // MARK: - Dynamic Grid Configuration
 
-    /// Dynamic column count based on number of apps
-    /// 1-4 apps: 2 cols, 5-6: 3 cols, 7-8: 4 cols, 9-10: 5 cols, 11-12: 6 cols, 13+: 7 cols
+    /// Column count from the global Popover Size (Small 4 / Medium 5 / Large 6), capped at the app
+    /// count so a tile with few apps stays tight rather than padding out empty trailing columns.
     private var columnCount: Int {
-        let count = apps.count
-        switch count {
-        case 0...4: return 2
-        case 5...6: return 3
-        case 7...8: return 4
-        case 9...10: return 5
-        case 11...12: return 6
-        default: return 7  // 13+ apps - max 7 columns
-        }
+        max(1, min(metrics.columns, max(1, apps.count)))
     }
 
-    /// Dynamic grid columns based on app count
+    /// Grid columns sized by Tile Size; spacing by Spacing.
     private var columns: [GridItem] {
-        Array(repeating: GridItem(.fixed(itemWidth), spacing: itemSpacing), count: columnCount)
+        Array(repeating: GridItem(.fixed(metrics.cellWidth), spacing: metrics.gap), count: columnCount)
     }
 
-    /// Dynamic popover width based on column count
+    /// Popover width from cell width × columns.
     private var popoverWidth: CGFloat {
-        // Width = (itemWidth * cols) + (spacing * (cols-1)) + (horizontal padding * 2)
-        CGFloat(itemWidth) * CGFloat(columnCount) + itemSpacing * CGFloat(columnCount - 1) + gridHorizontalPadding * 2
+        metrics.cellWidth * CGFloat(columnCount) + metrics.gap * CGFloat(columnCount - 1) + gridHorizontalPadding * 2
     }
 
     // Layout constants
@@ -206,8 +236,6 @@ struct StackPopoverView: View {
     private let gridTopPadding: CGFloat = 16
     private let gridBottomPadding: CGFloat = 16
     private let gridHorizontalPadding: CGFloat = 16
-    private let itemWidth: CGFloat = 100     // Width per grid item (64 icon + padding + text width)
-    private let itemSpacing: CGFloat = 8     // Spacing between items
 
     var body: some View {
         VStack(spacing: 0) {
@@ -252,11 +280,15 @@ struct StackPopoverView: View {
                 emptyStateView
             } else {
                 ScrollView(.vertical, showsIndicators: true) {
-                    LazyVGrid(columns: columns, spacing: 12) {
+                    LazyVGrid(columns: columns, spacing: metrics.gap) {
                         ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in
                             StackAppItem(
                                 app: app,
                                 isSelected: selectedIndex == index,
+                                iconSize: metrics.iconSize,
+                                cellWidth: metrics.cellWidth,
+                                showLabel: settings.showLabels,
+                                highlightOnHover: settings.highlightOnHover,
                                 onLaunch: onLaunch
                             )
                             // Composite ID forces SwiftUI to destroy/recreate the view when icon style
@@ -275,9 +307,11 @@ struct StackPopoverView: View {
             }
         }
         .frame(width: popoverWidth, height: calculateHeight())
-        // LIQUID GLASS: Single translucent surface for header + grid
+        // LIQUID GLASS: Single translucent surface for header + grid (host-supplied in previews).
         .background(Color.clear)
-        .background(VisualEffectView.liquidGlass)
+        .background {
+            if showsBackground { VisualEffectView.liquidGlass }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .enableKeyboardNavigation)) { _ in
             keyboardNavigationEnabled = true
             selectedIndex = apps.isEmpty ? nil : 0
@@ -308,15 +342,17 @@ struct StackPopoverView: View {
     private func calculateHeight() -> CGFloat {
         guard !apps.isEmpty else { return 180 }
 
-        // Calculate grid content height based on dynamic column count
+        // Item height = icon + (label line, when shown) + cell padding. Rows spaced by Spacing.
         let rows = ceil(Double(apps.count) / Double(columnCount))
-        let itemHeight: CGFloat = 100  // Height per grid item (64 icon + 6 spacing + text + padding)
-        let rowSpacing: CGFloat = 12   // Spacing between rows
-        let gridContentHeight = CGFloat(rows) * itemHeight + CGFloat(max(0, Int(rows) - 1)) * rowSpacing + gridTopPadding + gridBottomPadding
+        let labelHeight: CGFloat = settings.showLabels ? 4 + 14 : 0
+        let itemHeight = metrics.iconSize + labelHeight + 4  // 2pt cell padding top+bottom
+        let gridContentHeight = CGFloat(rows) * itemHeight
+            + CGFloat(max(0, Int(rows) - 1)) * metrics.gap
+            + gridTopPadding + gridBottomPadding
 
         // Total = header + grid content, capped at max
         let totalHeight = headerHeight + gridContentHeight
-        return min(totalHeight, 500)
+        return min(totalHeight, 600)
     }
 
     // MARK: - Keyboard Navigation
@@ -352,12 +388,13 @@ struct StackPopoverView: View {
     }
 
     private func launchAppAt(index: Int) {
-        guard index < apps.count else { return }
+        guard !isPreview, index < apps.count else { return }
         AppLauncher.launch(apps[index])
         onLaunch()
     }
 
     private func openConfigurator() {
+        guard !isPreview else { return }
         NotificationCenter.default.post(name: .openConfigurator, object: nil)
         onLaunch()
     }
@@ -367,38 +404,56 @@ struct StackPopoverView: View {
 
 struct StackAppItem: View {
     let app: AppItem
-    let isSelected: Bool  // Keyboard navigation selection only
+    let isSelected: Bool  // Keyboard navigation selection
+    let iconSize: CGFloat
+    let cellWidth: CGFloat
+    let showLabel: Bool
+    let highlightOnHover: Bool
     let onLaunch: () -> Void
+
+    @State private var isHovered = false
 
     // Observe IconStyleManager for icon style changes
     // This triggers view refresh when system icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
+    /// Mouse hover uses the subtle Liquid-Glass fill (`.quaternary`) like typical Mac apps; the
+    /// stronger accent is reserved for keyboard-focus selection (accessibility). Hover honours the
+    /// global "Highlight on Hover" toggle.
+    private var highlightStyle: AnyShapeStyle {
+        if isSelected { return AnyShapeStyle(Color(nsColor: .selectedContentBackgroundColor)) }
+        if highlightOnHover && isHovered { return AnyShapeStyle(.quaternary) }
+        return AnyShapeStyle(Color.clear)
+    }
 
     var body: some View {
         // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
         let _ = iconStyleManager.currentStyle
 
         VStack(spacing: 4) {
-            // Large app icon (64x64 like native Dock folders)
+            // App icon, sized by the global Tile Size setting.
             appIconView
-                .frame(width: 64, height: 64)
+                .frame(width: iconSize, height: iconSize)
 
-            // App name - truncated with ellipsis
-            // Use hierarchical style for vibrancy optimization
-            Text(app.name)
-                .font(.system(size: 11, weight: .regular))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .frame(width: 90)
+            if showLabel {
+                // App name - truncated with ellipsis. Use hierarchical style for vibrancy.
+                Text(app.name)
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(width: cellWidth)
+            }
         }
+        // Keep the interactive cell ≥44pt even when the glyph is smaller (HIG hit target).
+        .frame(minWidth: 44, minHeight: 44)
         .padding(2)
         .background(
-            // Keyboard selection only - no hover effect for grid view
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(isSelected ? Color(nsColor: .selectedContentBackgroundColor) : Color.clear)
+                .fill(highlightStyle)
         )
         .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
     }
 
     @ViewBuilder
@@ -407,7 +462,7 @@ struct StackAppItem: View {
         // cached icon before the placeholder appears.
         if AppInstallChecker.resolve(app).status == .missing {
             Image(systemName: "questionmark.app.dashed")
-                .font(.system(size: 32))
+                .font(.system(size: iconSize * 0.5))
                 .foregroundStyle(.secondary)
         } else if let nsImage = AppIconLoader.icon(for: app) {
             Image(nsImage: nsImage)
@@ -415,7 +470,7 @@ struct StackAppItem: View {
                 .interpolation(.high)
         } else {
             Image(systemName: "app")
-                .font(.system(size: 32))
+                .font(.system(size: iconSize * 0.5))
                 .foregroundStyle(.secondary)
         }
     }
@@ -428,6 +483,13 @@ struct StackAppItem: View {
 struct ListPopoverView: View {
     let configuration: DockTileConfiguration?
     let onLaunch: () -> Void
+    /// When false, the view skips its own Liquid Glass background (host supplies the surface).
+    var showsBackground: Bool = true
+    /// When true (Settings preview), the panel stays interactive for hover but performs no actions.
+    var isPreview: Bool = false
+    /// When set (Settings preview), renders these *draft* settings instead of the shared suite, so
+    /// the live preview reflects unsaved edits without persisting them. nil in the real popover.
+    var settingsOverride: PopoverSettings? = nil
 
     @State private var selectedIndex: Int? = nil
     @State private var keyboardNavigationEnabled = false
@@ -435,6 +497,21 @@ struct ListPopoverView: View {
     // Observe IconStyleManager for icon style changes
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
+    /// Saved **List** popover-appearance values, read once when the popover is built (see
+    /// StackPopoverView). List has no Show Labels setting — it always labels its rows.
+    private let loadedSettings = PopoverSettings.load(layout: .list)
+
+    /// Draft override (preview) wins over the saved values; nil → the real loaded settings.
+    private var settings: PopoverSettings { settingsOverride ?? loadedSettings }
+
+    private var metrics: PopoverListMetrics {
+        PopoverMetrics.list(
+            popoverSize: settings.popoverSize,
+            tileSize: settings.tileSize,
+            spacing: settings.spacing
+        )
+    }
 
     private var apps: [AppItem] {
         configuration?.appItems ?? []
@@ -466,6 +543,8 @@ struct ListPopoverView: View {
                         ListAppRow(
                             app: app,
                             isSelected: selectedIndex == index,
+                            metrics: metrics,
+                            highlightOnHover: settings.highlightOnHover,
                             onLaunch: onLaunch
                         )
                         // Force view recreation when icon style changes
@@ -498,10 +577,12 @@ struct ListPopoverView: View {
             )
         }
         .padding(.vertical, 8)
-        .frame(width: 220)
+        .frame(width: metrics.width)
         // LIQUID GLASS: Transparent SwiftUI background to allow NSVisualEffectView through
         .background(Color.clear)
-        .background(VisualEffectView.liquidGlassMenu)
+        .background {
+            if showsBackground { VisualEffectView.liquidGlassMenu }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .enableKeyboardNavigation)) { _ in
             keyboardNavigationEnabled = true
             selectedIndex = apps.isEmpty ? nil : 0
@@ -554,17 +635,19 @@ struct ListPopoverView: View {
     }
 
     private func launchAppAt(index: Int) {
-        guard index < apps.count else { return }
+        guard !isPreview, index < apps.count else { return }
         AppLauncher.launch(apps[index])
         onLaunch()
     }
 
     private func openConfigurator() {
+        guard !isPreview else { return }
         NotificationCenter.default.post(name: .openConfigurator, object: nil)
         onLaunch()
     }
 
     private func openInFinder() {
+        guard !isPreview else { return }
         // Open the Applications folder or configured folder
         NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
         onLaunch()
@@ -576,6 +659,8 @@ struct ListPopoverView: View {
 struct ListAppRow: View {
     let app: AppItem
     let isSelected: Bool
+    let metrics: PopoverListMetrics
+    let highlightOnHover: Bool
     let onLaunch: () -> Void
 
     @State private var isHovered = false
@@ -584,35 +669,38 @@ struct ListAppRow: View {
     // This triggers view refresh when system icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
-    /// Whether to show highlight (selection takes priority over hover)
-    private var isHighlighted: Bool {
-        isSelected || isHovered
+    /// Mouse hover uses the subtle Liquid-Glass fill (`.quaternary`); the stronger accent is kept for
+    /// keyboard-focus selection. Hover honours the global "Highlight on Hover" toggle.
+    private var highlightStyle: AnyShapeStyle {
+        if isSelected { return AnyShapeStyle(Color(nsColor: .selectedContentBackgroundColor)) }
+        if highlightOnHover && isHovered { return AnyShapeStyle(.quaternary) }
+        return AnyShapeStyle(Color.clear)
     }
 
     var body: some View {
         // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
         let _ = iconStyleManager.currentStyle
 
-        HStack(spacing: 8) {
-            // Small icon (16x16 like native menu items)
+        HStack(spacing: metrics.rowSpacing) {
+            // Icon, sized by the global Tile Size setting.
             appIconView
-                .frame(width: 16, height: 16)
+                .frame(width: metrics.iconSize, height: metrics.iconSize)
 
-            // App name - white text on selection for contrast (works in light & dark mode)
+            // White text on the accent keyboard-selection; normal text on the subtle hover fill.
             Text(app.name)
-                .font(.system(size: 13))
-                .foregroundStyle(isHighlighted ? .white : .primary)
+                .font(.system(size: metrics.fontSize))
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
                 .lineLimit(1)
 
             Spacer()
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 4)
+        .padding(.vertical, metrics.rowVerticalPadding)
+        // Keep the row hit target ≥44pt wide even at the smallest tile/spacing tier.
+        .frame(minHeight: 28)
         .background(
-            // LIQUID GLASS: Use system selectedContentBackgroundColor for vibrant selection
-            // This maintains the glassy look even when selected
             RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .fill(isHighlighted ? Color(nsColor: .selectedContentBackgroundColor) : Color.clear)
+                .fill(highlightStyle)
         )
         .contentShape(Rectangle())
         .onHover { hovering in
@@ -625,7 +713,7 @@ struct ListAppRow: View {
         // Resolved synchronously so a deleted app shows the placeholder, not its stale icon.
         if AppInstallChecker.resolve(app).status == .missing {
             Image(systemName: "questionmark.app.dashed")
-                .font(.system(size: 12))
+                .font(.system(size: metrics.iconSize * 0.75))
                 .foregroundStyle(.secondary)
         } else if let nsImage = AppIconLoader.icon(for: app) {
             Image(nsImage: nsImage)
@@ -633,7 +721,7 @@ struct ListAppRow: View {
                 .interpolation(.high)
         } else {
             Image(systemName: "app.fill")
-                .font(.system(size: 12))
+                .font(.system(size: metrics.iconSize * 0.75))
                 .foregroundStyle(.secondary)
         }
     }
@@ -654,27 +742,27 @@ struct ListMenuRow: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundStyle(isHovered ? .white : .primary)
+                    .foregroundStyle(.primary)
                     .frame(width: 16)
 
                 Text(title)
                     .font(.system(size: 13))
-                    .foregroundStyle(isHovered ? .white : .primary)
+                    .foregroundStyle(.primary)
 
                 Spacer()
 
                 if hasSubmenu {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(isHovered ? .white.opacity(0.7) : .secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 4)
             .background(
-                // LIQUID GLASS: Use system selectedContentBackgroundColor for vibrant hover
+                // Subtle Liquid-Glass hover fill (matches the app rows), not the bold accent.
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(isHovered ? Color(nsColor: .selectedContentBackgroundColor) : Color.clear)
+                    .fill(isHovered ? AnyShapeStyle(.quaternary) : AnyShapeStyle(Color.clear))
             )
             .contentShape(Rectangle())
         }

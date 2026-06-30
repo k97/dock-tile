@@ -36,6 +36,8 @@
 		AAFB021 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = AAFB011 /* FirebaseCrashlytics */; };
 		AAGSI01 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AAGSI02 /* GoogleService-Info.plist */; };
 		AAGSV01 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAGSV02 /* GeneralSettingsView.swift */; };
+		AAPAM01 /* PopoverAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAPAM02 /* PopoverAppearance.swift */; };
+		AAPAV01 /* PopoverAppearanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAPAV02 /* PopoverAppearanceView.swift */; };
 		AAH00001 /* HelperBundleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAH00002 /* HelperBundleManager.swift */; };
 		AAHELP01 /* HelperAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHELP02 /* HelperAppDelegate.swift */; };
 		AAHMM01 /* HelperMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHMM02 /* HelperMigrationManager.swift */; };
@@ -133,6 +135,8 @@
 		AAF32B63 /* ItemRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemRowView.swift; sourceTree = "<group>"; };
 		AAGSI02 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AAGSV02 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		AAPAM02 /* PopoverAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverAppearance.swift; sourceTree = "<group>"; };
+		AAPAV02 /* PopoverAppearanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverAppearanceView.swift; sourceTree = "<group>"; };
 		AAH00002 /* HelperBundleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperBundleManager.swift; sourceTree = "<group>"; };
 		AAHELP02 /* HelperAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperAppDelegate.swift; sourceTree = "<group>"; };
 		AAHMM02 /* HelperMigrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperMigrationManager.swift; sourceTree = "<group>"; };
@@ -302,6 +306,7 @@
 			children = (
 				AAAB0002 /* AboutView.swift */,
 				AAGSV02 /* GeneralSettingsView.swift */,
+				AAPAV02 /* PopoverAppearanceView.swift */,
 				AA12D329 /* DockTileConfigurationView.swift */,
 				AA169EDE /* DockTileSidebarView.swift */,
 				AADDFDF7 /* DockTileDetailView.swift */,
@@ -328,6 +333,7 @@
 			isa = PBXGroup;
 			children = (
 				AACFE26F /* ConfigurationModels.swift */,
+				AAPAM02 /* PopoverAppearance.swift */,
 				AACFS002 /* ConfigurationSchema.swift */,
 				AA0D6A16 /* ConfigurationModels.swift */,
 				AACFS004 /* ConfigurationSchema.swift */,
@@ -592,6 +598,8 @@
 				AAUDK01 /* UserDefaultsKeys.swift in Sources */,
 				AALGN01 /* LoginItemManager.swift in Sources */,
 				AAGSV01 /* GeneralSettingsView.swift in Sources */,
+				AAPAM01 /* PopoverAppearance.swift in Sources */,
+				AAPAV01 /* PopoverAppearanceView.swift in Sources */,
 				AALTS01 /* LoginTileSpawner.swift in Sources */,
 				AA2B0DD5 /* DockLockManager.swift in Sources */,
 				AA218BB9 /* DockLockSettingsView.swift in Sources */,
