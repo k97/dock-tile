@@ -101,71 +101,20 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         let launcherView = LauncherView(configuration: configuration)
         let controller = NSHostingController(rootView: launcherView)
 
+        // Let the SwiftUI content drive the popover size. `LauncherView` routes to
+        // `StackPopoverView` / `ListPopoverView`, which size themselves entirely from the
+        // `PopoverMetrics` seam (the global Popover Appearance settings). Sizing the popover from
+        // that ideal size — instead of the old hard-coded `calculatePopoverSize()` — is what makes
+        // the saved settings (Popover Size / Tile Size / Spacing / Labels) actually apply to each
+        // helper tile's real Dock popover, per its own grid/list layout, matching the live preview.
+        controller.sizingOptions = [.preferredContentSize]
+
         // Keep strong reference to prevent deallocation
         self.hostingController = controller
 
-        // Calculate size based on layout mode and content
-        let size = calculatePopoverSize()
-
-        controller.view.frame = NSRect(origin: .zero, size: size)
-
         popover.contentViewController = controller
-        popover.contentSize = size
 
         return popover
-    }
-
-    /// Calculate popover size based on layout mode and number of apps
-    private func calculatePopoverSize() -> NSSize {
-        guard let screen = NSScreen.main else {
-            return NSSize(width: 340, height: 180)
-        }
-
-        let appCount = configuration?.appItems.count ?? 0
-
-        // Constrain max width to 80% of visible frame for ultra-wide/small displays
-        let maxWidth = screen.visibleFrame.width * 0.8
-
-        if configuration?.layoutMode == .list {
-            // List view: fixed width, height based on content
-            // Title (30) + apps (28 each) + divider (12) + utility items (56) + padding (16)
-            let baseHeight: CGFloat = 114  // Title + divider + utilities + padding
-            let appsHeight = CGFloat(max(appCount, 1)) * 28
-            let totalHeight = min(baseHeight + appsHeight, 400)
-            let width = min(220, maxWidth)
-            return NSSize(width: width, height: totalHeight)
-        } else {
-            // Grid view: dynamic width based on column count
-            guard appCount > 0 else {
-                let width = min(232, maxWidth)  // 2 cols minimum (100*2 + 8 + 16*2)
-                return NSSize(width: width, height: 180)
-            }
-
-            // Dynamic column count: 1-4 apps: 2 cols, 5-6: 3 cols, 7-8: 4 cols, etc.
-            let columnCount: Int
-            switch appCount {
-            case 0...4: columnCount = 2
-            case 5...6: columnCount = 3
-            case 7...8: columnCount = 4
-            case 9...10: columnCount = 5
-            case 11...12: columnCount = 6
-            default: columnCount = 7  // 13+ apps
-            }
-
-            // Calculate dynamic width: (itemWidth * cols) + (spacing * (cols-1)) + (padding * 2)
-            let itemWidth: CGFloat = 100   // 64 icon + padding + text width
-            let itemSpacing: CGFloat = 8
-            let horizontalPadding: CGFloat = 16
-            let dynamicWidth = CGFloat(columnCount) * itemWidth + CGFloat(columnCount - 1) * itemSpacing + horizontalPadding * 2
-
-            let rows = ceil(Double(appCount) / Double(columnCount))
-            let itemHeight: CGFloat = 100  // 64 icon + 6 spacing + text + padding
-            let rowSpacing: CGFloat = 12
-            let contentHeight = rows * Double(itemHeight) + Double(max(0, Int(rows) - 1)) * Double(rowSpacing)
-            let totalHeight = min(CGFloat(contentHeight) + 68, 500)  // 68 = header + padding
-            let width = min(dynamicWidth, maxWidth)
-            return NSSize(width: width, height: totalHeight)
-        }
     }
 
     /// Create anchor window and determine the preferred edge for popover

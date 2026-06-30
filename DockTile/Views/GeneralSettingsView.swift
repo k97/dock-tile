@@ -32,9 +32,12 @@ struct GeneralSettingsView: View {
     @AppStorage(UserDefaultsKeys.analyticsEnabled, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
     private var analyticsEnabled = true
 
-    /// Mirrors the persisted Popover Size only to render the drill-down row's trailing summary.
-    @AppStorage(UserDefaultsKeys.popoverSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var popoverSize: PopoverSizeTier = .medium
+    /// Mirror both layouts' persisted Popover Size for the drill-down row's trailing summary
+    /// ("Grid · M · List · M"). Grid and List are stored independently.
+    @AppStorage(UserDefaultsKeys.popoverGridSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
+    private var gridPopoverSize: PopoverSizeTier = .medium
+    @AppStorage(UserDefaultsKeys.popoverListSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
+    private var listPopoverSize: PopoverSizeTier = .medium
 
     var body: some View {
         NavigationStack {
@@ -186,10 +189,23 @@ struct GeneralSettingsView: View {
 
             Spacer()
 
-            Text(AppStrings.PopoverOption.size(popoverSize))
+            Text(popoverSummary)
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
+                .monospacedDigit()
         }
+    }
+
+    /// "Grid · M · List · M" — both independent popover configs at a glance.
+    private var popoverSummary: String {
+        func abbr(_ size: PopoverSizeTier) -> String {
+            switch size {
+            case .small: return "S"
+            case .medium: return "M"
+            case .large: return "L"
+            }
+        }
+        return "Grid · \(abbr(gridPopoverSize))  ·  List · \(abbr(listPopoverSize))"
     }
 
     // MARK: - Missing App Scan

@@ -16,54 +16,90 @@ import SwiftUI
 import AppKit
 
 struct PopoverAppearanceView: View {
-    /// Edits are staged here and only written to the shared suite on **Save** (draft/commit model),
-    /// so helper popovers never read a half-applied change. The live preview renders this draft.
-    @State private var draft: PopoverSettings
-    /// The last-saved baseline, used to drive the Save button's dirty state and to revert on close.
-    @State private var savedBaseline: PopoverSettings
+    /// Grid and List are configured **independently** — each layout has its own staged draft, only
+    /// written to the shared suite on **Save** (draft/commit). A grid tile reads the grid config, a
+    /// list tile the list config. The live preview renders whichever the Configure switcher is on.
+    @State private var gridDraft: PopoverSettings
+    @State private var listDraft: PopoverSettings
+    /// Last-saved baselines, used to drive the Save button's dirty state.
+    @State private var gridBaseline: PopoverSettings
+    @State private var listBaseline: PopoverSettings
 
-    /// Seed both draft and baseline from the persisted (shared-suite) values so the preview opens on
-    /// what's actually live, with no first-render flash through the defaults.
+    /// Seed each layout's draft + baseline from its persisted values so the preview opens on what's
+    /// actually live, with no first-render flash through the defaults.
     init() {
-        let loaded = PopoverSettings.load()
-        _draft = State(initialValue: loaded)
-        _savedBaseline = State(initialValue: loaded)
+        let grid = PopoverSettings.load(layout: .grid)
+        let list = PopoverSettings.load(layout: .list)
+        _gridDraft = State(initialValue: grid)
+        _listDraft = State(initialValue: list)
+        _gridBaseline = State(initialValue: grid)
+        _listBaseline = State(initialValue: list)
     }
 
-    /// Convenience bindings into the draft for each control. `animation` is built explicitly because
-    /// `$draft.animation` would resolve to SwiftUI's `Binding.animation(_:)` method, not the field.
-    private var popoverSize: Binding<PopoverSizeTier> { $draft.popoverSize }
-    private var tileSize: Binding<PopoverSizeTier> { $draft.tileSize }
-    private var animation: Binding<PopoverAnimationTier> {
-        Binding(get: { draft.animation }, set: { draft.animation = $0 })
-    }
-    private var spacing: Binding<PopoverSpacingTier> { $draft.spacing }
-    private var showLabels: Binding<Bool> { $draft.showLabels }
-    private var highlightOnHover: Binding<Bool> { $draft.highlightOnHover }
+    /// Tile list + helper visibility — used to push the saved settings to the running Dock tiles.
+    @EnvironmentObject private var configManager: ConfigurationManager
 
-    /// Save is enabled only when the draft differs from what's persisted; Reset only when the draft
-    /// isn't already the spec defaults.
-    private var isDirty: Bool { draft != savedBaseline }
-    private var isAtDefaults: Bool { draft == .default }
+    /// True while helpers are being rebuilt + relaunched — drives the Save button's loading state.
+    @State private var isApplying = false
+    /// Presents the one-time "applying restarts the Dock" confirmation before the rebuild.
+    @State private var showApplyRestartPrompt = false
 
-    /// Which layout the *preview* shows. Preview-only — the real per-tile Grid/List choice still
-    /// lives on the Tile Detail screen, so flipping this never touches any tile's config.
+    /// Which layout's config the form edits AND the preview shows. This is the **Configure** panel
+    /// switcher — NOT a persisted tile setting (per-tile Grid/List lives on Tile Detail). Switching
+    /// it just changes which independent config the controls below read from and write to.
     @State private var previewLayout: LayoutMode = .grid
+
+    /// The config the form is currently editing — grid or list per the Configure switcher. All
+    /// control handlers route through this so they only ever touch the active layout's config.
+    private var activeDraft: Binding<PopoverSettings> {
+        Binding(
+            get: { previewLayout == .grid ? gridDraft : listDraft },
+            set: { if previewLayout == .grid { gridDraft = $0 } else { listDraft = $0 } }
+        )
+    }
+
+    /// Per-control bindings into the *active* config. `animation` is built explicitly because
+    /// `$x.animation` would resolve to SwiftUI's `Binding.animation(_:)` method, not the field.
+    private var popoverSize: Binding<PopoverSizeTier> {
+        Binding(get: { activeDraft.wrappedValue.popoverSize }, set: { activeDraft.wrappedValue.popoverSize = $0 })
+    }
+    private var tileSize: Binding<PopoverSizeTier> {
+        Binding(get: { activeDraft.wrappedValue.tileSize }, set: { activeDraft.wrappedValue.tileSize = $0 })
+    }
+    private var animation: Binding<PopoverAnimationTier> {
+        Binding(get: { activeDraft.wrappedValue.animation }, set: { activeDraft.wrappedValue.animation = $0 })
+    }
+    private var spacing: Binding<PopoverSpacingTier> {
+        Binding(get: { activeDraft.wrappedValue.spacing }, set: { activeDraft.wrappedValue.spacing = $0 })
+    }
+    private var highlightOnHover: Binding<Bool> {
+        Binding(get: { activeDraft.wrappedValue.highlightOnHover }, set: { activeDraft.wrappedValue.highlightOnHover = $0 })
+    }
+    /// Show Labels is a Grid-only setting (a list popover always labels its rows), so it writes the
+    /// grid config directly — its row is only shown when the Grid panel is active.
+    private var showLabels: Binding<Bool> {
+        Binding(get: { gridDraft.showLabels }, set: { gridDraft.showLabels = $0 })
+    }
+
+    /// Save is enabled when EITHER layout's draft differs from what's persisted (both are committed
+    /// together). Reset affects only the active config, so it's gated on the active config alone.
+    private var isDirty: Bool { gridDraft != gridBaseline || listDraft != listBaseline }
+    private var isActiveAtDefaults: Bool { activeDraft.wrappedValue == .default }
 
     /// When the system Reduce Motion setting is on we force Animation to None and disable the
     /// control (HIG: animation speed follows the OS preference, not an in-app override).
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var motionDuration: Double {
-        PopoverMetrics.animationDuration(draft.animation, reduceMotion: reduceMotion)
+        PopoverMetrics.animationDuration(activeDraft.wrappedValue.animation, reduceMotion: reduceMotion)
     }
 
     /// A signature of every value the real popover reads — changing it forces the embedded panel to
-    /// re-init and re-read `PopoverSettings.load()` from the shared suite (the @AppStorage writes
-    /// land there first), so the preview always mirrors the shipped rendering 1:1.
+    /// re-init and re-read the active config, so the preview always mirrors the shipped rendering 1:1.
     private var previewSignature: String {
-        [draft.popoverSize.rawValue, draft.tileSize.rawValue, draft.spacing.rawValue, draft.animation.rawValue,
-         draft.showLabels ? "L" : "l", draft.highlightOnHover ? "H" : "h", previewLayout.rawValue]
+        let a = activeDraft.wrappedValue
+        return [a.popoverSize.rawValue, a.tileSize.rawValue, a.spacing.rawValue, a.animation.rawValue,
+                a.showLabels ? "L" : "l", a.highlightOnHover ? "H" : "h", previewLayout.rawValue]
             .joined(separator: "-")
     }
 
@@ -80,7 +116,7 @@ struct PopoverAppearanceView: View {
             .frame(maxWidth: .infinity)
         }
         .background(NSColorBackgroundView.windowBackground)
-        .navigationTitle(AppStrings.Settings.popover)
+        .navigationTitle(AppStrings.Settings.popoverAppearance)
         .toolbar {
             // HIG: window-level actions live in the toolbar. Reset is the secondary (plain bordered)
             // button; Save is the primary (accent-tinted, prominent) action on the trailing edge.
@@ -91,14 +127,43 @@ struct PopoverAppearanceView: View {
                 .buttonStyle(.bordered)
                 .labelStyle(.iconOnly)
                 .help(AppStrings.Button.resetToDefaults)
-                .disabled(isAtDefaults)
+                .disabled(isActiveAtDefaults || isApplying)
 
-                Button(AppStrings.Button.save, action: save)
-                    .buttonStyle(.borderedProminent)
-                    .tint(.accentColor)
-                    .keyboardShortcut("s", modifiers: .command)
-                    .disabled(!isDirty)
+                Button(action: save) {
+                    if isApplying {
+                        // Loading state while rebuilding the tiles: spinner + "Applying…".
+                        HStack(spacing: 6) {
+                            ProgressView().controlSize(.small)
+                            Text(AppStrings.Button.saving)
+                        }
+                    } else {
+                        Text(AppStrings.Button.save)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.accentColor)
+                // A prominent (accent-filled) button uses a white "on-accent" label so it stays legible
+                // on the fill in BOTH light and dark mode (the Tahoe toolbar otherwise tints the label
+                // itself the accent colour → unreadable blue-on-blue).
+                .foregroundStyle(.white)
+                // HIG button states: a disabled control reduces prominence by dimming the WHOLE
+                // control. In this toolbar `.disabled()` dims only the label, leaving a bright-blue
+                // fill with faded text (uneven). Fading the whole button fades fill + label together,
+                // so it reads as one uniformly-dimmed "disabled blue" button. Stays full while there's
+                // something to do (dirty) or while applying (busy + spinner).
+                .opacity((isDirty || isApplying) ? 1.0 : 0.45)
+                .keyboardShortcut("s", modifiers: .command)
+                .disabled(isApplying || !isDirty)
             }
+        }
+        .alert(AppStrings.Alert.applyPopoverTitle, isPresented: $showApplyRestartPrompt) {
+            Button(AppStrings.Button.applyToTiles) {
+                UserDefaults.standard.set(true, forKey: UserDefaultsKeys.hasAcknowledgedPopoverApplyRestart)
+                Task { await applyToRunningTiles() }
+            }
+            Button(AppStrings.Button.cancel, role: .cancel) { }
+        } message: {
+            Text(AppStrings.Alert.applyPopoverMessage)
         }
     }
 
@@ -179,11 +244,11 @@ struct PopoverAppearanceView: View {
             if previewLayout == .grid {
                 StackPopoverView(configuration: PreviewAppCatalog.sampleConfiguration,
                                  onLaunch: {}, showsBackground: false, isPreview: true,
-                                 settingsOverride: draft)
+                                 settingsOverride: activeDraft.wrappedValue)
             } else {
                 ListPopoverView(configuration: PreviewAppCatalog.sampleConfiguration,
                                 onLaunch: {}, showsBackground: false, isPreview: true,
-                                settingsOverride: draft)
+                                settingsOverride: activeDraft.wrappedValue)
             }
         }
         .id(previewSignature)
@@ -207,12 +272,9 @@ struct PopoverAppearanceView: View {
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: 0) {
+            configureStrip
             sectionHeader(AppStrings.Settings.popover)
             card {
-                segmentedRow(AppStrings.Label.popoverLayout, selection: $previewLayout, options: LayoutMode.allCases) {
-                    $0.displayName
-                }
-                divider
                 segmentedRow(AppStrings.Label.popoverSize, selection: popoverSize, options: PopoverSizeTier.allCases) {
                     AppStrings.PopoverOption.size($0)
                 }
@@ -242,6 +304,33 @@ struct PopoverAppearanceView: View {
                 .padding(.horizontal, 4)
                 .padding(.top, 6)
         }
+    }
+
+    /// The "Configure" panel switcher: a header + subtitle on the left and a Grid/List segmented
+    /// control on the right. This is NOT a persisted setting — it selects which independent config
+    /// (grid / list) the form below edits and the preview shows.
+    private var configureStrip: some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(AppStrings.Settings.popoverConfigure.uppercased())
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Text(AppStrings.Settings.popoverConfigureSubtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Picker("", selection: $previewLayout) {
+                ForEach(LayoutMode.allCases, id: \.self) { layout in
+                    Text(layout.displayName).tag(layout)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+        }
+        .padding(.horizontal, 4)
+        .padding(.bottom, 10)
     }
 
     // Animation row: disabled + forced to None when Reduce Motion is on, with an explanatory caption.
@@ -367,21 +456,54 @@ struct PopoverAppearanceView: View {
 
     // MARK: - Actions
 
-    /// Commit the staged draft to the shared suite. Helpers pick it up on their next popover open.
-    private func save() {
-        draft.persist()
-        savedBaseline = draft
-        AnalyticsService.shared.log(.settingChanged, ["setting": "popover_appearance", "saved": true])
-        DiagnosticsLog.shared.log("settings", "Popover appearance saved")
+    /// Visible tiles that have a helper bundle on disk — the ones a rebuild can push the new look to.
+    private var applicableHelpers: [DockTileConfiguration] {
+        configManager.configurations.filter {
+            $0.isVisibleInDock && HelperBundleManager.shared.helperExists(for: $0)
+        }
     }
 
-    /// Stage the spec defaults into the draft (previewed live). The user still presses **Save** to
-    /// commit — consistent with the explicit-save model.
+    /// Commit the staged draft to the shared suite, then offer to push it to the running tiles.
+    /// Persisting alone is enough for the *next* popover open; applying now rebuilds the pinned
+    /// helpers so the change takes effect immediately (one Dock restart).
+    private func save() {
+        // Both independent configs are committed together.
+        gridDraft.persist(layout: .grid)
+        listDraft.persist(layout: .list)
+        gridBaseline = gridDraft
+        listBaseline = listDraft
+        AnalyticsService.shared.log(.settingChanged, ["setting": "popover_appearance", "saved": true])
+        DiagnosticsLog.shared.log("settings", "Popover appearance saved (grid + list)")
+
+        // No pinned tiles → nothing to push; the save is done.
+        guard !applicableHelpers.isEmpty else { return }
+        // Consent is read/written explicitly (not via @AppStorage) so the gate can't be skewed by a
+        // stale cross-process defaults cache — the prompt must reliably show the first time.
+        let acknowledged = UserDefaults.standard.bool(forKey: UserDefaultsKeys.hasAcknowledgedPopoverApplyRestart)
+        if acknowledged {
+            Task { await applyToRunningTiles() }
+        } else {
+            showApplyRestartPrompt = true   // first time: warn that the Dock will restart
+        }
+    }
+
+    /// Rebuild + relaunch the pinned helpers so their popovers adopt the just-saved settings.
+    /// Drives the Save button's loading state for the duration (rebuild + single Dock restart).
+    @MainActor
+    private func applyToRunningTiles() async {
+        isApplying = true
+        defer { isApplying = false }
+        await HelperMigrationManager(configManager: configManager).reapply(applicableHelpers)
+        DiagnosticsLog.shared.log("settings", "Popover appearance applied to running tiles")
+    }
+
+    /// Stage the spec defaults into the **active** config only (previewed live). The other layout's
+    /// config is untouched. The user still presses **Save** to commit — consistent with the model.
     private func resetToDefaults() {
         withAnimation(.easeInOut(duration: max(0.18, motionDuration))) {
-            draft = .default
+            activeDraft.wrappedValue = .default
         }
-        DiagnosticsLog.shared.log("settings", "Popover appearance reset to defaults (staged)")
+        DiagnosticsLog.shared.log("settings", "Popover \(previewLayout.rawValue) config reset to defaults (staged)")
     }
 
     private func openAccessibilitySettings() {

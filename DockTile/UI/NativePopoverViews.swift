@@ -187,10 +187,11 @@ struct StackPopoverView: View {
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
-    /// Saved popover-appearance values, read once from the shared suite when this popover is built.
-    /// Helpers render the popover, so this picks up the main app's Settings → Popover values on the
-    /// next open (matches the icon-style propagation model). The preview overrides it with a draft.
-    private let loadedSettings = PopoverSettings.load()
+    /// Saved **Grid** popover-appearance values, read once from the shared suite when this popover is
+    /// built. Helpers render the popover, so this picks up the main app's Settings → Popover (Grid
+    /// panel) values on the next open (matches the icon-style propagation model). The preview
+    /// overrides it with a draft.
+    private let loadedSettings = PopoverSettings.load(layout: .grid)
 
     /// Draft override (preview) wins over the saved values; nil → the real loaded settings.
     private var settings: PopoverSettings { settingsOverride ?? loadedSettings }
@@ -497,8 +498,9 @@ struct ListPopoverView: View {
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
-    /// Saved popover-appearance values, read once when the popover is built (see StackPopoverView).
-    private let loadedSettings = PopoverSettings.load()
+    /// Saved **List** popover-appearance values, read once when the popover is built (see
+    /// StackPopoverView). List has no Show Labels setting — it always labels its rows.
+    private let loadedSettings = PopoverSettings.load(layout: .list)
 
     /// Draft override (preview) wins over the saved values; nil → the real loaded settings.
     private var settings: PopoverSettings { settingsOverride ?? loadedSettings }

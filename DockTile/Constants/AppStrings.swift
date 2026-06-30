@@ -44,6 +44,18 @@ enum AppStrings {
             comment: "Checkbox label to suppress future Dock restart alerts"
         )
 
+        static let applyPopoverTitle = NSLocalizedString(
+            "alert.applyPopover.title",
+            value: "Apply to your Dock tiles?",
+            comment: "Confirmation title before rebuilding tiles to apply popover appearance settings"
+        )
+
+        static let applyPopoverMessage = NSLocalizedString(
+            "alert.applyPopover.message",
+            value: "Dock Tile will rebuild your pinned tiles with the new popover look and briefly restart the Dock. Your other Dock items won't be affected.",
+            comment: "Confirmation message warning the Dock will restart when applying popover settings"
+        )
+
         static let missingAppsTitle = NSLocalizedString(
             "alert.missingApps.title",
             value: "Some apps are no longer installed",
@@ -106,6 +118,18 @@ enum AppStrings {
             "button.save",
             value: "Save",
             comment: "Primary toolbar button that commits the popover appearance settings"
+        )
+
+        static let saving = NSLocalizedString(
+            "button.saving",
+            value: "Applying…",
+            comment: "Loading label on the Save button while applying settings to Dock tiles"
+        )
+
+        static let applyToTiles = NSLocalizedString(
+            "button.applyToTiles",
+            value: "Apply",
+            comment: "Confirm button that rebuilds tiles to apply popover settings"
         )
 
         static let openAccessibilitySettings = NSLocalizedString(
@@ -556,7 +580,7 @@ enum AppStrings {
 
         static let popoverAppearance = NSLocalizedString(
             "settings.popover.appearance",
-            value: "Popover Appearance",
+            value: "Appearance",
             comment: "Title of the drill-down row in General that opens popover settings"
         )
 
@@ -570,6 +594,18 @@ enum AppStrings {
             "settings.popover.section.tiles",
             value: "Tiles",
             comment: "Section header for the per-item controls inside the popover settings"
+        )
+
+        static let popoverConfigure = NSLocalizedString(
+            "settings.popover.configure",
+            value: "Configure",
+            comment: "Label for the Grid/List panel switcher in popover settings"
+        )
+
+        static let popoverConfigureSubtitle = NSLocalizedString(
+            "settings.popover.configure.subtitle",
+            value: "Each layout's settings are saved independently",
+            comment: "Subtitle explaining that Grid and List popover settings are stored separately"
         )
 
         static let popoverFooter = NSLocalizedString(

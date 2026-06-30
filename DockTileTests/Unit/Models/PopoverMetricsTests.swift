@@ -137,4 +137,62 @@ struct PopoverMetricsTests {
         #expect(s.popoverSize == .medium)
         #expect(s.animation == .default)
     }
+
+    // MARK: - Per-layout persistence (Grid & List stored independently)
+
+    /// Isolated ephemeral suite per call (unique name, torn down in `defer`) — never touches
+    /// `UserDefaults.standard`, so it's parallel-safe.
+    private func withTempDefaults(_ body: (UserDefaults) -> Void) {
+        let name = "com.docktile.tests.popover.\(UUID().uuidString)"
+        let d = UserDefaults(suiteName: name)!
+        defer { d.removePersistentDomain(forName: name) }
+        body(d)
+    }
+
+    @Test("Grid and List configs persist to independent keys and never bleed into each other")
+    func gridAndListPersistIndependently() {
+        withTempDefaults { d in
+            var grid = PopoverSettings.default
+            grid.popoverSize = .large
+            grid.tileSize = .large
+            var list = PopoverSettings.default
+            list.popoverSize = .small
+            list.spacing = .compact
+
+            grid.persist(layout: .grid, to: d)
+            list.persist(layout: .list, to: d)
+
+            let loadedGrid = PopoverSettings.load(layout: .grid, from: d)
+            let loadedList = PopoverSettings.load(layout: .list, from: d)
+            #expect(loadedGrid.popoverSize == .large)
+            #expect(loadedGrid.tileSize == .large)
+            #expect(loadedList.popoverSize == .small)
+            #expect(loadedList.spacing == .compact)
+            // The other layout's fields are untouched by each write.
+            #expect(loadedGrid.spacing == .comfortable)
+            #expect(loadedList.tileSize == .medium)
+        }
+    }
+
+    @Test("List config never writes a Show Labels key; List load always resolves showLabels true")
+    func listSkipsShowLabels() {
+        withTempDefaults { d in
+            var list = PopoverSettings.default
+            list.showLabels = false   // even if a caller flips it, List must not persist it
+            list.persist(layout: .list, to: d)
+
+            #expect(d.object(forKey: UserDefaultsKeys.popoverListSize) != nil)
+            #expect(d.object(forKey: "popover.list.showLabels") == nil)
+            // A list popover always labels its rows, regardless of any stored value.
+            #expect(PopoverSettings.load(layout: .list, from: d).showLabels == true)
+        }
+    }
+
+    @Test("Absent per-layout values resolve to the spec defaults")
+    func loadDefaultsWhenAbsent() {
+        withTempDefaults { d in
+            #expect(PopoverSettings.load(layout: .grid, from: d) == PopoverSettings.default)
+            #expect(PopoverSettings.load(layout: .list, from: d) == PopoverSettings.default)
+        }
+    }
 }

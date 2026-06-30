@@ -61,37 +61,68 @@ struct PopoverSettings: Equatable {
         highlightOnHover: true
     )
 
-    /// Read the current values from the shared suite. Used by helper popovers (which can't use
-    /// `@AppStorage` ergonomically across processes). Delegates parsing to the pure `resolve(...)`
-    /// seam below so the fallback logic is unit-tested without touching real UserDefaults.
+    /// The shared-suite keys for one layout's config. Grid and List are stored independently; List
+    /// has no `showLabels` key (a list popover always labels its rows).
+    private struct Keys {
+        let size, tileSize, animation, spacing, highlightOnHover: String
+        let showLabels: String?
+    }
+
+    private static func keys(for layout: LayoutMode) -> Keys {
+        switch layout {
+        case .grid:
+            return Keys(size: UserDefaultsKeys.popoverGridSize,
+                        tileSize: UserDefaultsKeys.popoverGridTileSize,
+                        animation: UserDefaultsKeys.popoverGridAnimation,
+                        spacing: UserDefaultsKeys.popoverGridSpacing,
+                        highlightOnHover: UserDefaultsKeys.popoverGridHighlightOnHover,
+                        showLabels: UserDefaultsKeys.popoverGridShowLabels)
+        case .list:
+            return Keys(size: UserDefaultsKeys.popoverListSize,
+                        tileSize: UserDefaultsKeys.popoverListTileSize,
+                        animation: UserDefaultsKeys.popoverListAnimation,
+                        spacing: UserDefaultsKeys.popoverListSpacing,
+                        highlightOnHover: UserDefaultsKeys.popoverListHighlightOnHover,
+                        showLabels: nil)
+        }
+    }
+
+    /// Read one layout's config from the shared suite. Used by helper popovers (which can't use
+    /// `@AppStorage` ergonomically across processes) — a grid tile loads `.grid`, a list tile `.list`.
+    /// Delegates parsing to the pure `resolve(...)` seam so the fallback logic is unit-tested without
+    /// touching real UserDefaults. List has no stored `showLabels` → resolves to `true` (always labels).
     static func load(
+        layout: LayoutMode,
         from defaults: UserDefaults? = UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName)
     ) -> PopoverSettings {
         guard let d = defaults else { return .default }
+        let k = keys(for: layout)
         return resolve(
-            sizeRaw: d.string(forKey: UserDefaultsKeys.popoverSize),
-            tileRaw: d.string(forKey: UserDefaultsKeys.popoverTileSize),
-            animationRaw: d.string(forKey: UserDefaultsKeys.popoverAnimation),
-            spacingRaw: d.string(forKey: UserDefaultsKeys.popoverSpacing),
+            sizeRaw: d.string(forKey: k.size),
+            tileRaw: d.string(forKey: k.tileSize),
+            animationRaw: d.string(forKey: k.animation),
+            spacingRaw: d.string(forKey: k.spacing),
             // `object(forKey:)` distinguishes "absent" (→ default ON) from an explicit false.
-            showLabels: d.object(forKey: UserDefaultsKeys.popoverShowLabels) as? Bool,
-            highlightOnHover: d.object(forKey: UserDefaultsKeys.popoverHighlightOnHover) as? Bool
+            showLabels: k.showLabels.flatMap { d.object(forKey: $0) as? Bool },
+            highlightOnHover: d.object(forKey: k.highlightOnHover) as? Bool
         )
     }
 
-    /// Write these values to the shared suite — the explicit counterpart to `load()`. The Settings
-    /// pane stages edits in a draft and calls this only when the user presses **Save**, so helper
-    /// popovers pick up a coherent set on their next open (not mid-edit).
+    /// Write one layout's config to the shared suite — the explicit counterpart to `load(layout:)`.
+    /// The Settings pane stages edits per layout and calls this for both on **Save**, so helper
+    /// popovers pick up a coherent set on their next open (not mid-edit). List skips `showLabels`.
     func persist(
+        layout: LayoutMode,
         to defaults: UserDefaults? = UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName)
     ) {
         guard let d = defaults else { return }
-        d.set(popoverSize.rawValue, forKey: UserDefaultsKeys.popoverSize)
-        d.set(tileSize.rawValue, forKey: UserDefaultsKeys.popoverTileSize)
-        d.set(animation.rawValue, forKey: UserDefaultsKeys.popoverAnimation)
-        d.set(spacing.rawValue, forKey: UserDefaultsKeys.popoverSpacing)
-        d.set(showLabels, forKey: UserDefaultsKeys.popoverShowLabels)
-        d.set(highlightOnHover, forKey: UserDefaultsKeys.popoverHighlightOnHover)
+        let k = Self.keys(for: layout)
+        d.set(popoverSize.rawValue, forKey: k.size)
+        d.set(tileSize.rawValue, forKey: k.tileSize)
+        d.set(animation.rawValue, forKey: k.animation)
+        d.set(spacing.rawValue, forKey: k.spacing)
+        d.set(highlightOnHover, forKey: k.highlightOnHover)
+        if let showLabelsKey = k.showLabels { d.set(showLabels, forKey: showLabelsKey) }
     }
 
     /// Pure mapping from raw stored values → settings, with the spec defaults as the fallback for
