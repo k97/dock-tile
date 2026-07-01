@@ -547,7 +547,7 @@ struct DockTileDetailView: View {
 
     private func addItem() {
         let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
+        panel.allowsMultipleSelection = true
         panel.canChooseDirectories = true
         panel.canChooseFiles = true
         panel.allowedContentTypes = [.application, .folder]
@@ -556,35 +556,56 @@ struct DockTileDetailView: View {
         panel.prompt = AppStrings.Button.add
         panel.message = AppStrings.FilePicker.message
 
-        if panel.runModal() == .OK, let url = panel.url {
+        guard panel.runModal() == .OK else { return }
+
+        // Batch-add every selected URL. Newly built items accumulate here so the
+        // debounced auto-save fires once, and so duplicates within the same
+        // selection are caught against items added earlier in this batch.
+        var newItems: [AppItem] = []
+        var skipped = 0
+
+        for url in panel.urls {
             var isDirectory: ObjCBool = false
             FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
 
             if isDirectory.boolValue && !url.pathExtension.lowercased().contains("app") {
                 // It's a folder (not an .app bundle)
                 let folderPath = url.path
-                if editedConfig.appItems.contains(where: { $0.folderPath == folderPath }) {
-                    NSSound.beep()
-                    return
+                let isDuplicate = editedConfig.appItems.contains { $0.folderPath == folderPath }
+                    || newItems.contains { $0.folderPath == folderPath }
+                if isDuplicate {
+                    skipped += 1
+                    continue
                 }
                 if let folderItem = AppItem.from(folderURL: url) {
-                    editedConfig.appItems.append(folderItem)
-                    DiagnosticsLog.shared.log("tile", "Added folder '\(folderItem.name)' to '\(editedConfig.name)' (\(editedConfig.appItems.count) item(s))")
+                    newItems.append(folderItem)
                 }
             } else {
                 // It's an application
-                if let bundle = Bundle(url: url),
-                   let bundleId = bundle.bundleIdentifier,
-                   editedConfig.appItems.contains(where: { $0.bundleIdentifier == bundleId }) {
-                    NSSound.beep()
-                    return
+                let bundleId = Bundle(url: url)?.bundleIdentifier
+                let isDuplicate = bundleId.map { id in
+                    editedConfig.appItems.contains { $0.bundleIdentifier == id }
+                        || newItems.contains { $0.bundleIdentifier == id }
+                } ?? false
+                if isDuplicate {
+                    skipped += 1
+                    continue
                 }
                 if let appItem = AppItem.from(appURL: url) {
-                    editedConfig.appItems.append(appItem)
-                    DiagnosticsLog.shared.log("tile", "Added app '\(appItem.name)' to '\(editedConfig.name)' (\(editedConfig.appItems.count) item(s))")
+                    newItems.append(appItem)
                 }
             }
         }
+
+        if newItems.isEmpty {
+            // Nothing added (all duplicates or unreadable) — signal per HIG.
+            NSSound.beep()
+        } else {
+            editedConfig.appItems.append(contentsOf: newItems)
+        }
+
+        let names = newItems.map(\.name).joined(separator: ", ")
+        DiagnosticsLog.shared.log("tile", "Added \(newItems.count) item(s) to '\(editedConfig.name)', skipped \(skipped) duplicate(s) (\(editedConfig.appItems.count) total)\(names.isEmpty ? "" : ": \(names)")")
     }
 }
 

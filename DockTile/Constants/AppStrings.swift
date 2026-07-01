@@ -916,7 +916,7 @@ enum AppStrings {
     enum FilePicker {
         static let message = NSLocalizedString(
             "filePicker.message",
-            value: "Select an application or folder to add",
+            value: "Select one or more applications or folders to add",
             comment: "Message in file picker dialog"
         )
     }
