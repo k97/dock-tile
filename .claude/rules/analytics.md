@@ -22,6 +22,10 @@ Collection is ON only when **Release build AND user consent**:
 - Consent is **opt-out, default ON**, key `UserDefaultsKeys.analyticsEnabled` stored in the
   **shared suite** `com.docktile.shared` (NOT the per-app domain) so helpers honour the main
   app's toggle. UI: the "Share anonymous usage data" toggle in [GeneralSettingsView](../../DockTile/Views/GeneralSettingsView.swift).
+- **Pure gating seams** (regression-guarded, `AnalyticsServiceTests`): `AnalyticsService.resolveConsent(storedValue:)`
+  (opt-out default) and `.shouldCollect(isRelease:consentGranted:)` drive `applyCollectionState`.
+  `AnalyticsEvent` is `CaseIterable` and a test asserts every name stays Firebase-safe (lowercase
+  snake_case, ≤40 chars, no reserved prefix, unique) so a new event can't silently break in prod.
 
 ## Helper bundles
 
