@@ -27,6 +27,7 @@ Controlled via Info.plist variables (`DTEnvironment`, `DTHelperPrefix`, `DTPrefs
 ## Rules
 
 - [Architecture](/.claude/rules/architecture.md) — Helper bundles, Ghost/App mode, NSPopover, CFPreferences
+- [Smart Add](/.claude/rules/smart-add.md) — On-device tile suggestions on +, pure ranking seams, opt-out toggle
 - [Dock Lock](/.claude/rules/dock-lock.md) — Pin Dock to one display, CGEvent tap, Accessibility permission
 - [Start at Login](/.claude/rules/login-items.md) — SMAppService launcher agent, opt-out default, reconcile-on-launch (Sparkle fix)
 - [Development](/.claude/rules/development.md) — Code patterns, schema evolution, shared utilities
