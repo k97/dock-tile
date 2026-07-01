@@ -33,8 +33,11 @@ struct DockTileApp: App {
             DockTileConfigurationView()
                 .environmentObject(configManager)
                 .environmentObject(updateController)
+                .environmentObject(SmartAddEngine.shared)
                 .onAppear {
                     appDelegate.configManager = configManager
+                    // Refresh the on-device usage signal so the next + press has fresh suggestions.
+                    SmartAddEngine.shared.warmUp()
                 }
                 // Hand SwiftUI's openWindow action to the AppDelegate so AppKit-side code
                 // (deep links, Dock-icon reopen) can recreate this window after it's closed.

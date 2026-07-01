@@ -23,7 +23,24 @@ enum SidebarSelection: Hashable {
 
 struct DockTileConfigurationView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
+    @EnvironmentObject private var smartAddEngine: SmartAddEngine
     @State private var isDrilledDown = false
+
+    /// Smart Add sheet state. Driven by `.sheet(item:)` — NOT `isPresented` + a separate array.
+    /// With a separate `Bool` + array, SwiftUI can evaluate the sheet content while the array is
+    /// still its old (empty) value, so the sheet opens with no cards. Carrying the suggestions in
+    /// the item guarantees the content is built from the exact value that opened it.
+    @State private var smartAddPresentation: SmartAddPresentation?
+
+    /// Identifiable wrapper so `.sheet(item:)` builds the sheet with these exact suggestions.
+    private struct SmartAddPresentation: Identifiable {
+        let id = UUID()
+        let suggestions: [TileSuggestion]
+    }
+
+    /// Smart Add on/off (opt-out, default ON). When OFF, + always creates a blank tile — see
+    /// the General settings toggle. Main-app domain.
+    @AppStorage(UserDefaultsKeys.smartAddEnabled) private var smartAddEnabled = true
 
     /// Single source of truth for what the sidebar has selected and what fills the detail
     /// column — a tile or an inline Settings pane. Kept in sync with `configManager`'s tile
@@ -37,7 +54,7 @@ struct DockTileConfigurationView: View {
     var body: some View {
         NavigationSplitView {
             // Sidebar with tiles + inline Settings, accordion-style sections
-            DockTileSidebarView(selection: $selection)
+            DockTileSidebarView(selection: $selection, onAdd: handleAddTapped)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
             detailColumn
@@ -89,6 +106,39 @@ struct DockTileConfigurationView: View {
             }
         } message: {
             Text(AppStrings.Alert.missingAppsMessage)
+        }
+        // Smart Add: shown when + finds on-device suggestions. Nothing here docks a tile — picking
+        // a suggestion only pre-fills Tile Detail; the explicit Add to Dock confirm stays there.
+        .sheet(item: $smartAddPresentation) { presentation in
+            SmartAddSheet(
+                suggestions: presentation.suggestions,
+                onUse: { suggestion in
+                    configManager.createConfiguration(from: suggestion)
+                    smartAddPresentation = nil
+                },
+                onCreateNew: {
+                    configManager.createConfiguration()
+                    smartAddPresentation = nil
+                },
+                onClose: { smartAddPresentation = nil }
+            )
+        }
+    }
+
+    /// The + toolbar action. Computes on-device suggestions: if any, present the Smart Add sheet;
+    /// otherwise fall through to today's blank-tile flow unchanged.
+    private func handleAddTapped() {
+        // Smart Add off → always the blank-tile flow.
+        guard smartAddEnabled else {
+            configManager.createConfiguration()
+            return
+        }
+
+        let suggestions = smartAddEngine.computeSuggestions(existing: configManager.configurations)
+        if suggestions.isEmpty {
+            configManager.createConfiguration()
+        } else {
+            smartAddPresentation = SmartAddPresentation(suggestions: suggestions)
         }
     }
 
@@ -268,4 +318,5 @@ struct EmptyConfigurationView: View {
     DockTileConfigurationView()
         .environmentObject(ConfigurationManager())
         .environmentObject(UpdateController())
+        .environmentObject(SmartAddEngine.shared)
 }

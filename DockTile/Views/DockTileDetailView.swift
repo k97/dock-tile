@@ -51,6 +51,11 @@ struct DockTileDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                // Provenance banner — only for tiles just created by Smart Add (transient flag).
+                if configManager.smartAddProvenanceIDs.contains(editedConfig.id) {
+                    smartAddBanner
+                }
+
                 // Hero section: Icon + Grouped Controls
                 heroSection
 
@@ -188,6 +193,46 @@ struct DockTileDetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Smart Add Provenance Banner
+
+    /// Subtle accent-tinted banner shown atop Tile Detail for a tile just created by Smart Add.
+    /// Explains the tile is a starting point and can be dismissed; it never persists across
+    /// relaunch (the flag is runtime-only in `ConfigurationManager`).
+    private var smartAddBanner: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
+                .accessibilityHidden(true)
+
+            Text(AppStrings.SmartAdd.provenanceBanner)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 8)
+
+            Button {
+                configManager.clearSmartAddProvenance(editedConfig.id)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(AppStrings.Button.done)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.12),
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(Color.accentColor.opacity(0.25), lineWidth: 1)
+        )
     }
 
     // MARK: - Hero Section (Figma Spec)
@@ -464,6 +509,10 @@ struct DockTileDetailView: View {
 
                 // Save configuration changes (including lastDockIndex)
                 configManager.updateConfiguration(configToSave)
+
+                // The user has acted on this tile (added/updated/removed) — retire the one-time
+                // Smart Add provenance banner.
+                configManager.clearSmartAddProvenance(configToSave.id)
 
                 // If only showInAppSwitcher changed but tile was already visible,
                 // we need to restart the helper to pick up the new activation policy
