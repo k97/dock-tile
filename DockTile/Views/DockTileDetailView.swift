@@ -581,12 +581,13 @@ struct DockTileDetailView: View {
                     newItems.append(folderItem)
                 }
             } else {
-                // It's an application
+                // It's an application. Dedup on the on-disk path (unique per .app bundle) rather
+                // than the bundle id: browser PWAs reuse one identifier across separate installs, so
+                // two genuinely different tiles (e.g. multi-account inboxes) can legitimately share it.
+                let appPath = url.path
                 let bundleId = Bundle(url: url)?.bundleIdentifier
-                let isDuplicate = bundleId.map { id in
-                    editedConfig.appItems.contains { $0.bundleIdentifier == id }
-                        || newItems.contains { $0.bundleIdentifier == id }
-                } ?? false
+                let isDuplicate = editedConfig.appItems.contains { $0.matchesApp(path: appPath, bundleId: bundleId) }
+                    || newItems.contains { $0.matchesApp(path: appPath, bundleId: bundleId) }
                 if isDuplicate {
                     skipped += 1
                     continue

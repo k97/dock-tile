@@ -20,7 +20,11 @@ enum AppLauncher {
         if app.isFolder, let folderPath = app.folderPath {
             DiagnosticsLog.shared.log("launch", "Opening folder from tile: \(app.name)")
             workspace.open(URL(fileURLWithPath: folderPath))
-        } else if let appURL = workspace.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+        } else if let appURL = AppItem.resolvedAppURL(
+            lastKnownPath: app.lastKnownPath,
+            pathExists: app.lastKnownPath.map { FileManager.default.fileExists(atPath: $0) } ?? false,
+            bundleResolvedURL: workspace.urlForApplication(withBundleIdentifier: app.bundleIdentifier)
+        ) {
             let config = NSWorkspace.OpenConfiguration()
             workspace.openApplication(at: appURL, configuration: config) { _, error in
                 if let error {

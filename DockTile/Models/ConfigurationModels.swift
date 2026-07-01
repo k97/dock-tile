@@ -510,4 +510,36 @@ struct AppItem: Identifiable, Codable, Hashable {
             folderPath: folderPath
         )
     }
+
+    // MARK: - Identity Helpers
+
+    /// True when this (application) item refers to the same on-disk app as `path` / `bundleId`.
+    ///
+    /// Identity is the on-disk **path** — unique per `.app` bundle — because browser PWAs
+    /// (Chrome/Edge) reuse a single `CFBundleIdentifier` across separate installs: the id derives
+    /// from the site URL, so the same site added under different browser profiles (multi-account
+    /// inboxes) yields distinct bundles that share one id. Bundle id is only a fallback for legacy
+    /// pre-v8 items that never stamped a `lastKnownPath`.
+    func matchesApp(path: String, bundleId: String?) -> Bool {
+        guard !isFolder else { return false }
+        if let known = lastKnownPath { return known == path }
+        guard let bundleId else { return false }
+        return bundleIdentifier == bundleId
+    }
+
+    /// Resolve the on-disk `.app` URL to act on for this item. Prefers the exact bundle at
+    /// `lastKnownPath` (so PWAs that share a bundle id resolve to their OWN install and launch
+    /// their OWN window), falling back to Launch Services bundle-id resolution when the path is
+    /// stale/missing — which self-heals a moved or updated app. Pure decision: callers supply the
+    /// probed facts so the rule stays unit-testable.
+    nonisolated static func resolvedAppURL(
+        lastKnownPath: String?,
+        pathExists: Bool,
+        bundleResolvedURL: @autoclosure () -> URL?
+    ) -> URL? {
+        if let path = lastKnownPath, pathExists {
+            return URL(fileURLWithPath: path)
+        }
+        return bundleResolvedURL()
+    }
 }
