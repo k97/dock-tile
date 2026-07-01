@@ -361,6 +361,30 @@
         }
       }
     },
+    "button.createNewTile": {
+      "comment": "Smart Add sheet — neutral button that starts a blank tile instead of a suggestion",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create New Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create New Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create New Tile"
+          }
+        }
+      }
+    },
     "button.customise": {
       "comment": "Button to open customization view",
       "extractionState": "manual",
@@ -669,6 +693,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "Update"
+          }
+        }
+      }
+    },
+    "button.useThisTile": {
+      "comment": "Smart Add sheet — button that creates a pre-filled tile from a suggestion",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use This Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use This Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use This Tile"
           }
         }
       }
@@ -1701,6 +1749,246 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dock Tile"
+          }
+        }
+      }
+    },
+    "smartAdd.privacyFootnote": {
+      "comment": "Footer note stating Smart Add suggestions are computed on-device only",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learned on your Mac. Never leaves your device."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learned on your Mac. Never leaves your device."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learned on your Mac. Never leaves your device."
+          }
+        }
+      }
+    },
+    "smartAdd.provenanceBanner": {
+      "comment": "Banner shown atop Tile Detail when a tile was just created by Smart Add",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created by Smart Add from your recent apps. Rename it, restyle it or edit the apps — then add it to your Dock."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created by Smart Add from your recent apps. Rename it, restyle it or edit the apps — then add it to your Dock."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created by Smart Add from your recent apps. Rename it, restyle it or edit the apps — then add it to your Dock."
+          }
+        }
+      }
+    },
+    "smartAdd.reason.byCategory": {
+      "comment": "Reason chip — apps grouped by their app category",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By category"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By category"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By category"
+          }
+        }
+      }
+    },
+    "smartAdd.reason.mostUsed": {
+      "comment": "Reason chip — the most-used cluster this week",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most used this week"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most used this week"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most used this week"
+          }
+        }
+      }
+    },
+    "smartAdd.reason.openedTogether": {
+      "comment": "Reason chip — apps repeatedly opened in the same session",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opened together"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opened together"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opened together"
+          }
+        }
+      }
+    },
+    "smartAdd.settings.sectionHeader": {
+      "comment": "General settings section header for the Smart Add toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Add"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Add"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Add"
+          }
+        }
+      }
+    },
+    "smartAdd.settings.toggleDescription": {
+      "comment": "Description under the Smart Add toggle in General settings",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Turn this off to always start with an empty tile."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Turn this off to always start with an empty tile."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Turn this off to always start with an empty tile."
+          }
+        }
+      }
+    },
+    "smartAdd.settings.toggleTitle": {
+      "comment": "Title of the Smart Add on/off toggle in General settings",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest tiles when I add one"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest tiles when I add one"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest tiles when I add one"
+          }
+        }
+      }
+    },
+    "smartAdd.subtitle": {
+      "comment": "Header subtitle of the Smart Add suggestion sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a tile to start from — you can rename it, restyle it and change the apps next."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a tile to start from — you can rename it, restyle it and change the apps next."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a tile to start from — you can rename it, restyle it and change the apps next."
+          }
+        }
+      }
+    },
+    "smartAdd.title": {
+      "comment": "Header title of the Smart Add suggestion sheet",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a Tile"
           }
         }
       }
