@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/macos-27-design-system-12f9dc8e-fab1-4150-b21a-cf65a5bf96f4/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/macos-27-design-system-12f9dc8e-fab1-4150-b21a-cf65a5bf96f4/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/macos-27-design-system-12f9dc8e-fab1-4150-b21a-cf65a5bf96f4/tokens/typography.css">
+<link rel="stylesheet" href="_ds/macos-27-design-system-12f9dc8e-fab1-4150-b21a-cf65a5bf96f4/tokens/semantic.css">
+<link rel="stylesheet" href="_ds/macos-27-design-system-12f9dc8e-fab1-4150-b21a-cf65a5bf96f4/tokens/base.css">
+<link rel="stylesheet" href="_ds/macos-27-design-system-12f9dc8e-fab1-4150-b21a-cf65a5bf96f4/styles.css">
+<script src="_ds/macos-27-design-system-12f9dc8e-fab1-4150-b21a-cf65a5bf96f4/_ds_bundle.js"></script>
+<style>
+  :root { color-scheme: light; }
+  body{ margin:0; background:#f0eee9; font-family:var(--font-sans),system-ui,sans-serif; }
+  .dv-turn{ padding:44px 48px 40px; border-bottom:1px solid rgba(0,0,0,.08); scroll-margin-top:16px; }
+  .dv-thd{ display:flex; align-items:baseline; gap:10px; margin:0 0 8px; }
+  .dv-tid{ font:600 10px ui-monospace,Menlo,monospace; padding:3px 7px; background:#1a1a1a; color:#fff; border-radius:4px; text-decoration:none; }
+  .dv-tname{ font:600 14px/1.2 var(--font-sans); color:#1a1a1a; }
+  .dv-tsub{ font:400 12px/1.5 var(--font-sans); color:rgba(0,0,0,.5); margin:0 0 26px; max-width:760px; }
+  .dv-steplabel{ display:flex; align-items:center; gap:9px; margin:38px 0 15px; }
+  .dv-stepnum{ width:20px;height:20px;border-radius:50%;background:#1a1a1a;color:#fff;font:600 11px var(--font-sans);display:flex;align-items:center;justify-content:center;flex:none; }
+  .dv-steptext{ font:600 13px var(--font-sans); color:#1a1a1a; }
+  .dv-stepsub{ font:400 12px var(--font-sans); color:rgba(0,0,0,.5); }
+  .dv-opts{ display:flex; flex-wrap:wrap; gap:40px; align-items:flex-start; }
+  .dv-opt{ flex:none; display:flex; flex-direction:column; gap:11px; scroll-margin-top:16px; }
+  .dv-oid{ font:600 10.5px ui-monospace,Menlo,monospace; padding:3px 7px; background:rgba(0,0,0,.08); color:#1a1a1a; border-radius:5px; text-decoration:none; }
+  .dv-olabel{ display:flex; align-items:baseline; gap:8px; font:400 11.5px/1.3 var(--font-sans); color:rgba(0,0,0,.55); }
+  .dv-opt:target .dv-oid{ background:#2a78d6; color:#fff; }
+  .dv-next{ margin:34px 0 0; font:12px/1.6 var(--font-sans); color:rgba(0,0,0,.5); }
+  .dv-next a{ text-decoration:none; }
+  .win-shadow{ border-radius:11px; box-shadow:0 30px 70px -20px rgba(0,0,0,.42), 0 8px 22px -8px rgba(0,0,0,.24); }
+</style>
+</helmet>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Smart Add — the sheet, then the screen after you pick</span></div>
+  <p class="dv-tsub">The chosen direction (grid of picks) with the copy updates: cards now say <strong>Use This Tile</strong>, the footer says <strong>Create My Own Tile</strong>. Both exits land on the normal Tile Detail screen — the actual <em>Add to Dock</em> commit lives there — so nothing hits your Dock until you confirm. Dock Tile clusters recent apps on-device (launch history + Spotlight use-counts, grouped by category, co-launch and recency).</p>
+
+  <!-- ============ FLOW NOTE ============ -->
+  <div style="background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.06); padding:20px 24px; margin-bottom:6px; max-width:1020px;">
+    <div style="font:600 11px var(--font-sans); letter-spacing:.06em; text-transform:uppercase; color:rgba(0,0,0,.42); margin-bottom:16px;">The full path</div>
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:9px; padding:9px 13px; border-radius:9px; background:#f5f5f7; box-shadow:inset 0 0 0 1px rgba(0,0,0,.07);"><div style="width:16px;height:16px;border-radius:5px;background:var(--accent);display:flex;align-items:center;justify-content:center;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M12 5v14 M5 12h14"></path></svg></div><span style="font:500 12px var(--font-sans); color:rgba(0,0,0,.78);">Click +</span></div>
+      <svg width="24" height="14" viewBox="0 0 24 14" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h18 M15 2.5l5 4.5-5 4.5"></path></svg>
+      <div style="display:flex; align-items:center; gap:9px; padding:9px 13px; border-radius:9px; background:color-mix(in srgb,var(--accent) 9%,#fff); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent);"><svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 3l1.7 5L19 9.7l-5.3 1.7L12 17l-1.7-4.6L5 9.7l5.3-1.7z"></path></svg><span style="font:500 12px var(--font-sans); color:rgba(0,0,0,.8);">Smart Add sheet</span></div>
+      <svg width="24" height="14" viewBox="0 0 24 14" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h18 M15 2.5l5 4.5-5 4.5"></path></svg>
+      <div style="display:flex; flex-direction:column; gap:7px;">
+        <div style="display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:9px; background:#f5f5f7; box-shadow:inset 0 0 0 1px rgba(0,0,0,.07);"><span style="font:600 9.5px var(--font-sans); color:var(--accent); background:color-mix(in srgb,var(--accent) 14%,transparent); padding:2px 6px; border-radius:5px;">USE THIS TILE</span><span style="font:400 11.5px var(--font-sans); color:rgba(0,0,0,.6);">→ Tile Detail, pre-filled</span></div>
+        <div style="display:flex; align-items:center; gap:8px; padding:7px 12px; border-radius:9px; background:#f5f5f7; box-shadow:inset 0 0 0 1px rgba(0,0,0,.07);"><span style="font:600 9.5px var(--font-sans); color:rgba(0,0,0,.55); background:rgba(0,0,0,.08); padding:2px 6px; border-radius:5px;">CREATE NEW TILE</span><span style="font:400 11.5px var(--font-sans); color:rgba(0,0,0,.6);">→ Tile Detail, empty draft</span></div>
+      </div>
+      <svg width="24" height="14" viewBox="0 0 24 14" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h18 M15 2.5l5 4.5-5 4.5"></path></svg>
+      <div style="display:flex; align-items:center; gap:9px; padding:9px 13px; border-radius:9px; background:#f5f5f7; box-shadow:inset 0 0 0 1px rgba(0,0,0,.07);"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="checkmark" size="13" color="#28a745" weight="2.4" hint-size="13px,13px"></x-import><span style="font:500 12px var(--font-sans); color:rgba(0,0,0,.78);">Add to Dock</span></div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 1: THE SHEET ============ -->
+  <div class="dv-steplabel"><div class="dv-stepnum">1</div><div><span class="dv-steptext">The Smart Add sheet</span> &nbsp;<span class="dv-stepsub">drops over the main window</span></div></div>
+  <div class="dv-opts">
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Suggestion grid — updated copy</div>
+      <div class="win-shadow" style="width:768px; overflow:hidden;">
+        <x-import component-from-global-scope="DesignSystem_12f9dc.Window" title="Dock Tile" width="768px" hint-size="768px,470px">
+          <div style="position:relative; display:flex; width:100%; height:452px; background:var(--surface-window);">
+            <!-- behind: sidebar -->
+            <div style="width:240px; flex:none; background:var(--surface-sidebar); border-right:.5px solid var(--separator); padding:8px; display:flex; flex-direction:column; gap:1px;">
+              <div style="font-size:11px; font-weight:600; color:var(--text-tertiary); padding:8px 8px 4px;">Tiles</div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="folder" size="14" color="#fff" weight="1.9" hint-size="14px,14px"></x-import></div><span>Work</span></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#B197FC,#AF52DE);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="star-fill" size="13" color="#fff" weight="1.9" hint-size="13px,13px"></x-import></div><span>Creative</span></div>
+              <div style="font-size:11px; font-weight:600; color:var(--text-tertiary); padding:14px 8px 4px;">Settings</div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#ADB5BD,#8E8E93);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="gear" size="14" color="#fff" weight="1.7" hint-size="14px,14px"></x-import></div><span>General</span></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="lock" size="13" color="#fff" weight="1.8" hint-size="13px,13px"></x-import></div><span>Dock Lock</span></div>
+            </div>
+            <div style="flex:1; min-width:0; background:var(--surface-grouped); padding:24px; display:flex; gap:16px;">
+              <div style="width:96px;height:96px;border-radius:21px;background:linear-gradient(180deg,#4DABF7,#007AFF);opacity:.55;"></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:10px;"><div style="height:40px;border-radius:10px;background:rgba(0,0,0,.05);"></div><div style="height:40px;border-radius:10px;background:rgba(0,0,0,.05);"></div></div>
+            </div>
+            <!-- scrim -->
+            <div style="position:absolute; inset:0; background:rgba(0,0,0,.26); backdrop-filter:blur(1px); -webkit-backdrop-filter:blur(1px);"></div>
+            <!-- SHEET -->
+            <div style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding-top:20px;">
+              <div style="width:624px; background:var(--surface-card); border-radius:12px; box-shadow:0 22px 60px -12px rgba(0,0,0,.5), inset 0 0 0 .5px rgba(0,0,0,.06); overflow:hidden;">
+                <div style="display:flex; align-items:flex-start; gap:12px; padding:16px 18px 14px;">
+                  <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(160deg,#7AA7FF,#3B6BFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M12 3l1.7 5L19 9.7l-5.3 1.7L12 17l-1.7-4.6L5 9.7l5.3-1.7z"></path><path d="M18.5 14l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"></path></svg></div>
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:15px; font-weight:700; color:var(--text-primary);">Add a Tile</div>
+                    <div style="font-size:11.5px; color:var(--text-secondary); line-height:1.4; margin-top:2px;">Pick a tile to start from — you can rename it, restyle it and change the apps next.</div>
+                  </div>
+                  <div style="width:22px;height:22px;border-radius:50%;background:var(--fill-secondary);display:flex;align-items:center;justify-content:center;flex:none;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="xmark" size="11" color="var(--text-secondary)" weight="2.4" hint-size="11px,11px"></x-import></div>
+                </div>
+                <div style="height:.5px; background:var(--separator);"></div>
+                <div style="display:flex; gap:12px; padding:16px 18px;">
+                  <!-- Browse -->
+                  <div style="flex:1; border-radius:11px; box-shadow:inset 0 0 0 .5px var(--separator); background:var(--surface-window); padding:14px 12px; display:flex; flex-direction:column; align-items:center; gap:9px;" style-hover="box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 4%, var(--surface-window))">
+                    <div style="width:58px;height:58px;border-radius:13px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5), 0 3px 8px -2px rgba(0,90,200,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="globe" size="30" color="#fff" weight="1.7" hint-size="30px,30px"></x-import></div>
+                    <div style="font-size:13.5px; font-weight:600; color:var(--text-primary);">Browse</div>
+                    <div style="display:inline-flex; align-items:center; gap:4px; background:var(--fill-secondary); border-radius:9px; padding:2px 8px;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="gridsquare" size="9" color="var(--text-secondary)" weight="1.8" hint-size="9px,9px"></x-import><span style="font-size:10.5px; color:var(--text-secondary); font-weight:500;">By category</span></div>
+                    <div style="display:flex; gap:4px; margin-top:2px;">
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#5AC8FA,#0A84FF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">S</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#FFD666,#FF9F0A);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">C</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#B197FC,#AF52DE);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">A</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">M</div>
+                    </div>
+                    <div style="width:100%; height:26px; margin-top:5px; border-radius:6px; background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); font-size:12px; font-weight:500; display:flex; align-items:center; justify-content:center;" style-hover="background: color-mix(in srgb, var(--accent) 18%, transparent)">Use This Tile</div>
+                  </div>
+                  <!-- Watch -->
+                  <div style="flex:1; border-radius:11px; box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); background:color-mix(in srgb, var(--accent) 4%, var(--surface-window)); padding:14px 12px; display:flex; flex-direction:column; align-items:center; gap:9px;">
+                    <div style="width:58px;height:58px;border-radius:13px;background:linear-gradient(180deg,#FF6482,#FF2D55);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5), 0 3px 8px -2px rgba(200,0,60,.5);display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M8 6.5v11l9-5.5z"></path></svg></div>
+                    <div style="font-size:13.5px; font-weight:600; color:var(--text-primary);">Watch</div>
+                    <div style="display:inline-flex; align-items:center; gap:4px; background:var(--fill-secondary); border-radius:9px; padding:2px 8px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg><span style="font-size:10.5px; color:var(--text-secondary); font-weight:500;">Most used this week</span></div>
+                    <div style="display:flex; gap:4px; margin-top:2px;">
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#5E5CE6,#3634A3);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">TV</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#6EA8FF,#2E5BFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">I</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#5AC8FA,#0A84FF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 9px var(--font-sans);">QT</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#FFC24D,#FF9500);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">P</div>
+                    </div>
+                    <div style="width:100%; height:26px; margin-top:5px; border-radius:6px; background:var(--accent); color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,.24);" style-hover="filter:brightness(1.07)">Use This Tile</div>
+                  </div>
+                  <!-- Ship -->
+                  <div style="flex:1; border-radius:11px; box-shadow:inset 0 0 0 .5px var(--separator); background:var(--surface-window); padding:14px 12px; display:flex; flex-direction:column; align-items:center; gap:9px;" style-hover="box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 4%, var(--surface-window))">
+                    <div style="width:58px;height:58px;border-radius:13px;background:linear-gradient(180deg,#8E97EE,#5856D6);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5), 0 3px 8px -2px rgba(60,50,180,.5);display:flex;align-items:center;justify-content:center;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8l-4 4 4 4 M15 8l4 4-4 4"></path></svg></div>
+                    <div style="font-size:13.5px; font-weight:600; color:var(--text-primary);">Ship</div>
+                    <div style="display:inline-flex; align-items:center; gap:4px; background:var(--fill-secondary); border-radius:9px; padding:2px 8px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5l5-5 M8 11l-2 2a3 3 0 004 4l2-2 M16 13l2-2a3 3 0 00-4-4l-2 2"></path></svg><span style="font-size:10.5px; color:var(--text-secondary); font-weight:500;">Opened together</span></div>
+                    <div style="display:flex; gap:4px; margin-top:2px;">
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">X</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#48484A,#1C1C1E);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;color:#fff;font:600 11px var(--font-sans);">›</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#FF6482,#FF2D55);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);">F</div>
+                      <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(180deg,#B197FC,#AF52DE);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 11px var(--font-sans);">#</div>
+                    </div>
+                    <div style="width:100%; height:26px; margin-top:5px; border-radius:6px; background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); font-size:12px; font-weight:500; display:flex; align-items:center; justify-content:center;" style-hover="background: color-mix(in srgb, var(--accent) 18%, transparent)">Use This Tile</div>
+                  </div>
+                </div>
+                <div style="height:.5px; background:var(--separator);"></div>
+                <div style="display:flex; align-items:center; gap:12px; padding:11px 18px;">
+                  <x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="lock" size="11" color="var(--text-tertiary)" weight="1.8" hint-size="11px,11px"></x-import>
+                  <span style="font-size:11px; color:var(--text-tertiary);">Learned on your Mac. Never leaves your device.</span>
+                  <div style="flex:1;"></div>
+                  <div style="height:26px; padding:0 13px; border-radius:6px; background:var(--surface-control); box-shadow:0 .5px 1px rgba(0,0,0,.16), inset 0 0 0 .5px rgba(0,0,0,.10); font-size:12px; font-weight:500; color:var(--text-primary); display:flex; align-items:center; gap:5px; cursor:default;" style-hover="filter:brightness(0.97)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14 M5 12h14"></path></svg>Create New Tile</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </x-import>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STEP 2: OUTCOMES ============ -->
+  <div class="dv-steplabel"><div class="dv-stepnum">2</div><div><span class="dv-steptext">What opens next</span> &nbsp;<span class="dv-stepsub">the normal Tile Detail — where you refine and hit Add to Dock</span></div></div>
+  <div class="dv-opts">
+
+    <!-- 1b: after Use This Tile -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>After “Use This Tile” (Watch) — pre-filled, ready to confirm</div>
+      <div class="win-shadow" style="width:768px; overflow:hidden; position:relative;">
+        <div style="position:absolute; top:32px; right:16px; z-index:5;"><div style="height:24px; padding:0 14px; border-radius:6px; background:var(--accent); color:#fff; font-size:12px; font-weight:500; display:flex; align-items:center; gap:5px; box-shadow:0 .5px 1px rgba(0,0,0,.24);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14 M5 12h14"></path></svg>Add to Dock</div></div>
+        <x-import component-from-global-scope="DesignSystem_12f9dc.Window" title="Watch" width="768px" hint-size="768px,624px">
+          <div style="display:flex; width:100%; height:624px; background:var(--surface-window);">
+            <!-- sidebar, Watch selected -->
+            <div style="width:240px; flex:none; background:var(--surface-sidebar); border-right:.5px solid var(--separator); padding:8px; display:flex; flex-direction:column; gap:1px;">
+              <div style="font-size:11px; font-weight:600; color:var(--text-tertiary); padding:8px 8px 4px;">Tiles</div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="folder" size="14" color="#fff" weight="1.9" hint-size="14px,14px"></x-import></div><span>Work</span></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#B197FC,#AF52DE);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="star-fill" size="13" color="#fff" weight="1.9" hint-size="13px,13px"></x-import></div><span>Creative</span></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:#fff; background:var(--accent);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#FF6482,#FF2D55);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M8 6.5v11l9-5.5z"></path></svg></div><span>Watch</span></div>
+              <div style="font-size:11px; font-weight:600; color:var(--text-tertiary); padding:14px 8px 4px;">Settings</div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#ADB5BD,#8E8E93);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="gear" size="14" color="#fff" weight="1.7" hint-size="14px,14px"></x-import></div><span>General</span></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="lock" size="13" color="#fff" weight="1.8" hint-size="13px,13px"></x-import></div><span>Dock Lock</span></div>
+            </div>
+            <!-- detail -->
+            <div style="flex:1; min-width:0; background:#ececec; overflow:hidden; padding:20px; display:flex; flex-direction:column; gap:18px;">
+              <!-- provenance banner -->
+              <div style="display:flex; align-items:center; gap:9px; padding:8px 12px; border-radius:10px; background:color-mix(in srgb,var(--accent) 9%,#fff); box-shadow:inset 0 0 0 .5px color-mix(in srgb,var(--accent) 28%,transparent);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 3l1.7 5L19 9.7l-5.3 1.7L12 17l-1.7-4.6L5 9.7l5.3-1.7z"></path></svg>
+                <span style="font-size:11.5px; color:var(--text-primary);">Created by Smart Add from your recent apps. Rename it, restyle it or edit the apps — then add it to your Dock.</span>
+              </div>
+              <!-- hero -->
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                  <div style="width:104px; height:104px; border-radius:23px; background:linear-gradient(180deg,#FF6482,#FF2D55); box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5); display:flex; align-items:center; justify-content:center;"><svg width="46" height="46" viewBox="0 0 24 24" fill="#fff"><path d="M8 6.5v11l9-5.5z"></path></svg></div>
+                  <div style="width:104px; height:24px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--text-primary); background:rgba(0,0,0,.05); border-radius:6px;">Customise</div>
+                </div>
+                <div style="flex:1; background:rgba(118,118,128,.10); border-radius:12px; padding:0 12px;">
+                  <div style="display:flex; align-items:center; height:40px;"><span style="font-size:13px; color:var(--text-primary);">Tile Name</span><div style="flex:1;"></div><span style="font-size:13px; color:var(--text-primary);">Watch</span></div>
+                  <div style="height:1px; background:rgba(0,0,0,.06);"></div>
+                  <div style="display:flex; align-items:center; height:40px;"><span style="font-size:13px; color:var(--text-primary);">Show Tile</span><div style="flex:1;"></div><x-import component-from-global-scope="DesignSystem_12f9dc.Switch" checked="{{ true }}" hint-size="38px,22px"></x-import></div>
+                  <div style="height:1px; background:rgba(0,0,0,.06);"></div>
+                  <div style="display:flex; align-items:center; height:40px;"><span style="font-size:13px; color:var(--text-primary);">Layout</span><div style="flex:1;"></div><div style="display:flex; align-items:center; gap:6px; height:22px; padding:0 6px 0 9px; background:#fff; border-radius:6px; box-shadow:0 .5px 1px rgba(0,0,0,.16), 0 0 0 .5px rgba(0,0,0,.08); font-size:13px; color:var(--text-primary);"><span>Grid</span><span style="display:inline-flex; color:var(--accent);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4-4 4 4 M8 14l4 4 4-4"></path></svg></span></div></div>
+                  <div style="height:1px; background:rgba(0,0,0,.06);"></div>
+                  <div style="display:flex; align-items:center; height:40px;"><span style="font-size:13px; color:var(--text-primary);">Show in App Switcher</span><div style="flex:1;"></div><x-import component-from-global-scope="DesignSystem_12f9dc.Switch" checked="{{ false }}" hint-size="38px,22px"></x-import></div>
+                </div>
+              </div>
+              <!-- selected items -->
+              <div>
+                <div style="font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:10px;">Selected Items</div>
+                <div style="border-radius:12px; overflow:hidden; box-shadow:inset 0 0 0 .5px rgba(0,0,0,.1);">
+                  <div style="display:flex; align-items:center; height:26px; padding:0 10px; background:#f3f3f4;"><div style="width:16px;"></div><div style="flex:1; font-size:11px; font-weight:500; color:rgba(0,0,0,.5);">Item</div><div style="width:110px; font-size:11px; font-weight:500; color:rgba(0,0,0,.5);">Kind</div></div>
+                  <div style="height:1px; background:rgba(0,0,0,.12);"></div>
+                  <div style="display:flex; align-items:center; height:30px; padding:0 10px; background:#e9e9ec;"><div style="width:16px; display:flex; justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.32)" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></div><div style="flex:1; display:flex; align-items:center; gap:9px; min-width:0;"><div style="width:18px;height:18px;border-radius:5px;background:linear-gradient(180deg,#5E5CE6,#3634A3);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 8px var(--font-sans);flex:none;">TV</div><span style="font-size:13px; color:var(--text-primary);">TV</span></div><div style="width:110px; font-size:13px; color:rgba(0,0,0,.5);">Application</div></div>
+                  <div style="display:flex; align-items:center; height:30px; padding:0 10px; background:#f5f5f6;"><div style="width:16px; display:flex; justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.32)" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></div><div style="flex:1; display:flex; align-items:center; gap:9px; min-width:0;"><div style="width:18px;height:18px;border-radius:5px;background:linear-gradient(180deg,#6EA8FF,#2E5BFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 10px var(--font-sans);flex:none;">I</div><span style="font-size:13px; color:var(--text-primary);">IINA</span></div><div style="width:110px; font-size:13px; color:rgba(0,0,0,.5);">Application</div></div>
+                  <div style="display:flex; align-items:center; height:30px; padding:0 10px; background:#e9e9ec;"><div style="width:16px; display:flex; justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.32)" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></div><div style="flex:1; display:flex; align-items:center; gap:9px; min-width:0;"><div style="width:18px;height:18px;border-radius:5px;background:linear-gradient(180deg,#5AC8FA,#0A84FF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 7px var(--font-sans);flex:none;">QT</div><span style="font-size:13px; color:var(--text-primary);">QuickTime Player</span></div><div style="width:110px; font-size:13px; color:rgba(0,0,0,.5);">Application</div></div>
+                  <div style="display:flex; align-items:center; height:30px; padding:0 10px; background:#f5f5f6;"><div style="width:16px; display:flex; justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.32)" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></div><div style="flex:1; display:flex; align-items:center; gap:9px; min-width:0;"><div style="width:18px;height:18px;border-radius:5px;background:linear-gradient(180deg,#FFC24D,#FF9500);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:#fff;font:600 9px var(--font-sans);flex:none;">P</div><span style="font-size:13px; color:var(--text-primary);">Plex</span></div><div style="width:110px; font-size:13px; color:rgba(0,0,0,.5);">Application</div></div>
+                  <div style="height:1px; background:rgba(0,0,0,.12);"></div>
+                  <div style="display:flex; align-items:center; height:28px; padding:4px; background:#f3f3f4;"><div style="width:24px; height:20px; display:flex; align-items:center; justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.6)" stroke-width="2" stroke-linecap="round"><path d="M12 5v14 M5 12h14"></path></svg></div><div style="width:.5px; height:16px; background:rgba(0,0,0,.15);"></div><div style="width:24px; height:20px; display:flex; align-items:center; justify-content:center; opacity:.4;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.6)" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"></path></svg></div></div>
+                </div>
+              </div>
+              <!-- remove -->
+              <div style="background:rgba(118,118,128,.10); border-radius:12px; padding:0 12px;"><div style="display:flex; align-items:center; gap:16px; min-height:42px; padding:8px 0;"><div style="display:flex; flex-direction:column; gap:2px;"><span style="font-size:13px; color:var(--text-primary);">Remove from Dock</span><span style="font-size:11px; color:rgba(0,0,0,.5);">This removes the tile only, and your apps or folders stay intact</span></div><div style="flex:1;"></div><div style="font-size:12px; color:#FF3B30; background:rgba(0,0,0,.05); border-radius:6px; height:24px; padding:0 12px; display:flex; align-items:center;">Remove</div></div></div>
+            </div>
+          </div>
+        </x-import>
+      </div>
+    </div>
+
+    <!-- 1c: after Create My Own Tile -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>After “Create New Tile” — empty draft (today’s behavior)</div>
+      <div class="win-shadow" style="width:768px; overflow:hidden; position:relative;">
+        <div style="position:absolute; top:32px; right:16px; z-index:5;"><div style="height:24px; padding:0 14px; border-radius:6px; background:var(--accent); color:#fff; font-size:12px; font-weight:500; display:flex; align-items:center; gap:5px; box-shadow:0 .5px 1px rgba(0,0,0,.24); opacity:.5;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14 M5 12h14"></path></svg>Add to Dock</div></div>
+        <x-import component-from-global-scope="DesignSystem_12f9dc.Window" title="New Tile" width="768px" hint-size="768px,624px">
+          <div style="display:flex; width:100%; height:624px; background:var(--surface-window);">
+            <div style="width:240px; flex:none; background:var(--surface-sidebar); border-right:.5px solid var(--separator); padding:8px; display:flex; flex-direction:column; gap:1px;">
+              <div style="font-size:11px; font-weight:600; color:var(--text-tertiary); padding:8px 8px 4px;">Tiles</div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="folder" size="14" color="#fff" weight="1.9" hint-size="14px,14px"></x-import></div><span>Work</span></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#B197FC,#AF52DE);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="star-fill" size="13" color="#fff" weight="1.9" hint-size="13px,13px"></x-import></div><span>Creative</span></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:#fff; background:var(--accent);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#A6B0BD,#6E7580);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="folder" size="14" color="#fff" weight="1.9" hint-size="14px,14px"></x-import></div><span>New Tile</span></div>
+              <div style="font-size:11px; font-weight:600; color:var(--text-tertiary); padding:14px 8px 4px;">Settings</div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#ADB5BD,#8E8E93);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="gear" size="14" color="#fff" weight="1.7" hint-size="14px,14px"></x-import></div><span>General</span></div>
+              <div style="display:flex; align-items:center; gap:10px; padding:5px 8px; border-radius:6px; font-size:13px; color:var(--text-primary);"><div style="width:24px;height:24px;border-radius:5px;background:linear-gradient(180deg,#4DABF7,#007AFF);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="lock" size="13" color="#fff" weight="1.8" hint-size="13px,13px"></x-import></div><span>Dock Lock</span></div>
+            </div>
+            <div style="flex:1; min-width:0; background:#ececec; overflow:hidden; padding:20px; display:flex; flex-direction:column; gap:18px;">
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                  <div style="width:104px; height:104px; border-radius:23px; background:linear-gradient(180deg,#A6B0BD,#6E7580); box-shadow:inset 0 0 0 .5px rgba(255,255,255,.5); display:flex; align-items:center; justify-content:center;"><x-import component-from-global-scope="DesignSystem_12f9dc.Icon" name="folder" size="46" color="#fff" weight="1.6" hint-size="46px,46px"></x-import></div>
+                  <div style="width:104px; height:24px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--text-primary); background:rgba(0,0,0,.05); border-radius:6px;">Customise</div>
+                </div>
+                <div style="flex:1; background:rgba(118,118,128,.10); border-radius:12px; padding:0 12px;">
+                  <div style="display:flex; align-items:center; height:40px;"><span style="font-size:13px; color:var(--text-primary);">Tile Name</span><div style="flex:1;"></div><span style="font-size:13px; color:var(--text-tertiary);">New Tile</span></div>
+                  <div style="height:1px; background:rgba(0,0,0,.06);"></div>
+                  <div style="display:flex; align-items:center; height:40px;"><span style="font-size:13px; color:var(--text-primary);">Show Tile</span><div style="flex:1;"></div><x-import component-from-global-scope="DesignSystem_12f9dc.Switch" checked="{{ false }}" hint-size="38px,22px"></x-import></div>
+                  <div style="height:1px; background:rgba(0,0,0,.06);"></div>
+                  <div style="display:flex; align-items:center; height:40px;"><span style="font-size:13px; color:var(--text-primary);">Layout</span><div style="flex:1;"></div><div style="display:flex; align-items:center; gap:6px; height:22px; padding:0 6px 0 9px; background:#fff; border-radius:6px; box-shadow:0 .5px 1px rgba(0,0,0,.16), 0 0 0 .5px rgba(0,0,0,.08); font-size:13px; color:var(--text-primary);"><span>Grid</span><span style="display:inline-flex; color:var(--accent);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10l4-4 4 4 M8 14l4 4 4-4"></path></svg></span></div></div>
+                  <div style="height:1px; background:rgba(0,0,0,.06);"></div>
+                  <div style="display:flex; align-items:center; height:40px;"><span style="font-size:13px; color:var(--text-primary);">Show in App Switcher</span><div style="flex:1;"></div><x-import component-from-global-scope="DesignSystem_12f9dc.Switch" checked="{{ false }}" hint-size="38px,22px"></x-import></div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:10px;">Selected Items</div>
+                <div style="border-radius:12px; overflow:hidden; box-shadow:inset 0 0 0 .5px rgba(0,0,0,.1);">
+                  <div style="display:flex; align-items:center; height:26px; padding:0 10px; background:#f3f3f4;"><div style="width:16px;"></div><div style="flex:1; font-size:11px; font-weight:500; color:rgba(0,0,0,.5);">Item</div><div style="width:110px; font-size:11px; font-weight:500; color:rgba(0,0,0,.5);">Kind</div></div>
+                  <div style="height:1px; background:rgba(0,0,0,.12);"></div>
+                  <div style="height:150px; background:#efeff1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;">
+                    <div style="font-size:13px; color:var(--text-secondary);">No items added yet</div>
+                    <div style="font-size:11px; color:var(--text-tertiary);">Click + to add applications or folders</div>
+                  </div>
+                  <div style="height:1px; background:rgba(0,0,0,.12);"></div>
+                  <div style="display:flex; align-items:center; height:28px; padding:4px; background:#f3f3f4;"><div style="width:24px; height:20px; display:flex; align-items:center; justify-content:center;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.6)" stroke-width="2" stroke-linecap="round"><path d="M12 5v14 M5 12h14"></path></svg></div><div style="width:.5px; height:16px; background:rgba(0,0,0,.15);"></div><div style="width:24px; height:20px; display:flex; align-items:center; justify-content:center; opacity:.3;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,.6)" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"></path></svg></div></div>
+                </div>
+              </div>
+              <div style="background:rgba(118,118,128,.10); border-radius:12px; padding:0 12px;"><div style="display:flex; align-items:center; gap:16px; min-height:42px; padding:8px 0;"><div style="display:flex; flex-direction:column; gap:2px;"><span style="font-size:13px; color:var(--text-primary);">Remove from Dock</span><span style="font-size:11px; color:rgba(0,0,0,.5);">This removes the tile only, and your apps or folders stay intact</span></div><div style="flex:1;"></div><div style="font-size:12px; color:#FF3B30; background:rgba(0,0,0,.05); border-radius:6px; height:24px; padding:0 12px; display:flex; align-items:center; opacity:.5;">Remove</div></div></div>
+            </div>
+          </div>
+        </x-import>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Try next: "let the Customise button on <a class="dv-oid" href="#1b">1b</a> open the icon studio" · "add a confirmation toast after Add to Dock" · "show the cold-start sheet when there's no usage yet" · "new directions"</p>
+</section>
+</x-dc>
+</body>
+</html>
