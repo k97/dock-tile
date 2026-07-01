@@ -32,6 +32,11 @@ struct GeneralSettingsView: View {
     @AppStorage(UserDefaultsKeys.analyticsEnabled, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
     private var analyticsEnabled = true
 
+    /// Smart Add on/off (opt-out, default ON). Main-app domain — the suggestion flow is main-app
+    /// only, so this is not stored in the shared suite.
+    @AppStorage(UserDefaultsKeys.smartAddEnabled)
+    private var smartAddEnabled = true
+
     /// Mirror both layouts' persisted Popover Size for the drill-down row's trailing summary
     /// ("Grid · M · List · M"). Grid and List are stored independently.
     @AppStorage(UserDefaultsKeys.popoverGridSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
@@ -52,6 +57,22 @@ struct GeneralSettingsView: View {
                     missingAppsRow
 
                     analyticsRow
+                }
+
+                // Smart Add — suggest ready-made tiles on +. Sits directly before Popover.
+                Section {
+                    smartAddRow
+
+                    // Privacy footnote inside the same card (matches the design), below a divider.
+                    Label {
+                        Text(AppStrings.SmartAdd.privacyFootnote)
+                    } icon: {
+                        Image(systemName: "lock.fill")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                } header: {
+                    Text(AppStrings.SmartAdd.settingsSectionHeader)
                 }
 
                 // Popover appearance lives one level down — a grouped Form with a live preview.
@@ -156,6 +177,21 @@ struct GeneralSettingsView: View {
             Button(AppStrings.Button.scanForMissingApps) {
                 runMissingAppsScan()
             }
+        }
+    }
+
+    /// Smart Add on/off. When OFF, pressing + always creates a blank tile (no suggestion sheet).
+    /// No leading icon, per the design.
+    private var smartAddRow: some View {
+        Toggle(isOn: $smartAddEnabled) {
+            Text(AppStrings.SmartAdd.settingsToggleTitle)
+            Text(AppStrings.SmartAdd.settingsToggleDescription)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .onChange(of: smartAddEnabled) { _, enabled in
+            AnalyticsService.shared.log(.settingChanged, ["setting": "smart_add", "enabled": enabled])
+            DiagnosticsLog.shared.log("settings", "Smart Add toggled \(enabled ? "ON" : "OFF")")
         }
     }
 

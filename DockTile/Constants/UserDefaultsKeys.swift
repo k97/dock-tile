@@ -17,6 +17,11 @@ enum UserDefaultsKeys {
     static let lastSelectedConfigId = "lastSelectedConfigId"
     static let lastMigratedAppVersion = "lastMigratedAppVersion"
 
+    /// "Smart Add" — suggest ready-made tiles when the user presses +. Opt-out, default ON
+    /// (absent/true = ON). Main-app domain only: the suggestion flow runs solely in the main app,
+    /// so helper bundles never read it. When OFF, + always creates a blank tile.
+    static let smartAddEnabled = "smartAddEnabled"
+
     // "Start tiles at login" is ON by default (opt-out). SMAppService is the source of truth for
     // the *current* status, but a Sparkle update replaces the app bundle and can silently demote
     // the registration. We persist the user's opt-out below so the main app can re-assert
