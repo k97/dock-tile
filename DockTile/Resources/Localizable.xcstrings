@@ -920,19 +920,19 @@
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select an application or folder to add"
+            "value": "Select one or more applications or folders to add"
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select an application or folder to add"
+            "value": "Select one or more applications or folders to add"
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select an application or folder to add"
+            "value": "Select one or more applications or folders to add"
           }
         }
       }
