@@ -75,10 +75,20 @@ private struct SymbolButton: View {
     let weight: IconWeight
     let onTap: () -> Void
 
+    /// Subtle contact shadow so picker glyphs share the tiles' raised-on-glass feel.
+    private var glyphShadow: IconDepthMetrics.GlyphShadow? {
+        IconDepthMetrics.glyphShadow(style: .defaultStyle, iconType: .sfSymbol, nominalSize: size)
+    }
+
     var body: some View {
         Button(action: onTap) {
             glyph
                 .foregroundColor(isSelected ? .white : .primary)
+                .shadow(
+                    color: glyphShadow.map { Color.black.opacity($0.blackAlpha) } ?? .clear,
+                    radius: glyphShadow?.blur ?? 0,
+                    y: glyphShadow?.offset ?? 0
+                )
                 .frame(width: 40, height: 40)
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)

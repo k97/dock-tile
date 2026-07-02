@@ -72,10 +72,20 @@ private struct EmojiButton: View {
     let size: CGFloat
     let onTap: () -> Void
 
+    /// Subtle contact shadow so picker emoji share the tiles' raised-on-glass feel.
+    private var glyphShadow: IconDepthMetrics.GlyphShadow? {
+        IconDepthMetrics.glyphShadow(style: .defaultStyle, iconType: .emoji, nominalSize: size)
+    }
+
     var body: some View {
         Button(action: onTap) {
             Text(emoji)
                 .font(.system(size: size))
+                .shadow(
+                    color: glyphShadow.map { Color.black.opacity($0.blackAlpha) } ?? .clear,
+                    radius: glyphShadow?.blur ?? 0,
+                    y: glyphShadow?.offset ?? 0
+                )
                 .frame(width: 40, height: 40)
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)

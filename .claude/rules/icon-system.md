@@ -14,7 +14,7 @@
 
 **Background**: Linear gradient from `TintColor.colorTop` to `colorBottom`.
 
-**Glass effect**: White inner stroke at 50% opacity, line width scales proportionally (0.5pt at 160pt).
+**Glass effect**: White inner stroke, line width scales proportionally (0.5pt at 160pt). Opacity + width now come from the shared `IconDepthMetrics` seam (see below), not inline constants.
 
 **Content**: SF Symbols (white, `.semibold`) or emojis. Size controlled by `iconScale` (10-20, default 14).
 
@@ -22,7 +22,39 @@
 
 **Critical gotcha**: Use `NSBitmapImageRep` with explicit pixel dimensions — not `NSImage(size:).lockFocus()` which creates Retina-scaled backing stores that produce wrong pixel counts for `iconutil`.
 
-**No baked-in shadows** — the Dock adds these dynamically. Baking would cause doubled shadows.
+**No baked-in *tile* shadow** — the Dock adds the outer drop shadow dynamically; baking that would double it. This is distinct from the **inner glyph depth** below, which IS baked (an inner contact shadow + sheen the Dock does not provide).
+
+## Liquid Glass Depth (`IconDepthMetrics`)
+
+Tahoe's real Liquid Glass icons get specular highlights + depth from the system's layered `.icon`
+pipeline (Icon Composer). DockTile tiles are generated at runtime (per tint × per style), so they
+can't use it — instead they **emulate** the treatment by baking a restrained depth pass. All the
+magnitudes live in one pure, value-in/value-out seam,
+[IconDepthMetrics.swift](../../DockTile/Utilities/IconDepthMetrics.swift), consumed by BOTH the baked
+renderer (`IconGenerator`) and the live preview (`DockTileIconPreview`) so they cannot drift.
+
+- **Three effects, tuned per style** (Default/Dark full; grayscale Clear/Tinted dialled back so the
+  emulated gloss doesn't fight the system's own tinting):
+  1. **Surface sheen** — a soft top→transparent white gloss clipped to the squircle
+     (`drawSurfaceSheen` / a `LinearGradient` overlay).
+  2. **Glyph contact shadow** — a soft black shadow beneath the glyph (baked via
+     `CGContext.setShadow`, derived from the composited glyph's alpha; SwiftUI `.shadow` in the
+     preview). Emoji get a lighter shadow but — unlike before — in **every** style, not just Dark.
+  3. **Glyph shading** — SF Symbols / the brand glyph are filled with a top→bottom gradient
+     (foreground → foreground darkened by `glyphBottomDarken`, via `Color/NSColor.darkened(by:)`).
+     Emoji are multicolour and never recoloured.
+- **Size gate (`minDetailSize`, critical)**: all depth is suppressed below ~22px so the tiny 16px
+  `.icns` renditions stay crisp instead of muddy; medium/large baked variants and every in-app
+  preview clear the gate.
+- **The seam also owns the two things the renderers used to disagree on**: the glyph **size ratio**
+  (`glyphSizeRatio`, with the 0.60 SF-Symbol safe-area cap — the preview's inline copy used to omit
+  it) and the glass **stroke width** (`strokeLineWidth`, scaled — the preview used a fixed 0.5).
+  `IconGenerator.maxSafeRatio` / `.warningThreshold` / `.isAtSafeAreaLimit` now forward to the seam.
+  Guarded by `IconDepthMetricsTests`.
+- **Same treatment on non-tile squircles**: `SettingsBadgeIcon` (sidebar Settings rows) reads the
+  seam with `.defaultStyle`; the symbol/emoji picker cells get the subtle glyph contact shadow.
+- **Existing tiles adopt it** on the next helper re-bake (Update-after-edit, or the version-bump
+  migration pipeline) — no schema change, fully backward compatible.
 
 ## Icon Scale Safe Area
 

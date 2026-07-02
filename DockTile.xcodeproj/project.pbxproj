@@ -59,6 +59,7 @@
 		AASPK001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = AASPK002 /* Sparkle */; };
 		AASTR001 /* AppStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASTR002 /* AppStrings.swift */; };
 		AAU00001 /* IconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAU00002 /* IconGenerator.swift */; };
+		AAIDM001 /* IconDepthMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAIDM002 /* IconDepthMetrics.swift */; };
 		AAUDK01 /* UserDefaultsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUDK02 /* UserDefaultsKeys.swift */; };
 		AAUPC001 /* UpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUPC002 /* UpdateController.swift */; };
 /* End PBXBuildFile section */
@@ -159,6 +160,7 @@
 		AASPGV01 /* SymbolPickerGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPickerGrid.swift; sourceTree = "<group>"; };
 		AASTR002 /* AppStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStrings.swift; sourceTree = "<group>"; };
 		AAU00002 /* IconGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconGenerator.swift; sourceTree = "<group>"; };
+		AAIDM002 /* IconDepthMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconDepthMetrics.swift; sourceTree = "<group>"; };
 		AAUDK02 /* UserDefaultsKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsKeys.swift; sourceTree = "<group>"; };
 		AAUPC002 /* UpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateController.swift; sourceTree = "<group>"; };
 		AAXCFG01 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
@@ -387,6 +389,7 @@
 			isa = PBXGroup;
 			children = (
 				AAU00002 /* IconGenerator.swift */,
+				AAIDM002 /* IconDepthMetrics.swift */,
 				AAILB02 /* AppIconLoader.swift */,
 				AAALB02 /* AppLauncher.swift */,
 			);
@@ -575,6 +578,7 @@
 				AA0022 /* LauncherView.swift in Sources */,
 				AANPV01 /* NativePopoverViews.swift in Sources */,
 				AAU00001 /* IconGenerator.swift in Sources */,
+				AAIDM001 /* IconDepthMetrics.swift in Sources */,
 				AAH00001 /* HelperBundleManager.swift in Sources */,
 				AAANS01 /* AnalyticsService.swift in Sources */,
 				AAHMM01 /* HelperMigrationManager.swift in Sources */,

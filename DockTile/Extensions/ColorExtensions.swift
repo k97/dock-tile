@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 extension Color {
     /// Initialize Color from hex string
@@ -110,5 +111,20 @@ extension Color {
 
         // Fallback: return original color
         return self
+    }
+
+    /// Blend this colour toward black by `fraction` (0 = unchanged, 1 = black).
+    /// Used for the glyph's dimensional shading (top → bottom fill) in the icon depth
+    /// treatment, mirrored by `NSColor.darkened(by:)` in the baked renderer.
+    func darkened(by fraction: CGFloat) -> Color {
+        Color(NSColor(self).darkened(by: fraction))
+    }
+}
+
+extension NSColor {
+    /// Blend this colour toward black by `fraction` (0 = unchanged, 1 = black).
+    /// Counterpart to `Color.darkened(by:)` for `IconGenerator`'s CoreGraphics pipeline.
+    func darkened(by fraction: CGFloat) -> NSColor {
+        blended(withFraction: fraction, of: .black) ?? self
     }
 }
