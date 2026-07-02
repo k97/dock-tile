@@ -105,6 +105,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Configure window sizing after a brief delay to ensure window exists
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [self] in
             configureMainWindowSizing()
+
+            // Nudge to /Applications if the app is translocated or running from Downloads etc.,
+            // where it can't copy itself to build helper tiles. Deferred so a window exists to sit
+            // the prompt above. Main-app only, suppressible, and skipped when already installed.
+            AppRelocationManager.shared.checkOnLaunch()
         }
 
         // Check if first launch

@@ -1,6 +1,6 @@
 # Dock Tile
 
-Multi-instance macOS utility (macOS 15.0+) that creates customizable dock tiles via helper bundles. Swift 6, SwiftUI + AppKit hybrid. v1.8.0 released.
+Multi-instance macOS utility (macOS 15.0+) that creates customizable dock tiles via helper bundles. Swift 6, SwiftUI + AppKit hybrid. v1.8.1 released.
 
 ## Commands
 
@@ -31,6 +31,7 @@ Controlled via Info.plist variables (`DTEnvironment`, `DTHelperPrefix`, `DTPrefs
 - [Smart Add](/.claude/rules/smart-add.md) — On-device tile suggestions on +, pure ranking seams, opt-out toggle
 - [Dock Lock](/.claude/rules/dock-lock.md) — Pin Dock to one display, CGEvent tap, Accessibility permission
 - [Start at Login](/.claude/rules/login-items.md) — SMAppService launcher agent, opt-out default, reconcile-on-launch (Sparkle fix)
+- [App Relocation](/.claude/rules/app-relocation.md) — Move-to-/Applications nudge, translocation guard on helper generation, Release-only
 - [Development](/.claude/rules/development.md) — Code patterns, schema evolution, shared utilities
 - [Testing](/.claude/rules/testing.md) — Swift Testing framework, commands, coverage targets
 - [CI & Release](/.claude/rules/ci-release.md) — GitHub Actions, Sparkle updates, code signing

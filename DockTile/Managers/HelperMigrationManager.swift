@@ -106,6 +106,14 @@ final class HelperMigrationManager {
             DiagnosticsLog.shared.log("settings", "Apply popover appearance: no visible helpers to update")
             return
         }
+        // Fail loud, not silent: if the app is translocated it cannot rebuild any helper (the
+        // regenerate batch would swallow the per-tile copy failures and record a bare non-fatal).
+        // Surface the actionable "move to /Applications" prompt and skip the doomed batch.
+        guard AppRelocationManager.shared.canGenerateBundles else {
+            DiagnosticsLog.shared.log("settings", "Apply popover appearance blocked: app is translocated")
+            AppRelocationManager.shared.presentBlockingPrompt()
+            return
+        }
         DiagnosticsLog.shared.log("settings", "Apply popover appearance: rebuilding \(targets.count) helper(s)")
         await DiagnosticsLog.shared.measure("Re-apply popover appearance to \(targets.count) helper(s)") {
             await regenerateBatch(targets, currentVersion: HelperBundleManager.currentAppVersion)

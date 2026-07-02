@@ -42,7 +42,8 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `DockTileDetailView.resolveDockAction` / `.dockActionIsEnabled` / `.contentSignature`,
 `HelperBundleManager.shouldPerformDockRemoval`, `DiagnosticsLog.shouldRecord` (verbose dev/prod gate),
 `ConfigurationManager.canCreateNewTile` (sidebar + gate — never deadlock at zero tiles),
-`IconDepthMetrics` (glyph size-ratio cap + glass stroke + Liquid-Glass sheen/shadow/shading, per style, size-gated — shared by the baked `.icns` renderer and the live preview).
+`IconDepthMetrics` (glyph size-ratio cap + glass stroke + Liquid-Glass sheen/shadow/shading, per style, size-gated — shared by the baked `.icns` renderer and the live preview),
+`AppRelocation.classify` / `.blocksBundleGeneration` / `.requiresRelocation` (translocation → move-to-/Applications decision).
 
 Assertion rules: prefer `#require` over `if`-guarded `#expect`; assert exact values/magnitudes,
 not `!=nil` / `.isValid` / `a>b`; never write `UserDefaults.standard` in tests — use

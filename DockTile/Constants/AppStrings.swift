@@ -85,6 +85,30 @@ enum AppStrings {
             value: "Every app in your tiles is currently installed.",
             comment: "Message of the manual scan dialog when nothing is missing"
         )
+
+        static let relocateTitle = NSLocalizedString(
+            "alert.relocate.title",
+            value: "Move Dock Tile to Applications?",
+            comment: "Title of the prompt asking the user to move the app into the Applications folder"
+        )
+
+        static let relocateMessage = NSLocalizedString(
+            "alert.relocate.message",
+            value: "Dock Tile is running from outside your Applications folder. macOS may run it from a temporary, read-only location, which can stop new tiles from being created. Move it to Applications to make sure everything works.",
+            comment: "Message of the launch-time nudge to move the app to Applications"
+        )
+
+        static let relocateBlockingMessage = NSLocalizedString(
+            "alert.relocate.blockingMessage",
+            value: "Dock Tile can't create or update this tile because it's running from a temporary, read-only location. This happens when the app is launched from Downloads. Move Dock Tile to your Applications folder and try again.",
+            comment: "Message shown when a tile action is blocked because the app is translocated"
+        )
+
+        static let relocateCheckbox = NSLocalizedString(
+            "alert.relocate.checkbox",
+            value: "Don't ask again",
+            comment: "Checkbox to suppress future move-to-Applications nudges"
+        )
     }
 
     // MARK: - Buttons
@@ -148,6 +172,18 @@ enum AppStrings {
             "button.confirm",
             value: "Confirm",
             comment: "Confirm button for alert dialogs"
+        )
+
+        static let moveToApplications = NSLocalizedString(
+            "button.moveToApplications",
+            value: "Move to Applications",
+            comment: "Button that moves the app into the Applications folder"
+        )
+
+        static let notNow = NSLocalizedString(
+            "button.notNow",
+            value: "Not Now",
+            comment: "Dismiss button for the non-blocking move-to-Applications nudge"
         )
 
         static let customise = NSLocalizedString(
@@ -1059,6 +1095,12 @@ enum AppStrings {
             "error.failedToCodeSign",
             value: "Failed to code sign helper bundle",
             comment: "Error when code signing fails"
+        )
+
+        static let appTranslocated = NSLocalizedString(
+            "error.appTranslocated",
+            value: "Dock Tile is running from a temporary, read-only location and can't create tiles. Move it to your Applications folder and try again.",
+            comment: "Error when the app is translocated and cannot generate helper bundles"
         )
     }
 

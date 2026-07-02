@@ -68,6 +68,9 @@ final class HelperBundleManager {
             return
         }
 
+        // Refuse early (with an actionable error) if we can't safely copy ourselves as a template.
+        try verifyCanGenerateBundles()
+
         installingBundleIds.insert(config.bundleIdentifier)
         defer { installingBundleIds.remove(config.bundleIdentifier) }
 
@@ -441,6 +444,17 @@ final class HelperBundleManager {
     }
 
     // MARK: - Bundle Generation (Pure Swift)
+
+    /// Pre-flight for any op that copies the running app as a helper template. When the app is
+    /// running from an App Translocation mount (quarantined + launched from ~/Downloads etc.) the
+    /// copy fails deep inside FileManager with an opaque Cocoa 260 — the exact non-fatal seen in
+    /// Crashlytics. Throwing early turns that into an actionable, catchable error so callers can
+    /// point the user at "move to /Applications" instead of silently recording a failure.
+    func verifyCanGenerateBundles() throws {
+        guard AppRelocationManager.shared.canGenerateBundles else {
+            throw HelperBundleError.appTranslocated
+        }
+    }
 
     private func generateHelperBundle(
         appName: String,
@@ -1126,6 +1140,7 @@ final class HelperBundleManager {
     /// Regenerate a helper bundle in-place WITHOUT Dock operations.
     /// Used by HelperMigrationManager for batch updates (single Dock restart at end).
     func regenerateHelperBundle(for config: DockTileConfiguration) async throws {
+        try verifyCanGenerateBundles()
         let appName = sanitizeAppName(config.name)
         let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
 
@@ -1218,6 +1233,9 @@ enum HelperBundleError: Error, LocalizedError {
     case bundleCopyFailed
     case codesignFailed
     case mainAppNotFound
+    /// The app is running from an App Translocation mount (quarantined + launched from e.g.
+    /// ~/Downloads), so it cannot copy itself as a helper template. Actionable: move to /Applications.
+    case appTranslocated
 
     var errorDescription: String? {
         switch self {
@@ -1231,6 +1249,8 @@ enum HelperBundleError: Error, LocalizedError {
             return AppStrings.Error.failedToCodeSign
         case .mainAppNotFound:
             return AppStrings.Error.mainAppNotFound
+        case .appTranslocated:
+            return AppStrings.Error.appTranslocated
         }
     }
 }
