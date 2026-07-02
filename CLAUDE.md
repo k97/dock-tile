@@ -1,6 +1,6 @@
 # Dock Tile
 
-Multi-instance macOS utility (macOS 15.0+) that creates customizable dock tiles via helper bundles. Swift 6, SwiftUI + AppKit hybrid. v1.6.0 released.
+Multi-instance macOS utility (macOS 15.0+) that creates customizable dock tiles via helper bundles. Swift 6, SwiftUI + AppKit hybrid. v1.7.0 released.
 
 ## Commands
 
