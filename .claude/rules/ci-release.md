@@ -9,6 +9,8 @@
 
 Both use `macos-26` beta runners (ARM64 only). `paths-ignore` skips CI on website/docs-only changes. Vercel uses `ignoreCommand` in `vercel.json` to skip on Xcode-only changes.
 
+**SwiftPM caching + resolve-retry (flaky-build fix)**: every build/test job caches `./build/SourcePackages` + `~/Library/Caches/org.swift.swiftpm` (keyed on `Package.resolved`) and runs a `-resolvePackageDependencies` step with retries **before** building. Firebase ships large binary xcframeworks (e.g. `grpc`) as binary targets downloaded during resolution; without this, every run re-downloaded them and a transient "network connection was lost" failed the build. A cache hit skips the download entirely; a cache miss retries (4×). A Firebase/dependency bump changes `Package.resolved` → first run is a cache miss (slower) that repopulates.
+
 ## Release Pipeline
 
 ```bash

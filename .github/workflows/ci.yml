@@ -66,6 +66,35 @@ jobs:
           xcrun --show-sdk-path
           xcodebuild -showsdks
 
+      # Cache the resolved SwiftPM checkouts + downloaded binary artifacts (Firebase ships large
+      # xcframeworks like grpc as binary targets). A cache hit skips the network download entirely
+      # — both a big speed-up and the fix for the flaky "network connection was lost" red builds.
+      - name: Cache SwiftPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./build/SourcePackages
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('DockTile.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      # Resolve up front with retries so a transient artifact-download blip (cache miss) retries
+      # instead of failing the whole build. The build step below then reuses ./build/SourcePackages.
+      - name: Resolve Swift packages (retry on flaky downloads)
+        run: |
+          for attempt in 1 2 3 4; do
+            echo "📦 Resolving package dependencies (attempt $attempt)…"
+            if xcodebuild -project "$PROJECT" -scheme "$SCHEME" \
+                 -derivedDataPath ./build -resolvePackageDependencies; then
+              exit 0
+            fi
+            echo "⚠️ Resolve failed (attempt $attempt); retrying in 20s…"
+            sleep 20
+          done
+          echo "❌ Package resolution failed after 4 attempts"
+          exit 1
+
       - name: Build Debug
         run: |
           set -o pipefail
