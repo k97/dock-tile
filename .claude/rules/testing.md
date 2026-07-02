@@ -38,7 +38,9 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `runRegenerationBatch`, `helperInfoPlist` / `stripMainAppIcons`, `Debouncer`,
 `AppInstallChecker.classifyInstallStatus`, `PopoverMetrics` / `PopoverSettings.resolve`,
 `SmartAddEngine.rankGroups` / `.score` / `.coLaunchClusters` / `SmartAddCategory.identity`,
-`AnalyticsService.resolveConsent` / `.shouldCollect`.
+`AnalyticsService.resolveConsent` / `.shouldCollect`,
+`DockTileDetailView.resolveDockAction` / `.dockActionIsEnabled` / `.contentSignature`,
+`HelperBundleManager.shouldPerformDockRemoval`.
 
 Assertion rules: prefer `#require` over `if`-guarded `#expect`; assert exact values/magnitudes,
 not `!=nil` / `.isValid` / `a>b`; never write `UserDefaults.standard` in tests — use

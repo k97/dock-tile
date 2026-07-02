@@ -30,14 +30,81 @@ struct DockTileDetailView: View {
     /// checks on every keystroke. The task cancels/restarts on each increment, providing debounce.
     @State private var saveGeneration: Int = 0
 
+    /// Fingerprint of the config content as of the last completed toolbar action (or view load).
+    /// Drives the dirty state that gates the hidden-tile "Done" button. Seeded in `init` so a
+    /// freshly opened tile starts clean (its edits were already persisted by the auto-save).
+    @State private var appliedContentSignature: Int
+
+    // MARK: - Action Resolution (pure seams, regression-guarded by DockActionResolutionTests)
+
+    /// The concrete operation the toolbar action button performs. `saveOnly` is the critical
+    /// case: a hidden, not-pinned tile has NO Dock work to do — acting on it must never reach
+    /// HelperBundleManager (the "Dock restarts on every Done" regression).
+    enum DockAction: Equatable {
+        case install    // visible — add to Dock, or full helper re-render + restart if already pinned
+        case remove     // hidden but still pinned — unpin (restarts the Dock)
+        case saveOnly   // hidden and not pinned — persist edits only, never touch the Dock
+    }
+
+    nonisolated static func resolveDockAction(isVisibleInDock: Bool, isCurrentlyInDock: Bool) -> DockAction {
+        if isVisibleInDock { return .install }
+        return isCurrentlyInDock ? .remove : .saveOnly
+    }
+
+    /// Dock-touching actions stay enabled regardless of dirty state — the pending Dock op IS the
+    /// change (and Update deliberately re-renders the helper on demand). Only the no-op-prone
+    /// saveOnly "Done" requires new edits, so it can't be spammed into pointless work.
+    nonisolated static func dockActionIsEnabled(action: DockAction, isDirty: Bool, isProcessing: Bool) -> Bool {
+        guard !isProcessing else { return false }
+        switch action {
+        case .install, .remove: return true
+        case .saveOnly: return isDirty
+        }
+    }
+
+    /// Cheap fingerprint of the user-editable content. Deliberately EXCLUDES bookkeeping that
+    /// `performDockAction` writes back after a successful action (`lastDockIndex`,
+    /// `helperAppVersion`) — including those would immediately re-dirty the button — and
+    /// `isVisibleInDock` (visibility selects WHICH action shows, it isn't content). App items are
+    /// identified by `id` (items are added/removed, never edited in place), which keeps this free
+    /// of the O(n × icon_data_size) full-struct equality the view avoids elsewhere.
+    nonisolated static func contentSignature(of config: DockTileConfiguration) -> Int {
+        var hasher = Hasher()
+        hasher.combine(config.name)
+        hasher.combine(config.tintColor)
+        hasher.combine(config.symbolEmoji)
+        hasher.combine(config.iconType)
+        hasher.combine(config.iconValue)
+        hasher.combine(config.iconScale)
+        hasher.combine(config.iconWeight)
+        hasher.combine(config.layoutMode)
+        hasher.combine(config.showInAppSwitcher)
+        for item in config.appItems {
+            hasher.combine(item.id)
+        }
+        return hasher.finalize()
+    }
+
+    private var currentDockAction: DockAction {
+        Self.resolveDockAction(
+            isVisibleInDock: editedConfig.isVisibleInDock,
+            isCurrentlyInDock: isCurrentlyInDock
+        )
+    }
+
+    private var isDirty: Bool {
+        Self.contentSignature(of: editedConfig) != appliedContentSignature
+    }
+
     /// Dynamic button text based on toggle state and actual Dock presence
     private var actionButtonText: String {
-        if editedConfig.isVisibleInDock {
-            // User wants tile in Dock
+        switch currentDockAction {
+        case .install:
             return isCurrentlyInDock ? AppStrings.Button.update : AppStrings.Button.addToDock
-        } else {
-            // User wants tile removed from Dock
-            return isCurrentlyInDock ? AppStrings.Button.removeFromDock : AppStrings.Button.done
+        case .remove:
+            return AppStrings.Button.removeFromDock
+        case .saveOnly:
+            return AppStrings.Button.done
         }
     }
 
@@ -46,6 +113,7 @@ struct DockTileDetailView: View {
         self.onCustomise = onCustomise
         self._editedConfig = State(initialValue: config)
         self._tileName = State(initialValue: config.name)
+        self._appliedContentSignature = State(initialValue: Self.contentSignature(of: config))
     }
 
     var body: some View {
@@ -73,18 +141,26 @@ struct DockTileDetailView: View {
         // Toolbar with dynamic action button
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button(actionButtonText) {
-                    handleDockAction()
+                Button(action: handleDockAction) {
+                    if isProcessing {
+                        // Busy state INSIDE the button (same pattern as the Popover Appearance
+                        // Save button): spinner + label, button disabled. Keeps the toolbar
+                        // stable — no external spinner popping in and shoving the button around.
+                        HStack(spacing: 6) {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text(actionButtonText)
+                        }
+                    } else {
+                        Text(actionButtonText)
+                    }
                 }
                 .buttonStyle(.bordered)
-                .disabled(isProcessing)
-            }
-
-            if isProcessing {
-                ToolbarItem(placement: .automatic) {
-                    ProgressView()
-                        .controlSize(.small)
-                }
+                .disabled(!Self.dockActionIsEnabled(
+                    action: currentDockAction,
+                    isDirty: isDirty,
+                    isProcessing: isProcessing
+                ))
             }
         }
         .alert(AppStrings.Title.deleteTile, isPresented: $showDeleteConfirmation) {
@@ -450,6 +526,13 @@ struct DockTileDetailView: View {
     }
 
     private func handleDockAction() {
+        // Saving a hidden, not-pinned tile never touches the Dock — no restart happens, so the
+        // Dock-restart consent dialog must not appear for it.
+        if currentDockAction == .saveOnly {
+            performDockAction()
+            return
+        }
+
         // Check if user has already acknowledged Dock restart
         let hasAcknowledged = UserDefaults.standard.bool(forKey: UserDefaultsKeys.hasAcknowledgedDockRestart)
 
@@ -476,9 +559,13 @@ struct DockTileDetailView: View {
                 let originalConfig = configManager.configuration(for: editedConfig.id)
                 let appSwitcherChanged = originalConfig?.showInAppSwitcher != configToSave.showInAppSwitcher
 
-                // Install or uninstall based on Show Tile toggle
-                if configToSave.isVisibleInDock {
-                    // User wants tile in Dock - install/update
+                // Resolve the action from the toggle + actual Dock presence. The saveOnly case
+                // (hidden AND not pinned) must never reach HelperBundleManager — there is no
+                // Dock work to do, and reaching it was the "Dock restarts on every Done" bug.
+                switch Self.resolveDockAction(isVisibleInDock: configToSave.isVisibleInDock,
+                                              isCurrentlyInDock: isCurrentlyInDock) {
+                case .install:
+                    // User wants tile in Dock - install/update (full helper re-render)
                     // Clear lastDockIndex after successful install (position is now live in Dock)
                     let wasInDock = isCurrentlyInDock
                     try await HelperBundleManager.shared.installHelper(for: configToSave)
@@ -493,9 +580,9 @@ struct DockTileDetailView: View {
                     print("✅ Helper installed: \(configToSave.name)")
                     print("   User can open it from: ~/Library/Application Support/DockTile/")
                     DiagnosticsLog.shared.log("dock", "\(wasInDock ? "Updated" : "Added") tile '\(configToSave.name)' in Dock")
-                } else {
+
+                case .remove:
                     // User wants tile removed - save position before removal
-                    // Remove from Dock plist regardless of whether bundle exists
                     print("🗑️ Removing tile from Dock: \(configToSave.name)")
                     let savedPosition = try await HelperBundleManager.shared.removeFromDock(for: configToSave)
                     if let position = savedPosition {
@@ -505,6 +592,11 @@ struct DockTileDetailView: View {
                     AnalyticsService.shared.log(.tileHidden, ["app_count": configToSave.appItems.count])
                     print("✅ Tile removed from Dock: \(configToSave.name)")
                     DiagnosticsLog.shared.log("dock", "Removed tile '\(configToSave.name)' from Dock (savedIndex=\(savedPosition.map(String.init) ?? "nil"))")
+
+                case .saveOnly:
+                    // Hidden tile with nothing pinned: persist edits only. No Dock op, no restart.
+                    print("💾 Saving hidden tile without touching the Dock: \(configToSave.name)")
+                    DiagnosticsLog.shared.log("dock", "Saved hidden tile '\(configToSave.name)' — no Dock op, Dock NOT restarted")
                 }
 
                 // Save configuration changes (including lastDockIndex)
@@ -523,6 +615,11 @@ struct DockTileDetailView: View {
                 // Update local state to match saved config
                 editedConfig = configToSave
                 tileName = configToSave.name
+
+                // The action applied/saved everything — mark content clean so the saveOnly
+                // "Done" button disables until the user edits again. Signature-based (not the
+                // generation counter) so the bookkeeping writes above don't re-dirty it.
+                appliedContentSignature = Self.contentSignature(of: configToSave)
 
                 // Refresh dock state after action
                 updateDockState()

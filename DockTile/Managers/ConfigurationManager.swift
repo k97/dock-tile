@@ -234,13 +234,12 @@ final class ConfigurationManager: ObservableObject {
 
         let config = configurations[index]
 
-        // Always clean up helper bundle, but only restart Dock if tile was visible
+        // Always clean up helper bundle. uninstallHelper itself only restarts the Dock when
+        // it actually removed a plist entry — the config's isVisibleInDock flag is NOT a
+        // presence signal (a never-pinned tile defaults to visible).
         Task {
             do {
-                try await HelperBundleManager.shared.uninstallHelper(
-                    for: config,
-                    restartDock: config.isVisibleInDock
-                )
+                try await HelperBundleManager.shared.uninstallHelper(for: config)
                 print("🗑️ Removed helper bundle for: \(config.name)")
             } catch {
                 AnalyticsService.shared.record(error, context: "uninstallHelper",

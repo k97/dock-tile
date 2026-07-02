@@ -290,11 +290,11 @@ final class HelperBundleManager {
         }
     }
 
-    /// Uninstall a helper bundle for the given configuration
-    /// - Parameters:
-    ///   - config: The configuration to uninstall
-    ///   - shouldRestartDock: Whether to restart the Dock after uninstalling (default: true)
-    func uninstallHelper(for config: DockTileConfiguration, restartDock shouldRestartDock: Bool = true) async throws {
+    /// Uninstall a helper bundle for the given configuration.
+    /// The Dock is restarted only when an actual Dock plist entry was removed — deleting a
+    /// never-pinned or already-hidden tile must NOT bounce the Dock (its `isVisibleInDock`
+    /// flag defaults to true before the tile is ever pinned, so the flag is NOT a presence signal).
+    func uninstallHelper(for config: DockTileConfiguration) async throws {
         print("🗑️ Uninstalling helper for: \(config.name)")
 
         // Find helper by bundle ID (handles renamed helpers)
@@ -306,10 +306,8 @@ final class HelperBundleManager {
             try await Task.sleep(nanoseconds: 300_000_000)
         }
 
-        // Remove from Dock plist if it was in the Dock
-        if shouldRestartDock {
-            removeFromDockPlist(bundleId: config.bundleIdentifier)
-        }
+        // Always attempt plist cleanup (also sweeps stale entries); remember whether it changed.
+        let didRemoveFromDock = removeFromDockPlist(bundleId: config.bundleIdentifier)
 
         // Delete the bundle if it exists
         if let helperPath = helperPath {
@@ -319,9 +317,11 @@ final class HelperBundleManager {
             print("   ✓ No helper bundle found to delete")
         }
 
-        // Restart Dock after bundle is deleted to avoid "?" icon
-        if shouldRestartDock {
+        // Restart Dock after bundle is deleted to avoid "?" icon — but only if the Dock changed
+        if didRemoveFromDock {
             restartDock()
+        } else {
+            print("   ✓ Tile was not in the Dock — Dock not restarted")
         }
 
         print("✅ Helper uninstalled for: \(config.name)")
@@ -368,6 +368,18 @@ final class HelperBundleManager {
         print("🗑️ Removing from Dock only: \(config.name)")
         print("   Bundle ID: \(config.bundleIdentifier)")
 
+        // CRITICAL: a removal with nothing to remove must leave the Dock alone. A never-pinned
+        // or already-removed tile reaches this path (e.g. "Done" on a hidden tile), and blindly
+        // restarting the Dock here was the "Dock keeps restarting on every Done" regression.
+        // Returning nil is safe: callers only overwrite lastDockIndex on a non-nil result.
+        let wasInDock = findInDock(bundleId: config.bundleIdentifier) != nil
+        let helperRunning = isHelperRunning(bundleId: config.bundleIdentifier)
+        guard Self.shouldPerformDockRemoval(isInDock: wasInDock, isHelperRunning: helperRunning) else {
+            print("   ✓ Not in Dock and no helper running — nothing to remove, Dock left alone")
+            DiagnosticsLog.shared.log("dock", "removeFromDock NO-OP for '\(config.name)' (not pinned, helper not running) — Dock NOT restarted")
+            return nil
+        }
+
         // CRITICAL: Save Dock position BEFORE removal for later restoration
         let savedDockIndex = findDockIndex(bundleId: config.bundleIdentifier)
         if let index = savedDockIndex {
@@ -392,26 +404,40 @@ final class HelperBundleManager {
             }
         }
 
-        // Remove from Dock plist (works even if bundle doesn't exist)
-        removeFromDockPlist(bundleId: config.bundleIdentifier)
+        // Remove from Dock plist (works even if bundle doesn't exist). Only an actual plist
+        // change warrants restarting the Dock — e.g. the tile may have only had a running
+        // helper to quit, with no persistent-apps entry left to clean up.
+        let didRemoveFromPlist = removeFromDockPlist(bundleId: config.bundleIdentifier)
 
-        // Restart Dock to apply changes
-        restartDock()
+        if didRemoveFromPlist {
+            // Restart Dock to apply changes
+            restartDock()
 
-        // Wait for Dock to fully restart and plist to update
-        try await waitForTileRemoval(bundleId: config.bundleIdentifier)
+            // Wait for Dock to fully restart and plist to update
+            try await waitForTileRemoval(bundleId: config.bundleIdentifier)
 
-        // Final verification (should always succeed now)
-        if findInDock(bundleId: config.bundleIdentifier) == nil {
-            print("   ✓ Verified tile removed from Dock")
-            DiagnosticsLog.shared.log("dock", "Removed '\(config.name)' from Dock (verified)")
+            // Final verification (should always succeed now)
+            if findInDock(bundleId: config.bundleIdentifier) == nil {
+                print("   ✓ Verified tile removed from Dock")
+                DiagnosticsLog.shared.log("dock", "Removed '\(config.name)' from Dock (verified)")
+            } else {
+                print("   ⚠️ Tile still in Dock after restart - this shouldn't happen")
+                DiagnosticsLog.shared.log("dock", "'\(config.name)' STILL in Dock after restart — removal did not take")
+            }
         } else {
-            print("   ⚠️ Tile still in Dock after restart - this shouldn't happen")
-            DiagnosticsLog.shared.log("dock", "'\(config.name)' STILL in Dock after restart — removal did not take")
+            print("   ✓ No Dock plist entry to remove — Dock not restarted")
+            DiagnosticsLog.shared.log("dock", "removeFromDock for '\(config.name)': no plist entry — Dock NOT restarted")
         }
 
         print("✅ Removed from Dock: \(config.name)")
         return savedDockIndex
+    }
+
+    /// Pure seam (regression-guard convention): whether the hide/remove path has any real work
+    /// to do. When the tile has no Dock plist entry AND no helper process is running, removal is
+    /// a complete no-op and the Dock must NOT be restarted. Guarded by `DockActionResolutionTests`.
+    nonisolated static func shouldPerformDockRemoval(isInDock: Bool, isHelperRunning: Bool) -> Bool {
+        isInDock || isHelperRunning
     }
 
     // MARK: - Bundle Generation (Pure Swift)
@@ -850,14 +876,18 @@ final class HelperBundleManager {
     /// Remove app from Dock plist by bundle ID (doesn't require bundle to exist)
     /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
     /// Used during uninstall when bundle may be deleted before Dock restart
-    private func removeFromDockPlist(bundleId: String) {
+    /// Returns `true` when an entry was actually found and removed — the caller uses this to
+    /// decide whether a Dock restart is warranted at all. A no-op removal must NOT restart the
+    /// Dock (regression: acting on an already-hidden tile bounced the Dock every time).
+    @discardableResult
+    private func removeFromDockPlist(bundleId: String) -> Bool {
         print("📌 Removing from Dock plist: \(bundleId)")
 
         // Read current persistent-apps using CFPreferences
         let dockAppId = "com.apple.dock" as CFString
         guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             print("   ⚠️ Could not read persistent-apps from CFPreferences")
-            return
+            return false
         }
 
         // Filter out apps - check by bundle-identifier in tile-data first, then fallback to Info.plist
@@ -916,8 +946,10 @@ final class HelperBundleManager {
             } else {
                 print("   ⚠️ CFPreferences sync failed")
             }
+            return true
         } else {
             print("   ✓ Entry not found in Dock")
+            return false
         }
     }
 
