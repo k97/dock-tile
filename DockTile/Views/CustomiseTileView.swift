@@ -45,7 +45,10 @@ struct CustomiseTileView: View {
         .navigationTitle(AppStrings.Navigation.customiseTile)
         .toolbar {
             ToolbarItem(placement: .navigation) {
-                Button(action: onBack) {
+                Button(action: {
+                    DiagnosticsLog.shared.ui("Customise → Back to Tile Detail '\(editedConfig.name)'")
+                    onBack()
+                }) {
                     Label(AppStrings.Button.back, systemImage: "chevron.left")
                 }
             }
@@ -76,6 +79,12 @@ struct CustomiseTileView: View {
         }
         .onChange(of: editedConfig.iconValue) { _, newValue in
             DiagnosticsLog.shared.log("tile", "Icon changed to \(editedConfig.iconType == .emoji ? "emoji" : "symbol") '\(newValue)' for '\(editedConfig.name)'")
+        }
+        .onChange(of: editedConfig.iconWeight) { _, newValue in
+            DiagnosticsLog.shared.ui("Customise → Icon weight \(newValue.displayName) for '\(editedConfig.name)'")
+        }
+        .onChange(of: selectedIconTab) { _, newTab in
+            DiagnosticsLog.shared.ui("Customise → Icon picker tab '\(newTab == .symbol ? "Symbol" : "Emoji")'")
         }
     }
 

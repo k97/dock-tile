@@ -44,6 +44,28 @@ struct ConfigurationManagerTests {
         #expect(ConfigurationManager.uniqueName(base: "New Tile", existing: ["New Tile", "New Tile 2"]) == "New Tile 1")
     }
 
+    // MARK: - + Button Gate (canCreateNewTile)
+
+    // The toolbar + is disabled only while an unedited, freshly-created tile is *selected* — never
+    // when there is no selection. Guards the deadlock where deleting the last blank tile left the +
+    // stuck disabled with zero tiles (nothing to edit to re-enable it).
+
+    @Test("No selection → + enabled regardless of the stale edited flag")
+    func canCreateWithNoSelection() {
+        #expect(ConfigurationManager.canCreateNewTile(hasSelection: false, selectedEdited: false))
+        #expect(ConfigurationManager.canCreateNewTile(hasSelection: false, selectedEdited: true))
+    }
+
+    @Test("Selected unedited tile → + disabled (must engage with the blank tile first)")
+    func cannotCreateWhenSelectedTileUnedited() {
+        #expect(!ConfigurationManager.canCreateNewTile(hasSelection: true, selectedEdited: false))
+    }
+
+    @Test("Selected edited tile → + enabled")
+    func canCreateWhenSelectedTileEdited() {
+        #expect(ConfigurationManager.canCreateNewTile(hasSelection: true, selectedEdited: true))
+    }
+
     // MARK: - Configuration Lookup
 
     @Test("configuration(for:) returns nil for unknown ID")

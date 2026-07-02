@@ -948,6 +948,12 @@ enum AppStrings {
             comment: "Header text for empty state"
         )
 
+        static let createFirstTileDescription = NSLocalizedString(
+            "empty.createFirstTileDescription",
+            value: "Group your favourite apps into a tile and pin it to the Dock.",
+            comment: "Supporting text under the empty-state header"
+        )
+
         static let detail = NSLocalizedString(
             "empty.detail",
             value: "Detail",

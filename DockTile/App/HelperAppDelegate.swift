@@ -200,6 +200,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         print("🖱️ Helper dock icon clicked (hasVisibleWindows: \(flag))")
+        DiagnosticsLog.shared.ui("Dock icon clicked (popover \(floatingPanel.isVisible ? "open" : "closed"))")
         showedPopoverOnActivation = false  // This was a dock click, not Cmd+Tab
 
         // Swallow the reopen macOS delivers right after a user cold-launch — we already
@@ -254,7 +255,9 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         // Show popover
         print("   Calling floatingPanel.show()...")
-        floatingPanel.show(animated: true, withKeyboardFocus: withKeyboardFocus)
+        DiagnosticsLog.shared.measure("Show popover '\(config?.name ?? "?")'") {
+            floatingPanel.show(animated: true, withKeyboardFocus: withKeyboardFocus)
+        }
         print("   Popover show complete")
         DiagnosticsLog.shared.log("helper", "Popover shown — \(config?.appItems.count ?? 0) app(s), layout=\(config?.layoutMode.rawValue ?? "?"), keyboard=\(withKeyboardFocus)")
     }

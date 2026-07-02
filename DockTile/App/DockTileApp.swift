@@ -62,23 +62,27 @@ struct DockTileApp: App {
             // Re-point the standard Settings menu item / ⌘, at the inline General pane.
             CommandGroup(replacing: .appSettings) {
                 Button(AppStrings.Menu.settings) {
+                    DiagnosticsLog.shared.ui("Menu → Settings (⌘,)")
                     NotificationCenter.default.post(name: .openSettingsPane, object: SettingsPane.general)
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }
             CommandGroup(replacing: .appInfo) {
                 Button("About Dock Tile") {
+                    DiagnosticsLog.shared.ui("Menu → About Dock Tile")
                     aboutWindowController.showAbout {
                         updateController.checkForUpdates()
                     }
                 }
                 Divider()
                 Button("Check for Updates...") {
+                    DiagnosticsLog.shared.ui("Menu → Check for Updates")
                     updateController.checkForUpdates()
                 }
             }
             CommandGroup(replacing: .newItem) {
                 Button(AppStrings.Menu.newTile) {
+                    DiagnosticsLog.shared.ui("Menu → New Tile (⌘N)")
                     configManager.createConfiguration()
                 }
                 .keyboardShortcut("n", modifiers: .command)
@@ -86,6 +90,7 @@ struct DockTileApp: App {
             }
             CommandGroup(after: .newItem) {
                 Button(AppStrings.Menu.copyDiagnostics) {
+                    DiagnosticsLog.shared.ui("Menu → Copy Diagnostics")
                     DiagnosticsLog.shared.copyToPasteboard()
                 }
             }

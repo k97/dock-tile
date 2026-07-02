@@ -76,6 +76,28 @@ spinner. Guarded by `DockActionResolutionTests`.
 
 **Helpers must not touch the Dock**: helper processes also construct a `ConfigurationManager` (for popover config), so `init()` returns early via `AppEnvironment.isHelper` before `startDockWatcher()`/`syncDockVisibility()` — only the main app watches/reconciles the Dock, preventing multi-writer races on the config file and Dock plist.
 
+## Sidebar Selection & Empty State
+
+The main window's `SidebarSelection` (a tile, a Settings pane, or the `.tilesPlaceholder`
+"No Tiles" row) is the single source of truth driving the detail column; tile selection mirrors
+into `ConfigurationManager.selectedConfigId`. Both the empty state and Settings live in the same
+detail column, so navigation invariants matter:
+
+- **`.tilesPlaceholder` (critical)**: the "No Tiles" row is a **selectable** placeholder that routes
+  to the empty-state detail. Without it, once the user opened a Settings pane at zero tiles there was
+  no selectable tile row to click back to, stranding them in Settings. First launch and
+  last-tile-deletion both default `selection` to it, so the empty state (not a Settings pane) is what
+  appears. `EmptyConfigurationView` takes an `onAdd` closure wired to the **same** `handleAddTapped`
+  as the sidebar + (Smart Add if suggestions exist, else a blank tile) — the two entry points must
+  not diverge.
+- **+ gate must never deadlock (critical)**: the toolbar + is gated by the pure
+  `ConfigurationManager.canCreateNewTile(hasSelection:selectedEdited:)` seam — disabled **only** while
+  an unedited freshly-created tile is *selected*, always enabled when there's no selection. Gating on
+  `selectedConfigHasBeenEdited` alone left + permanently disabled after deleting the last blank tile
+  (the flag stayed `false` with zero tiles, nothing to edit to flip it back). `deleteConfiguration`
+  also resets the flag to `true` when the list empties so the stored value stays honest. Guarded by
+  `ConfigurationManagerTests`.
+
 ## Popover Configure Gear Icon
 
 Both `StackPopoverView` (grid) and `ListPopoverView` (list) have a gear icon that opens the main app to configure that tile. Posts `.openConfigurator` notification → `HelperAppDelegate` handles routing via `docktile://configure?bundleId=...` deep link. Routes to correct build: DerivedData for dev, `/Applications/` for release.

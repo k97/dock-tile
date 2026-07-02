@@ -107,6 +107,7 @@ struct AppStringsTests {
 
         // Empty states
         #expect(!AppStrings.Empty.createFirstTile.isEmpty)
+        #expect(!AppStrings.Empty.createFirstTileDescription.isEmpty)
         #expect(!AppStrings.Empty.detail.isEmpty)
         #expect(!AppStrings.Empty.noApps.isEmpty)
         #expect(!AppStrings.Empty.noItemsAdded.isEmpty)

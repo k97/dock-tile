@@ -745,6 +745,30 @@
         }
       }
     },
+    "empty.createFirstTileDescription": {
+      "comment": "Supporting text under the empty-state header",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group your favourite apps into a tile and pin it to the Dock."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group your favourite apps into a tile and pin it to the Dock."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group your favorite apps into a tile and pin it to the Dock."
+          }
+        }
+      }
+    },
     "empty.detail": {
       "comment": "Placeholder text in detail view",
       "extractionState": "manual",

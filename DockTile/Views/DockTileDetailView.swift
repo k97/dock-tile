@@ -164,8 +164,11 @@ struct DockTileDetailView: View {
             }
         }
         .alert(AppStrings.Title.deleteTile, isPresented: $showDeleteConfirmation) {
-            Button(AppStrings.Button.cancel, role: .cancel) {}
+            Button(AppStrings.Button.cancel, role: .cancel) {
+                DiagnosticsLog.shared.ui("Delete confirmation → Cancel '\(editedConfig.name)'")
+            }
             Button(AppStrings.Button.delete, role: .destructive) {
+                DiagnosticsLog.shared.ui("Delete confirmation → Delete '\(editedConfig.name)'")
                 deleteTile()
             }
         } message: {
@@ -337,10 +340,14 @@ struct DockTileDetailView: View {
                     }
                 }
                 .onTapGesture {
+                    DiagnosticsLog.shared.ui("Tile Detail → Customise (icon tapped) '\(editedConfig.name)'")
                     onCustomise()
                 }
 
-                SubtleButton(title: AppStrings.Button.customise, width: 118, action: onCustomise)
+                SubtleButton(title: AppStrings.Button.customise, width: 118, action: {
+                    DiagnosticsLog.shared.ui("Tile Detail → Customise button '\(editedConfig.name)'")
+                    onCustomise()
+                })
             }
 
             // Right column: Custom Form Group
@@ -500,7 +507,10 @@ struct DockTileDetailView: View {
                 SubtleButton(
                     title: AppStrings.Button.remove,
                     textColor: .red,
-                    action: { showDeleteConfirmation = true }
+                    action: {
+                        DiagnosticsLog.shared.ui("Tile Detail → Remove tile pressed '\(editedConfig.name)' (shows delete confirmation)")
+                        showDeleteConfirmation = true
+                    }
                 )
             }
             .frame(height: 42)
@@ -526,6 +536,8 @@ struct DockTileDetailView: View {
     }
 
     private func handleDockAction() {
+        DiagnosticsLog.shared.ui("Tile Detail → '\(actionButtonText)' pressed for '\(editedConfig.name)' (action=\(currentDockAction), visible=\(editedConfig.isVisibleInDock), pinned=\(isCurrentlyInDock))")
+
         // Saving a hidden, not-pinned tile never touches the Dock — no restart happens, so the
         // Dock-restart consent dialog must not appear for it.
         if currentDockAction == .saveOnly {
@@ -568,7 +580,9 @@ struct DockTileDetailView: View {
                     // User wants tile in Dock - install/update (full helper re-render)
                     // Clear lastDockIndex after successful install (position is now live in Dock)
                     let wasInDock = isCurrentlyInDock
-                    try await HelperBundleManager.shared.installHelper(for: configToSave)
+                    try await DiagnosticsLog.shared.measure("\(wasInDock ? "Update" : "Install") helper '\(configToSave.name)'") {
+                        try await HelperBundleManager.shared.installHelper(for: configToSave)
+                    }
                     configToSave.lastDockIndex = nil  // Clear saved position
                     configToSave.helperAppVersion = HelperBundleManager.currentAppVersion
 
@@ -584,7 +598,9 @@ struct DockTileDetailView: View {
                 case .remove:
                     // User wants tile removed - save position before removal
                     print("🗑️ Removing tile from Dock: \(configToSave.name)")
-                    let savedPosition = try await HelperBundleManager.shared.removeFromDock(for: configToSave)
+                    let savedPosition = try await DiagnosticsLog.shared.measure("Remove helper '\(configToSave.name)' from Dock") {
+                        try await HelperBundleManager.shared.removeFromDock(for: configToSave)
+                    }
                     if let position = savedPosition {
                         configToSave.lastDockIndex = position
                         print("   📍 Saved Dock position: \(position) for later restoration")
@@ -702,7 +718,11 @@ struct DockTileDetailView: View {
         panel.prompt = AppStrings.Button.add
         panel.message = AppStrings.FilePicker.message
 
-        guard panel.runModal() == .OK else { return }
+        DiagnosticsLog.shared.ui("Tile Detail → + (add app/folder) opened file picker for '\(editedConfig.name)'")
+        guard panel.runModal() == .OK else {
+            DiagnosticsLog.shared.ui("Tile Detail → add app/folder picker cancelled")
+            return
+        }
 
         // Batch-add every selected URL. Newly built items accumulate here so the
         // debounced auto-save fires once, and so duplicates within the same

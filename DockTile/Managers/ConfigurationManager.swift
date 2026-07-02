@@ -219,6 +219,22 @@ final class ConfigurationManager: ObservableObject {
         }
     }
 
+    /// Whether the toolbar + may create a new tile. The "engage with the fresh blank tile first"
+    /// gate (`selectedConfigHasBeenEdited`) only makes sense while an unedited tile is *selected* —
+    /// with no selection (e.g. the last tile was just deleted) there is nothing to engage with, so
+    /// + must stay enabled. Gating on the flag alone left + permanently disabled after deleting the
+    /// last blank tile (a dead-end with zero tiles). Pure `nonisolated static` seam so the rule is
+    /// unit-tested without a live manager (mirrors `resolveDockVisibility`).
+    nonisolated static func canCreateNewTile(hasSelection: Bool, selectedEdited: Bool) -> Bool {
+        !hasSelection || selectedEdited
+    }
+
+    /// Live value of the + gate for the sidebar, derived from the current selection + edit flag.
+    var canCreateNewTile: Bool {
+        Self.canCreateNewTile(hasSelection: selectedConfigId != nil,
+                              selectedEdited: selectedConfigHasBeenEdited)
+    }
+
     /// Dismiss the Smart Add provenance banner for a tile (user dismissed it, or the tile was
     /// added to the Dock). Idempotent.
     func clearSmartAddProvenance(_ id: UUID) {
@@ -254,6 +270,12 @@ final class ConfigurationManager: ObservableObject {
         // If deleted config was selected, select another one (or nil if none left)
         if selectedConfigId == id {
             selectedConfigId = configurations.first?.id
+        }
+
+        // Deleting the last tile leaves no tile to "engage with", so the blank-tile gate no longer
+        // applies — reset the flag so the + button isn't stranded disabled with zero tiles.
+        if configurations.isEmpty {
+            selectedConfigHasBeenEdited = true
         }
 
         saveConfigurations()
