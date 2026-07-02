@@ -337,6 +337,30 @@
         }
       }
     },
+    "button.checkNow": {
+      "comment": "Settings → Software Update: button that triggers a manual Sparkle update check",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Now"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Now"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check Now"
+          }
+        }
+      }
+    },
     "button.confirm": {
       "comment": "Confirm button for alert dialogs",
       "extractionState": "manual",
@@ -656,19 +680,19 @@
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scan…"
+            "value": "Scan"
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scan…"
+            "value": "Scan"
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scan…"
+            "value": "Scan"
           }
         }
       }

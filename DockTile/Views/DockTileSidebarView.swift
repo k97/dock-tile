@@ -104,7 +104,9 @@ struct SettingsRow: View {
 }
 
 /// A squircle badge matching the tile icon look (`DockTileIconPreview`): continuous rounded
-/// rect, top-to-bottom gradient, white SF Symbol, subtle inner glass stroke.
+/// rect, top-to-bottom gradient, white SF Symbol, subtle inner glass stroke, and the same
+/// Liquid-Glass depth (top sheen + glyph contact shadow) as the tiles. Settings badges always
+/// render in the colourful Default style, so the depth seam is read with `.defaultStyle`.
 struct SettingsBadgeIcon: View {
     let systemName: String
     let tint: Color
@@ -112,8 +114,23 @@ struct SettingsBadgeIcon: View {
 
     private var cornerRadius: CGFloat { size * 0.225 }
 
+    private var glyphShadow: IconDepthMetrics.GlyphShadow? {
+        IconDepthMetrics.glyphShadow(style: .defaultStyle, iconType: .sfSymbol, nominalSize: size)
+    }
+
+    private var glyphForeground: AnyShapeStyle {
+        if let darken = IconDepthMetrics.glyphBottomDarken(style: .defaultStyle, iconType: .sfSymbol, nominalSize: size) {
+            return AnyShapeStyle(
+                LinearGradient(colors: [.white, Color.white.darkened(by: darken)], startPoint: .top, endPoint: .bottom)
+            )
+        }
+        return AnyShapeStyle(Color.white)
+    }
+
     var body: some View {
-        ZStack {
+        let sheenAlpha = IconDepthMetrics.surfaceSheenAlpha(style: .defaultStyle, nominalSize: size)
+
+        return ZStack {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(
                     LinearGradient(
@@ -124,11 +141,33 @@ struct SettingsBadgeIcon: View {
                 )
 
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.5), lineWidth: 0.5)
+                .strokeBorder(
+                    Color.white.opacity(IconDepthMetrics.strokeOpacity(style: .defaultStyle)),
+                    lineWidth: IconDepthMetrics.strokeLineWidth(nominalSize: size)
+                )
+
+            if sheenAlpha > 0 {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.white.opacity(sheenAlpha), location: 0),
+                                .init(color: .clear, location: IconDepthMetrics.surfaceSheenHeightFraction)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
 
             Image(systemName: systemName)
                 .font(.system(size: size * 0.5, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(glyphForeground)
+                .shadow(
+                    color: glyphShadow.map { Color.black.opacity($0.blackAlpha) } ?? .clear,
+                    radius: glyphShadow?.blur ?? 0,
+                    y: glyphShadow?.offset ?? 0
+                )
         }
         .frame(width: size, height: size)
     }

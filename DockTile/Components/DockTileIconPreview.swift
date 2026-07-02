@@ -79,27 +79,42 @@ struct DockTileIconPreview: View {
     }
 
     private var symbolSize: CGFloat {
-        // Base ratio: maps iconScale 10-20 to approximately 0.30-0.65
-        let baseRatio = 0.30 + (CGFloat(iconScale - 10) * 0.035)
-
-        let ratio: CGFloat
-        if iconType == .emoji {
-            // Emoji gets +5% offset for visual weight
-            ratio = baseRatio + 0.05
-        } else if iconValue == SFSymbolCatalog.brandSymbolName {
-            // Brand logo scales with the stepper on its own curve, capped in the
-            // safe area. Mirrors IconGenerator.brandRatio(forScale:).
-            ratio = SFSymbolCatalog.brandRatio(forScale: iconScale)
-        } else {
-            ratio = baseRatio
-        }
-
-        return size * ratio
+        // Shared seam handles the brand curve + SF-Symbol safe-area cap, so the preview and
+        // the baked .icns pick identical glyph sizes (the inline copy here used to omit the cap).
+        size * IconDepthMetrics.glyphSizeRatio(iconScale: iconScale, iconType: iconType, iconValue: iconValue)
     }
 
     /// Colors based on current icon style
     private var styleColors: (backgroundTop: Color, backgroundBottom: Color, foreground: Color) {
         tintColor.colors(for: iconStyle)
+    }
+
+    // MARK: Depth treatment (mirrors IconGenerator via the shared seam)
+
+    private var glyphShadow: IconDepthMetrics.GlyphShadow? {
+        IconDepthMetrics.glyphShadow(style: iconStyle, iconType: iconType, nominalSize: size)
+    }
+
+    private var glyphBottomDarken: CGFloat? {
+        IconDepthMetrics.glyphBottomDarken(style: iconStyle, iconType: iconType, nominalSize: size)
+    }
+
+    private var surfaceSheenAlpha: CGFloat {
+        IconDepthMetrics.surfaceSheenAlpha(style: iconStyle, nominalSize: size)
+    }
+
+    /// Top→bottom shading fill for SF Symbols / brand glyph; flat foreground when suppressed.
+    private var glyphForeground: AnyShapeStyle {
+        if let darken = glyphBottomDarken {
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [styleColors.foreground, styleColors.foreground.darkened(by: darken)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+        }
+        return AnyShapeStyle(styleColors.foreground)
     }
 
     var body: some View {
@@ -114,55 +129,71 @@ struct DockTileIconPreview: View {
                     )
                 )
 
-            // Beveled glass effect (inner stroke)
-            // In dark style, use a subtler stroke
+            // Beveled glass effect (inner stroke) — opacity + width from the shared seam.
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .strokeBorder(
-                    isDarkStyle
-                        ? Color.white.opacity(0.2)
-                        : Color.white.opacity(0.5),
-                    lineWidth: 0.5
+                    Color.white.opacity(IconDepthMetrics.strokeOpacity(style: iconStyle)),
+                    lineWidth: IconDepthMetrics.strokeLineWidth(nominalSize: size)
                 )
+
+            // Liquid-Glass surface sheen: soft top specular gloss, clipped to the squircle.
+            if surfaceSheenAlpha > 0 {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.white.opacity(surfaceSheenAlpha), location: 0),
+                                .init(color: .clear, location: IconDepthMetrics.surfaceSheenHeightFraction)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
 
             // Icon content (SF Symbol or Emoji)
             iconContent
         }
         .frame(width: size, height: size)
-        // NOTE: No drop shadow here - the Dock adds shadows dynamically
-        // This preview shows exactly what the icon file looks like
+        // NOTE: No outer drop shadow — the Dock adds that. The glyph's contact shadow below is
+        // an inner lift effect (mirrors the baked .icns), not the tile's system shadow.
     }
 
     @ViewBuilder
     private var iconContent: some View {
         switch iconType {
         case .sfSymbol:
-            // SF Symbol with icon style-aware color
-            // Default: white symbol on colored gradient
-            // Dark: tint-colored symbol on dark background
-            if iconValue == SFSymbolCatalog.brandSymbolName, let logo = SFSymbolCatalog.brandGlyph {
-                // The DockTile brand logo is a bundled template image, not a system symbol.
-                Image(nsImage: logo)
-                    .resizable()
-                    .renderingMode(.template)
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: symbolSize, height: symbolSize)
-                    .foregroundColor(styleColors.foreground)
-            } else {
-                Image(systemName: iconValue)
-                    .font(.system(size: symbolSize, weight: iconWeight.fontWeight))
-                    .foregroundColor(styleColors.foreground)
+            // SF Symbol with icon style-aware fill + soft contact shadow (raised-on-glass).
+            Group {
+                if iconValue == SFSymbolCatalog.brandSymbolName, let logo = SFSymbolCatalog.brandGlyph {
+                    // The DockTile brand logo is a bundled template image, not a system symbol.
+                    Image(nsImage: logo)
+                        .resizable()
+                        .renderingMode(.template)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: symbolSize, height: symbolSize)
+                        .foregroundStyle(glyphForeground)
+                } else {
+                    Image(systemName: iconValue)
+                        .font(.system(size: symbolSize, weight: iconWeight.fontWeight))
+                        .foregroundStyle(glyphForeground)
+                }
             }
-            // NOTE: No text shadow - native macOS icons don't have baked-in text shadows
+            .shadow(
+                color: glyphShadow.map { Color.black.opacity($0.blackAlpha) } ?? .clear,
+                radius: glyphShadow?.blur ?? 0,
+                y: glyphShadow?.offset ?? 0
+            )
 
         case .emoji:
-            // Emojis: "Sticker on Glass" metaphor
-            // Keep full color, add subtle shadow in dark style to lift off the surface
+            // Emojis: "Sticker on Glass" metaphor — full colour + a subtle contact shadow in
+            // every style (seam-driven), to lift them off the surface.
             Text(iconValue)
                 .font(.system(size: symbolSize))
                 .shadow(
-                    color: isDarkStyle ? Color.black.opacity(0.3) : Color.clear,
-                    radius: isDarkStyle ? 2 : 0,
-                    y: isDarkStyle ? 1 : 0
+                    color: glyphShadow.map { Color.black.opacity($0.blackAlpha) } ?? .clear,
+                    radius: glyphShadow?.blur ?? 0,
+                    y: glyphShadow?.offset ?? 0
                 )
         }
     }

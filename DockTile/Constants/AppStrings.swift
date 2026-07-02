@@ -194,7 +194,7 @@ enum AppStrings {
 
         static let scanForMissingApps = NSLocalizedString(
             "button.scanForMissingApps",
-            value: "Scan…",
+            value: "Scan",
             comment: "Settings button that scans tiles for moved/uninstalled apps"
         )
 
@@ -232,6 +232,12 @@ enum AppStrings {
             "button.checkForUpdates",
             value: "Check for Updates…",
             comment: "Button that triggers a manual Sparkle update check"
+        )
+
+        static let checkNow = NSLocalizedString(
+            "button.checkNow",
+            value: "Check Now",
+            comment: "Settings → Software Update: button that triggers a manual Sparkle update check"
         )
 
         static let useThisTile = NSLocalizedString(
