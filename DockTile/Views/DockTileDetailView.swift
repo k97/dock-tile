@@ -639,6 +639,12 @@ struct DockTileDetailView: View {
 
                 // Refresh dock state after action
                 updateDockState()
+            } catch let error as HelperBundleError where error == .appTranslocated {
+                // The app is translocated (running from a quarantined ~/Downloads copy) so it can't
+                // build the helper. Don't just show the raw error — offer the actionable fix.
+                errorMessage = error.localizedDescription
+                DiagnosticsLog.shared.log("dock", "Dock action blocked for '\(editedConfig.name)': app is translocated")
+                AppRelocationManager.shared.presentBlockingPrompt()
             } catch {
                 errorMessage = error.localizedDescription
                 DiagnosticsLog.shared.log("dock", "Dock action FAILED for '\(editedConfig.name)' (visible=\(editedConfig.isVisibleInDock)): \(error.localizedDescription)")

@@ -17,6 +17,11 @@ enum UserDefaultsKeys {
     static let lastSelectedConfigId = "lastSelectedConfigId"
     static let lastMigratedAppVersion = "lastMigratedAppVersion"
 
+    /// User dismissed the launch-time "move to Applications" nudge with "Don't ask again". Main-app
+    /// domain (the nudge is main-app only). The *blocking* prompt shown when a helper op is actually
+    /// refused ignores this — a broken location must keep asking until the app is moved.
+    static let relocationPromptSuppressed = "relocationPromptSuppressed"
+
     /// "Smart Add" — suggest ready-made tiles when the user presses +. Opt-out, default ON
     /// (absent/true = ON). Main-app domain only: the suggestion flow runs solely in the main app,
     /// so helper bundles never read it. When OFF, + always creates a blank tile.

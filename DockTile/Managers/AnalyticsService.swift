@@ -44,6 +44,10 @@ enum AnalyticsEvent: String, CaseIterable {
     case dockLockMoveStarted = "dock_lock_move_started"
     case dockLockMoveSucceeded = "dock_lock_move_succeeded"
     case dockLockMoveFailed = "dock_lock_move_failed"
+    case relocationPrompted = "relocation_prompted"
+    case relocationMoveStarted = "relocation_move_started"
+    case relocationMoveSucceeded = "relocation_move_succeeded"
+    case relocationMoveFailed = "relocation_move_failed"
 }
 
 @MainActor
@@ -146,14 +150,16 @@ final class AnalyticsService {
     }
 
     /// Record a non-fatal error with optional custom keys. Always prints, preserving existing logging.
+    ///
+    /// The context + keys are attached via `record(error:userInfo:)` so they are scoped to THIS
+    /// event. They must NOT go through `setCustomValue`, which mutates the global Crashlytics key
+    /// set — under concurrent non-fatals those keys bleed across issues (and onto the next crash),
+    /// misattributing debugging context.
     func record(_ error: Error, context: String, keys: [String: String] = [:]) {
         print("❌ [\(context)] \(error.localizedDescription)")
         guard isConfigured else { return }
-        let crashlytics = Crashlytics.crashlytics()
-        crashlytics.setCustomValue(context, forKey: "error_context")
-        for (key, value) in keys {
-            crashlytics.setCustomValue(value, forKey: key)
-        }
-        crashlytics.record(error: error)
+        var userInfo: [String: Any] = keys
+        userInfo["error_context"] = context
+        Crashlytics.crashlytics().record(error: error, userInfo: userInfo)
     }
 }
