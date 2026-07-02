@@ -19,6 +19,10 @@ enum SettingsPane: Hashable, CaseIterable {
 enum SidebarSelection: Hashable {
     case tile(UUID)
     case settings(SettingsPane)
+    /// The "No Tiles" placeholder row — selecting it shows the empty-state detail. Lets the user
+    /// return to the empty state after visiting Settings, and gives first launch a concrete
+    /// selection so the empty state (not a Settings pane) is what appears.
+    case tilesPlaceholder
 }
 
 struct DockTileConfigurationView: View {
@@ -70,9 +74,14 @@ struct DockTileConfigurationView: View {
         )
         .background(WindowAccessor(isCustomising: isDrilledDown))
         .onAppear {
-            // Restore the persisted tile selection on first launch.
-            if selection == nil, let id = configManager.selectedConfigId {
-                selection = .tile(id)
+            // Restore the persisted tile selection on first launch; with no tiles, land on the
+            // empty-state placeholder so the user sees the empty state (not a Settings pane).
+            if selection == nil {
+                if let id = configManager.selectedConfigId {
+                    selection = .tile(id)
+                } else {
+                    selection = .tilesPlaceholder
+                }
             }
         }
         // Selecting a tile in the sidebar drives the manager (which the rest of the app reads).
@@ -86,15 +95,21 @@ struct DockTileConfigurationView: View {
                 DiagnosticsLog.shared.ui("Sidebar → selected tile '\(name)'")
             case .settings(let pane):
                 DiagnosticsLog.shared.ui("Sidebar → opened Settings '\(pane)'")
+            case .tilesPlaceholder:
+                DiagnosticsLog.shared.ui("Sidebar → empty state (No Tiles)")
             case .none:
                 break
             }
         }
         // External changes (create / delete / duplicate) jump the sidebar to that tile,
-        // pulling focus out of a Settings pane if one was open.
+        // pulling focus out of a Settings pane if one was open. When the last tile is deleted
+        // (selection becomes nil), fall back to the empty-state placeholder so the detail shows
+        // the empty state and the "No Tiles" row is highlighted instead of a stale tile selection.
         .onChange(of: configManager.selectedConfigId) { _, newId in
-            if let id = newId, selection != .tile(id) {
-                selection = .tile(id)
+            if let id = newId {
+                if selection != .tile(id) { selection = .tile(id) }
+            } else if case .tile = selection {
+                selection = .tilesPlaceholder
             }
         }
         // ⌘, (and the Settings menu item) route here instead of opening a detached window.
@@ -164,7 +179,7 @@ struct DockTileConfigurationView: View {
         switch selection {
         case .settings(let pane):
             settingsDetail(pane)
-        case .tile, .none:
+        case .tile, .tilesPlaceholder, .none:
             tileDetail
         }
     }
@@ -217,8 +232,8 @@ struct DockTileConfigurationView: View {
             .background(Color(nsColor: .windowBackgroundColor))
             .animation(.easeInOut(duration: 0.3), value: isDrilledDown)
         } else {
-            // Empty state
-            EmptyConfigurationView()
+            // Empty state — routes through the same Smart Add flow as the sidebar +.
+            EmptyConfigurationView(onAdd: handleAddTapped)
         }
     }
 }
@@ -294,38 +309,22 @@ private struct WindowAccessor: NSViewRepresentable {
 struct EmptyConfigurationView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
 
+    /// Same action as the sidebar +: compute Smart Add suggestions, else fall back to a blank tile.
+    var onAdd: () -> Void
+
     var body: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "square.stack.3d.up")
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
-
-            VStack(spacing: 8) {
-                Text(AppStrings.Empty.createFirstTile)
-                    .font(.title2)
-                    .fontWeight(.medium)
-
-                Text("Click the + button in the sidebar to create a new dock tile")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            Button(action: {
-                configManager.createConfiguration()
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                    Text(AppStrings.Button.newTile)
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
+        // Apple's canonical empty-state component: it owns the icon size, typography,
+        // spacing rhythm, and light/dark treatment, so the layout stays HIG-correct.
+        ContentUnavailableView {
+            Label(AppStrings.Empty.createFirstTile, systemImage: "square.stack.3d.up")
+        } description: {
+            Text(AppStrings.Empty.createFirstTileDescription)
+        } actions: {
+            Button(action: onAdd) {
+                Label(AppStrings.Button.newTile, systemImage: "plus")
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.large)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(40)
     }
 }
 

@@ -29,9 +29,12 @@ struct DockTileSidebarView: View {
             // Tiles — collapsible accordion section with an always-visible disclosure triangle.
             Section(AppStrings.Sidebar.tilesSection, isExpanded: $tilesExpanded) {
                 if configManager.configurations.isEmpty {
+                    // Tappable so the user can return to the empty-state detail after visiting a
+                    // Settings pane (with zero tiles there's no tile row to select otherwise).
                     Text(AppStrings.Empty.noTiles)
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .tag(SidebarSelection.tilesPlaceholder)
                 } else {
                     ForEach(configManager.configurations) { config in
                         ConfigurationRow(config: config)
@@ -70,8 +73,8 @@ struct DockTileSidebarView: View {
                     Image(systemName: "plus")
                 }
                 .accessibilityIdentifier("addTileButton")
-                .disabled(!configManager.selectedConfigHasBeenEdited)
-                .help(configManager.selectedConfigHasBeenEdited
+                .disabled(!configManager.canCreateNewTile)
+                .help(configManager.canCreateNewTile
                     ? AppStrings.Tooltip.createNewTile
                     : AppStrings.Tooltip.editFirst)
             }
