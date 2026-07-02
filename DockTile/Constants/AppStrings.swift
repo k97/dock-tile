@@ -233,6 +233,18 @@ enum AppStrings {
             value: "Check for Updates…",
             comment: "Button that triggers a manual Sparkle update check"
         )
+
+        static let useThisTile = NSLocalizedString(
+            "button.useThisTile",
+            value: "Use This Tile",
+            comment: "Smart Add sheet — button that creates a pre-filled tile from a suggestion"
+        )
+
+        static let createNewTile = NSLocalizedString(
+            "button.createNewTile",
+            value: "Create New Tile",
+            comment: "Smart Add sheet — neutral button that starts a blank tile instead of a suggestion"
+        )
     }
 
     // MARK: - Labels
@@ -772,6 +784,72 @@ enum AppStrings {
             "section.selectedItems",
             value: "Selected Items",
             comment: "Section header for selected items"
+        )
+    }
+
+    // MARK: - Smart Add
+
+    /// Strings for the "Smart Add" sheet and its provenance banner. Grouped app usage is computed
+    /// entirely on-device (see `SmartAddEngine`); the privacy footnote states this explicitly.
+    enum SmartAdd {
+        static let title = NSLocalizedString(
+            "smartAdd.title",
+            value: "Add a Tile",
+            comment: "Header title of the Smart Add suggestion sheet"
+        )
+
+        static let subtitle = NSLocalizedString(
+            "smartAdd.subtitle",
+            value: "Pick a tile to start from — you can rename it, restyle it and change the apps next.",
+            comment: "Header subtitle of the Smart Add suggestion sheet"
+        )
+
+        static let privacyFootnote = NSLocalizedString(
+            "smartAdd.privacyFootnote",
+            value: "Learned on your Mac. Never leaves your device.",
+            comment: "Footer note stating Smart Add suggestions are computed on-device only"
+        )
+
+        static let settingsSectionHeader = NSLocalizedString(
+            "smartAdd.settings.sectionHeader",
+            value: "Smart Add",
+            comment: "General settings section header for the Smart Add toggle"
+        )
+
+        static let settingsToggleTitle = NSLocalizedString(
+            "smartAdd.settings.toggleTitle",
+            value: "Suggest tiles when I add one",
+            comment: "Title of the Smart Add on/off toggle in General settings"
+        )
+
+        static let settingsToggleDescription = NSLocalizedString(
+            "smartAdd.settings.toggleDescription",
+            value: "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Turn this off to always start with an empty tile.",
+            comment: "Description under the Smart Add toggle in General settings"
+        )
+
+        static let reasonByCategory = NSLocalizedString(
+            "smartAdd.reason.byCategory",
+            value: "By category",
+            comment: "Reason chip — apps grouped by their app category"
+        )
+
+        static let reasonMostUsed = NSLocalizedString(
+            "smartAdd.reason.mostUsed",
+            value: "Most used this week",
+            comment: "Reason chip — the most-used cluster this week"
+        )
+
+        static let reasonOpenedTogether = NSLocalizedString(
+            "smartAdd.reason.openedTogether",
+            value: "Opened together",
+            comment: "Reason chip — apps repeatedly opened in the same session"
+        )
+
+        static let provenanceBanner = NSLocalizedString(
+            "smartAdd.provenanceBanner",
+            value: "Created by Smart Add from your recent apps. Rename it, restyle it or edit the apps — then add it to your Dock.",
+            comment: "Banner shown atop Tile Detail when a tile was just created by Smart Add"
         )
     }
 

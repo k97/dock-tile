@@ -32,6 +32,11 @@ final class ConfigurationManager: ObservableObject {
     /// Drives the consolidated "some apps are no longer installed" alert in the main window.
     @Published var showMissingAppsPrompt: Bool = false
 
+    /// IDs of tiles created via Smart Add this session. Runtime-only (never persisted) so the
+    /// one-time provenance banner on Tile Detail never reappears after relaunch. Cleared when the
+    /// user dismisses the banner or adds the tile to the Dock.
+    @Published private(set) var smartAddProvenanceIDs: Set<UUID> = []
+
     /// Throttle guard — the full sweep runs once per app session (window-appear), not on every
     /// activation. `scanForMissingApps(force:)` bypasses it for explicit re-checks (e.g. after a
     /// remove). Mirrors the `lastMigratedAppVersion` once-per-launch guard.
@@ -153,6 +158,44 @@ final class ConfigurationManager: ObservableObject {
         return config
     }
 
+    /// Create a pre-filled configuration from a Smart Add suggestion. Seeds name (uniquified),
+    /// tint, SF Symbol icon, and the suggestion's apps. `isVisibleInDock` is left **ON** — matching
+    /// a blank new tile's default — so the **Show Tile** switch reads on while the user reviews it.
+    /// This does NOT dock anything: with no helper bundle on disk the action button still reads
+    /// **Add to Dock** and nothing pins until the user confirms there (the reconciler's never-pinned
+    /// guard spares this brand-new-visible-but-unpinned state). Selects the new tile and marks it
+    /// "edited" (a pre-filled tile is already engaged, so the + button stays enabled), records the
+    /// provenance for the one-time banner, and logs the creation with `source: "smart_add"`.
+    @discardableResult
+    func createConfiguration(from suggestion: TileSuggestion) -> DockTileConfiguration {
+        let config = DockTileConfiguration(
+            name: generateUniqueName(base: suggestion.name),
+            tintColor: suggestion.tint,
+            symbolEmoji: ConfigurationDefaults.symbolEmoji,  // legacy field kept in sync
+            iconType: .sfSymbol,
+            iconValue: suggestion.symbol,
+            appItems: suggestion.appItems,
+            isVisibleInDock: true
+        )
+
+        configurations.append(config)
+        smartAddProvenanceIDs.insert(config.id)
+
+        // A pre-filled tile counts as already edited — keep the + button enabled (unlike a blank
+        // draft). Guard selectedConfigId's didSet from re-asserting during the switch.
+        isCreatingNewConfig = true
+        selectedConfigHasBeenEdited = true
+        selectedConfigId = config.id
+        isCreatingNewConfig = false
+
+        saveConfigurations()
+
+        AnalyticsService.shared.log(.tileCreated, ["source": "smart_add"])
+        DiagnosticsLog.shared.log("tile", "Created tile '\(config.name)' via Smart Add (\(config.appItems.count) app(s))")
+        print("✨ Created configuration via Smart Add: \(config.name) [\(config.id)]")
+        return config
+    }
+
     /// Update an existing configuration
     func updateConfiguration(_ config: DockTileConfiguration) {
         guard let index = configurations.firstIndex(where: { $0.id == config.id }) else {
@@ -174,6 +217,12 @@ final class ConfigurationManager: ObservableObject {
             selectedConfigHasBeenEdited = true
             print("✏️ Selected config marked as edited")
         }
+    }
+
+    /// Dismiss the Smart Add provenance banner for a tile (user dismissed it, or the tile was
+    /// added to the Dock). Idempotent.
+    func clearSmartAddProvenance(_ id: UUID) {
+        smartAddProvenanceIDs.remove(id)
     }
 
     /// Delete a configuration by ID

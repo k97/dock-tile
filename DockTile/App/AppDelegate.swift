@@ -98,6 +98,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // explicitly turned it off in Settings.
         LoginItemManager.shared.reconcileOnLaunch()
 
+        // Smart Add: begin building the on-device app-usage signal (launch history + Spotlight).
+        // Main app only; stays entirely on device (independent of the analytics toggle).
+        SmartAddEngine.shared.startObserving()
+
         // Configure window sizing after a brief delay to ensure window exists
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [self] in
             configureMainWindowSizing()

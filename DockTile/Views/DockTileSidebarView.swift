@@ -15,6 +15,11 @@ struct DockTileSidebarView: View {
     /// detail pane and the sidebar stay in lock-step. See `SidebarSelection`.
     @Binding var selection: SidebarSelection?
 
+    /// Invoked when the toolbar + is pressed. The parent decides whether to show the Smart Add
+    /// sheet (if the engine has suggestions) or fall through to a blank tile — see
+    /// `DockTileConfigurationView`. Kept as a closure so the sheet stays hosted in the parent.
+    var onAdd: () -> Void
+
     /// Accordion expand/collapse state, persisted so it survives relaunch (Apple Notes-style).
     @AppStorage("sidebar.tilesExpanded") private var tilesExpanded = true
     @AppStorage("sidebar.settingsExpanded") private var settingsExpanded = true
@@ -61,11 +66,10 @@ struct DockTileSidebarView: View {
         .navigationTitle(AppStrings.Sidebar.title)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: {
-                    configManager.createConfiguration()
-                }) {
+                Button(action: onAdd) {
                     Image(systemName: "plus")
                 }
+                .accessibilityIdentifier("addTileButton")
                 .disabled(!configManager.selectedConfigHasBeenEdited)
                 .help(configManager.selectedConfigHasBeenEdited
                     ? AppStrings.Tooltip.createNewTile
@@ -168,7 +172,7 @@ struct ConfigurationContextMenu: View {
 
 #Preview {
     NavigationSplitView {
-        DockTileSidebarView(selection: .constant(nil))
+        DockTileSidebarView(selection: .constant(nil), onAdd: {})
             .environmentObject({
                 let manager = ConfigurationManager()
                 manager.createConfiguration()

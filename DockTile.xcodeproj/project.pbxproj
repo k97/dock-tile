@@ -18,7 +18,9 @@
 		AA291E3F /* ItemRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF32B63 /* ItemRowView.swift */; };
 		AA2B0DD5 /* DockLockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4D24B5 /* DockLockManager.swift */; };
 		AA3FF186 /* ConfigurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC48362 /* ConfigurationManager.swift */; };
-		AA607EF9 /* DockTileSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA169EDE /* DockTileSidebarView.swift */; };
+		AASAE01 /* SmartAddEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASAE02 /* SmartAddEngine.swift */; };
+		AASAS01 /* SmartAddSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AASAS02 /* SmartAddSheet.swift */; };
+								AA607EF9 /* DockTileSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA169EDE /* DockTileSidebarView.swift */; };
 		AA732640 /* DockTileConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA12D329 /* DockTileConfigurationView.swift */; };
 		AA7EF687 /* CustomiseTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC45935 /* CustomiseTileView.swift */; };
 		AAA2155B /* DiagnosticsLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE6EC9F /* DiagnosticsLog.swift */; };
@@ -121,7 +123,9 @@
 		AAC2BA1B /* DockTileIconPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileIconPreview.swift; sourceTree = "<group>"; };
 		AAC45935 /* CustomiseTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomiseTileView.swift; sourceTree = "<group>"; };
 		AAC48362 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
-		AAC653A9 /* DockTileConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileConfigurationView.swift; sourceTree = "<group>"; };
+		AASAE02 /* SmartAddEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartAddEngine.swift; sourceTree = "<group>"; };
+		AASAS02 /* SmartAddSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartAddSheet.swift; sourceTree = "<group>"; };
+								AAC653A9 /* DockTileConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileConfigurationView.swift; sourceTree = "<group>"; };
 		AAC89BB2 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
 		AACFE26F /* ConfigurationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationModels.swift; sourceTree = "<group>"; };
 		AACFS002 /* ConfigurationSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationSchema.swift; sourceTree = "<group>"; };
@@ -316,6 +320,7 @@
 				AA05B3C0 /* DockTileSidebarView.swift */,
 				AAC653A9 /* DockTileConfigurationView.swift */,
 				AA4AC606 /* DockLockSettingsView.swift */,
+				AASAS02 /* SmartAddSheet.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -352,6 +357,7 @@
 				AAHMM02 /* HelperMigrationManager.swift */,
 				AALGN02 /* LoginItemManager.swift */,
 				AADPW001 /* DockPlistWatcher.swift */,
+				AASAE02 /* SmartAddEngine.swift */,
 				AAC89BB2 /* ConfigurationManager.swift */,
 				AA4D24B5 /* DockLockManager.swift */,
 				AAE6EC9F /* DiagnosticsLog.swift */,
@@ -582,6 +588,8 @@
 				AA732640 /* DockTileConfigurationView.swift in Sources */,
 				AA28203D /* ColorExtensions.swift in Sources */,
 				AA3FF186 /* ConfigurationManager.swift in Sources */,
+				AASAE01 /* SmartAddEngine.swift in Sources */,
+				AASAS01 /* SmartAddSheet.swift in Sources */,
 				AAENV002 /* Environment.swift in Sources */,
 				AA09AE0F /* ConfigurationModels.swift in Sources */,
 				AACFS001 /* ConfigurationSchema.swift in Sources */,

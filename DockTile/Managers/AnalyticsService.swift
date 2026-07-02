@@ -25,7 +25,7 @@ import FirebaseCrashlytics
 /// Firebase event names. Raw values must be Firebase-safe: snake_case, <= 40 chars,
 /// and must not use a reserved prefix (`firebase_`, `google_`, `ga_`). These are log-like
 /// identifiers and are intentionally NOT localized.
-enum AnalyticsEvent: String {
+enum AnalyticsEvent: String, CaseIterable {
     case appLaunched = "app_launched"
     case tileCreated = "tile_created"
     case tileAddedToDock = "tile_added_to_dock"
@@ -65,14 +65,27 @@ final class AnalyticsService {
 
     /// Opt-out: defaults to ON when the key has never been set.
     var consentGranted: Bool {
-        guard let defaults = sharedDefaults, defaults.object(forKey: UserDefaultsKeys.analyticsEnabled) != nil else {
-            return true
-        }
-        return defaults.bool(forKey: UserDefaultsKeys.analyticsEnabled)
+        Self.resolveConsent(storedValue: sharedDefaults?.object(forKey: UserDefaultsKeys.analyticsEnabled) as? Bool)
     }
 
     /// Whether the build/environment is allowed to collect at all (Release only).
     private var environmentAllowsCollection: Bool { AppEnvironment.isRelease }
+
+    // MARK: - Pure gating seams (regression-guarded)
+    //
+    // The two privacy-critical decisions — opt-out consent resolution and the Release-only AND
+    // consent gate — are pure `nonisolated static` functions so they are unit-testable without
+    // Firebase, UserDefaults, or the build environment (mirrors `resolveDockVisibility`).
+
+    /// Resolve opt-out consent from the stored value. Absent (never set) → granted (ON by default).
+    nonisolated static func resolveConsent(storedValue: Bool?) -> Bool {
+        storedValue ?? true
+    }
+
+    /// Collection is allowed ONLY in a Release build AND with consent granted. Debug/Dev never send.
+    nonisolated static func shouldCollect(isRelease: Bool, consentGranted: Bool) -> Bool {
+        isRelease && consentGranted
+    }
 
     // MARK: - Lifecycle
 
@@ -107,7 +120,7 @@ final class AnalyticsService {
     }
 
     private func applyCollectionState() {
-        let enabled = environmentAllowsCollection && consentGranted
+        let enabled = Self.shouldCollect(isRelease: environmentAllowsCollection, consentGranted: consentGranted)
         collectionEnabled = enabled
         guard isConfigured else { return }
         Analytics.setAnalyticsCollectionEnabled(enabled)
