@@ -154,7 +154,7 @@ struct GeneralSettingsView: View {
 
             Spacer()
 
-            Button(AppStrings.Button.checkForUpdates) {
+            Button(AppStrings.Button.checkNow) {
                 DiagnosticsLog.shared.ui("Settings → Check for Updates pressed")
                 updateController.checkForUpdates()
             }

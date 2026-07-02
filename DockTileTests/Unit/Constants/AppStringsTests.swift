@@ -33,6 +33,7 @@ struct AppStringsTests {
         #expect(!AppStrings.Button.addToDock.isEmpty)
         #expect(!AppStrings.Button.back.isEmpty)
         #expect(!AppStrings.Button.cancel.isEmpty)
+        #expect(AppStrings.Button.checkNow == "Check Now")
         #expect(!AppStrings.Button.confirm.isEmpty)
         #expect(!AppStrings.Button.customise.isEmpty)
         #expect(!AppStrings.Button.delete.isEmpty)
