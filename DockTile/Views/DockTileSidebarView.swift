@@ -157,12 +157,14 @@ struct ConfigurationContextMenu: View {
 
     var body: some View {
         Button(AppStrings.Button.duplicate) {
+            DiagnosticsLog.shared.ui("Sidebar context menu → Duplicate '\(config.name)'")
             configManager.duplicateConfiguration(config)
         }
 
         Divider()
 
         Button(AppStrings.Button.delete, role: .destructive) {
+            DiagnosticsLog.shared.ui("Sidebar context menu → Delete '\(config.name)'")
             configManager.deleteConfiguration(config.id)
         }
     }

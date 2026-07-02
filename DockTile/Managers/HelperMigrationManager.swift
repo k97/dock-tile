@@ -76,7 +76,9 @@ final class HelperMigrationManager {
         if !staleBundleConfigs.isEmpty {
             print("[Migration] Regenerating \(staleBundleConfigs.count) helper(s)...")
             DiagnosticsLog.shared.log("migration", "Regenerating \(staleBundleConfigs.count) stale helper(s) for v\(currentVersion)")
-            await regenerateBatch(staleBundleConfigs, currentVersion: currentVersion)
+            await DiagnosticsLog.shared.measure("Migrate \(staleBundleConfigs.count) stale helper(s) → v\(currentVersion)") {
+                await regenerateBatch(staleBundleConfigs, currentVersion: currentVersion)
+            }
         }
 
         // Save and mark migration complete
@@ -105,7 +107,9 @@ final class HelperMigrationManager {
             return
         }
         DiagnosticsLog.shared.log("settings", "Apply popover appearance: rebuilding \(targets.count) helper(s)")
-        await regenerateBatch(targets, currentVersion: HelperBundleManager.currentAppVersion)
+        await DiagnosticsLog.shared.measure("Re-apply popover appearance to \(targets.count) helper(s)") {
+            await regenerateBatch(targets, currentVersion: HelperBundleManager.currentAppVersion)
+        }
         AnalyticsService.shared.log(.settingChanged, ["setting": "popover_apply", "count": targets.count])
     }
 

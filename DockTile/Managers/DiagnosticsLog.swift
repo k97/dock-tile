@@ -18,6 +18,17 @@
 //  dropped in Release, so prod reports stay lean. Dev and prod write to separate
 //  files (separate support folders), so dev's firehose never reaches a user's prod log.
 //
+//  Click tracing: `ui(_:)` is a semantic shorthand for user-interaction events (button
+//  taps, sidebar selection, menu commands, Dock clicks). It is ALWAYS verbose, so the
+//  click firehose lands in dev reports and is dropped in Release automatically — the
+//  "rich in dev, quiet in prod" contract with no per-call bookkeeping.
+//
+//  Workflow timing: `measure(_:_:)` brackets a unit of work with a start/end line (elapsed
+//  ms) AND an OSSignposter interval, so a multi-step workflow (install a helper, run the
+//  migration batch, build+show a popover) is both readable in the copied report and
+//  profilable in Instruments' "workflow" signposts. Timing lines are verbose (dev only);
+//  a thrown error is logged non-verbose (failures matter in prod too).
+//
 //  Thread-safe — safe to call from any thread.
 //
 
@@ -50,6 +61,11 @@ final class DiagnosticsLog: @unchecked Sendable {
 
     private let logger = Logger(subsystem: "com.docktile.diagnostics", category: "app")
 
+    /// Signpost interval emitter for `measure(_:)`. Shows workflow spans in Instruments'
+    /// "workflow" signpost track (subsystem "com.docktile.diagnostics") so a dev can profile
+    /// how long install / migration / popover-show actually take.
+    private let signposter = OSSignposter(subsystem: "com.docktile.diagnostics", category: "workflow")
+
     private let stamp: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -69,10 +85,18 @@ final class DiagnosticsLog: @unchecked Sendable {
         lock.lock(); self.label = label; lock.unlock()
     }
 
+    /// Pure gate for whether an event is recorded: verbose (dev-detail) events are dropped in
+    /// Release; everything else is always kept. Extracted as a `nonisolated static` seam (mirrors
+    /// `resolveDockVisibility` / `AnalyticsService.shouldCollect`) so the dev-verbose/prod-quiet
+    /// rule is unit-tested without depending on the build-time `AppEnvironment.isRelease` constant.
+    nonisolated static func shouldRecord(verbose: Bool, isRelease: Bool) -> Bool {
+        !(verbose && isRelease)
+    }
+
     /// Record a diagnostic event. `category` is a short tag, e.g. "update", "dock", "helper".
     /// Pass `verbose: true` for high-frequency/low-signal events — those are dropped in Release.
     func log(_ category: String, _ message: String, verbose: Bool = false) {
-        if verbose && AppEnvironment.isRelease { return }
+        guard Self.shouldRecord(verbose: verbose, isRelease: AppEnvironment.isRelease) else { return }
 
         let now = Date()
         lock.lock()
@@ -83,6 +107,67 @@ final class DiagnosticsLog: @unchecked Sendable {
 
         appendToFile("\(stamp.string(from: now)) [\(label) \(ProcessInfo.processInfo.processIdentifier)] [\(category)] \(message)\n")
         logger.notice("[\(label, privacy: .public)] [\(category, privacy: .public)] \(message, privacy: .public)")
+    }
+
+    /// Record a user-interaction (click/tap/selection/menu) event. Semantic shorthand for
+    /// `log("ui", …, verbose: true)`: the click firehose is ALWAYS verbose, so it enriches dev
+    /// reports and is dropped in Release automatically. Use for the gesture that *triggers* work
+    /// ("+ pressed", "Add to Dock clicked", "Dock icon clicked → show popover"), complementing the
+    /// non-verbose state-change logs that record the *outcome*.
+    func ui(_ message: String) {
+        log("ui", message, verbose: true)
+    }
+
+    // MARK: - Workflow timing
+
+    /// Bracket an async unit of work with start/end timing lines and an OSSignposter interval.
+    /// Logs `▶ <name>` then `✔ <name> (Nms)` (both verbose — dev only); a thrown error logs
+    /// `✗ <name> FAILED (Nms)` non-verbose (kept in prod) and re-throws. Returns the body's value.
+    ///
+    /// Inherits the caller's actor isolation (`#isolation`) so a `@MainActor` workflow closure that
+    /// captures actor-isolated state stays on that actor rather than being "sent" across actors —
+    /// avoids the Swift 6 non-Sendable-closure diagnostic without forcing `@Sendable` on the body.
+    func measure<T>(_ name: String, category: String = "workflow", isolation: isolated (any Actor)? = #isolation, _ body: () async throws -> T) async rethrows -> T {
+        let clock = ContinuousClock()
+        let start = clock.now
+        let id = signposter.makeSignpostID()
+        let interval = signposter.beginInterval("workflow", id: id, "\(name)")
+        log(category, "▶ \(name)", verbose: true)
+        do {
+            let result = try await body()
+            signposter.endInterval("workflow", interval)
+            log(category, "✔ \(name) (\(Self.elapsedMs(from: start, clock: clock))ms)", verbose: true)
+            return result
+        } catch {
+            signposter.endInterval("workflow", interval)
+            log(category, "✗ \(name) FAILED (\(Self.elapsedMs(from: start, clock: clock))ms): \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    /// Synchronous counterpart to `measure(_:_:)` for non-async workflows.
+    func measure<T>(_ name: String, category: String = "workflow", _ body: () throws -> T) rethrows -> T {
+        let clock = ContinuousClock()
+        let start = clock.now
+        let id = signposter.makeSignpostID()
+        let interval = signposter.beginInterval("workflow", id: id, "\(name)")
+        log(category, "▶ \(name)", verbose: true)
+        do {
+            let result = try body()
+            signposter.endInterval("workflow", interval)
+            log(category, "✔ \(name) (\(Self.elapsedMs(from: start, clock: clock))ms)", verbose: true)
+            return result
+        } catch {
+            signposter.endInterval("workflow", interval)
+            log(category, "✗ \(name) FAILED (\(Self.elapsedMs(from: start, clock: clock))ms): \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    /// Whole milliseconds elapsed since `start`. Pure so `measure`'s formatting is trivially checked.
+    nonisolated static func elapsedMs(from start: ContinuousClock.Instant, clock: ContinuousClock) -> Int {
+        let (seconds, attoseconds) = start.duration(to: clock.now).components
+        return Int(seconds * 1000 + attoseconds / 1_000_000_000_000_000)
     }
 
     private func pruneLocked(now: Date) {
@@ -148,6 +233,7 @@ final class DiagnosticsLog: @unchecked Sendable {
             "Role:       \(AppEnvironment.appRole)",
             "Bundle:     \(Bundle.main.bundleIdentifier ?? "unknown")",
             "macOS:      \(os.majorVersion).\(os.minorVersion).\(os.patchVersion)",
+            "Verbose:    \(AppEnvironment.isRelease ? "off (release — click/workflow traces omitted)" : "on (dev — click + workflow traces included)")",
             "Events:     \(events.count) in the last hour (main app + all helper tiles)",
             String(repeating: "—", count: 56)
         ]

@@ -40,7 +40,7 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `SmartAddEngine.rankGroups` / `.score` / `.coLaunchClusters` / `SmartAddCategory.identity`,
 `AnalyticsService.resolveConsent` / `.shouldCollect`,
 `DockTileDetailView.resolveDockAction` / `.dockActionIsEnabled` / `.contentSignature`,
-`HelperBundleManager.shouldPerformDockRemoval`.
+`HelperBundleManager.shouldPerformDockRemoval`, `DiagnosticsLog.shouldRecord` (verbose dev/prod gate).
 
 Assertion rules: prefer `#require` over `if`-guarded `#expect`; assert exact values/magnitudes,
 not `!=nil` / `.isValid` / `a>b`; never write `UserDefaults.standard` in tests — use

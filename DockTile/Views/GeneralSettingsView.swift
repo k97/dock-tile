@@ -155,6 +155,7 @@ struct GeneralSettingsView: View {
             Spacer()
 
             Button(AppStrings.Button.checkForUpdates) {
+                DiagnosticsLog.shared.ui("Settings → Check for Updates pressed")
                 updateController.checkForUpdates()
             }
             .disabled(!updateController.canCheckForUpdates)
@@ -282,6 +283,7 @@ struct GeneralSettingsView: View {
     /// toggle to the real system state so the UI never lies.
     private func applyLoginSetting(_ enabled: Bool) {
         AnalyticsService.shared.log(.settingChanged, ["setting": "start_at_login", "enabled": enabled])
+        DiagnosticsLog.shared.log("settings", "Start at login toggled \(enabled ? "ON" : "OFF")")
         do {
             if enabled {
                 try LoginItemManager.shared.enable()

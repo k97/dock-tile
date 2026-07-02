@@ -648,6 +648,7 @@ struct ListPopoverView: View {
 
     private func openInFinder() {
         guard !isPreview else { return }
+        DiagnosticsLog.shared.ui("Popover (list) → Open in Finder")
         // Open the Applications folder or configured folder
         NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
         onLaunch()

@@ -77,8 +77,17 @@ struct DockTileConfigurationView: View {
         }
         // Selecting a tile in the sidebar drives the manager (which the rest of the app reads).
         .onChange(of: selection) { _, newValue in
-            if case .tile(let id) = newValue, configManager.selectedConfigId != id {
-                configManager.selectedConfigId = id
+            switch newValue {
+            case .tile(let id):
+                if configManager.selectedConfigId != id {
+                    configManager.selectedConfigId = id
+                }
+                let name = configManager.configuration(for: id)?.name ?? "?"
+                DiagnosticsLog.shared.ui("Sidebar → selected tile '\(name)'")
+            case .settings(let pane):
+                DiagnosticsLog.shared.ui("Sidebar → opened Settings '\(pane)'")
+            case .none:
+                break
             }
         }
         // External changes (create / delete / duplicate) jump the sidebar to that tile,
@@ -113,14 +122,19 @@ struct DockTileConfigurationView: View {
             SmartAddSheet(
                 suggestions: presentation.suggestions,
                 onUse: { suggestion in
+                    DiagnosticsLog.shared.ui("Smart Add sheet → 'Use this tile' \(suggestion.name) (\(suggestion.appItems.count) app(s))")
                     configManager.createConfiguration(from: suggestion)
                     smartAddPresentation = nil
                 },
                 onCreateNew: {
+                    DiagnosticsLog.shared.ui("Smart Add sheet → 'Create New Tile'")
                     configManager.createConfiguration()
                     smartAddPresentation = nil
                 },
-                onClose: { smartAddPresentation = nil }
+                onClose: {
+                    DiagnosticsLog.shared.ui("Smart Add sheet → dismissed (no tile)")
+                    smartAddPresentation = nil
+                }
             )
         }
     }
@@ -130,14 +144,17 @@ struct DockTileConfigurationView: View {
     private func handleAddTapped() {
         // Smart Add off → always the blank-tile flow.
         guard smartAddEnabled else {
+            DiagnosticsLog.shared.ui("+ pressed (Smart Add off) → new blank tile")
             configManager.createConfiguration()
             return
         }
 
         let suggestions = smartAddEngine.computeSuggestions(existing: configManager.configurations)
         if suggestions.isEmpty {
+            DiagnosticsLog.shared.ui("+ pressed → no suggestions, new blank tile")
             configManager.createConfiguration()
         } else {
+            DiagnosticsLog.shared.ui("+ pressed → Smart Add sheet with \(suggestions.count) suggestion(s)")
             smartAddPresentation = SmartAddPresentation(suggestions: suggestions)
         }
     }

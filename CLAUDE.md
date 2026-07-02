@@ -37,6 +37,7 @@ Controlled via Info.plist variables (`DTEnvironment`, `DTHelperPrefix`, `DTPrefs
 - [Localization](/.claude/rules/localization-macos.md) — String Catalogs, US/UK/AU English
 - [Icon System](/.claude/rules/icon-system.md) — Tahoe icon generation, icon styles, Icon Composer
 - [Analytics](/.claude/rules/analytics.md) — Firebase Analytics + Crashlytics, consent gating, dSYM upload
+- [Diagnostics](/.claude/rules/diagnostics.md) — Cross-process Copy Diagnostics, dev-verbose/prod-quiet, `ui()` click tracing, `measure()` workflow timing
 - [Website Assets](/.claude/rules/website-assets.md) — Favicon/webp generation, screenshot blur placeholders
 
 ## Verification
