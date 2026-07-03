@@ -40,7 +40,7 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `SmartAddEngine.rankGroups` / `.score` / `.coLaunchClusters` / `SmartAddCategory.identity`,
 `AnalyticsService.resolveConsent` / `.shouldCollect`,
 `DockTileDetailView.resolveDockAction` / `.dockActionIsEnabled` / `.contentSignature`,
-`HelperBundleManager.shouldPerformDockRemoval` / `.helperFolderName` (same-name tiles disambiguate to distinct folders), `DiagnosticsLog.shouldRecord` (verbose dev/prod gate),
+`HelperBundleManager.shouldPerformDockRemoval` / `.helperFolderName` (same-name tiles disambiguate to distinct folders) / `.helperIconsComplete` (bundle icon-integrity probe), `HelperMigrationManager.classifyHelperHealth` (self-heal targets pinned-and-broken bundles only — drafts safe), `DiagnosticsLog.shouldRecord` (verbose dev/prod gate),
 `ConfigurationManager.canCreateNewTile` (sidebar + gate — never deadlock at zero tiles),
 `IconDepthMetrics` (glyph size-ratio cap + glass stroke + Liquid-Glass surface/glyph sheen + shadow + shading, per style, size-gated — shared by the baked `.icns` renderer and the live preview; `glyphSheen` covers symbols 0.55 and emoji 0.18),
 `NSColor/Color.liftedForDarkGlyph` (perceived-luminance floor for the Dark-style tinted glyph — `#5F00FF` visibility) + `TintColor.colors`/`.nsColors(for:iconType:)` (Dark splits SF Symbol vs emoji, guarded by `DarkGlyphTreatmentTests`),

@@ -16,6 +16,10 @@ final class HelperMigrationManager {
 
     private let configManager: ConfigurationManager
 
+    /// Once-per-session guard for `selfHealIfNeeded` (the manager is recreated per launch `.task`,
+    /// so the throttle is static — mirrors `ConfigurationManager.hasScannedForMissingApps`).
+    private static var didSelfHeal = false
+
     init(configManager: ConfigurationManager) {
         self.configManager = configManager
     }
@@ -116,6 +120,63 @@ final class HelperMigrationManager {
             "still_stale": stillStale ? 1 : 0
         ])
         print("[Migration] Complete for v\(currentVersion) (stillStale: \(stillStale))")
+    }
+
+    /// Version-independent self-heal: repair pinned tiles whose on-disk bundle is broken in a way
+    /// normal migration misses — because a *pre-fix* app version stamped `helperAppVersion` current
+    /// while the bundle is actually missing, structurally corrupt, or built by an older app. Keys on
+    /// the ACTUAL on-disk state, not the config stamp, so it catches damage the (config-stale-keyed)
+    /// migration skips.
+    ///
+    /// **Draft-safe by construction**: gated on `pinnedBundleIds` (a reliable, synchronized Dock
+    /// read). A brand-new tile the user hasn't Added to the Dock is never in that set, so it is
+    /// never touched — repairing only already-pinned tiles cannot create an unwanted pin.
+    ///
+    /// Call once per launch, after `migrateIfNeeded` + `scanForMissingApps`, main-app only.
+    func selfHealIfNeeded() async {
+        guard !Self.didSelfHeal else { return }
+        Self.didSelfHeal = true
+
+        let helperManager = HelperBundleManager.shared
+        let currentVersion = HelperBundleManager.currentAppVersion
+
+        // One synchronized Dock read for the whole sweep.
+        let pinned = helperManager.pinnedBundleIds()
+        guard !pinned.isEmpty else { return }
+
+        var toHeal: [DockTileConfiguration] = []
+        for config in configManager.configurations where pinned.contains(config.bundleIdentifier) {
+            let bundlePath = helperManager.helperExists(for: config) ? helperManager.helperPath(for: config) : nil
+            let bundleExists = bundlePath != nil
+            let iconsComplete = bundlePath.map { helperManager.helperIconsComplete(at: $0) } ?? false
+            let bakedMatches = bundlePath.flatMap { helperManager.helperBakedVersion(at: $0) } == currentVersion
+
+            if Self.classifyHelperHealth(
+                isPinnedInDock: true,
+                bundleExists: bundleExists,
+                iconsComplete: iconsComplete,
+                bakedVersionMatchesCurrent: bakedMatches
+            ) == .heal {
+                DiagnosticsLog.shared.log("selfheal",
+                    "Pinned tile '\(config.name)' needs repair (exists=\(bundleExists), icons=\(iconsComplete), bakedCurrent=\(bakedMatches))")
+                toHeal.append(config)
+            }
+        }
+
+        guard !toHeal.isEmpty else { return }
+
+        // Don't force-quit + fail on a machine that can't generate bundles (translocated); defer.
+        guard AppRelocationManager.shared.canGenerateBundles else {
+            DiagnosticsLog.shared.log("selfheal",
+                "Self-heal deferred: bundle generation blocked — \(toHeal.count) pinned tile(s) left broken")
+            return
+        }
+
+        DiagnosticsLog.shared.log("selfheal", "Self-healing \(toHeal.count) broken pinned tile(s)")
+        AnalyticsService.shared.log(.helperSelfHeal, ["count": toHeal.count])
+        await DiagnosticsLog.shared.measure("Self-heal \(toHeal.count) pinned tile(s)") {
+            await regenerateBatch(toHeal, currentVersion: currentVersion)
+        }
     }
 
     /// On-demand rebuild + relaunch of the given helpers with a single Dock restart. Used when the
@@ -228,6 +289,29 @@ final class HelperMigrationManager {
         }
 
         return BatchOutcome(stampedIds: stamped, regeneratedIds: regenerated)
+    }
+
+    // MARK: - Self-heal triage (pure seam)
+
+    enum HelperHealth: Equatable {
+        case healthy   // pinned bundle is present, complete, and current — or the tile isn't pinned
+        case heal      // pinned bundle is missing / structurally corrupt / built by an older app
+    }
+
+    /// Pure rule for `selfHealIfNeeded`. Only a tile that is **pinned in the Dock** can be a repair
+    /// target — an unpinned draft is `.healthy` no matter what's on disk, so self-heal can never
+    /// force-pin a tile the user never Added. Guarded by `HelperSelfHealTests`.
+    nonisolated static func classifyHelperHealth(
+        isPinnedInDock: Bool,
+        bundleExists: Bool,
+        iconsComplete: Bool,
+        bakedVersionMatchesCurrent: Bool
+    ) -> HelperHealth {
+        guard isPinnedInDock else { return .healthy }
+        if !bundleExists { return .heal }
+        if !iconsComplete { return .heal }
+        if !bakedVersionMatchesCurrent { return .heal }
+        return .healthy
     }
 
     // MARK: - Migration triage (pure seam)

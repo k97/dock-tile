@@ -41,6 +41,7 @@ enum AnalyticsEvent: String, CaseIterable {
     case configureGearTapped = "configure_gear_tapped"
     case settingChanged = "setting_changed"
     case helperMigrationRun = "helper_migration_run"
+    case helperSelfHeal = "helper_self_heal"
     case dockLockMoveStarted = "dock_lock_move_started"
     case dockLockMoveSucceeded = "dock_lock_move_succeeded"
     case dockLockMoveFailed = "dock_lock_move_failed"

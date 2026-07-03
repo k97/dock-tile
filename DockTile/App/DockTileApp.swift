@@ -56,6 +56,12 @@ struct DockTileApp: App {
                     // Then flag any apps that have been uninstalled since last launch. Cheap,
                     // throttled to once per session, and heals moved-app paths along the way.
                     configManager.scanForMissingApps()
+
+                    // Finally, repair any pinned tile whose on-disk bundle is broken in a way the
+                    // (config-stale-keyed) migration missed — missing / corrupt icons / older baked
+                    // version stamped "current" by a pre-fix release. Runs after migration so it
+                    // only sees genuinely-broken bundles; draft-safe (pinned tiles only).
+                    await migration.selfHealIfNeeded()
                 }
         }
         .windowResizability(.contentSize)

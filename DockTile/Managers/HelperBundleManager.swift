@@ -378,6 +378,55 @@ final class HelperBundleManager {
         return NSDictionary(contentsOf: infoPlist)?["CFBundleIdentifier"] as? String
     }
 
+    // MARK: - Self-heal integrity probes
+
+    /// True when a helper bundle carries a complete generated icon set: the active `AppIcon.icns`
+    /// plus all four style variants, each present and non-empty. Catches a helper left structurally
+    /// broken by a killed-mid-generation write (e.g. a leftover `.iconset` + only the stale template
+    /// `AppIcon-Dev.icns`, with `AppIcon.icns` and the variants absent) — which the Dock renders as
+    /// a generic/broken icon.
+    func helperIconsComplete(at bundlePath: URL) -> Bool {
+        let resources = bundlePath.appendingPathComponent("Contents/Resources")
+        let required = ["AppIcon.icns"] + IconStyle.allCases.map { Self.iconFilename(for: $0) }
+        let fm = FileManager.default
+        for name in required {
+            let path = resources.appendingPathComponent(name).path
+            guard let attrs = try? fm.attributesOfItem(atPath: path),
+                  let size = attrs[.size] as? Int, size > 0 else {
+                return false
+            }
+        }
+        return true
+    }
+
+    /// The marketing version baked into a helper bundle (its own `CFBundleShortVersionString`, set
+    /// when the app copied itself as a template). Distinguishes "built by an older app" from the
+    /// config's stamped `helperAppVersion`, which a past stamp-only could have set to current while
+    /// the bundle stayed old. `nil` if unreadable.
+    func helperBakedVersion(at bundlePath: URL) -> String? {
+        let infoPlist = bundlePath.appendingPathComponent("Contents/Info.plist")
+        return NSDictionary(contentsOf: infoPlist)?["CFBundleShortVersionString"] as? String
+    }
+
+    /// Bundle identifiers currently pinned in the Dock, read in ONE synchronized pass (so a
+    /// self-heal sweep does a single Dock read, not one per tile). Collects the `bundle-identifier`
+    /// stored in each `tile-data` entry — which our `addToDock` always writes.
+    func pinnedBundleIds() -> Set<String> {
+        let dockAppId = "com.apple.dock" as CFString
+        CFPreferencesAppSynchronize(dockAppId)
+        guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
+            return []
+        }
+        var ids: Set<String> = []
+        for entry in persistentApps {
+            if let tileData = entry["tile-data"] as? [String: Any],
+               let id = tileData["bundle-identifier"] as? String {
+                ids.insert(id)
+            }
+        }
+        return ids
+    }
+
     /// Remove tile from Dock only (without deleting bundle)
     /// Use this when user toggles "Show Tile" OFF - removes from Dock but keeps bundle
     /// Returns the Dock index before removal (for position restoration later)
