@@ -134,6 +134,50 @@ enum IconDepthMetrics {
         return GlyphShadow(blackAlpha: alpha, offset: offset, blur: blur)
     }
 
+    // MARK: - Glyph specular sheen (Liquid-Glass gloss on the symbol)
+
+    struct GlyphSheen: Equatable {
+        /// White alpha at the top of the glyph, fading to clear.
+        var alpha: CGFloat
+        /// Fraction of the glyph's height over which the sheen fades from full (top) to clear.
+        var heightFraction: CGFloat
+    }
+
+    /// A specular highlight clipped to the TOP of the glyph shape — the Liquid-Glass "lit glass"
+    /// cue, stacked *above* the shading fill + contact shadow. A white→transparent vertical
+    /// gradient masked by the glyph, concentrated in the top `heightFraction`. `nil` only when the
+    /// icon is too small to carry depth.
+    ///
+    /// Because the sheen is **additive white light, not a recolour**, it also works on emoji — a
+    /// glossy-sticker highlight consistent with the "Sticker on Glass" metaphor — but much gentler
+    /// (`emojiAlpha`) so it doesn't wash out the emoji's own colour and detail.
+    ///
+    /// The top-heavy falloff is deliberate: a uniform glow reads as plastic; the top-to-bottom
+    /// asymmetry is what the eye reads as glass. Grayscale Clear/Tinted are dialled back so the
+    /// gloss doesn't fight the system's own tinting (same rationale as `surfaceSheenAlpha`).
+    static func glyphSheen(style: IconStyle, iconType: IconType, nominalSize: CGFloat) -> GlyphSheen? {
+        guard showsDepth(nominalSize: nominalSize) else { return nil }
+        let alpha: CGFloat
+        if iconType == .emoji {
+            alpha = emojiAlpha
+        } else {
+            switch style {
+            case .defaultStyle: alpha = 0.55
+            case .dark:         alpha = 0.55
+            case .clear:        alpha = 0.30
+            case .tinted:       alpha = 0.37
+            }
+        }
+        return GlyphSheen(alpha: alpha, heightFraction: glyphSheenHeightFraction)
+    }
+
+    /// Emoji specular sheen alpha — a restrained glossy-sticker highlight (emoji keep their own
+    /// colour, so the gloss must stay light or it flattens them).
+    static let emojiAlpha: CGFloat = 0.18
+
+    /// Height fraction shared by every style's glyph sheen (tuned in the live study).
+    static let glyphSheenHeightFraction: CGFloat = 0.53
+
     // MARK: - Glyph shading (dimensional fill; symbols / brand only)
 
     /// How much the BOTTOM of the glyph is darkened toward black to fake a top-lit,

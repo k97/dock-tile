@@ -228,6 +228,34 @@ extension NSColor {
         return self
     }
 
+    /// Returns a version of the colour lifted to a minimum *perceived luminance*, suitable for a
+    /// Dark-style **glyph** sitting on a neutral near-black background. Blends the colour toward
+    /// white only as far as needed to clear the floor, preserving hue while shedding saturation.
+    ///
+    /// WHY perceived luminance, not HSB brightness: a colour like Media's `#5F00FF` has *maximum*
+    /// HSB brightness (its bright channel is blue) yet reads dark because blue is weighted only
+    /// 0.114 in perceived luminance — so "raise brightness" is a no-op on exactly the colours that
+    /// vanish on near-black. Lifting on `0.299R+0.587G+0.114B` fixes that. (HIG: the Dark variant's
+    /// foreground "may need to be made lighter for better contrast.")
+    /// - Parameter minLuminance: The perceived-luminance floor (0.0-1.0), e.g. 0.6.
+    func liftedForDarkGlyph(minLuminance: CGFloat) -> NSColor {
+        guard let rgb = self.usingColorSpace(.deviceRGB) else { return self }
+        let r = rgb.redComponent, g = rgb.greenComponent, b = rgb.blueComponent
+        let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+        guard luminance < minLuminance else {
+            // Already light enough; return at full opacity (drop any inherited alpha).
+            return NSColor(red: r, green: g, blue: b, alpha: 1.0)
+        }
+        // Blend toward white by t. Because luminance is linear in RGB, this lands L' on the floor.
+        let t = (minLuminance - luminance) / (1.0 - luminance)
+        return NSColor(
+            red: r + t * (1.0 - r),
+            green: g + t * (1.0 - g),
+            blue: b + t * (1.0 - b),
+            alpha: 1.0
+        )
+    }
+
     convenience init?(hex: String) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")

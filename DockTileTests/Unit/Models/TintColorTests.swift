@@ -251,3 +251,137 @@ extension TintColor.PresetColor {
         }
     }
 }
+
+// MARK: - Dark-style glyph treatment (colored glyph on neutral near-black)
+
+/// Perceived luminance with the same weights the renderer uses (`0.299R+0.587G+0.114B`).
+private func perceivedLuminance(_ color: NSColor) -> CGFloat? {
+    guard let c = color.usingColorSpace(.deviceRGB) else { return nil }
+    return 0.299 * c.redComponent + 0.587 * c.greenComponent + 0.114 * c.blueComponent
+}
+
+@Suite("Dark-style tinted-glyph rendering")
+struct DarkGlyphTreatmentTests {
+
+    private let floor = TintColor.darkGlyphLuminanceFloor
+
+    // MARK: liftedForDarkGlyph
+
+    @Test("The #5F00FF invisibility case is lifted to at least the luminance floor")
+    func mediaVioletIsLifted() throws {
+        // #5F00FF has max HSB brightness but low perceived luminance — the regression case.
+        let violet = try #require(NSColor(hex: "#5F00FF"))
+        let before = try #require(perceivedLuminance(violet))
+        #expect(before < floor)  // guards the premise of the test
+
+        let lifted = violet.liftedForDarkGlyph(minLuminance: floor)
+        let after = try #require(perceivedLuminance(lifted))
+        #expect(after >= floor - 0.001)
+        #expect(lifted.alphaComponent == 1.0)
+    }
+
+    @Test("An already-light tint is returned essentially unchanged")
+    func lightTintUnchanged() throws {
+        let amber = try #require(NSColor(hex: "#FF9500"))  // Orange bottom stop
+        let before = try #require(perceivedLuminance(amber))
+        #expect(before >= floor)  // already above the floor
+
+        let lifted = amber.liftedForDarkGlyph(minLuminance: floor)
+        let li = try #require(lifted.usingColorSpace(.deviceRGB))
+        let am = try #require(amber.usingColorSpace(.deviceRGB))
+        #expect(abs(li.redComponent - am.redComponent) < 0.01)
+        #expect(abs(li.greenComponent - am.greenComponent) < 0.01)
+        #expect(abs(li.blueComponent - am.blueComponent) < 0.01)
+    }
+
+    @Test("Lifting preserves hue direction (violet stays blue-dominant over red over green)")
+    func liftPreservesHueOrder() throws {
+        let violet = try #require(NSColor(hex: "#5F00FF"))
+        let lifted = try #require(violet.liftedForDarkGlyph(minLuminance: floor).usingColorSpace(.deviceRGB))
+        // Original ordering is blue > red > green; blending toward white keeps that ordering.
+        #expect(lifted.blueComponent > lifted.redComponent)
+        #expect(lifted.redComponent > lifted.greenComponent)
+    }
+
+    @Test("Color and NSColor lifts agree (preview matches the baked .icns)")
+    func colorAndNSColorLiftAgree() throws {
+        let hex = "#5F00FF"
+        let ns = try #require(NSColor(hex: hex)).liftedForDarkGlyph(minLuminance: floor)
+        let sw = NSColor(Color(hex: hex).liftedForDarkGlyph(minLuminance: floor))
+        let a = try #require(ns.usingColorSpace(.deviceRGB))
+        let b = try #require(sw.usingColorSpace(.deviceRGB))
+        #expect(abs(a.redComponent - b.redComponent) < 0.01)
+        #expect(abs(a.greenComponent - b.greenComponent) < 0.01)
+        #expect(abs(a.blueComponent - b.blueComponent) < 0.01)
+    }
+
+    // MARK: nsColors(for: .dark, iconType:)
+
+    @Test("Dark + SF Symbol: neutral near-black background AND a visible tinted glyph")
+    func darkSymbolUsesNeutralBackgroundAndVisibleGlyph() throws {
+        let tint = TintColor.custom("#5F00FF")
+        let result = tint.nsColors(for: .dark, iconType: .sfSymbol)
+
+        // Background is the neutral near-black pair, NOT the tile's tint.
+        let expectedTop = try #require(NSColor(hex: TintColor.darkNeutralTopHex)?.usingColorSpace(.deviceRGB))
+        let bgTop = try #require(result.backgroundTop.usingColorSpace(.deviceRGB))
+        #expect(abs(bgTop.redComponent - expectedTop.redComponent) < 0.01)
+        #expect(abs(bgTop.greenComponent - expectedTop.greenComponent) < 0.01)
+        #expect(abs(bgTop.blueComponent - expectedTop.blueComponent) < 0.01)
+
+        // Foreground is the lifted tint — non-white and above the luminance floor.
+        let fgLum = try #require(perceivedLuminance(result.foreground))
+        #expect(fgLum >= floor - 0.001)
+        let fg = try #require(result.foreground.usingColorSpace(.deviceRGB))
+        #expect(fg.blueComponent > fg.greenComponent)  // still carries the violet identity
+    }
+
+    @Test("Dark + emoji: keeps the darkened-own-tint background (unchanged path)")
+    func darkEmojiKeepsDarkenedTint() throws {
+        let tint = TintColor.preset(.blue)
+        let result = tint.nsColors(for: .dark, iconType: .emoji)
+
+        // Background must NOT be the neutral near-black — it's the darkened blue tint.
+        let neutralTop = try #require(NSColor(hex: TintColor.darkNeutralTopHex)?.usingColorSpace(.deviceRGB))
+        let bgTop = try #require(result.backgroundTop.usingColorSpace(.deviceRGB))
+        let isNeutral = abs(bgTop.redComponent - neutralTop.redComponent) < 0.02
+            && abs(bgTop.greenComponent - neutralTop.greenComponent) < 0.02
+            && abs(bgTop.blueComponent - neutralTop.blueComponent) < 0.02
+        #expect(!isNeutral)
+        // Blue tint: blue channel dominates the (darkened) background.
+        #expect(bgTop.blueComponent > bgTop.redComponent)
+    }
+
+    @Test("SwiftUI colors(for:) mirrors nsColors(for:) in Dark for both icon types")
+    func swiftUIMirrorsNSColors() throws {
+        for iconType in [IconType.sfSymbol, .emoji] {
+            let tint = TintColor.custom("#5F00FF")
+            let ns = tint.nsColors(for: .dark, iconType: iconType)
+            let sw = tint.colors(for: .dark, iconType: iconType)
+
+            let nsFg = try #require(ns.foreground.usingColorSpace(.deviceRGB))
+            let swFg = try #require(NSColor(sw.foreground).usingColorSpace(.deviceRGB))
+            #expect(abs(nsFg.redComponent - swFg.redComponent) < 0.01)
+            #expect(abs(nsFg.greenComponent - swFg.greenComponent) < 0.01)
+            #expect(abs(nsFg.blueComponent - swFg.blueComponent) < 0.01)
+
+            let nsBg = try #require(ns.backgroundTop.usingColorSpace(.deviceRGB))
+            let swBg = try #require(NSColor(sw.backgroundTop).usingColorSpace(.deviceRGB))
+            #expect(abs(nsBg.redComponent - swBg.redComponent) < 0.01)
+            #expect(abs(nsBg.greenComponent - swBg.greenComponent) < 0.01)
+            #expect(abs(nsBg.blueComponent - swBg.blueComponent) < 0.01)
+        }
+    }
+
+    @Test("Non-Dark styles ignore iconType (Default is unchanged for symbol and emoji)")
+    func nonDarkStylesIgnoreIconType() throws {
+        let tint = TintColor.preset(.purple)
+        let symbol = tint.nsColors(for: .defaultStyle, iconType: .sfSymbol)
+        let emoji = tint.nsColors(for: .defaultStyle, iconType: .emoji)
+        let s = try #require(symbol.backgroundTop.usingColorSpace(.deviceRGB))
+        let e = try #require(emoji.backgroundTop.usingColorSpace(.deviceRGB))
+        #expect(abs(s.redComponent - e.redComponent) < 0.001)
+        #expect(abs(s.greenComponent - e.greenComponent) < 0.001)
+        #expect(abs(s.blueComponent - e.blueComponent) < 0.001)
+    }
+}

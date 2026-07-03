@@ -99,8 +99,9 @@ struct IconGenerator {
         let rect = CGRect(origin: .zero, size: size)
         let squirclePath = createSquirclePath(in: rect, cornerRadius: cornerRadius)
 
-        // Get appearance-aware colors
-        let colors = tintColor.nsColors(for: iconStyle)
+        // Get appearance-aware colors. Dark style diverges by icon type (SF Symbol → tinted
+        // glyph on neutral near-black; emoji → darkened-own-tint), so thread the type through.
+        let colors = tintColor.nsColors(for: iconStyle, iconType: iconType)
 
         // Draw gradient background (appearance-aware)
         drawGradient(
@@ -145,6 +146,10 @@ struct IconGenerator {
         let bottomDarken = IconDepthMetrics.glyphBottomDarken(
             style: iconStyle, iconType: iconType, nominalSize: size.width
         )
+        // Liquid-Glass specular sheen clipped to the glyph top (SF Symbols / brand only).
+        let glyphSheen = IconDepthMetrics.glyphSheen(
+            style: iconStyle, iconType: iconType, nominalSize: size.width
+        )
 
         // Draw icon (SF Symbol or emoji) with appearance-aware colors
         switch iconType {
@@ -156,16 +161,19 @@ struct IconGenerator {
                 weight: iconWeight.nsFontWeight,
                 color: colors.foreground,
                 shadow: glyphShadow,
-                bottomDarken: bottomDarken
+                bottomDarken: bottomDarken,
+                sheen: glyphSheen
             )
         case .emoji:
             // Emojis: "Sticker on Glass" metaphor - keep full color, with a subtle contact
-            // shadow (now in every style, not just Dark) to lift them off the surface.
+            // shadow (now in every style, not just Dark) to lift them off the surface, plus a
+            // gentle glossy-sticker specular sheen.
             drawEmoji(
                 emoji: iconValue,
                 rect: rect,
                 fontSize: fontSize,
-                shadow: glyphShadow
+                shadow: glyphShadow,
+                sheen: glyphSheen
             )
         }
 
@@ -309,13 +317,14 @@ struct IconGenerator {
         weight: NSFont.Weight = .medium,
         color: NSColor = .white,
         shadow: IconDepthMetrics.GlyphShadow? = nil,
-        bottomDarken: CGFloat? = nil
+        bottomDarken: CGFloat? = nil,
+        sheen: IconDepthMetrics.GlyphSheen? = nil
     ) {
         // The DockTile brand logo lives alongside SF Symbols but is rendered
         // from a bundled template image rather than a system symbol. The brand
         // glyph is a fixed-weight raster, so symbol weight does not apply to it.
         if symbolName == SFSymbolCatalog.brandSymbolName, let glyph = SFSymbolCatalog.brandGlyph {
-            drawBrandGlyph(glyph, rect: rect, fontSize: fontSize, color: color, shadow: shadow, bottomDarken: bottomDarken)
+            drawBrandGlyph(glyph, rect: rect, fontSize: fontSize, color: color, shadow: shadow, bottomDarken: bottomDarken, sheen: sheen)
             return
         }
 
@@ -326,11 +335,11 @@ struct IconGenerator {
         guard let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else {
             // Fallback to a default symbol if the requested one doesn't exist
-            drawFallbackSymbol(rect: rect, fontSize: fontSize, weight: weight, color: color, shadow: shadow, bottomDarken: bottomDarken)
+            drawFallbackSymbol(rect: rect, fontSize: fontSize, weight: weight, color: color, shadow: shadow, bottomDarken: bottomDarken, sheen: sheen)
             return
         }
 
-        drawGlyphMask(symbolImage, rect: rect, color: color, shadow: shadow, bottomDarken: bottomDarken)
+        drawGlyphMask(symbolImage, rect: rect, color: color, shadow: shadow, bottomDarken: bottomDarken, sheen: sheen)
     }
 
     private static func drawFallbackSymbol(
@@ -339,7 +348,8 @@ struct IconGenerator {
         weight: NSFont.Weight = .medium,
         color: NSColor = .white,
         shadow: IconDepthMetrics.GlyphShadow? = nil,
-        bottomDarken: CGFloat? = nil
+        bottomDarken: CGFloat? = nil,
+        sheen: IconDepthMetrics.GlyphSheen? = nil
     ) {
         // Draw a star as fallback
         let config = NSImage.SymbolConfiguration(pointSize: fontSize, weight: weight)
@@ -347,7 +357,7 @@ struct IconGenerator {
             .withSymbolConfiguration(config) else {
             return
         }
-        drawGlyphMask(fallbackImage, rect: rect, color: color, shadow: shadow, bottomDarken: bottomDarken)
+        drawGlyphMask(fallbackImage, rect: rect, color: color, shadow: shadow, bottomDarken: bottomDarken, sheen: sheen)
     }
 
     /// Draw the bundled DockTile logo, tinted to the appearance-aware foreground.
@@ -360,7 +370,8 @@ struct IconGenerator {
         fontSize: CGFloat,
         color: NSColor,
         shadow: IconDepthMetrics.GlyphShadow? = nil,
-        bottomDarken: CGFloat? = nil
+        bottomDarken: CGFloat? = nil,
+        sheen: IconDepthMetrics.GlyphSheen? = nil
     ) {
         // `fontSize` already encodes the brand size ratio for the current Icon
         // Scale (see generateIcon), so draw the logo as a square of that side.
@@ -371,7 +382,7 @@ struct IconGenerator {
             width: side,
             height: side
         )
-        drawGlyph(glyph, in: drawRect, color: color, shadow: shadow, bottomDarken: bottomDarken)
+        drawGlyph(glyph, in: drawRect, color: color, shadow: shadow, bottomDarken: bottomDarken, sheen: sheen)
     }
 
     // MARK: - Glyph Compositing (shading + contact shadow)
@@ -383,7 +394,8 @@ struct IconGenerator {
         rect: CGRect,
         color: NSColor,
         shadow: IconDepthMetrics.GlyphShadow?,
-        bottomDarken: CGFloat?
+        bottomDarken: CGFloat?,
+        sheen: IconDepthMetrics.GlyphSheen? = nil
     ) {
         let glyphSize = image.size
         let drawRect = CGRect(
@@ -392,7 +404,7 @@ struct IconGenerator {
             width: glyphSize.width,
             height: glyphSize.height
         )
-        drawGlyph(image, in: drawRect, color: color, shadow: shadow, bottomDarken: bottomDarken)
+        drawGlyph(image, in: drawRect, color: color, shadow: shadow, bottomDarken: bottomDarken, sheen: sheen)
     }
 
     /// Draw a template glyph filled with either a flat tint or a top→bottom shading gradient
@@ -404,7 +416,8 @@ struct IconGenerator {
         in drawRect: CGRect,
         color: NSColor,
         shadow: IconDepthMetrics.GlyphShadow?,
-        bottomDarken: CGFloat?
+        bottomDarken: CGFloat?,
+        sheen: IconDepthMetrics.GlyphSheen? = nil
     ) {
         // Build the filled glyph: a vertical shading gradient when requested, else a flat tint.
         let filled: NSImage
@@ -431,6 +444,74 @@ struct IconGenerator {
         }
         filled.draw(in: drawRect)
         context.restoreGState()
+
+        // Liquid-Glass specular sheen: a white→transparent gloss clipped to the glyph's own alpha,
+        // concentrated in the top `heightFraction`. Built as an NSImage the same way as
+        // `gradientFilledGlyph` (proven orientation) and drawn back over the filled glyph, rather
+        // than clipping the main context with a raw CGImage (which would flip vertically).
+        if let sheen, sheen.alpha > 0,
+           let sheenImage = sheenGlyph(image, alpha: sheen.alpha, heightFraction: sheen.heightFraction) {
+            sheenImage.draw(in: drawRect)
+        }
+    }
+
+    /// Produce a copy of a template glyph filled with a top→transparent white gloss (the specular
+    /// sheen), clipped to the glyph's own alpha and confined to the top `heightFraction`. Mirrors
+    /// `gradientFilledGlyph`'s construction so orientation matches the filled glyph exactly.
+    private static func sheenGlyph(
+        _ image: NSImage,
+        alpha: CGFloat,
+        heightFraction: CGFloat
+    ) -> NSImage? {
+        let size = image.size
+        let pixelW = Int(size.width.rounded())
+        let pixelH = Int(size.height.rounded())
+        guard pixelW > 0, pixelH > 0,
+              let maskCG = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let rep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: pixelW,
+                pixelsHigh: pixelH,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 0
+              ),
+              let gctx = NSGraphicsContext(bitmapImageRep: rep) else {
+            return nil
+        }
+        rep.size = size
+
+        let cg = gctx.cgContext
+        let bounds = CGRect(origin: .zero, size: size)
+        // Clip to the glyph shape, then paint the top-down gloss through it.
+        cg.clip(to: bounds, mask: maskCG)
+
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let gradient = CGGradient(
+            colorsSpace: colorSpace,
+            colors: [
+                NSColor.white.withAlphaComponent(alpha).cgColor,
+                NSColor.white.withAlphaComponent(0).cgColor
+            ] as CFArray,
+            locations: [0.0, 1.0]
+        ) else {
+            return nil
+        }
+        // Top of the glyph (maxY) → down over `heightFraction` of its height, then clear.
+        cg.drawLinearGradient(
+            gradient,
+            start: CGPoint(x: bounds.midX, y: bounds.maxY),
+            end: CGPoint(x: bounds.midX, y: bounds.maxY - bounds.height * heightFraction),
+            options: []
+        )
+
+        let output = NSImage(size: size)
+        output.addRepresentation(rep)
+        return output
     }
 
     /// Produce a copy of a template glyph filled with a vertical top→bottom gradient, clipped to
@@ -494,7 +575,8 @@ struct IconGenerator {
         emoji: String,
         rect: CGRect,
         fontSize: CGFloat,
-        shadow: IconDepthMetrics.GlyphShadow? = nil
+        shadow: IconDepthMetrics.GlyphShadow? = nil,
+        sheen: IconDepthMetrics.GlyphSheen? = nil
     ) {
         // Emojis keep their full color ("Sticker on Glass" metaphor)
         // No foregroundColor applied - let the emoji render naturally
@@ -524,6 +606,78 @@ struct IconGenerator {
         let drawPoint = CGPoint(x: x, y: y)
 
         attributedString.draw(at: drawPoint)
+
+        // Glossy-sticker specular sheen, confined to the emoji's own silhouette.
+        if let sheen, sheen.alpha > 0,
+           let gloss = emojiSheenImage(emoji: emoji, font: font, size: stringSize,
+                                       alpha: sheen.alpha, heightFraction: sheen.heightFraction) {
+            gloss.draw(at: drawPoint, from: .zero, operation: .sourceOver, fraction: 1.0)
+        }
+    }
+
+    /// Build a top→transparent white gloss confined to an emoji's silhouette. Because an emoji is
+    /// full-colour, the glyph shape is isolated by compositing the emoji over the gloss with
+    /// `.destinationIn` (keep the gloss only where the emoji is opaque) rather than a luminance
+    /// clip, which would key off the emoji's colours instead of its shape.
+    private static func emojiSheenImage(
+        emoji: String,
+        font: NSFont,
+        size: CGSize,
+        alpha: CGFloat,
+        heightFraction: CGFloat
+    ) -> NSImage? {
+        let pixelW = Int(size.width.rounded())
+        let pixelH = Int(size.height.rounded())
+        guard pixelW > 0, pixelH > 0,
+              let rep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: pixelW,
+                pixelsHigh: pixelH,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 0
+              ),
+              let gctx = NSGraphicsContext(bitmapImageRep: rep) else {
+            return nil
+        }
+        rep.size = size
+        let bounds = CGRect(origin: .zero, size: size)
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = gctx
+        let cg = gctx.cgContext
+
+        // 1. Paint the top-down white gloss across the whole bounds.
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        if let gradient = CGGradient(
+            colorsSpace: colorSpace,
+            colors: [
+                NSColor.white.withAlphaComponent(alpha).cgColor,
+                NSColor.white.withAlphaComponent(0).cgColor
+            ] as CFArray,
+            locations: [0.0, 1.0]
+        ) {
+            cg.drawLinearGradient(
+                gradient,
+                start: CGPoint(x: bounds.midX, y: bounds.maxY),
+                end: CGPoint(x: bounds.midX, y: bounds.maxY - bounds.height * heightFraction),
+                options: []
+            )
+        }
+
+        // 2. Keep the gloss only where the emoji is opaque (silhouette mask via alpha compositing).
+        cg.setBlendMode(.destinationIn)
+        NSAttributedString(string: emoji, attributes: [.font: font]).draw(at: .zero)
+
+        NSGraphicsContext.restoreGraphicsState()
+
+        let output = NSImage(size: size)
+        output.addRepresentation(rep)
+        return output
     }
 
     // MARK: - ICNS Generation

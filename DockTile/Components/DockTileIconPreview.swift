@@ -84,9 +84,11 @@ struct DockTileIconPreview: View {
         size * IconDepthMetrics.glyphSizeRatio(iconScale: iconScale, iconType: iconType, iconValue: iconValue)
     }
 
-    /// Colors based on current icon style
+    /// Colors based on current icon style. Threads `iconType` so Dark style splits the same way
+    /// the baked `.icns` does: SF Symbol → tinted glyph on neutral near-black; emoji → darkened
+    /// own-tint (tint-coloured symbol on dark background).
     private var styleColors: (backgroundTop: Color, backgroundBottom: Color, foreground: Color) {
-        tintColor.colors(for: iconStyle)
+        tintColor.colors(for: iconStyle, iconType: iconType)
     }
 
     // MARK: Depth treatment (mirrors IconGenerator via the shared seam)
@@ -101,6 +103,11 @@ struct DockTileIconPreview: View {
 
     private var surfaceSheenAlpha: CGFloat {
         IconDepthMetrics.surfaceSheenAlpha(style: iconStyle, nominalSize: size)
+    }
+
+    /// Liquid-Glass specular sheen for SF Symbols / brand glyph (nil for emoji / too small).
+    private var glyphSheen: IconDepthMetrics.GlyphSheen? {
+        IconDepthMetrics.glyphSheen(style: iconStyle, iconType: iconType, nominalSize: size)
     }
 
     /// Top→bottom shading fill for SF Symbols / brand glyph; flat foreground when suppressed.
@@ -159,37 +166,72 @@ struct DockTileIconPreview: View {
         // an inner lift effect (mirrors the baked .icns), not the tile's system shadow.
     }
 
+    /// The bare glyph (brand image or SF Symbol) at the current size, filled with `style`.
+    /// Reused for both the visible fill and as the mask for the specular sheen so the two
+    /// can't diverge.
+    @ViewBuilder
+    private func glyphShape<S: ShapeStyle>(_ style: S) -> some View {
+        if iconValue == SFSymbolCatalog.brandSymbolName, let logo = SFSymbolCatalog.brandGlyph {
+            // The DockTile brand logo is a bundled template image, not a system symbol.
+            Image(nsImage: logo)
+                .resizable()
+                .renderingMode(.template)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: symbolSize, height: symbolSize)
+                .foregroundStyle(style)
+        } else {
+            Image(systemName: iconValue)
+                .font(.system(size: symbolSize, weight: iconWeight.fontWeight))
+                .foregroundStyle(style)
+        }
+    }
+
     @ViewBuilder
     private var iconContent: some View {
         switch iconType {
         case .sfSymbol:
-            // SF Symbol with icon style-aware fill + soft contact shadow (raised-on-glass).
-            Group {
-                if iconValue == SFSymbolCatalog.brandSymbolName, let logo = SFSymbolCatalog.brandGlyph {
-                    // The DockTile brand logo is a bundled template image, not a system symbol.
-                    Image(nsImage: logo)
-                        .resizable()
-                        .renderingMode(.template)
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: symbolSize, height: symbolSize)
-                        .foregroundStyle(glyphForeground)
-                } else {
-                    Image(systemName: iconValue)
-                        .font(.system(size: symbolSize, weight: iconWeight.fontWeight))
-                        .foregroundStyle(glyphForeground)
+            // SF Symbol with icon style-aware fill + soft contact shadow (raised-on-glass),
+            // topped by a Liquid-Glass specular sheen clipped to the glyph shape.
+            glyphShape(glyphForeground)
+                .overlay {
+                    if let sheen = glyphSheen {
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.white.opacity(sheen.alpha), location: 0),
+                                .init(color: .clear, location: sheen.heightFraction)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        // Mask the gloss to the glyph's own shape (colour is irrelevant to a mask).
+                        .mask(glyphShape(Color.white))
+                    }
                 }
-            }
-            .shadow(
-                color: glyphShadow.map { Color.black.opacity($0.blackAlpha) } ?? .clear,
-                radius: glyphShadow?.blur ?? 0,
-                y: glyphShadow?.offset ?? 0
-            )
+                .shadow(
+                    color: glyphShadow.map { Color.black.opacity($0.blackAlpha) } ?? .clear,
+                    radius: glyphShadow?.blur ?? 0,
+                    y: glyphShadow?.offset ?? 0
+                )
 
         case .emoji:
             // Emojis: "Sticker on Glass" metaphor — full colour + a subtle contact shadow in
-            // every style (seam-driven), to lift them off the surface.
+            // every style (seam-driven), topped by a gentle glossy-sticker specular sheen.
             Text(iconValue)
                 .font(.system(size: symbolSize))
+                .overlay {
+                    if let sheen = glyphSheen {
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.white.opacity(sheen.alpha), location: 0),
+                                .init(color: .clear, location: sheen.heightFraction)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        // Mask the gloss to the emoji's silhouette (its rendered alpha).
+                        .mask(Text(iconValue).font(.system(size: symbolSize)))
+                    }
+                }
                 .shadow(
                     color: glyphShadow.map { Color.black.opacity($0.blackAlpha) } ?? .clear,
                     radius: glyphShadow?.blur ?? 0,

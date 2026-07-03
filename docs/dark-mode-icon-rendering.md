@@ -48,47 +48,72 @@ unaffected by this change.
 
 ## The decision
 
-**Dark style renders a darkened shade of the tile's _own_ tint as the background, with a white
-symbol.**
+Dark style **splits by icon type**, because the original white-on-darkened-tint reads too
+high-contrast ("punchy") for an SF Symbol, while an emoji can't be recoloured at all.
 
-- **Background** = the tile's existing gradient (`colorTop`/`colorBottom`) pushed dark by a
-  *brightness cap*: hue and saturation are preserved, brightness is clamped to a ceiling. Light
-  tints (amber, pink) darken to their own colour; already-dark tints stay dark. This restores
-  per-tile colour identity in Dark style and satisfies the "light tints should darken into their
-  colour" expectation.
-- **Foreground** = **white**. White on any darkened-tint background gives uniform, maximum
-  legibility for *every* tint, including the default grey, and matches the Default-style symbol
-  treatment. This is the HIG "make the foreground lighter for contrast" guidance taken to its
-  most robust endpoint.
+**Dark + SF Symbol — colored glyph on neutral near-black (HIG-native).** Flip the roles: the
+tile's picked colour becomes the *glyph*, sitting on a neutral near-black background.
 
-Brightness ceilings (tuned against the previous `#2C2C2E → #1C1C1E` darkness, slightly higher so
-the tint reads): **top `0.22`, bottom `0.13`**.
+- **Background** = the neutral near-black gradient `#2C2C2E → #1C1C1E` (the pre-tint values). A
+  monochrome surface is what lets a coloured glyph read, and it matches Tahoe's native dark-icon
+  model.
+- **Foreground** = the tile's `colorBottom` (its "primary tint"), **lifted on perceived
+  luminance** to a floor so it stays visible — see `liftedForDarkGlyph` below. This is the HIG
+  guidance "the foreground color may need to be made lighter for better contrast" applied
+  *per-hue* rather than collapsed to white, so each tile keeps its colour identity and the result
+  is calmer than a stark white glyph.
+
+**Dark + emoji — darkened-own-tint background (unchanged).** An emoji renders in full colour and
+can't be recoloured, so it keeps the darkened shade of the tile's own tint as its background
+(brightness-capped: **top `0.22`, bottom `0.13`**), with the emoji + contact shadow on top.
+
+### `liftedForDarkGlyph(minLuminance:)` — the contrast floor
+
+Added to **both** colour spaces (`NSColor` in [AppearanceManager.swift](../DockTile/Managers/AppearanceManager.swift),
+`Color` in [ColorExtensions.swift](../DockTile/Extensions/ColorExtensions.swift)), mirroring the
+`darkenedForDarkMode` pair. It reads device-RGB, computes perceived luminance
+`L = 0.299R + 0.587G + 0.114B`, and — only if `L` is below the floor — blends the colour toward
+white by `t = (floor − L) / (1 − L)` per channel. Because luminance is linear in RGB, that lands
+`L'` exactly on the floor while preserving hue (it sheds saturation only as far as needed). This is
+the fix for the `#5F00FF` case: violet has max HSB brightness but low *perceived* luminance, so an
+HSB "brighten" is a no-op — the lift must be on perceived luminance.
+
+**Floor = `0.55`** (`TintColor.darkGlyphLuminanceFloor`). Deliberately restrained rather than a
+hotter `0.6`+: a higher floor pushes glyphs toward white and reintroduces the "too bright / punchy"
+feel this change set out to fix. `0.55` keeps even deep violet/blue clearly legible on near-black
+while staying calm. Tunable in one place.
 
 ### Alternatives considered and rejected
 
 | Approach | Why rejected |
 |----------|--------------|
-| **Brightened-tint symbol** on the darkened-tint background | Keeps it colourful but needs a per-hue perceived-luminance floor and still gives lower, hue-dependent contrast than white. White is simpler and uniformly legible. |
-| **Apple-literal: uniform near-black background, brightened logo** (the old shape, minus the contrast bug) | Does **not** preserve per-tile colour identity — every tile stays a near-black slab. Fails the core complaint that distinct tiles should stay distinct in Dark style. |
-| **Lift the raw tint symbol to a luminance floor** (keep old grey background) | Minimal patch for the Media case only; leaves the "all tiles are the same grey" identity problem untouched. |
-| **Blend the tint toward white for the symbol** | Desaturates *every* dark-style symbol, not just dark ones; muddies bright tints unnecessarily. |
+| **White symbol on darkened-own-tint** (the previous shipping decision) | Robust and uniformly legible, but the pure-white glyph reads too high-contrast/"punchy" against the dark tile — the complaint that motivated this change. |
+| **Translucent white symbol** on the darkened-own-tint background | The minimal one-line softening, but translucency is the mechanism of the *Clear* icon style, not Dark; it's off-spec and doesn't restore per-hue identity. Kept as the fallback option, not chosen. |
+| **Darkened-own-tint background _with_ a tinted glyph** | Colour-on-same-hue-dark is low, hue-dependent contrast; the neutral near-black background is what makes a coloured glyph read reliably. |
+| **Blend the tint toward white unconditionally** | Desaturates *every* dark-style symbol, not just the dark ones; muddies bright tints. The luminance floor only lifts colours that actually need it. |
 
 ## Implementation
 
-- **`darkenedForDarkMode(maxBrightness:)`** — added to both `NSColor`
+- **`darkenedForDarkMode(maxBrightness:)`** — on both `NSColor`
   ([AppearanceManager.swift](../DockTile/Managers/AppearanceManager.swift)) and `Color`
   ([ColorExtensions.swift](../DockTile/Extensions/ColorExtensions.swift)). Converts to
   `.deviceRGB` HSB, preserves hue and saturation, returns the colour with
-  `brightness = min(brightness, maxBrightness)` at full opacity. `min` (a cap, not a set) is the
-  key: it darkens light tints without *brightening* already-dark ones.
-- **`TintColor` Dark cases** in [IconStyleManager.swift](../DockTile/Managers/IconStyleManager.swift):
-  - `nsColors(for:)` (used by `IconGenerator` to render the actual `.icns`) returns
-    `(nsColorTop.darkenedForDarkMode(0.22), nsColorBottom.darkenedForDarkMode(0.13), .white)`.
-  - `colors(for:)` (used by the SwiftUI in-app tile preview) mirrors it with
-    `colorTop`/`colorBottom` and `.white`, so the preview matches the generated icon.
+  `brightness = min(brightness, maxBrightness)` at full opacity. Still used for the **Dark + emoji**
+  background.
+- **`liftedForDarkGlyph(minLuminance:)`** — the perceived-luminance lift described above, added
+  next to it in both colour spaces. Used for the **Dark + SF Symbol** glyph.
+- **`TintColor` Dark cases** in [IconStyleManager.swift](../DockTile/Managers/IconStyleManager.swift)
+  now take an `iconType` and branch:
+  - `.sfSymbol`: background = neutral near-black pair (`TintColor.darkNeutralTopHex/BottomHex`);
+    foreground = `nsColorBottom.liftedForDarkGlyph(minLuminance: TintColor.darkGlyphLuminanceFloor)`.
+  - `.emoji`: background = `darkenedForDarkMode(0.22)`/`(0.13)`; foreground `.white` (unused by the
+    emoji draw path).
+  - `nsColors(for:iconType:)` (renders the `.icns`) and `colors(for:iconType:)` (the SwiftUI
+    preview) are kept in lock-step. Call sites: [IconGenerator.swift](../DockTile/Utilities/IconGenerator.swift)
+    and [DockTileIconPreview.swift](../DockTile/Components/DockTileIconPreview.swift).
 
 The two colour spaces are kept in sync deliberately — the SwiftUI preview must match the
-`NSBitmapImageRep`-rendered `.icns`.
+`NSBitmapImageRep`-rendered `.icns`. Guarded by `DarkGlyphTreatmentTests`.
 
 ## Applying the change to existing tiles
 

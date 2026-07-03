@@ -113,6 +113,16 @@ extension Color {
         return self
     }
 
+    /// Lift this colour to a minimum *perceived luminance* for use as a Dark-style **glyph** on a
+    /// neutral near-black background. Mirrors `NSColor.liftedForDarkGlyph(minLuminance:)` so the
+    /// SwiftUI preview matches the baked `.icns`. Blends toward white only as far as needed to
+    /// clear the floor (preserving hue, shedding saturation). See the NSColor version for why the
+    /// floor is on `0.299R+0.587G+0.114B`, not HSB brightness (the `#5F00FF` invisibility case).
+    /// - Parameter minLuminance: The perceived-luminance floor (0.0-1.0), e.g. 0.55.
+    func liftedForDarkGlyph(minLuminance: CGFloat) -> Color {
+        Color(NSColor(self).liftedForDarkGlyph(minLuminance: minLuminance))
+    }
+
     /// Blend this colour toward black by `fraction` (0 = unchanged, 1 = black).
     /// Used for the glyph's dimensional shading (top → bottom fill) in the icon depth
     /// treatment, mirrored by `NSColor.darkened(by:)` in the baked renderer.

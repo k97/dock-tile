@@ -33,7 +33,7 @@ magnitudes live in one pure, value-in/value-out seam,
 [IconDepthMetrics.swift](../../DockTile/Utilities/IconDepthMetrics.swift), consumed by BOTH the baked
 renderer (`IconGenerator`) and the live preview (`DockTileIconPreview`) so they cannot drift.
 
-- **Three effects, tuned per style** (Default/Dark full; grayscale Clear/Tinted dialled back so the
+- **Four effects, tuned per style** (Default/Dark full; grayscale Clear/Tinted dialled back so the
   emulated gloss doesn't fight the system's own tinting):
   1. **Surface sheen** — a soft top→transparent white gloss clipped to the squircle
      (`drawSurfaceSheen` / a `LinearGradient` overlay).
@@ -43,6 +43,18 @@ renderer (`IconGenerator`) and the live preview (`DockTileIconPreview`) so they 
   3. **Glyph shading** — SF Symbols / the brand glyph are filled with a top→bottom gradient
      (foreground → foreground darkened by `glyphBottomDarken`, via `Color/NSColor.darkened(by:)`).
      Emoji are multicolour and never recoloured.
+  4. **Glyph specular sheen** (`glyphSheen`) — a white→transparent gloss **clipped to the glyph's
+     own shape**, concentrated in the top `heightFraction` (0.53), stacked above the shading fill
+     for a Liquid-Glass "lit glass" highlight. Alpha per style for symbols/brand (0.55 Default/Dark,
+     0.30 Clear, 0.37 Tinted). **Emoji get it too** — a much gentler `emojiAlpha` (0.18), since the
+     sheen is *additive white light, not a recolour*, so it glosses the "sticker" without flattening
+     its colour. The top-heavy falloff is what reads as glass rather than a flat glow.
+     - Rendering: for **symbols/brand** the baked `.icns` builds the gloss as an `NSImage` masked to
+       the glyph alpha (`sheenGlyph`, mirroring `gradientFilledGlyph`'s proven orientation) rather
+       than clipping the main context (which would flip vertically); the preview overlays a gradient
+       `.mask`ed by a second copy of the glyph. For **emoji** (full-colour) the mask can't key off
+       luminance, so the baked path isolates the silhouette by compositing the emoji over the gloss
+       with `.destinationIn` (`emojiSheenImage`); the preview masks with `Text(emoji)`.
 - **Size gate (`minDetailSize`, critical)**: all depth is suppressed below ~22px so the tiny 16px
   `.icns` renditions stay crisp instead of muddy; medium/large baked variants and every in-app
   preview clear the gate.
@@ -103,7 +115,7 @@ macOS Tahoe has an independent "Icon and widget style" setting (separate from Li
 |-------|-------------------|--------|
 | Default | `nil` | Colorful gradient, white symbol |
 | Automatic | `"RegularAutomatic"` | **Follows system appearance** — `.dark` in Dark mode, `.defaultStyle` in Light. This is the Tahoe default; `IconStyle.from()` MUST map it or dark icons never apply in Automatic mode |
-| Dark | `"RegularDark"` | Darkened shade of the tile's own tint (brightness-capped via `darkenedForDarkMode`, hue preserved), white symbol |
+| Dark | `"RegularDark"` | **Splits by icon type.** SF Symbol → tile's own tint as the *glyph* (lifted on perceived luminance to a `0.55` floor via `liftedForDarkGlyph`, so deep violet stays visible) on a **neutral near-black** background — HIG-native, and calmer than a stark white glyph. Emoji → darkened shade of the tile's own tint (`darkenedForDarkMode`, hue preserved) with the full-colour emoji (can't be recoloured). See [dark-mode-icon-rendering.md](../../docs/dark-mode-icon-rendering.md) |
 | Clear | `"ClearAutomatic"` | Light gray, dark gray symbol (grayscale only) |
 | Tinted | `"TintedAutomatic"` | Medium gray, white symbol (grayscale only) |
 

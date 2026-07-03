@@ -146,4 +146,46 @@ struct IconDepthMetricsTests {
         // Suppressed below the gate.
         #expect(IconDepthMetrics.glyphBottomDarken(style: .defaultStyle, iconType: .sfSymbol, nominalSize: 16) == nil)
     }
+
+    // MARK: - Glyph specular sheen
+
+    @Test("Glyph sheen is per-style for symbols; grayscale styles dialled back")
+    func glyphSheenPerStyle() throws {
+        let def = try #require(IconDepthMetrics.glyphSheen(style: .defaultStyle, iconType: .sfSymbol, nominalSize: 80))
+        let dark = try #require(IconDepthMetrics.glyphSheen(style: .dark, iconType: .sfSymbol, nominalSize: 80))
+        let clear = try #require(IconDepthMetrics.glyphSheen(style: .clear, iconType: .sfSymbol, nominalSize: 80))
+        let tinted = try #require(IconDepthMetrics.glyphSheen(style: .tinted, iconType: .sfSymbol, nominalSize: 80))
+        #expect(def.alpha == 0.55)
+        #expect(dark.alpha == 0.55)
+        #expect(clear.alpha == 0.30)
+        #expect(tinted.alpha == 0.37)
+        // Grayscale styles are gentler so the gloss doesn't fight the system tint.
+        #expect(clear.alpha < def.alpha)
+        #expect(tinted.alpha < def.alpha)
+        // Height fraction is shared across styles.
+        #expect(def.heightFraction == 0.53)
+        #expect(dark.heightFraction == 0.53)
+    }
+
+    @Test("Emoji get a gentle glossy-sticker sheen, much lighter than a symbol's")
+    func emojiSheenGentle() throws {
+        let emoji = try #require(IconDepthMetrics.glyphSheen(style: .defaultStyle, iconType: .emoji, nominalSize: 80))
+        let symbol = try #require(IconDepthMetrics.glyphSheen(style: .defaultStyle, iconType: .sfSymbol, nominalSize: 80))
+        #expect(emoji.alpha == 0.18)
+        #expect(emoji.alpha < symbol.alpha)
+        // Emoji sheen is style-independent (emoji keep full colour in every style).
+        #expect(IconDepthMetrics.glyphSheen(style: .dark, iconType: .emoji, nominalSize: 80)?.alpha == 0.18)
+        #expect(IconDepthMetrics.glyphSheen(style: .clear, iconType: .emoji, nominalSize: 80)?.alpha == 0.18)
+        #expect(emoji.heightFraction == 0.53)
+    }
+
+    @Test("Glyph sheen is suppressed below the size gate (symbol and emoji)")
+    func glyphSheenSizeGate() {
+        #expect(IconDepthMetrics.glyphSheen(style: .defaultStyle, iconType: .sfSymbol, nominalSize: 16) == nil)
+        #expect(IconDepthMetrics.glyphSheen(style: .dark, iconType: .sfSymbol, nominalSize: 21) == nil)
+        #expect(IconDepthMetrics.glyphSheen(style: .dark, iconType: .sfSymbol, nominalSize: 22) != nil)
+        // Emoji follow the same gate.
+        #expect(IconDepthMetrics.glyphSheen(style: .defaultStyle, iconType: .emoji, nominalSize: 16) == nil)
+        #expect(IconDepthMetrics.glyphSheen(style: .defaultStyle, iconType: .emoji, nominalSize: 22) != nil)
+    }
 }

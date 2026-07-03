@@ -294,7 +294,7 @@ enum AppStrings {
     enum Label {
         static let colour = NSLocalizedString(
             "label.colour",
-            value: "Tile Colour",
+            value: "Colour",
             comment: "Label for colour picker section"
         )
 

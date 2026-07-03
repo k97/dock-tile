@@ -19,9 +19,15 @@ struct IconGeneratorContentTests {
     private let px = 64
 
     private func icon(_ tint: TintColor, value: String = "star.fill", type: IconType = .sfSymbol) -> NSImage {
+        // Pin the Default style: these tests assert a tint-dominant background + a bright (white)
+        // glyph. Without pinning, `IconStyle.current` follows the host appearance, so on a Dark-mode
+        // machine they'd render the Dark variant (neutral near-black bg, tinted glyph) and the
+        // tint-dominance assertions would spuriously fail. Dark-style rendering is covered
+        // separately by DarkGlyphTreatmentTests.
         IconGenerator.generateIcon(
             tintColor: tint, iconType: type, iconValue: value,
-            iconScale: 14, size: CGSize(width: px, height: px))
+            iconScale: 14, size: CGSize(width: px, height: px),
+            iconStyle: .defaultStyle)
     }
 
     /// The bitmap the generator already rendered into (avoids a lossy headless re-render).

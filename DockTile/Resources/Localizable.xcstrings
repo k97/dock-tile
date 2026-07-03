@@ -1088,19 +1088,19 @@
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tile Colour"
+            "value": "Colour"
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tile Colour"
+            "value": "Colour"
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tile Color"
+            "value": "Color"
           }
         }
       }
