@@ -10,12 +10,63 @@
 import AppKit
 import SwiftUI
 
-// MARK: - Dock Position Detection
+// MARK: - Dock Preferences Snapshot
 
-enum DockPosition {
-    case bottom
-    case left
-    case right
+/// Snapshot of the `com.apple.dock` settings that drive popover anchoring. Read fresh on
+/// every popover open (`read()`, synchronize-first) so a settings change between opens —
+/// magnification slider, orientation, autohide — is always honoured. Uses the shared
+/// `DockEdge` (DockLockManager.swift); orientation comes from the pref, NOT from
+/// visibleFrame-gap inference, because an auto-hidden Dock reserves no gap at all.
+struct DockPrefs: Equatable {
+    var orientation: DockEdge
+    var magnificationEnabled: Bool
+    var tileSize: CGFloat
+    var largeSize: CGFloat
+    var autohide: Bool
+
+    /// Pure parser seam: applies macOS defaults for absent keys and clamps out-of-range
+    /// values (`defaults write` accepts largesize up to 512; garbage never reaches geometry).
+    nonisolated static func resolve(
+        orientation: String?,
+        magnification: Bool?,
+        tileSize: Double?,
+        largeSize: Double?,
+        autohide: Bool?
+    ) -> DockPrefs {
+        let edge: DockEdge
+        switch orientation {
+        case "left": edge = .left
+        case "right": edge = .right
+        default: edge = .bottom
+        }
+        return DockPrefs(
+            orientation: edge,
+            magnificationEnabled: magnification ?? false,
+            tileSize: CGFloat(min(max(tileSize ?? 48, 16), 128)),
+            largeSize: CGFloat(min(max(largeSize ?? 128, 16), 512)),
+            autohide: autohide ?? false
+        )
+    }
+
+    /// Live read of another app's domain: synchronize first — cfprefsd can serve a stale
+    /// cache (same lesson as the migration pipeline's Dock reads).
+    static func read() -> DockPrefs {
+        let domain = "com.apple.dock" as CFString
+        CFPreferencesAppSynchronize(domain)
+        func number(_ key: String) -> Double? {
+            (CFPreferencesCopyAppValue(key as CFString, domain) as? NSNumber)?.doubleValue
+        }
+        func bool(_ key: String) -> Bool? {
+            (CFPreferencesCopyAppValue(key as CFString, domain) as? NSNumber)?.boolValue
+        }
+        return resolve(
+            orientation: CFPreferencesCopyAppValue("orientation" as CFString, domain) as? String,
+            magnification: bool("magnification"),
+            tileSize: number("tilesize"),
+            largeSize: number("largesize"),
+            autohide: bool("autohide")
+        )
+    }
 }
 
 // MARK: - Panel State
@@ -62,28 +113,81 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         return state == .showing || state == .shown
     }
 
-    // MARK: - Dock Detection
+    // MARK: - Anchor Resolution (pure seam)
 
-    /// Detect the Dock's position by comparing screen frame vs visible frame
-    private func detectDockPosition() -> DockPosition {
-        guard let screen = NSScreen.main else { return .bottom }
+    /// Result of `resolveAnchor`: where the 1×1 anchor window goes (Cocoa screen coords)
+    /// and which popover edge the arrow should prefer.
+    struct ResolvedAnchor: Equatable {
+        var point: CGPoint
+        var edge: NSRectEdge
+    }
 
-        let frame = screen.frame
-        let visible = screen.visibleFrame
+    /// Perpendicular breathing room above the magnified icon / autohidden Dock band.
+    /// 25pt matches the shipped constant in DockAltTab (`largesize + 25`), the only known
+    /// tool that compensates for magnification; verified visually against the real Dock's
+    /// stack popover on this project's design pass.
+    nonisolated static let dockClearancePadding: CGFloat = 25
 
-        // Calculate the difference on each edge
-        let bottomGap = visible.minY - frame.minY
-        let leftGap = visible.minX - frame.minX
-        let rightGap = frame.maxX - visible.maxX
+    /// A measured visibleFrame gap below this is menu-bar/safe-area noise, not a Dock band
+    /// (same threshold as DockLockManager's display detection) — treat as "Dock reserves
+    /// nothing", i.e. autohide.
+    nonisolated static let minimumMeasuredInset: CGFloat = 20
 
-        // The Dock is on the side with the largest gap (excluding menu bar)
-        // Menu bar is always at top, so we ignore top gap
-        if leftGap > bottomGap && leftGap > rightGap {
-            return .left
-        } else if rightGap > bottomGap && rightGap > leftGap {
-            return .right
-        } else {
-            return .bottom
+    /// Hard cap on clearance as a fraction of the screen's perpendicular axis, so garbage
+    /// prefs (largesize 512) can never float the popover into the middle of the screen.
+    nonisolated static let maxClearanceFraction: CGFloat = 0.4
+
+    /// The single source of truth for where the popover anchors, given plain values.
+    ///
+    /// Rules (mirrors the real Dock's stack-popover behaviour, observed under magnification):
+    /// - Resting clearance is the **measured** visibleFrame gap (self-corrects when a crowded
+    ///   Dock auto-shrinks below the `tilesize` pref). When the Dock reserves nothing
+    ///   (autohide), fall back to `tilesize + padding` — the click that opened us proves the
+    ///   Dock is revealed right now.
+    /// - Magnification lifts clearance to `largesize + padding`: AX/CGWindow/CoreDock all
+    ///   report the *resting* layout while icons are magnified, so the worst-case envelope is
+    ///   the only reliable geometry — and since the user just clicked our icon, the cursor is
+    ///   on it and it IS at full largesize (the worst case is the exact case).
+    /// - `largesize <= tilesize` means magnification doesn't grow icons: no lift.
+    /// - The mouse coordinate is used only for the Dock-parallel axis (the cursor sits inside
+    ///   the clicked icon, making it the best icon-center estimate available without AX),
+    ///   clamped into the screen. NSPopover slides its arrow within the preferred edge when
+    ///   the anchor is near a screen corner, so no lateral compensation is needed here.
+    nonisolated static func resolveAnchor(
+        screenFrame: CGRect,
+        visibleFrame: CGRect,
+        mouse: CGPoint,
+        prefs: DockPrefs
+    ) -> ResolvedAnchor {
+        let measuredGap: CGFloat
+        switch prefs.orientation {
+        case .bottom: measuredGap = visibleFrame.minY - screenFrame.minY
+        case .left:   measuredGap = visibleFrame.minX - screenFrame.minX
+        case .right:  measuredGap = screenFrame.maxX - visibleFrame.maxX
+        }
+
+        let restingBand = measuredGap >= Self.minimumMeasuredInset
+            ? measuredGap
+            : prefs.tileSize + Self.dockClearancePadding
+
+        var clearance = restingBand
+        if prefs.magnificationEnabled && prefs.largeSize > prefs.tileSize {
+            clearance = max(restingBand, prefs.largeSize + Self.dockClearancePadding)
+        }
+
+        let axisLength = prefs.orientation == .bottom ? screenFrame.height : screenFrame.width
+        clearance = min(clearance, axisLength * Self.maxClearanceFraction)
+
+        switch prefs.orientation {
+        case .bottom:
+            let x = min(max(mouse.x, screenFrame.minX), screenFrame.maxX)
+            return ResolvedAnchor(point: CGPoint(x: x, y: screenFrame.minY + clearance), edge: .minY)
+        case .left:
+            let y = min(max(mouse.y, screenFrame.minY), screenFrame.maxY)
+            return ResolvedAnchor(point: CGPoint(x: screenFrame.minX + clearance, y: y), edge: .minX)
+        case .right:
+            let y = min(max(mouse.y, screenFrame.minY), screenFrame.maxY)
+            return ResolvedAnchor(point: CGPoint(x: screenFrame.maxX - clearance, y: y), edge: .maxX)
         }
     }
 
@@ -117,12 +221,22 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         return popover
     }
 
-    /// Create anchor window and determine the preferred edge for popover
-    /// Uses the "hard edge" rule: anchors strictly to visibleFrame boundary,
-    /// ignoring mouse depth into the Dock area
+    /// Create anchor window and determine the preferred edge for popover.
+    /// Anchoring is "anchor-and-hold": resolved once per show from the click-time mouse
+    /// location and the current Dock prefs, then never chased — the same settle behaviour
+    /// as the real Dock's stack popover (its body holds position when magnification
+    /// collapses; only its tail tracks, which nothing public can replicate).
     private func createAnchorWindowAndEdge() -> (window: NSWindow, edge: NSRectEdge) {
-        // Safe guard: fall back to screen bounds if visibleFrame unavailable
-        guard let screen = NSScreen.main else {
+        let mouseLocation = NSEvent.mouseLocation
+
+        // A Dock click lands on the display hosting the Dock, so the screen under the
+        // cursor is the right one — NSScreen.main is the *key window's* screen, which can
+        // differ on multi-display setups (especially with Dock Lock pinning the Dock).
+        let screen = NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) }
+            ?? NSScreen.main
+
+        // Safe guard: fall back to a degenerate anchor if no screen is available
+        guard let screen else {
             let fallbackWindow = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
                 styleMask: .borderless,
@@ -134,47 +248,22 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
             return (fallbackWindow, .minY)
         }
 
-        let visibleFrame = screen.visibleFrame
-        let mouseLocation = NSEvent.mouseLocation
-        let dockPosition = detectDockPosition()
+        let prefs = DockPrefs.read()
+        let anchor = FloatingPanel.resolveAnchor(
+            screenFrame: screen.frame,
+            visibleFrame: screen.visibleFrame,
+            mouse: mouseLocation,
+            prefs: prefs
+        )
+        DiagnosticsLog.shared.log(
+            "helper",
+            "Popover anchor \(Int(anchor.point.x)),\(Int(anchor.point.y)) " +
+            "edge=\(prefs.orientation) mag=\(prefs.magnificationEnabled) " +
+            "tile=\(Int(prefs.tileSize)) large=\(Int(prefs.largeSize)) autohide=\(prefs.autohide)",
+            verbose: true
+        )
 
-        let windowRect: NSRect
-        let preferredEdge: NSRectEdge
-
-        switch dockPosition {
-        case .bottom:
-            // Hard edge rule: anchor Y is exactly at visibleFrame.minY (top of Dock)
-            // Use mouse only for X-axis positioning
-            windowRect = NSRect(
-                x: mouseLocation.x,
-                y: visibleFrame.minY,
-                width: 1,
-                height: 1
-            )
-            preferredEdge = .minY  // Arrow points down toward Dock
-
-        case .left:
-            // Hard edge rule: anchor X is exactly at visibleFrame.minX (right edge of Dock)
-            // Use mouse only for Y-axis positioning
-            windowRect = NSRect(
-                x: visibleFrame.minX,
-                y: mouseLocation.y,
-                width: 1,
-                height: 1
-            )
-            preferredEdge = .minX  // Arrow points left toward Dock
-
-        case .right:
-            // Hard edge rule: anchor X is exactly at visibleFrame.maxX (left edge of Dock)
-            // Use mouse only for Y-axis positioning
-            windowRect = NSRect(
-                x: visibleFrame.maxX,
-                y: mouseLocation.y,
-                width: 1,
-                height: 1
-            )
-            preferredEdge = .maxX  // Arrow points right toward Dock
-        }
+        let windowRect = NSRect(x: anchor.point.x, y: anchor.point.y, width: 1, height: 1)
 
         let window = NSWindow(
             contentRect: windowRect,
@@ -189,7 +278,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         window.ignoresMouseEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        return (window, preferredEdge)
+        return (window, anchor.edge)
     }
 
     // MARK: - Show/Hide

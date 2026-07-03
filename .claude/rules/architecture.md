@@ -41,9 +41,30 @@ Set in `HelperBundleManager.updateInfoPlist()` (build time) and `HelperAppDelega
 
 ## NSPopover Positioning
 
-`FloatingPanel.swift` anchors to Dock edge using `visibleFrame` boundary (not mouse position):
-- Compares `NSScreen.main.frame` vs `visibleFrame` to detect Dock side (largest gap = Dock location)
-- Anchors flush to `visibleFrame.minY/minX/maxX` — mouse coordinate only for the axis parallel to the Dock
+`FloatingPanel.swift` anchors via the pure seam `FloatingPanel.resolveAnchor` +
+`DockPrefs.read()` (guarded by `FloatingPanelAnchorTests`), resolved once per open —
+**anchor-and-hold**, never chased (the real Dock's stack popover holds its body when
+magnification collapses; only its tail tracks, which nothing public can replicate).
+
+- **Orientation from the pref, never gap inference (critical)**: `DockPrefs.read()`
+  (synchronize-first, per-open) supplies `orientation`/`magnification`/`tilesize`/`largesize`/
+  `autohide`; `DockLockManager.currentDockEdge()` delegates to it. An auto-hidden Dock reserves
+  **zero** `visibleFrame` on every screen, so the old largest-gap detection had no signal there.
+- **Magnification clearance (critical)**: magnified icons overdraw *above* the reserved
+  `visibleFrame` band, and every readable source (AX tree, CGWindow bounds, `CoreDockGetRect`)
+  reports only the RESTING layout while icons are magnified — so the anchor lifts to the
+  worst-case envelope `largesize + 25` (matches DockAltTab, the only shipping tool that
+  compensates). The clicked icon is under the cursor, so it IS at full largesize. Without this
+  the popover pinned on top of the magnified icon. `largesize ≤ tilesize` → no lift; clearance
+  capped at 40% of the screen axis (defends against `defaults write largesize 512`).
+- **Autohide**: measured gap < 20pt ⇒ fall back to `tilesize + 25` (the click proves the Dock
+  is revealed right now). Resting clearance otherwise uses the *measured* gap, which
+  self-corrects when a crowded Dock auto-shrinks below the `tilesize` pref.
+- **Screen = the one under the mouse** (a Dock click lands on the Dock's display), not
+  `NSScreen.main` (the key window's screen — differs on multi-display, e.g. with Dock Lock).
+- Mouse coordinate only for the axis parallel to the Dock (best icon-centre estimate without
+  AX — which helpers can't get: per-binary TCC grants, regenerated bundles). NSPopover slides
+  its arrow within the preferred edge near screen corners; no lateral compensation needed.
 - `NSVisualEffectView` with `.popover` material for native vibrancy
 - Keyboard navigation via `KeyboardCaptureView` (custom NSView)
 

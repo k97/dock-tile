@@ -681,17 +681,10 @@ final class DockLockManager: ObservableObject {
         return result
     }
 
-    /// Reads the Dock's configured orientation from `com.apple.dock`, matching the
-    /// CFPreferences approach used elsewhere for Dock state.
+    /// Reads the Dock's configured orientation from `com.apple.dock` via the shared
+    /// `DockPrefs` snapshot (synchronize-first), the same source the popover anchoring uses.
     private func currentDockEdge() -> DockEdge {
-        // Flush cfprefsd's cache so we read the orientation written moments ago.
-        CFPreferencesAppSynchronize("com.apple.dock" as CFString)
-        let value = CFPreferencesCopyAppValue("orientation" as CFString, "com.apple.dock" as CFString) as? String
-        switch value {
-        case "left": return .left
-        case "right": return .right
-        default: return .bottom
-        }
+        DockPrefs.read().orientation
     }
 
     // MARK: Displays
