@@ -333,13 +333,41 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add website/public/appcast.xml website/lib/config.ts
-          if ! git diff --staged --quiet; then
-            git commit -m "chore: update website for v${{ steps.version.outputs.VERSION }}"
-            git push origin HEAD:main
-          else
+
+          if git diff --quiet -- website/public/appcast.xml website/lib/config.ts; then
             echo "No website changes to commit"
+            exit 0
           fi
+
+          # This job runs on a detached HEAD at the release tag, so a plain `push HEAD:main`
+          # requires main == tag and is rejected if any commit landed on main during the ~7-min
+          # build — which fails the whole release (regression that broke the first 1.8.3 attempt).
+          # Instead, re-apply the generated website files on top of the LATEST origin/main and push
+          # with retry, so a concurrent main push can't break the release.
+          cp website/public/appcast.xml /tmp/appcast.xml
+          cp website/lib/config.ts /tmp/config.ts
+
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git checkout -f -B main origin/main
+            cp /tmp/appcast.xml website/public/appcast.xml
+            cp /tmp/config.ts website/lib/config.ts
+            git add website/public/appcast.xml website/lib/config.ts
+            if git diff --staged --quiet; then
+              echo "Website already up to date on main; nothing to push"
+              exit 0
+            fi
+            git commit -m "chore: update website for v${{ steps.version.outputs.VERSION }}"
+            if git push origin HEAD:main; then
+              echo "Pushed website updates (attempt $attempt)"
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt) — main advanced; retrying on latest"
+            sleep 5
+          done
+
+          echo "::error::Failed to push website updates to main after 5 attempts"
+          exit 1
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
