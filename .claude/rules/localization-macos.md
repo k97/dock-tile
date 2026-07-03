@@ -41,7 +41,8 @@ Categories: `Button.*`, `Label.*`, `Menu.*`, `Navigation.*`, `Section.*`, `Empty
 ## Testing
 
 ```bash
-defaults write com.docktile.DockTile AppleLanguages "(en-GB)"  # UK
-defaults write com.docktile.DockTile AppleLanguages "(en-US)"  # US
-defaults delete com.docktile.DockTile AppleLanguages           # Reset
+# Dev builds use com.docktile.dev.app; Release uses com.docktile.app
+defaults write com.docktile.dev.app AppleLanguages "(en-GB)"  # UK
+defaults write com.docktile.dev.app AppleLanguages "(en-US)"  # US
+defaults delete com.docktile.dev.app AppleLanguages           # Reset
 ```
