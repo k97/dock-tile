@@ -42,7 +42,8 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `DockTileDetailView.resolveDockAction` / `.dockActionIsEnabled` / `.contentSignature`,
 `HelperBundleManager.shouldPerformDockRemoval`, `DiagnosticsLog.shouldRecord` (verbose dev/prod gate),
 `ConfigurationManager.canCreateNewTile` (sidebar + gate — never deadlock at zero tiles),
-`IconDepthMetrics` (glyph size-ratio cap + glass stroke + Liquid-Glass sheen/shadow/shading, per style, size-gated — shared by the baked `.icns` renderer and the live preview),
+`IconDepthMetrics` (glyph size-ratio cap + glass stroke + Liquid-Glass surface/glyph sheen + shadow + shading, per style, size-gated — shared by the baked `.icns` renderer and the live preview; `glyphSheen` covers symbols 0.55 and emoji 0.18),
+`NSColor/Color.liftedForDarkGlyph` (perceived-luminance floor for the Dark-style tinted glyph — `#5F00FF` visibility) + `TintColor.colors`/`.nsColors(for:iconType:)` (Dark splits SF Symbol vs emoji, guarded by `DarkGlyphTreatmentTests`),
 `AppRelocation.classify` / `.blocksBundleGeneration` / `.requiresRelocation` (translocation → move-to-/Applications decision).
 
 Assertion rules: prefer `#require` over `if`-guarded `#expect`; assert exact values/magnitudes,
