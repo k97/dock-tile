@@ -67,19 +67,20 @@ struct HelperMigrationTriageTests {
     }
 }
 
-// MARK: - Stamp-on-failure invariant
+// MARK: - Stamp-on-success invariant (convergent migration)
 
 private enum BatchTestError: Error { case boom }
 
-@Suite("Helper migration batch (stamp-on-failure)")
+@Suite("Helper migration batch (stamp-on-success)")
 @MainActor
 struct HelperMigrationBatchTests {
 
-    /// THE no-retry-loop invariant: a config that FAILS to regenerate must still be stamped, or
-    /// the migration retries it on every single launch (slowness + log spam). Only the successful
-    /// one is reported as regenerated (so only it gets relaunched).
-    @Test("Every config is stamped even when one fails; only successes count as regenerated")
-    func stampsOnFailure() async {
+    /// THE convergence invariant: a config that FAILS to regenerate must NOT be stamped, so the
+    /// next launch retries it (a transient failure — killed mid-generation, a momentary FS error —
+    /// heals instead of being permanently marked "migrated" while broken). Only successes are
+    /// stamped AND reported as regenerated (so only they get relaunched + trigger the Dock restart).
+    @Test("A failed config is left unstamped and unreported; the successful one is stamped")
+    func stampsOnSuccessOnly() async {
         let ok = DockTileConfiguration(name: "ok-tile")
         let bad = DockTileConfiguration(name: "bad-tile")
         var quitOrder: [String] = []
@@ -92,11 +93,10 @@ struct HelperMigrationBatchTests {
             }
         )
 
-        // Both stamped — the failure did NOT skip its stamp.
-        #expect(Set(outcome.stampedIds) == Set([ok.id, bad.id]))
-        // Only the successful regeneration is reported (the failed one won't be relaunched).
+        // Only the success is stamped — the failure stays stale so it retries next launch.
+        #expect(outcome.stampedIds == [ok.id])
         #expect(outcome.regeneratedIds == [ok.id])
-        // Each helper was quit before its (attempted) regeneration.
+        // Both were still quit before their (attempted) regeneration.
         #expect(Set(quitOrder) == Set([ok.bundleIdentifier, bad.bundleIdentifier]))
     }
 
@@ -112,7 +112,7 @@ struct HelperMigrationBatchTests {
         #expect(outcome.regeneratedIds == [a.id, b.id])
     }
 
-    @Test("All-failure batch still stamps everything, regenerates nothing")
+    @Test("All-failure batch stamps and regenerates nothing (everything retries next launch)")
     func allFail() async {
         let a = DockTileConfiguration(name: "a")
         let b = DockTileConfiguration(name: "b")
@@ -120,7 +120,7 @@ struct HelperMigrationBatchTests {
         let outcome = await HelperMigrationManager.runRegenerationBatch(
             [a, b], quit: { _ in }, regenerate: { _ in throw BatchTestError.boom })
 
-        #expect(Set(outcome.stampedIds) == Set([a.id, b.id]))
+        #expect(outcome.stampedIds.isEmpty)
         #expect(outcome.regeneratedIds.isEmpty)
     }
 }

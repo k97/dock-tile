@@ -118,11 +118,17 @@ Helper bundles have `CFBundleURLTypes` stripped from Info.plist (prevents helper
 
 `HelperMigrationManager` detects stale helper bundles on main app launch and batch-regenerates them with a single Dock restart.
 
-**Version tracking**: `helperAppVersion` (v6 schema field) stamps which app version built each helper. `nil` = pre-migration, treated as stale.
+**Version tracking**: `helperAppVersion` (v6 schema field) stamps which app version built each helper. `nil` = pre-migration, treated as stale. **This per-tile field is the source of truth**; `UserDefaultsKeys.lastMigratedAppVersion` is only a fast-path/bookkeeping marker.
 
-**Flow**: Check `UserDefaultsKeys.lastMigratedAppVersion` → find stale visible helpers → quit → regenerate bundle in-place via `HelperBundleManager.regenerateHelperBundle()` → single Dock restart → relaunch all.
+**Flow**: classify every tile (pure `classifyForMigration` seam) → stamp the confident no-rebuild ones → quit + regenerate stale visible+pinned helpers via `regenerateHelperBundle()` → single Dock restart → relaunch the regenerated ones.
 
-**Edge cases**: Missing bundle on disk → stamp and skip. Not in Dock → stamp and skip. Regeneration fails → log error, stamp version anyway (no retry loop). Already migrated → immediate return.
+**Convergent, not one-shot (critical)**: migration does **not** hard-early-return on `lastMigrated == currentVersion`. It re-derives per-tile state from `helperAppVersion` each launch, so a tile left stale by a previous run **retries until it succeeds** (the loop is cheap when all are current — each is `skipUpToDate` with no probe). This fixes the "some very-first bundles never migrated" class: a single transient miss no longer stamps a tile "migrated" forever.
+
+- **Reliable reads (critical)**: every Dock read (`findInDock`/`findDockIndex`/`isInDock`/`addToDock`) calls `CFPreferencesAppSynchronize("com.apple.dock")` **before** `CFPreferencesCopyAppValue` — reading another app's domain can return a cold/stale cfprefsd cache (notably right after login), which used to make `findInDock` miss genuinely-pinned tiles and skip them.
+- **Stamp on SUCCESS only (`runRegenerationBatch`)**: a failed regeneration is left **unstamped** so it retries next launch (heals a killed-mid-generation / transient-FS failure), reversing the old "stamp anyway". Failures never restart the Dock (only successes do), so a persistently-broken tile can't churn it.
+- **Translocation pre-flight**: if `AppRelocationManager.canGenerateBundles` is false, the regenerate batch is **skipped entirely** (not force-quit-then-fail) and tiles are left stale to retry once the app is moved — the launch relocation nudge asks the user.
+- **Completion**: `lastMigratedAppVersion` is stamped only when **no visible tile remains stale** (fully converged); otherwise it's left so the next launch retries the remainder.
+- **Edge cases**: not visible → `stampOnly` (rebuilds via `installHelper` when next shown). Visible + no bundle on disk → `stampOnly` (repair is the deferred version-independent self-heal, not the normal pass).
 
 ## Missing App Detection
 

@@ -27,14 +27,12 @@ final class HelperMigrationManager {
     func migrateIfNeeded() async {
         let currentVersion = HelperBundleManager.currentAppVersion
 
-        // Already migrated for this version?
         let lastMigrated = UserDefaults.standard.string(forKey: UserDefaultsKeys.lastMigratedAppVersion)
-        if lastMigrated == currentVersion {
-            return
-        }
 
-        print("[Migration] Checking helpers for v\(currentVersion) (last migrated: \(lastMigrated ?? "never"))")
-
+        // NOTE: no hard early-return on `lastMigrated == currentVersion`. Migration is convergent —
+        // it re-derives per-tile state from `helperAppVersion` every launch, so a tile left stale by
+        // a previously failed or blocked run retries until it succeeds. The loop below is cheap when
+        // everything is already current (each tile is skipUpToDate with no disk/Dock probe).
         let helperManager = HelperBundleManager.shared
         var staleBundleConfigs: [DockTileConfiguration] = []
         var configsToStamp: [UUID] = []
@@ -67,29 +65,57 @@ final class HelperMigrationManager {
             }
         }
 
-        // Stamp configs that don't need regeneration
+        // Converged already for this version — nothing to stamp or rebuild. Cheap fast-path.
+        if configsToStamp.isEmpty && staleBundleConfigs.isEmpty {
+            if lastMigrated != currentVersion {
+                UserDefaults.standard.set(currentVersion, forKey: UserDefaultsKeys.lastMigratedAppVersion)
+            }
+            return
+        }
+
+        print("[Migration] Checking helpers for v\(currentVersion) (last migrated: \(lastMigrated ?? "never"))")
+
+        // Stamp the confident no-rebuild tiles (hidden / no bundle / not pinned — each rebuilds via
+        // installHelper when next shown, so stamping current is safe).
         for id in configsToStamp {
             stampVersion(id, version: currentVersion)
         }
 
-        // Regenerate stale helpers
+        // Regenerate stale helpers — but only if we CAN. A translocated app can't copy itself, so
+        // the batch would force-quit each helper and then fail; defer it and leave the tiles stale
+        // so they retry once the app is relocated (the launch relocation nudge asks the user to
+        // move). Skipping here also avoids re-quitting helpers every launch on a doomed machine.
         if !staleBundleConfigs.isEmpty {
-            print("[Migration] Regenerating \(staleBundleConfigs.count) helper(s)...")
-            DiagnosticsLog.shared.log("migration", "Regenerating \(staleBundleConfigs.count) stale helper(s) for v\(currentVersion)")
-            await DiagnosticsLog.shared.measure("Migrate \(staleBundleConfigs.count) stale helper(s) → v\(currentVersion)") {
-                await regenerateBatch(staleBundleConfigs, currentVersion: currentVersion)
+            if AppRelocationManager.shared.canGenerateBundles {
+                print("[Migration] Regenerating \(staleBundleConfigs.count) helper(s)...")
+                DiagnosticsLog.shared.log("migration", "Regenerating \(staleBundleConfigs.count) stale helper(s) for v\(currentVersion)")
+                await DiagnosticsLog.shared.measure("Migrate \(staleBundleConfigs.count) stale helper(s) → v\(currentVersion)") {
+                    await regenerateBatch(staleBundleConfigs, currentVersion: currentVersion)
+                }
+            } else {
+                DiagnosticsLog.shared.log("migration", "Migration deferred: bundle generation blocked (translocated) — \(staleBundleConfigs.count) helper(s) left stale, will retry once relocated")
             }
         }
 
-        // Save and mark migration complete
         configManager.saveAllConfigurations()
-        UserDefaults.standard.set(currentVersion, forKey: UserDefaultsKeys.lastMigratedAppVersion)
+
+        // Mark the version fully migrated ONLY when no visible tile remains stale (every
+        // regeneration succeeded). If some failed or were blocked, leave the marker so the next
+        // launch retries the remainder — correctness is the per-tile helperAppVersion, not this key.
+        let stillStale = configManager.configurations.contains {
+            $0.isVisibleInDock && $0.helperAppVersion != currentVersion
+        }
+        if !stillStale {
+            UserDefaults.standard.set(currentVersion, forKey: UserDefaultsKeys.lastMigratedAppVersion)
+        }
+
         AnalyticsService.shared.log(.helperMigrationRun, [
             "from_version": lastMigrated ?? "none",
             "to_version": currentVersion,
-            "stale_count": staleBundleConfigs.count
+            "stale_count": staleBundleConfigs.count,
+            "still_stale": stillStale ? 1 : 0
         ])
-        print("[Migration] Complete for v\(currentVersion)")
+        print("[Migration] Complete for v\(currentVersion) (stillStale: \(stillStale))")
     }
 
     /// On-demand rebuild + relaunch of the given helpers with a single Dock restart. Used when the
@@ -142,8 +168,11 @@ final class HelperMigrationManager {
             }
         )
 
-        // Stamp EVERY config — successes and failures alike — so a broken helper isn't retried
-        // on every launch (see `runRegenerationBatch`).
+        // Stamp only the configs that actually regenerated. A failed regeneration is left stale so
+        // the next launch retries it (convergent migration) — a transient failure (killed
+        // mid-generation, a momentary FS error) heals instead of being permanently stamped
+        // "migrated" while broken. Retries are cheap and never restart the Dock (only successes do,
+        // below), so a persistently-broken tile can't churn the Dock.
         for id in outcome.stampedIds {
             stampVersion(id, version: currentVersion)
         }
@@ -171,11 +200,13 @@ final class HelperMigrationManager {
         var regeneratedIds: [UUID]
     }
 
-    /// Drives a regeneration batch with injected side effects, so the **stamp-on-failure**
-    /// invariant is unit-testable without touching real bundles or the Dock: each config is
-    /// quit, then regenerated; whether regeneration succeeds or throws, the config is stamped.
-    /// Only the configs whose `regenerate` returned without throwing are reported as regenerated.
-    /// (MainActor-isolated via the enclosing class — the injected closures capture MainActor state.)
+    /// Drives a regeneration batch with injected side effects, so the **stamp-on-success**
+    /// invariant is unit-testable without touching real bundles or the Dock: each config is quit,
+    /// then regenerated; a config is stamped (and reported regenerated) ONLY if `regenerate`
+    /// returned without throwing. A failure is left unstamped so `migrateIfNeeded` retries it on a
+    /// later launch (convergent migration) rather than permanently marking a broken helper
+    /// "migrated". (MainActor-isolated via the enclosing class — the injected closures capture
+    /// MainActor state.)
     static func runRegenerationBatch(
         _ configs: [DockTileConfiguration],
         quit: (String) async -> Void,
@@ -189,10 +220,11 @@ final class HelperMigrationManager {
             do {
                 try await regenerate(config)
                 regenerated.append(config.id)
+                stamped.append(config.id)  // stamp ONLY on success
             } catch {
-                // Swallowed here on purpose: the caller logs/records. The stamp below STILL runs.
+                // Left unstamped on purpose: the caller logs/records, and the tile stays stale so
+                // a future launch retries it. No Dock restart happens for a failure (see caller).
             }
-            stamped.append(config.id)  // INVARIANT: always stamp, success or failure.
         }
 
         return BatchOutcome(stampedIds: stamped, regeneratedIds: regenerated)

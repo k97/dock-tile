@@ -768,6 +768,10 @@ final class HelperBundleManager {
     /// Check if app is already in Dock (by path)
     func isInDock(at appPath: URL) -> Bool {
         let dockAppId = "com.apple.dock" as CFString
+        // Force cfprefsd to pull the latest on-disk state before reading ANOTHER app's domain —
+        // a cold/stale cache (notably right after login, when the Dock has just repopulated) would
+        // otherwise miss genuinely-pinned tiles and silently skip them during migration.
+        CFPreferencesAppSynchronize(dockAppId)
         guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             return false
         }
@@ -789,6 +793,10 @@ final class HelperBundleManager {
     /// Uses CFPreferences API to read from cfprefsd cache (not stale file on disk)
     func findDockIndex(bundleId: String) -> Int? {
         let dockAppId = "com.apple.dock" as CFString
+        // Force cfprefsd to pull the latest on-disk state before reading ANOTHER app's domain —
+        // a cold/stale cache (notably right after login, when the Dock has just repopulated) would
+        // otherwise miss genuinely-pinned tiles and silently skip them during migration.
+        CFPreferencesAppSynchronize(dockAppId)
         guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             return nil
         }
@@ -823,6 +831,10 @@ final class HelperBundleManager {
     /// Uses CFPreferences API to read from cfprefsd cache (not stale file on disk)
     func findInDock(bundleId: String) -> URL? {
         let dockAppId = "com.apple.dock" as CFString
+        // Force cfprefsd to pull the latest on-disk state before reading ANOTHER app's domain —
+        // a cold/stale cache (notably right after login, when the Dock has just repopulated) would
+        // otherwise miss genuinely-pinned tiles and silently skip them during migration.
+        CFPreferencesAppSynchronize(dockAppId)
         guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             return nil
         }
@@ -865,6 +877,8 @@ final class HelperBundleManager {
 
         // Read current persistent-apps using CFPreferences
         let dockAppId = "com.apple.dock" as CFString
+        // Fresh read before mutating persistent-apps (avoid a stale-cache read-modify-write).
+        CFPreferencesAppSynchronize(dockAppId)
         guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             print("   ⚠️ Could not read persistent-apps from CFPreferences")
             return
@@ -931,6 +945,8 @@ final class HelperBundleManager {
 
         // Read current persistent-apps using CFPreferences
         let dockAppId = "com.apple.dock" as CFString
+        // Fresh read before mutating persistent-apps (avoid a stale-cache read-modify-write).
+        CFPreferencesAppSynchronize(dockAppId)
         guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             print("   ⚠️ Could not read persistent-apps from CFPreferences")
             return false
@@ -1029,6 +1045,8 @@ final class HelperBundleManager {
         // Read current persistent-apps using CFPreferences (industry standard approach)
         // This ensures we're reading from cfprefsd cache, not stale file on disk
         let dockAppId = "com.apple.dock" as CFString
+        // Fresh read before mutating persistent-apps (avoid a stale-cache read-modify-write).
+        CFPreferencesAppSynchronize(dockAppId)
         guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             print("   ⚠️ Could not read persistent-apps from CFPreferences")
             return
@@ -1088,6 +1106,8 @@ final class HelperBundleManager {
 
         // Read current persistent-apps using CFPreferences
         let dockAppId = "com.apple.dock" as CFString
+        // Fresh read before mutating persistent-apps (avoid a stale-cache read-modify-write).
+        CFPreferencesAppSynchronize(dockAppId)
         guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
             print("   ⚠️ Could not read persistent-apps from CFPreferences")
             return
