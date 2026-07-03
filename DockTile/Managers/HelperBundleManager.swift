@@ -1064,6 +1064,24 @@ final class HelperBundleManager {
         }
     }
 
+    /// Re-seat a pinned helper's Dock entry — remove it from `persistent-apps` and re-add it at the
+    /// same index — WITHOUT restarting the Dock, so a *subsequent* single restart makes the Dock load
+    /// a FRESH icon for it. No-op if the tile isn't pinned.
+    ///
+    /// WHY (critical): after an **in-place** regenerate, `touchBundle` (mtime bump + `lsregister`)
+    /// does NOT invalidate the Dock's per-entry icon cache — the Dock keeps drawing the OLD render
+    /// for the unchanged persistent-apps entry even though `AppIcon.icns` on disk is new. Only
+    /// re-adding the entry (which mints a new GUID) forces a fresh icon load. This is exactly why
+    /// `installHelper` (remove + re-add) shows the new icon immediately, while the migration/self-heal
+    /// batch — which regenerated in place and only restarted the Dock — kept showing stale icons
+    /// until the user manually re-configured each tile.
+    func refreshDockEntry(for config: DockTileConfiguration) {
+        guard findInDock(bundleId: config.bundleIdentifier) != nil else { return }
+        let index = findDockIndex(bundleId: config.bundleIdentifier)
+        guard removeFromDockPlist(bundleId: config.bundleIdentifier) else { return }
+        addToDock(at: helperPath(for: config), atIndex: index)
+    }
+
     /// Add app to Dock without launching it (only if not already present)
     /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
     /// - Parameters:

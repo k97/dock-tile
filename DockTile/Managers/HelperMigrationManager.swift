@@ -241,6 +241,16 @@ final class HelperMigrationManager {
         let regeneratedConfigs = configs.filter { outcome.regeneratedIds.contains($0.id) }
         guard !regeneratedConfigs.isEmpty else { return }
 
+        // Re-seat each regenerated tile's Dock entry BEFORE the restart so the Dock loads FRESH
+        // icons. An in-place regenerate + touchBundle leaves the Dock serving its cached icon;
+        // re-adding the persistent-apps entry (new GUID) is what forces the refresh — the same
+        // mechanism installHelper uses, batched here into the single restart below. Without this the
+        // new icons regenerate on disk but the Dock keeps showing the old render until the tile is
+        // manually re-configured.
+        for config in regeneratedConfigs {
+            helperManager.refreshDockEntry(for: config)
+        }
+
         // Single Dock restart for the whole batch
         print("[Migration] Restarting Dock for \(regeneratedConfigs.count) updated helper(s)")
         helperManager.performDockRestart()
