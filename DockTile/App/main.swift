@@ -69,8 +69,11 @@ if CommandLine.arguments.contains(LoginTileSpawner.flag) {
     AnalyticsService.shared.configure()
     AnalyticsService.shared.log(.appLaunched)
 
-    DiagnosticsLog.shared.prepareOnLaunch()  // main-app-only: trim shared log to the last hour
-    DiagnosticsLog.shared.log("lifecycle", "Main app launched — v\(AppEnvironment.appVersion) (\(AppEnvironment.current))")
+    // Skip under a test host so a `xcodebuild test` doesn't trim/pollute the user's live dev log.
+    if !AppEnvironment.isRunningTests {
+        DiagnosticsLog.shared.prepareOnLaunch()  // main-app-only: trim shared log to the last hour
+        DiagnosticsLog.shared.log("lifecycle", "Main app launched — v\(AppEnvironment.appVersion) (\(AppEnvironment.current))")
+    }
 
     DockTileApp.main()
 }

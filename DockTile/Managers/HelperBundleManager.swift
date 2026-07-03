@@ -82,8 +82,10 @@ final class HelperBundleManager {
         AnalyticsService.shared.setBreadcrumb(config.bundleIdentifier, for: "installing_bundle_id")
         AnalyticsService.shared.setBreadcrumb("start", for: "install_step")
 
+        // Display name (CFBundleName) stays the clean human name; the FOLDER may be disambiguated
+        // when another tile already owns `<name>.app` (same-name tiles are allowed).
         let appName = sanitizeAppName(config.name)
-        let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
+        let helperPath = preferredHelperPath(for: config)
 
         // Check if a helper with this bundle ID already exists (possibly with different name)
         let existingHelperPath = findExistingHelper(bundleId: config.bundleIdentifier)
@@ -335,15 +337,45 @@ final class HelperBundleManager {
         return findExistingHelper(bundleId: config.bundleIdentifier) != nil
     }
 
-    /// Get the path to a helper bundle (finds by bundle ID, or returns expected path)
+    /// Get the path to a helper bundle (finds by bundle ID, or returns the path a new one would use).
     func helperPath(for config: DockTileConfiguration) -> URL {
-        // First try to find existing helper by bundle ID
+        // First try to find existing helper by bundle ID (handles renames + prior disambiguation).
         if let existingPath = findExistingHelper(bundleId: config.bundleIdentifier) {
             return existingPath
         }
-        // Otherwise return the expected path based on name
-        let appName = sanitizeAppName(config.name)
-        return helperDirectory.appendingPathComponent("\(appName).app")
+        return preferredHelperPath(for: config)
+    }
+
+    /// The folder a NEW (or renamed) helper should be written to. Helpers are stored by display
+    /// name (`<name>.app`), but two tiles legitimately can share a name — without disambiguation
+    /// the second install writes over the first's `<name>.app`, orphaning it (broken Dock icon,
+    /// "visible but never pinned"). So: keep the clean name when the path is free or already this
+    /// tile's; otherwise suffix with the tile's short id (`<name>-<shortId>.app`). Identity on disk
+    /// stays the unique bundle ID — only the folder name is disambiguated.
+    private func preferredHelperPath(for config: DockTileConfiguration) -> URL {
+        let base = sanitizeAppName(config.name)
+        let cleanPath = helperDirectory.appendingPathComponent("\(base).app")
+        let takenByOther = FileManager.default.fileExists(atPath: cleanPath.path)
+            && bundleId(atHelperPath: cleanPath) != config.bundleIdentifier
+        let folder = Self.helperFolderName(
+            baseName: base,
+            cleanNameTakenByOther: takenByOther,
+            shortId: String(config.id.uuidString.prefix(8))
+        )
+        return helperDirectory.appendingPathComponent(folder)
+    }
+
+    /// Pure rule for the on-disk folder name of a helper bundle. Clean `<name>.app` unless a
+    /// *different* tile already owns it, in which case a short-id suffix keeps same-named tiles
+    /// from colliding. Extracted so the regression is unit-testable without FileManager.
+    nonisolated static func helperFolderName(baseName: String, cleanNameTakenByOther: Bool, shortId: String) -> String {
+        cleanNameTakenByOther ? "\(baseName)-\(shortId).app" : "\(baseName).app"
+    }
+
+    /// The CFBundleIdentifier recorded in a helper bundle on disk (nil if absent/unreadable).
+    private func bundleId(atHelperPath path: URL) -> String? {
+        let infoPlist = path.appendingPathComponent("Contents/Info.plist")
+        return NSDictionary(contentsOf: infoPlist)?["CFBundleIdentifier"] as? String
     }
 
     /// Remove tile from Dock only (without deleting bundle)
@@ -1142,7 +1174,7 @@ final class HelperBundleManager {
     func regenerateHelperBundle(for config: DockTileConfiguration) async throws {
         try verifyCanGenerateBundles()
         let appName = sanitizeAppName(config.name)
-        let helperPath = helperDirectory.appendingPathComponent("\(appName).app")
+        let helperPath = preferredHelperPath(for: config)
 
         // If existing helper has a different name (was renamed), find by bundle ID
         let existingHelperPath = findExistingHelper(bundleId: config.bundleIdentifier)

@@ -89,6 +89,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Main app: Use regular mode to show dock icon
         NSApp.setActivationPolicy(.regular)
 
+        // Under a test host the app launches against the user's LIVE dev data. Stay inert — none of
+        // the launch side effects below (Dock Lock tap, login-item registration, Smart Add
+        // observing, /Applications relocation nudge) should run, or a `xcodebuild test` mutates real
+        // state. Helper migration (which once corrupted a tile mid-generation) is likewise gated at
+        // its own call sites. See AppEnvironment.isRunningTests.
+        guard !AppEnvironment.isRunningTests else {
+            print("🧪 Running under test host — skipping main-app launch side effects")
+            return
+        }
+
         // Dock Lock: resume the dock-pinning engine if it was previously enabled.
         // Controls live in the Settings window (⌘,).
         DockLockManager.shared.startIfEnabled()

@@ -51,6 +51,16 @@ enum AppEnvironment {
     /// Analytics/Crashlytics role label for the current process.
     static var appRole: String { isHelper ? "helper" : "main" }
 
+    /// Whether the process is running inside an XCTest / Swift Testing host. `xcodebuild test`
+    /// injects the test bundle into the app host (`TEST_HOST = Dock Tile Dev.app`), so the host's
+    /// normal launch path runs against the user's LIVE dev data. Gate launch-time side effects
+    /// (helper migration/regeneration, Dock reconcile + watch, login-item registration, Smart Add
+    /// observing) on `!isRunningTests` so a test run can never mutate or corrupt real tiles.
+    static let isRunningTests: Bool = {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || NSClassFromString("XCTestCase") != nil
+    }()
+
     /// Marketing version string (e.g., "1.2.1").
     static let appVersion: String = {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"

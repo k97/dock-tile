@@ -14,6 +14,16 @@ Users create Helper Bundles (copies of main app) stored in `~/Library/Applicatio
 5. Code signs with ad-hoc signature
 6. Saves/restores Dock position, restarts Dock, launches helper
 
+**Same-name disambiguation (critical)**: helpers are stored on disk by display name
+(`<name>.app`), but two tiles may legitimately share a name. Identity is the unique bundle ID
+(`<prefix>.<UUID>`), not the folder — so the write path resolves through `preferredHelperPath`:
+clean `<name>.app` when free or already this tile's, else `<name>-<shortId>.app` (pure
+`HelperBundleManager.helperFolderName` seam, guarded by `HelperFolderNameTests`). Without this the
+second same-named install overwrote the first's `<name>.app` and orphaned it — a broken Dock icon
+plus permanent "visible but never pinned" churn (its bundle ID no longer had a bundle on disk).
+`findExistingHelper(bundleId:)` still locates the bundle by ID for update/regenerate, so renames and
+prior disambiguation are handled; `CFBundleName` keeps the clean human name regardless of folder.
+
 **Runtime** (`HelperAppDelegate`): Sets activation policy based on Ghost/App mode, shows NSPopover on click.
 
 **Deletion** (`HelperBundleManager.uninstallHelper`): Quits helper → removes from Dock plist → deletes bundle → restarts Dock. Uses `async Task.sleep` (not sync `Thread.sleep`).

@@ -101,7 +101,10 @@ final class ConfigurationManager: ObservableObject {
         // tile's config for the popover — they must NOT watch or reconcile the Dock, or every
         // running helper would redundantly sync and race the main app on the shared config
         // file and the Dock plist.
-        guard !AppEnvironment.isHelper else { return }
+        // Also inert under a test host — a `xcodebuild test` runs the app against the user's live
+        // dev Dock plist and config; watching/reconciling there would restart the Dock and rewrite
+        // real tiles. (Tests that exercise reconciliation call the seams directly.)
+        guard !AppEnvironment.isHelper, !AppEnvironment.isRunningTests else { return }
 
         // Sync dock visibility on launch — reconcile both directions, including removing
         // any tiles left stuck in the Dock that the config says should be hidden.

@@ -127,3 +127,44 @@ struct HelperIconStripTests {
         #expect(exists(bundle, "Contents/Resources") == true)
     }
 }
+
+// MARK: - Helper folder disambiguation (same-name tiles must not collide)
+
+@Suite("Helper folder name")
+struct HelperFolderNameTests {
+
+    @Test("Clean name when the path is free / already this tile's")
+    func cleanNameWhenUncontested() {
+        #expect(HelperBundleManager.helperFolderName(
+            baseName: "Ship", cleanNameTakenByOther: false, shortId: "00358962") == "Ship.app")
+    }
+
+    @Test("Disambiguates with the short id when another tile owns the clean name")
+    func disambiguatesOnCollision() {
+        // Two legitimately same-named tiles: the second must not clobber the first's Ship.app.
+        #expect(HelperBundleManager.helperFolderName(
+            baseName: "Ship", cleanNameTakenByOther: true, shortId: "52300A6C") == "Ship-52300A6C.app")
+    }
+
+    @Test("Different tiles sharing a name resolve to different folders")
+    func sameNameDistinctFolders() {
+        let first = HelperBundleManager.helperFolderName(
+            baseName: "Ship", cleanNameTakenByOther: false, shortId: "00358962")
+        let second = HelperBundleManager.helperFolderName(
+            baseName: "Ship", cleanNameTakenByOther: true, shortId: "52300A6C")
+        #expect(first != second)
+    }
+}
+
+// MARK: - Test-host guard
+
+@Suite("Test environment detection")
+struct TestEnvironmentTests {
+
+    @Test("isRunningTests is true inside the test host (gates launch-time mutators)")
+    func detectsTestHost() {
+        // If this ever reads false, the app's launch side effects (helper migration, Dock
+        // reconcile/watch, login-item registration) would run against the user's live dev data.
+        #expect(AppEnvironment.isRunningTests == true)
+    }
+}
