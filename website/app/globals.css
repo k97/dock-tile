@@ -124,3 +124,259 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   DockTile v2 design system — dark glass + grain + emerald
+   Reference: .superdesign/design-system.md
+--------------------------------------------------------------------------- */
+
+/* The v2 marketing design is a fixed light/dark rhythm — pin the page
+   backdrop to the light zinc so a dark system theme can't leak a black
+   strip above/below the rounded section shells. */
+html,
+body {
+  background: #f4f4f5;
+}
+
+:root {
+  --emerald: #34d399;
+  --radius-major: 2.5rem;
+  --ease-entry: cubic-bezier(0.16, 1, 0.3, 1); /* spec: fade-in-up entries */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1); /* snappy UI interactions */
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Film grain over dark sections — prevents banding, adds analog depth */
+.grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.15;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Glass recipes — every glass element carries the 1px white/10 edge.
+   NOTE: write only the standard `backdrop-filter`; the build (Lightning CSS)
+   adds vendor prefixes. Hand-writing `-webkit-backdrop-filter` made the
+   compiler drop the unprefixed property, so Chrome rendered no blur. */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.glass-nav {
+  background: rgba(9, 9, 11, 0.45);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    backdrop-filter 300ms ease,
+    background-color 300ms ease;
+}
+/* 3× blur once the page scrolls under the floating nav */
+.glass-nav--scrolled {
+  background: rgba(9, 9, 11, 0.6);
+  backdrop-filter: blur(72px) saturate(180%);
+}
+
+/* Continuous-corner tile approximation (superellipse when supported) */
+.squircle {
+  border-radius: 22.5%;
+  aspect-ratio: 1 / 1;
+}
+@supports (corner-shape: superellipse(2)) {
+  .squircle {
+    corner-shape: superellipse(2);
+  }
+}
+
+/* macOS popover surface (web recreation of NSPopover vibrancy) */
+.popover-surface {
+  background: rgba(246, 246, 248, 0.82);
+  backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.28),
+    0 30px 60px rgba(0, 0, 0, 0.25);
+}
+
+/* Entry reveal — fade-in-up, staggered via --reveal-delay */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.reveal {
+  opacity: 0;
+  animation: reveal-up 0.8s var(--ease-entry) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.8s var(--ease-entry),
+    transform 0.8s var(--ease-entry);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------------------------------------------------------------------------
+   Golden Gate aurora — macOS-wallpaper-style gradient motion.
+   Fully blurred blobs drifting behind dark-section content; the section's
+   own gradient overlay + grain sit on top so the glass language survives.
+--------------------------------------------------------------------------- */
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Match the host section's rounded corners and keep the screen-blended
+     blobs inside this layer — without isolation the blend escapes the
+     border-radius clip and paints square corners over the section. */
+  border-radius: inherit;
+  isolation: isolate;
+}
+.aurora__blob {
+  position: absolute;
+  width: 55vw;
+  height: 55vw;
+  min-width: 480px;
+  min-height: 480px;
+  border-radius: 9999px;
+  filter: blur(110px);
+  mix-blend-mode: screen;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+/* Golden Gate at dusk: international orange, golden amber, dusk magenta, deep indigo */
+.aurora__blob--orange {
+  top: -18%;
+  left: -12%;
+  background: radial-gradient(circle at 40% 40%, rgba(255, 107, 53, 0.5), transparent 65%);
+  animation: aurora-a 26s var(--ease-in-out-strong) infinite alternate;
+}
+.aurora__blob--amber {
+  top: 4%;
+  right: -14%;
+  background: radial-gradient(circle at 55% 45%, rgba(255, 179, 71, 0.38), transparent 65%);
+  animation: aurora-b 32s var(--ease-in-out-strong) infinite alternate;
+}
+.aurora__blob--magenta {
+  bottom: -22%;
+  left: 14%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 84, 130, 0.32), transparent 65%);
+  animation: aurora-c 38s var(--ease-in-out-strong) infinite alternate;
+}
+.aurora__blob--indigo {
+  bottom: -8%;
+  right: 6%;
+  background: radial-gradient(circle at 50% 55%, rgba(76, 29, 149, 0.45), transparent 68%);
+  animation: aurora-a 44s var(--ease-in-out-strong) infinite alternate-reverse;
+}
+@keyframes aurora-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(14vw, 8vh, 0) scale(1.25);
+  }
+}
+@keyframes aurora-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.15);
+  }
+  to {
+    transform: translate3d(-16vw, 12vh, 0) scale(0.9);
+  }
+}
+@keyframes aurora-c {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+  to {
+    transform: translate3d(10vw, -10vh, 0) scale(1.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora__blob {
+    animation: none;
+  }
+}
+
+/* Dock demo popover motion — 200ms in (matches the app's 0.25s), faster out */
+@keyframes dock-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes dock-pop-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+}
+@keyframes dock-app-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce-subtle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s infinite ease-in-out;
+}
+
+/* Pressables acknowledge the press */
+.pressable {
+  transition: transform 160ms var(--ease-out-strong);
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-on-scroll {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .animate-bounce-subtle {
+    animation: none;
+  }
+}

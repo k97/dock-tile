@@ -16,9 +16,39 @@ export function slugify(text: string): string {
     .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
 }
 
+// v2 marketing copy — only spelling-sensitive strings vary by locale
+const marketingBase = {
+  heroEyebrow: "For macOS 26+",
+  heroHeadlineA: "Your Dock,",
+  heroHeadlineB: "finally organised.",
+  heroSub:
+    "iOS-style folders for the Mac. Group apps into beautiful tiles and launch anything in one click.",
+  tryIt: "Try it — click a tile",
+  smartAddEyebrow: "Features / 01",
+  smartAddTitle: "Tiles that build themselves.",
+  smartAddBody:
+    "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Suggestions come from what you actually use.",
+  smartAddPrivacy: "Learned on your Mac. Never leaves your device.",
+  dockLockEyebrow: "Features / 02",
+  dockLockTitle: "The Dock stays put.",
+  dockLockBody:
+    "Stop the Dock from jumping between screens on multi-display setups. It stays on the display you choose — always.",
+  bentoTitle: "Built for the power user.",
+  ctaTitle: "Get organised today.",
+  ctaButton: "Download Dock Tile",
+  ctaMetaFree: "Free download",
+} as const;
+
+const marketingUS = {
+  ...marketingBase,
+  heroHeadlineB: "finally organized.",
+  ctaTitle: "Get organized today.",
+} as const;
+
 // Content that differs between locales
 export const localisedContent = {
   "en-AU": {
+    marketing: marketingBase,
     // Hero
     tagline: "A native macOS launcher, built for the Dock",
     description:
@@ -122,6 +152,7 @@ export const localisedContent = {
   },
 
   "en-GB": {
+    marketing: marketingBase,
     // Hero
     tagline: "A native macOS launcher, built for the Dock",
     description:
@@ -225,6 +256,7 @@ export const localisedContent = {
   },
 
   "en-US": {
+    marketing: marketingUS,
     // Hero
     tagline: "A native macOS launcher, built for the Dock",
     description:

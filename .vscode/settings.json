@@ -1,0 +1,21 @@
+{
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    ".next": true,
+    "node_modules": true,
+    "package-lock.json": true,
+    "yarn.lock": true
+  },
+  "workbench.colorTheme": "Darkerized Better Selenized Light",
+  "editor.fontSize": 13.5,
+  "editor.lineHeight": 1.92,
+  "editor.suggestLineHeight": 0,
+  "terminal.integrated.lineHeight": 1.25,
+}
