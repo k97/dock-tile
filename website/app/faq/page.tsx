@@ -73,7 +73,7 @@ export default function FAQPage() {
   return (
     <main className="bg-zinc-100">
       {/* Dark hero band */}
-      <section className="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-black px-6 pb-16 pt-28 text-center md:mx-4 md:mt-4 md:pb-20 md:pt-36">
+      <section data-nav-tone="dark" className="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-black px-6 pb-16 pt-28 text-center md:mx-4 md:mt-4 md:pb-20 md:pt-36">
         <div className="grain" />
         <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-900/60" />
         <div className="relative z-10">
@@ -84,7 +84,7 @@ export default function FAQPage() {
             FAQ
           </span>
           <h1
-            className="reveal text-4xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-6xl"
+            className="reveal text-3xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-5xl"
             style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
           >
             Questions,
@@ -127,12 +127,12 @@ export default function FAQPage() {
       </section>
 
       {/* Compact dark CTA band */}
-      <section className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 md:mx-4 md:mb-4">
+      <section data-nav-tone="dark" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 md:mx-4 md:mb-4">
         <div className="grain" />
         <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-950/40" />
         <Reveal className="relative z-10 flex flex-col items-center justify-between gap-8 px-8 py-16 md:flex-row md:px-12">
           <div className="text-center md:text-left">
-            <h2 className="mb-2 text-2xl font-semibold tracking-[-0.05em] leading-[1.05] text-white md:text-3xl">
+            <h2 className="mb-2 text-xl font-semibold tracking-[-0.05em] leading-[1.05] text-white md:text-2xl">
               Still stuck?
             </h2>
             <p className="text-sm font-light text-white/50">

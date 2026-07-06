@@ -19,16 +19,28 @@ export function slugify(text: string): string {
 // v2 marketing copy — only spelling-sensitive strings vary by locale
 const marketingBase = {
   heroEyebrow: "For macOS 26+",
-  heroHeadlineA: "Your Dock,",
-  heroHeadlineB: "finally organised.",
+  heroHeadlineA: "Group your apps.",
+  heroHeadlineB: "Declutter your Dock.",
   heroSub:
     "iOS-style folders for the Mac. Group apps into beautiful tiles and launch anything in one click.",
   tryIt: "Try it — click a tile",
-  smartAddEyebrow: "Features / 01",
+  tilesEyebrow: "Features / 01",
+  tilesTitle: "Customised tiles with the simple editor.",
+  tilesBody:
+    "Give every group of apps a face you'll spot at a glance. Pick a colour, then a custom SF Symbol from Apple's library or any emoji — and fine-tune its size and weight — all in one simple editor.",
+  tilesCaption: "Colour, symbols, emoji, size & weight",
+  popoverEyebrow: "Features / 02",
+  popoverTitle: "Grid or list. Sized your way.",
+  popoverBody:
+    "Each tile opens a native popover — an icon grid like an iOS folder, or a compact list. Appearance controls tune size, spacing and labels for every tile at once, and running tiles pick the change up immediately.",
+  powerUserEyebrow: "Power user",
   smartAddTitle: "Tiles that build themselves.",
   smartAddBody:
-    "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Suggestions come from what you actually use.",
+    "Click +, and Dock Tile groups your recent apps into ready-made tiles to pick from — suggestions come from what you actually use.",
   smartAddPrivacy: "Learned on your Mac. Never leaves your device.",
+  ghostTitle: "Ghost mode.",
+  ghostBody:
+    "Tiles stay out of Cmd-Tab and the App Switcher by default — in the Dock when you need them, invisible when you don't.",
   dockLockEyebrow: "Features / 02",
   dockLockTitle: "The Dock stays put.",
   dockLockBody:
@@ -41,8 +53,11 @@ const marketingBase = {
 
 const marketingUS = {
   ...marketingBase,
-  heroHeadlineB: "finally organized.",
   ctaTitle: "Get organized today.",
+  tilesTitle: "Customized tiles with the simple editor.",
+  tilesBody:
+    "Give every group of apps a face you'll spot at a glance. Pick a color, then a custom SF Symbol from Apple's library or any emoji — and fine-tune its size and weight — all in one simple editor.",
+  tilesCaption: "Color, symbols, emoji, size & weight",
 } as const;
 
 // Content that differs between locales

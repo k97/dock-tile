@@ -17,7 +17,7 @@ export function LegalShell({
 }) {
   return (
     <main className="bg-zinc-100">
-      <section className="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-black pb-6 pt-28 md:mx-4 md:mt-4 md:pb-8 md:pt-36">
+      <section data-nav-tone="dark" className="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-black pb-6 pt-28 md:mx-4 md:mt-4 md:pb-8 md:pt-36">
         <div className="grain" />
         <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-900/60" />
 
@@ -27,7 +27,7 @@ export function LegalShell({
             <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">
               Legal
             </span>
-            <h1 className="mb-4 text-4xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-6xl">
+            <h1 className="mb-4 text-3xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-5xl">
               {title}
             </h1>
             <p className="text-sm font-light text-white/40">{lastUpdated}</p>

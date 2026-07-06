@@ -2,23 +2,32 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { Settings2 } from "lucide-react";
 import {
-  Sparkles,
-  Wrench,
-  MessagesSquare,
-  Tv,
-  Settings2,
-  type LucideIcon,
-} from "lucide-react";
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
+import { TileGlyph, type GlyphName } from "@/components/tile-glyph";
 
 /**
- * Interactive simulation of DockTile's core loop: click a Dock tile, the
- * app popover opens above it. Geometry and timing mirror the real app
- * (see .superdesign/refs/product-demo-spec.md):
- * - tiles: squircle, 22.5% radius, top→bottom tint gradient, glyph sheen
- * - popover: 4-col grid, centred title + gear, 11px labels, bottom arrow
- * - motion: 200ms strong ease-out entry from the tile, faster exit
- * The tile data is real — these are actual tiles from a production Mac.
+ * Interactive simulation of DockTile's core loop: a Dock tile is clicked and the
+ * app popover pops up out of it.
+ *
+ * Motion:
+ * - Magnification — the macOS Dock scale-under-cursor, done the way the real
+ *   thing (and every good web dock) does it: each icon's **width/height** is a
+ *   `useSpring` driven by its distance from the cursor's x (`mouseX`). Because
+ *   size is a real layout box (not a `transform: scale`), the flex row spreads
+ *   and the pill grows to contain every icon — no spill, no manual shift maths,
+ *   and the spring physics make it buttery. Icons sit on `items-end`, so growth
+ *   rises above the fixed-height shelf, exactly like macOS.
+ * - Popover — Apple-style scale-pop from the clicked tile (origin-aware).
+ * - Auto-cursor — idle loop: an SVG pointer tweens between tiles driving the
+ *   same `mouseX`, presses, and opens each. Hands off to the real pointer the
+ *   instant it enters the Dock; resumes after ~2.5s idle. Off under reduced-motion.
  */
 
 type DemoApp = { name: string; src: string };
@@ -26,7 +35,7 @@ type DemoApp = { name: string; src: string };
 type DemoTile = {
   id: string;
   name: string;
-  icon: LucideIcon;
+  glyph: GlyphName;
   gradient: string; // colorTop → colorBottom, per product palette
   apps: DemoApp[];
   layout?: "grid" | "list"; // per-tile, like the app's layoutMode
@@ -38,11 +47,18 @@ const LIST_WIDTH = 240;
 const widthFor = (tile: DemoTile | null) =>
   tile?.layout === "list" ? LIST_WIDTH : GRID_WIDTH;
 
+// Dock geometry
+const BASE = 60; // resting icon size (px)
+const PEAK = 92; // magnified icon size under the cursor (px)
+const RADIUS = 150; // px falloff radius of the magnification curve
+const SHELF_H = 82; // fixed shelf height (BASE + pt-3 + pb-2.5); icons rise above it
+const SPRING = { mass: 0.1, stiffness: 180, damping: 14 }; // buttery follow
+
 const TILES: DemoTile[] = [
   {
     id: "ai",
     name: "AI Apps",
-    icon: Sparkles,
+    glyph: "sparkles",
     gradient: "linear-gradient(to bottom, #FF8EA7, #FF5482)",
     apps: [
       { name: "Claude", src: "/assets/app-icons/claude.png" },
@@ -56,7 +72,7 @@ const TILES: DemoTile[] = [
   {
     id: "dev",
     name: "Dev Apps",
-    icon: Wrench,
+    glyph: "tools",
     gradient: "linear-gradient(to bottom, #B197FC, #AF52DE)",
     apps: [
       { name: "Code", src: "/assets/app-icons/vscode.png" },
@@ -70,7 +86,7 @@ const TILES: DemoTile[] = [
   {
     id: "comms",
     name: "Comms",
-    icon: MessagesSquare,
+    glyph: "chat",
     gradient: "linear-gradient(to bottom, #FFD666, #FFB900)",
     apps: [
       { name: "WhatsApp", src: "/assets/app-icons/whatsapp.png" },
@@ -84,7 +100,7 @@ const TILES: DemoTile[] = [
   {
     id: "media",
     name: "Media",
-    icon: Tv,
+    glyph: "tv",
     gradient: "linear-gradient(to bottom, #66E5FF, #00CFFC)",
     layout: "list",
     apps: [
@@ -96,46 +112,119 @@ const TILES: DemoTile[] = [
   },
 ];
 
+// Order of magnifiable Dock items (the separator is fixed, so it is excluded).
+const MAG_KEYS = ["finder", ...TILES.map((t) => t.id), "settings"];
+
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+/* ------------------------------------------------------------------ */
+/* One magnifying Dock slot — springs its own size from cursor distance */
+/* ------------------------------------------------------------------ */
+
+function MagItem({
+  mouseX,
+  enabled,
+  registerNode,
+  title,
+  className = "",
+  children,
+}: {
+  mouseX: MotionValue<number>;
+  enabled: boolean;
+  registerNode: (el: HTMLElement | null) => void;
+  title?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const distance = useTransform(mouseX, (x) => {
+    const b = ref.current?.getBoundingClientRect();
+    return b ? x - (b.x + b.width / 2) : RADIUS + 1;
+  });
+  const target = useTransform(distance, [-RADIUS, 0, RADIUS], [BASE, PEAK, BASE], {
+    clamp: true,
+  });
+  const size = useSpring(target, SPRING);
+
+  return (
+    <motion.div
+      ref={(el) => {
+        ref.current = el;
+        registerNode(el);
+      }}
+      title={title}
+      className={`relative flex items-end justify-center ${className}`}
+      style={{ width: enabled ? size : BASE, height: enabled ? size : BASE }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export function DockDemo({ className = "" }: { className?: string }) {
   const [openId, setOpenId] = React.useState<string | null>(null);
   const [closing, setClosing] = React.useState(false);
   const [launching, setLaunching] = React.useState<string | null>(null);
   const [focusIndex, setFocusIndex] = React.useState(-1);
+  const [reduced, setReduced] = React.useState(false);
+  const [autoActive, setAutoActive] = React.useState(false);
+
   const rootRef = React.useRef<HTMLDivElement>(null);
-  const tileRefs = React.useRef<Record<string, HTMLButtonElement | null>>({});
-  // Arrow x-position inside the popover (popover body stays centred; only
-  // the arrow tracks the clicked tile — the app's anchor-and-hold behaviour).
-  // Popover body centres over the clicked tile (clamped to the viewport);
-  // the arrow sits at the tile centre — like NSPopover's anchoring.
+  const rowRef = React.useRef<HTMLDivElement>(null);
+  const cursorRef = React.useRef<SVGSVGElement>(null);
+  const rippleHostRef = React.useRef<HTMLDivElement>(null);
+  // Every magnifiable slot's DOM node, keyed by id — used for popover anchoring
+  // and for the auto-demo's rest-position targets.
+  const itemNodes = React.useRef<Map<string, HTMLElement>>(new Map());
+
+  // Cursor x that drives magnification (client coords; Infinity = rested).
+  const mouseX = useMotionValue(Infinity);
+
+  // Auto-demo control.
+  const signalRef = React.useRef<{ cancelled: boolean }>({ cancelled: true });
+  const resumeTimer = React.useRef<number | null>(null);
+  const reducedRef = React.useRef(false);
+  const autoActiveRef = React.useRef(false);
+  const openRef = React.useRef<(id: string) => void>(() => {});
+  const closeRef = React.useRef<() => void>(() => {});
+
+  // Arrow x-position inside the popover (body centres over the clicked tile,
+  // clamped to the viewport; only the arrow tracks the tile — anchor-and-hold).
   const [pos, setPos] = React.useState({ left: 0, arrow: GRID_WIDTH / 2 });
 
   const openTile = TILES.find((t) => t.id === openId) ?? null;
   const popWidth = widthFor(openTile);
 
+  const registerNode = React.useCallback(
+    (key: string) => (el: HTMLElement | null) => {
+      if (el) itemNodes.current.set(key, el);
+      else itemNodes.current.delete(key);
+    },
+    [],
+  );
+
   const measure = React.useCallback(() => {
     if (!openId || !rootRef.current) return;
-    const tile = tileRefs.current[openId];
-    if (!tile) return;
+    const node = itemNodes.current.get(openId);
+    if (!node) return;
     const width = widthFor(TILES.find((t) => t.id === openId) ?? null);
     const rootBox = rootRef.current.getBoundingClientRect();
     if (rootBox.width === 0) return; // not laid out yet
-    const tileBox = tile.getBoundingClientRect();
+    const tileBox = node.getBoundingClientRect();
     const tileCentre = tileBox.left + tileBox.width / 2 - rootBox.left;
     let left = tileCentre - width / 2;
-    // keep the popover on-screen with an 8px gutter
     const minLeft = 8 - rootBox.left;
     const maxLeft = window.innerWidth - 8 - width - rootBox.left;
     left = Math.max(minLeft, Math.min(left, maxLeft));
     setPos({ left, arrow: tileCentre - left });
   }, [openId]);
 
-  // Position on open, and keep it correct as the layout shifts (resize,
-  // the hero reveal animation settling, late-loading app icons).
   React.useLayoutEffect(() => {
     measure();
     if (!openId) return;
     window.addEventListener("resize", measure);
-    const raf = requestAnimationFrame(measure); // after paint settles
+    const raf = requestAnimationFrame(measure);
     return () => {
       window.removeEventListener("resize", measure);
       cancelAnimationFrame(raf);
@@ -148,8 +237,20 @@ export function DockDemo({ className = "" }: { className?: string }) {
       setOpenId(null);
       setClosing(false);
       setFocusIndex(-1);
-    }, 140);
+    }, 200); // matches the scale-out duration
   }, []);
+
+  const open = React.useCallback((id: string) => {
+    setClosing(false); // cancel any in-flight close so we play scale-in, not -out
+    setOpenId(id);
+    setFocusIndex(-1);
+  }, []);
+
+  // Keep stable handles for the demo loop (mounted once).
+  React.useEffect(() => {
+    openRef.current = open;
+    closeRef.current = close;
+  }, [open, close]);
 
   // Transient behaviour: outside click and Escape dismiss.
   React.useEffect(() => {
@@ -168,13 +269,172 @@ export function DockDemo({ className = "" }: { className?: string }) {
     };
   }, [openId, close]);
 
+  // ---- Cursor takeover + auto-demo engine (mounted once) ----
+  React.useEffect(() => {
+    const root = rootRef.current;
+    const row = rowRef.current;
+    if (!root || !row) return;
+
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    reducedRef.current = prefersReduced;
+    setReduced(prefersReduced);
+
+    const restCenterX = new Map<string, number>();
+    let rootLeft = 0;
+    let dockTop = 0;
+
+    // Measure rest geometry with the Dock at rest (mouseX rested → all base).
+    const measureGeom = () => {
+      const rootR = root.getBoundingClientRect();
+      const rowR = row.getBoundingClientRect();
+      rootLeft = rootR.left;
+      dockTop = rowR.top - rootR.top;
+      itemNodes.current.forEach((el, k) => {
+        const b = el.getBoundingClientRect();
+        restCenterX.set(k, b.left + b.width / 2);
+      });
+    };
+    measureGeom();
+
+    // ---- Auto-cursor demo (drives the same mouseX as a real pointer) ----
+    const placeCursor = (clientX: number) => {
+      const el = cursorRef.current;
+      if (el)
+        el.style.transform = `translate(${(clientX - rootLeft - 4).toFixed(1)}px, ${(dockTop + BASE * 0.5).toFixed(1)}px)`;
+    };
+    const spawnRipple = (clientX: number) => {
+      const host = rippleHostRef.current;
+      if (!host) return;
+      const ring = document.createElement("span");
+      ring.className = "dock-click-ring";
+      ring.style.left = `${(clientX - rootLeft).toFixed(1)}px`;
+      ring.style.top = `${(dockTop + BASE * 0.42).toFixed(1)}px`;
+      host.appendChild(ring);
+      window.setTimeout(() => ring.remove(), 520);
+    };
+
+    const wait = (ms: number, sig: { cancelled: boolean }) =>
+      new Promise<void>((res) => {
+        const start = performance.now();
+        const tick = () => {
+          if (sig.cancelled || performance.now() - start >= ms) return res();
+          requestAnimationFrame(tick);
+        };
+        tick();
+      });
+
+    const tweenTo = (to: number, dur: number, sig: { cancelled: boolean }) =>
+      new Promise<void>((res) => {
+        const cur = mouseX.get();
+        const from = Number.isFinite(cur) ? cur : to;
+        const start = performance.now();
+        const tick = () => {
+          if (sig.cancelled) return res();
+          const p = Math.min(1, (performance.now() - start) / dur);
+          const v = from + (to - from) * easeInOutCubic(p);
+          mouseX.set(v);
+          placeCursor(v);
+          if (p < 1) requestAnimationFrame(tick);
+          else res();
+        };
+        tick();
+      });
+
+    const press = async (sig: { cancelled: boolean }, clientX: number) => {
+      const el = cursorRef.current;
+      if (el) el.dataset.pressing = "true";
+      spawnRipple(clientX);
+      await wait(150, sig);
+      if (el) el.dataset.pressing = "false";
+    };
+
+    const runLoop = async (sig: { cancelled: boolean }) => {
+      // Enter from the far (Settings) side, so the first travel sweeps the Dock.
+      const entry = restCenterX.get("settings") ?? rootLeft + 200;
+      mouseX.set(entry);
+      placeCursor(entry);
+      await wait(650, sig);
+      while (!sig.cancelled) {
+        for (const t of TILES) {
+          const target = restCenterX.get(t.id) ?? entry;
+          await tweenTo(target, 760, sig);
+          if (sig.cancelled) return;
+          await wait(110, sig); // settle before the click
+          await press(sig, target);
+          if (sig.cancelled) return;
+          openRef.current(t.id);
+          await wait(1750, sig);
+          if (sig.cancelled) return;
+          closeRef.current();
+          await wait(620, sig);
+          if (sig.cancelled) return;
+        }
+      }
+    };
+
+    const startDemo = () => {
+      if (reducedRef.current || !signalRef.current.cancelled) return;
+      const sig = { cancelled: false };
+      signalRef.current = sig;
+      autoActiveRef.current = true;
+      setAutoActive(true);
+      runLoop(sig);
+    };
+    const stopDemo = () => {
+      signalRef.current.cancelled = true;
+      autoActiveRef.current = false;
+      setAutoActive(false);
+      closeRef.current();
+    };
+    const clearResume = () => {
+      if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+      resumeTimer.current = null;
+    };
+    const scheduleResume = () => {
+      clearResume();
+      resumeTimer.current = window.setTimeout(() => {
+        if (!reducedRef.current) startDemo();
+      }, 2500);
+    };
+
+    // Real pointer takes over the instant it enters the Dock region.
+    const onPointerMove = (e: PointerEvent) => {
+      clearResume();
+      if (e.pointerType === "touch") {
+        if (autoActiveRef.current) stopDemo();
+        mouseX.set(Infinity);
+        return;
+      }
+      if (autoActiveRef.current) stopDemo();
+      mouseX.set(e.clientX);
+    };
+    const onPointerLeave = () => {
+      mouseX.set(Infinity);
+      scheduleResume();
+    };
+    row.addEventListener("pointermove", onPointerMove);
+    row.addEventListener("pointerleave", onPointerLeave);
+    const onResize = () => measureGeom();
+    window.addEventListener("resize", onResize);
+
+    // Kick off the idle demo shortly after mount (skip under reduced motion).
+    const startTimer = window.setTimeout(startDemo, 900);
+
+    return () => {
+      signalRef.current.cancelled = true;
+      clearResume();
+      window.clearTimeout(startTimer);
+      row.removeEventListener("pointermove", onPointerMove);
+      row.removeEventListener("pointerleave", onPointerLeave);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [mouseX]);
+
   const handleTileClick = (id: string) => {
-    if (openId === id) {
-      close();
-    } else {
-      setOpenId(id);
-      setFocusIndex(-1);
-    }
+    if (openId === id) close();
+    else open(id);
   };
 
   const handleLaunch = (appName: string) => {
@@ -185,7 +445,6 @@ export function DockDemo({ className = "" }: { className?: string }) {
     }, 260);
   };
 
-  // Arrow-key navigation inside the open popover (grid: ±1 / ±cols; list: ±1).
   const handlePopoverKeys = (e: React.KeyboardEvent) => {
     if (!openTile) return;
     const cols = openTile.layout === "list" ? 1 : 4;
@@ -203,6 +462,17 @@ export function DockDemo({ className = "" }: { className?: string }) {
     setFocusIndex(next < 0 ? 0 : next);
   };
 
+  // Popover motion — Apple-style scale-pop from the tile by default (subtle
+  // overshoot + fade), plain quick fade under reduced motion.
+  const animIn = reduced
+    ? "dock-pop-in 180ms var(--ease-out-strong)"
+    : "dock-scale-in 260ms cubic-bezier(0.22, 1, 0.36, 1)";
+  const animOut = reduced
+    ? "dock-pop-out 140ms var(--ease-out-strong) forwards"
+    : "dock-scale-out 190ms cubic-bezier(0.4, 0, 1, 1) forwards";
+
+  const magEnabled = !reduced;
+
   return (
     <div ref={rootRef} className={`relative inline-block ${className}`}>
       {/* Popover */}
@@ -211,21 +481,18 @@ export function DockDemo({ className = "" }: { className?: string }) {
           role="dialog"
           aria-label={`${openTile.name} apps`}
           onKeyDown={handlePopoverKeys}
-          className={`absolute bottom-full z-30 mb-4 rounded-2xl popover-surface ${
+          className={`popover-surface absolute bottom-full z-30 mb-4 rounded-2xl ${
             openTile.layout === "list" ? "p-2" : "p-3 pt-0"
           }`}
           style={{
             width: popWidth,
             left: pos.left,
             transformOrigin: `${pos.arrow}px 100%`,
-            animation: closing
-              ? "dock-pop-out 140ms var(--ease-out-strong) forwards"
-              : "dock-pop-in 200ms var(--ease-out-strong)",
+            animation: closing ? animOut : animIn,
           }}
         >
           {openTile.layout === "list" ? (
             <>
-              {/* List layout — leading title, rows, divider, utility rows */}
               <p className="px-3 pb-1 pt-1.5 text-[13px] font-semibold text-zinc-800">
                 {openTile.name}
               </p>
@@ -278,7 +545,6 @@ export function DockDemo({ className = "" }: { className?: string }) {
             </>
           ) : (
             <>
-              {/* Grid layout — spacer | centred title | gear header, 36pt */}
               <header className="flex h-9 items-center justify-between px-1">
                 <span className="w-7" />
                 <span className="text-[13px] font-medium text-zinc-800">
@@ -335,7 +601,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
             </>
           )}
 
-          {/* Arrow — wide shallow triangle, like NSPopover's; follows the clicked tile's centre */}
+          {/* Arrow — wide shallow triangle, following the clicked tile's centre */}
           <span
             aria-hidden
             className="popover-surface absolute top-full h-2.5 w-6 border-0! shadow-none!"
@@ -348,51 +614,127 @@ export function DockDemo({ className = "" }: { className?: string }) {
         </div>
       )}
 
-      {/* Dock shelf */}
-      <div className="flex items-end gap-3 rounded-3xl border border-white/15 bg-white/10 p-3 shadow-2xl backdrop-blur-2xl">
+      {/* Ripple host — click rings are appended here in root coordinates */}
+      <div
+        ref={rippleHostRef}
+        className="pointer-events-none absolute inset-0 z-38"
+        aria-hidden
+      />
+
+      {/* Auto-demo cursor (hidden until the idle loop runs / on real takeover) */}
+      <svg
+        ref={cursorRef}
+        className="dock-cursor"
+        width={25}
+        height={29}
+        viewBox="0 0 25 29"
+        aria-hidden
+        style={{ opacity: autoActive ? 1 : 0 }}
+      >
+        <path
+          className="dock-cursor__arrow"
+          d="M4 3 L4 23 L9.5 18.2 L12.7 25.6 L16 24.2 L12.9 17.1 L20 17.1 Z"
+          fill="#0b0b0f"
+          stroke="#ffffff"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </svg>
+
+      {/* Dock shelf — macOS Tahoe "Liquid Glass": translucent, bright specular
+          top rim fading to a shaded base, pronounced continuous corners. Fixed
+          height so magnified icons rise above it; width grows with the spread. */}
+      <div
+        ref={rowRef}
+        className="dock-shelf relative flex items-end gap-2 px-3"
+        style={{ height: SHELF_H }}
+      >
+        {/* Finder — always first, not clickable */}
+        <MagItem
+          mouseX={mouseX}
+          enabled={magEnabled}
+          registerNode={registerNode("finder")}
+          title="Finder"
+          className="drop-shadow-[0_3px_8px_rgba(0,0,0,0.28)]"
+        >
+          <Image
+            src="/assets/app-icons/finder.png"
+            alt=""
+            fill
+            sizes="92px"
+            priority
+            unoptimized
+            draggable={false}
+            className="object-contain"
+          />
+        </MagItem>
+
+        {/* Interactive DockTile tiles */}
         {TILES.map((tile) => {
-          const Icon = tile.icon;
           const isOpen = openId === tile.id;
           return (
-            <div key={tile.id} className="flex flex-col items-center gap-1.5">
+            <MagItem
+              key={tile.id}
+              mouseX={mouseX}
+              enabled={magEnabled}
+              registerNode={registerNode(tile.id)}
+              title={tile.name}
+              className="drop-shadow-[0_3px_8px_rgba(0,0,0,0.28)]"
+            >
               <button
-                ref={(el) => {
-                  tileRefs.current[tile.id] = el;
-                }}
                 type="button"
                 aria-expanded={isOpen}
                 aria-label={`Open ${tile.name}`}
                 onClick={() => handleTileClick(tile.id)}
-                className="squircle pressable relative flex h-14 w-14 items-center justify-center overflow-hidden transition-transform duration-200 ease-(--ease-out-strong) hover:-translate-y-1 hover:scale-105 md:h-16 md:w-16"
+                className="squircle relative flex h-full w-full items-center justify-center overflow-hidden"
                 style={{
                   background: tile.gradient,
                   boxShadow:
-                    "0 4px 12px rgba(0,0,0,0.25), inset 0 1px 1px rgba(255,255,255,0.3)",
+                    "inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -1px 2px rgba(0,0,0,0.12)",
                 }}
               >
-                {/* surface sheen — white gloss over the top half, per IconDepthMetrics */}
                 <span
                   aria-hidden
-                  className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-white/20 to-transparent"
+                  className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-white/25 to-transparent"
                 />
-                <Icon
-                  className="relative h-7 w-7 text-white md:h-8 md:w-8"
-                  strokeWidth={2}
-                  style={{ filter: "drop-shadow(0 1px 1.5px rgba(0,0,0,0.25))" }}
-                />
+                <span className="relative" style={{ width: "44%", height: "44%" }}>
+                  <TileGlyph
+                    name={tile.glyph}
+                    className="h-full w-full text-white drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.28)]"
+                  />
+                </span>
               </button>
-              {/* running indicator, macOS-style */}
-              <span
-                aria-hidden
-                className={`h-1 w-1 rounded-full transition-opacity duration-300 ${
-                  isOpen ? "bg-white/70 opacity-100" : "opacity-0"
-                }`}
-              />
-            </div>
+            </MagItem>
           );
         })}
-      </div>
 
+        {/* Separator — macOS Dock hairline divider before System Settings */}
+        <span
+          aria-hidden
+          className="mx-1 self-center rounded-full"
+          style={{ width: 1.5, height: 36, background: "rgba(255,255,255,0.18)" }}
+        />
+
+        {/* System Settings — last, not clickable */}
+        <MagItem
+          mouseX={mouseX}
+          enabled={magEnabled}
+          registerNode={registerNode("settings")}
+          title="System Settings"
+          className="drop-shadow-[0_3px_8px_rgba(0,0,0,0.28)]"
+        >
+          <Image
+            src="/assets/app-icons/settings.png"
+            alt=""
+            fill
+            sizes="92px"
+            priority
+            unoptimized
+            draggable={false}
+            className="object-contain"
+          />
+        </MagItem>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { Hero } from "@/components/hero";
 import {
-  SmartAddStory,
+  CustomTilesStory,
+  PowerUserSection,
   DockLockStory,
-  BentoGrid,
   FinalCta,
 } from "@/components/home-sections";
 import { Footer } from "@/components/footer";
@@ -11,9 +11,9 @@ export default function Home() {
   return (
     <main className="bg-zinc-100">
       <Hero />
-      <SmartAddStory />
+      <CustomTilesStory />
       <DockLockStory />
-      <BentoGrid />
+      <PowerUserSection />
       <FinalCta />
       <Footer />
     </main>
