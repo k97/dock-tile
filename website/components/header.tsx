@@ -71,9 +71,10 @@ export function Header() {
   const logoText = pillOverDark ? "text-zinc-900" : "text-white";
 
   return (
-    // top offset mirrors the hero container's inset (mt-3/mx-3, md:mt-4/mx-4)
-    // so the gap above the nav matches the padding around the hero exactly
-    <header className="fixed top-3 left-1/2 z-50 -translate-x-1/2 md:top-4">
+    // The hero sits mt-3 (md:mt-4) off the viewport; the nav repeats that same
+    // gap inside the hero, so viewport→hero and hero→nav read as one rhythm:
+    // top = hero inset ×2 (12+12px, md 16+16px).
+    <header className="fixed top-6 left-1/2 z-50 -translate-x-1/2 md:top-8">
       <nav
         ref={navRef}
         data-over={pillOverDark ? "dark" : "light"}
