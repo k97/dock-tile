@@ -5,7 +5,8 @@
 - Single-page marketing site: `Hero → CustomTilesStory (id="features") → DockLockStory →
   PowerUserSection → FinalCta` + Footer. The standalone `/features` route was deliberately
   deleted — nav "Features" scrolls to `/#features`. Don't recreate the page.
-- Nav order: **Features · Privacy · FAQ** + Download.
+- Nav order: **Features · Privacy · FAQ** + Download (Download is `md`+ only — see
+  design-system.md "Adaptive nav").
 - `FinalCta` owns the contextual extras: the quiet support "Get in touch" line, version links to
   `/release-notes` (not GitHub), "Open source" linking to the repo, and the Spades Audio
   cross-promo pill (formal voice: "Also available: Spades Audio — per-app volume control").

@@ -37,9 +37,13 @@ The header samples the section under the nav via `elementFromPoint` and flips to
 `[data-nav-tone]`. **Every dark section must be tagged `data-nav-tone="dark"`**; light is the
 untagged default — `"light"` is never set, so don't test for it.
 
-Below `md` the three text links collapse behind a hamburger (tone-matched glass dropdown in
-`header.tsx`); the pill keeps logo + Download only. The pill must fit the viewport with side
-gutters — the full link row overflowed both edges on phones.
+Below `md` the pill drops **Download** (`max-md:hidden`) and keeps logo + wordmark + the three
+text links inline — on a phone nobody installs a macOS app from the nav, and the links are the
+contextual actions (the hero + Final CTA still offer Download). No hamburger. The wordmark stays
+on mobile (nothing else on a phone names the app) and yields only below 360px
+(`min-[360px]:inline`), where the pill would otherwise touch the viewport edges. The pill must
+always fit the viewport with side gutters — it was the Download button that made the full link
+row overflow phones and forced the (since removed) hamburger.
 
 ## Typography
 
