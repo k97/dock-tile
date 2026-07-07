@@ -32,7 +32,7 @@ const marketingBase = {
   popoverEyebrow: "Features / 02",
   popoverTitle: "Grid or list. Sized your way.",
   popoverBody:
-    "Each tile opens a native popover — an icon grid like an iOS folder, or a compact list. Appearance controls tune size, spacing and labels for every tile at once, and running tiles pick the change up immediately.",
+    "Each tile opens a native popover — an icon grid like an iOS folder, or a compact list. Tune size, spacing and labels, live.",
   powerUserEyebrow: "Power user",
   smartAddTitle: "Tiles that build themselves.",
   smartAddBody:
@@ -41,6 +41,7 @@ const marketingBase = {
   ghostTitle: "Ghost mode.",
   ghostBody:
     "Tiles stay out of Cmd-Tab and the App Switcher by default — in the Dock when you need them, invisible when you don't.",
+  ghostTip: "Per-tile control. Surface any tile on demand.",
   dockLockEyebrow: "Features / 02",
   dockLockTitle: "The Dock stays put.",
   dockLockBody:
@@ -48,7 +49,9 @@ const marketingBase = {
   bentoTitle: "Built for the power user.",
   ctaTitle: "Get organised today.",
   ctaButton: "Download Dock Tile",
-  ctaMetaFree: "Free download",
+  ctaMetaOpenSource: "Open source",
+  spadesLead: "Also available:",
+  spadesButton: "Spades Audio — per-app volume control",
 } as const;
 
 const marketingUS = {
@@ -60,10 +63,80 @@ const marketingUS = {
   tilesCaption: "Color, symbols, emoji, size & weight",
 } as const;
 
+// Legal pages — only spelling-sensitive strings vary by locale
+const legalBase = {
+  licenceHeading: "Licence",
+  privacyConfigStores: "stores your tile settings, app lists, and customisations",
+} as const;
+
+const legalUS = {
+  ...legalBase,
+  licenceHeading: "License",
+  privacyConfigStores: "stores your tile settings, app lists, and customizations",
+} as const;
+
+// UK/AU → US spelling for copy rendered from shared data (e.g. release notes),
+// where duplicating the whole dataset per locale isn't worth it. Curated word
+// map only — word-boundary matched, preserves a leading capital.
+const usSpellings: Record<string, string> = {
+  behaviour: "behavior",
+  behaviours: "behaviors",
+  centre: "center",
+  centred: "centered",
+  colour: "color",
+  coloured: "colored",
+  colours: "colors",
+  customisation: "customization",
+  customisations: "customizations",
+  customise: "customize",
+  customised: "customized",
+  customiser: "customizer",
+  customising: "customizing",
+  favourite: "favorite",
+  favourites: "favorites",
+  grey: "gray",
+  licence: "license",
+  licences: "licenses",
+  maximise: "maximize",
+  maximised: "maximized",
+  minimise: "minimize",
+  minimised: "minimized",
+  optimise: "optimize",
+  optimised: "optimized",
+  organise: "organize",
+  organised: "organized",
+  organising: "organizing",
+  personalise: "personalize",
+  personalised: "personalized",
+  recognise: "recognize",
+  recognised: "recognized",
+  stabilise: "stabilize",
+  stabilised: "stabilized",
+  synchronise: "synchronize",
+  synchronised: "synchronized",
+};
+
+const ukSpellingPattern = new RegExp(
+  `\\b(${Object.keys(usSpellings).join("|")})\\b`,
+  "gi"
+);
+
+export function localiseText(text: string, locale: Locale): string {
+  if (locale !== "en-US") return text;
+  return text.replace(ukSpellingPattern, (match) => {
+    const us = usSpellings[match.toLowerCase()];
+    if (!us) return match;
+    return match[0] === match[0].toUpperCase()
+      ? us[0].toUpperCase() + us.slice(1)
+      : us;
+  });
+}
+
 // Content that differs between locales
 export const localisedContent = {
   "en-AU": {
     marketing: marketingBase,
+    legal: legalBase,
     // Hero
     tagline: "A native macOS launcher, built for the Dock",
     description:
@@ -168,6 +241,7 @@ export const localisedContent = {
 
   "en-GB": {
     marketing: marketingBase,
+    legal: legalBase,
     // Hero
     tagline: "A native macOS launcher, built for the Dock",
     description:
@@ -272,6 +346,7 @@ export const localisedContent = {
 
   "en-US": {
     marketing: marketingUS,
+    legal: legalUS,
     // Hero
     tagline: "A native macOS launcher, built for the Dock",
     description:

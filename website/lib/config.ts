@@ -12,6 +12,7 @@ export const siteConfig = {
 
   // Social & External Links
   githubUrl: "https://github.com/k97/dock-tile",
+  spadesAudioUrl: "https://www.spadesaudio.com",
 
   // App Info
   appName: "Dock Tile",

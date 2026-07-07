@@ -9,7 +9,7 @@ import { Footer } from "@/components/footer";
 
 export default function Home() {
   return (
-    <main className="bg-zinc-100">
+    <main className="bg-background">
       <Hero />
       <CustomTilesStory />
       <DockLockStory />

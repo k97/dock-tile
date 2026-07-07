@@ -19,6 +19,11 @@ const specialGothic = Special_Gothic_Expanded_One({
   weight: "400",
   subsets: ["latin"],
   display: "swap",
+  // This font has no metric data in next/font, so the auto-generated
+  // metrics-matched fallback fails ("Failed to find font override values").
+  // Opt out and supply our own fallback chain (mirrors --font-display).
+  adjustFontFallback: false,
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
