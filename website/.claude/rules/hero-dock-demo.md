@@ -42,6 +42,16 @@ wrapper owns everything DockTile-specific. Behaviour rules — each was hard-won
   timeout and shuts the new popover. Fix: keep the timer in a `closeTimer` ref, clear it in both
   `open()` and `close()`.
 
+## Bento popover showcase (`home-sections.tsx` PopoverShowcase)
+
+The "Grid or list" card's illustration is a **static 1:1 clone of this demo's popovers** — same
+markup, same product widths (grid 324 / list 240), interactivity stripped. Keep it in sync when
+the demo's popover rendering changes. **Illustrative macOS components never restyle responsively**
+(explicit owner mandate): they render at fixed natural size and `ScaleToFit` applies one uniform
+`transform: scale()` — an aspect-locked zoom, capped at 1:1 — to fit the card. Never let them
+stretch, squish, stack, or swap sizes per breakpoint; hand-drawn "roomy-ish" approximations were
+rejected twice before this.
+
 ## App-icon assets (`public/assets/app-icons/`)
 
 - Real icons extracted from installed apps (Swift `NSWorkspace` script → 128px PNG; `sips` for

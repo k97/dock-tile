@@ -9,6 +9,9 @@ only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock."
   blocks `#18181B`; light background `#F4F4F5` (zinc-100).
 - Grain overlay at 15% on every dark section (prevents banding).
 - Radii: 2.5rem on major section wrappers (the site's rhythm — keep it); internal cards 16–24px.
+- The power-user bento is 3-across only from `xl`; below that the cards stack in a centred
+  `max-w-md` column — a narrow 3-col card can't hold the fixed-size popover showcase
+  (see hero-dock-demo.md "Bento popover showcase").
 - Neutral chrome uses the shadcn tokens (`bg-background`, `bg-card`, `text-muted-foreground`,
   `border-border`), never literal `bg-white`/`bg-zinc-*`. The tokens are pinned to the exact
   Tailwind zinc oklch values, so the light theme is pixel-identical to the pre-token design.
@@ -25,12 +28,18 @@ only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock."
   a hydration flash. Pattern lives in `hero.tsx`.
 - Cards have fixed theme character: the Ghost card is always dark (hardcoded whites are correct);
   the Smart Add card flips, so its colours must be theme-aware (`text-zinc-600 dark:text-white/80`).
+  The Ghost card runs a charcoal gradient (`from-zinc-800 to-zinc-900`), NOT flat zinc-900 — flat
+  read as one slab with the pure-black Final CTA when stacked on mobile.
 
 ## Adaptive nav
 
 The header samples the section under the nav via `elementFromPoint` and flips tone from
 `[data-nav-tone]`. **Every dark section must be tagged `data-nav-tone="dark"`**; light is the
 untagged default — `"light"` is never set, so don't test for it.
+
+Below `md` the three text links collapse behind a hamburger (tone-matched glass dropdown in
+`header.tsx`); the pill keeps logo + Download only. The pill must fit the viewport with side
+gutters — the full link row overflowed both edges on phones.
 
 ## Typography
 

@@ -44,5 +44,7 @@ npm run build
 ```
 
 Visual checks: never drive the user's own browser — use an isolated Chrome profile; headless
-Chrome can't composite `backdrop-filter` (reports `none`). Stale `globals.css` in dev = restart
-`next dev` (Turbopack hot-reload quirk), not a code bug.
+Chrome can't composite `backdrop-filter` (reports `none`). Turbopack hot-reload quirks in dev —
+stale `globals.css` (restart `next dev`), and after HMR a `Reveal` scroll-observer can hold a
+stale DOM node so a whole section sits at opacity 0. Hard-reload before debugging either as a
+code bug.
