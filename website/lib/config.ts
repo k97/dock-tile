@@ -20,8 +20,9 @@ export const siteConfig = {
   description:
     "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders — native, open source, for macOS 26+.",
 
-  // Meta
-  siteUrl: "https://docktile.rkarthik.co",
+  // Meta — primary domain (docktile.rkarthik.co is retained as a redirecting
+  // alias; shipped apps' Sparkle feed URL still points at it, so never drop it)
+  siteUrl: "https://docktile.app",
   authorName: "Karthik",
   authorUrl: "https://rkarthik.co",
 };
