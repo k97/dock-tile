@@ -1,7 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { useMounted } from "@/lib/use-mounted";
-import { ArrowUpRight, Clock, EyeOff, Ghost, Lock, LockOpen, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Clock, EyeOff, Ghost, Lock, LockOpen, Settings2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -28,6 +29,116 @@ const listApps = [
   { name: "Podcasts", src: "/assets/app-icons/podcasts.png" },
   { name: "Kayo", src: "/assets/app-icons/kayo.png" },
 ];
+
+/* Product-true popover dimensions — same constants as the hero dock demo
+   (dock-demo.tsx), which mirror the app: grid = 324px (5-col medium tier),
+   list = 240px (medium). The showcase renders at these EXACT sizes and is
+   only ever uniformly zoomed, never reflowed. */
+const POPOVER_GRID_WIDTH = 324;
+const POPOVER_LIST_WIDTH = 240;
+
+/* Uniform scale-to-fit: children render at their fixed natural size; the
+   whole block is zoomed (transform scale, aspect ratio locked — like a
+   miniature screenshot) to the width on offer, capped at 1:1. The
+   illustration itself never restyles or reflows across viewports. */
+function ScaleToFit({ children }: { children: React.ReactNode }) {
+  const outerRef = React.useRef<HTMLDivElement>(null);
+  const innerRef = React.useRef<HTMLDivElement>(null);
+  const [fit, setFit] = React.useState<{ scale: number; height: number; left: number } | null>(null);
+
+  React.useLayoutEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+    const measure = () => {
+      const scale = Math.min(1, outer.clientWidth / inner.offsetWidth);
+      setFit({
+        scale,
+        height: Math.round(inner.offsetHeight * scale),
+        left: Math.max(0, (outer.clientWidth - inner.offsetWidth * scale) / 2),
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(outer);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={outerRef} className="relative w-full" style={{ height: fit?.height }}>
+      <div
+        ref={innerRef}
+        className={`absolute top-0 w-max ${fit ? "" : "invisible"}`}
+        style={fit ? { left: fit.left, transform: `scale(${fit.scale})`, transformOrigin: "top left" } : undefined}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* Static 1:1 replicas of the hero dock demo's popovers (themselves lifted
+   from the app) — same surface, header-with-gear, 48px labelled icon grid,
+   28px list rows and Configure… entry. Only interactivity is removed. */
+function PopoverShowcase() {
+  return (
+    <ScaleToFit>
+      <div className="flex items-center gap-4">
+        <div className="popover-surface rounded-2xl p-3 pt-0" style={{ width: POPOVER_GRID_WIDTH }}>
+          <header className="flex h-9 items-center justify-between px-1">
+            <span className="w-7" />
+            <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">Grid</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 dark:text-zinc-400">
+              <Settings2 className="h-3.5 w-3.5" />
+            </span>
+          </header>
+          <div className="grid grid-cols-4 gap-x-1 gap-y-3 px-1 pb-1 pt-1">
+            {gridApps.map((app) => (
+              <span key={app.name} className="flex flex-col items-center gap-1.5 rounded-lg p-1.5">
+                <Image
+                  src={app.src}
+                  alt={app.name}
+                  width={48}
+                  height={48}
+                  unoptimized
+                  draggable={false}
+                  className="h-12 w-12"
+                />
+                <span className="max-w-full truncate text-[11px] leading-none text-zinc-600 dark:text-zinc-300">
+                  {app.name}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="popover-surface rounded-2xl p-2" style={{ width: POPOVER_LIST_WIDTH }}>
+          <p className="px-3 pb-1 pt-1.5 text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">List</p>
+          <div className="flex flex-col">
+            {listApps.map((app) => (
+              <span key={app.name} className="flex min-h-7 items-center gap-2.5 rounded px-3 py-1">
+                <Image
+                  src={app.src}
+                  alt=""
+                  width={24}
+                  height={24}
+                  unoptimized
+                  draggable={false}
+                  className="h-6 w-6"
+                />
+                <span className="truncate text-[13px] text-zinc-800 dark:text-zinc-100">{app.name}</span>
+              </span>
+            ))}
+          </div>
+          <div className="mx-3 my-1 border-t border-black/10 dark:border-white/10" />
+          <span className="flex items-center gap-2.5 rounded px-3 py-1 text-[13px] text-zinc-700 dark:text-zinc-300">
+            <Settings2 className="h-3 w-4 text-zinc-500 dark:text-zinc-400" />
+            Configure…
+          </span>
+        </div>
+      </div>
+    </ScaleToFit>
+  );
+}
 
 // DockTile's own Dark icon style (see docs/rules/icon-system.md — and the
 // matching hero dock-demo.tsx): neutral near-black background, tile tint
@@ -111,7 +222,7 @@ export function PowerUserSection() {
   const isDarkSite = mounted && resolvedTheme === "dark";
 
   return (
-    <section className="mx-auto max-w-400 px-6 py-24 md:px-10 md:py-32">
+    <section className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-32">
       <Reveal className="mb-14 text-center">
         <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
           {m.powerUserEyebrow}
@@ -121,55 +232,20 @@ export function PowerUserSection() {
         </h2>
       </Reveal>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* 3-across only from xl up. Below that the row collapses to one column so
+          each card is wide enough to hold its illustration at a FIXED, roomy
+          native size (the Grid/List + Smart Add popovers never reflow per
+          breakpoint — they'd only cramp if squeezed into a narrow 3-col card). */}
+      <div className="grid gap-6 xl:grid-cols-3">
         {/* Grid or List — white card */}
-        <Reveal className="flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-8">
+        <Reveal className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 xl:max-w-none">
           <div>
             <h3 className="mb-3 text-xl font-bold text-foreground">{m.popoverTitle}</h3>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{m.popoverBody}</p>
           </div>
-          {/* grid + list popover mocks — native app icons, like the dock demo.
-              No tray wrapper: the popover-surface shadows breathe on the card
-              and the card stays shorter (drives the whole bento row height). */}
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="popover-surface flex-1 rounded-2xl p-3">
-              <p className="pb-2 pt-1 text-center text-[13px] font-medium text-zinc-800 dark:text-zinc-100">Grid</p>
-              <div className="grid grid-cols-3 gap-2">
-                {gridApps.map((app) => (
-                  <span key={app.name} className="flex aspect-square items-center justify-center">
-                    <Image
-                      src={app.src}
-                      alt={app.name}
-                      width={40}
-                      height={40}
-                      unoptimized
-                      draggable={false}
-                      className="h-9 w-9"
-                    />
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="popover-surface flex-1 rounded-2xl p-3">
-              <p className="pb-2 pt-1 text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">List</p>
-              <div className="flex flex-col gap-1">
-                {listApps.map((app) => (
-                  <span key={app.name} className="flex items-center gap-2 rounded px-2 py-1.5 text-[13px] text-zinc-700 dark:text-zinc-300">
-                    <Image
-                      src={app.src}
-                      alt=""
-                      width={20}
-                      height={20}
-                      unoptimized
-                      draggable={false}
-                      className="h-5 w-5"
-                    />
-                    {app.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* EXACT product popovers (via the dock demo's markup + dimensions),
+              zoomed to fit the card — see PopoverShowcase / ScaleToFit. */}
+          <PopoverShowcase />
           <div className="flex flex-wrap gap-2">
             {["Popover size", "Tile size", "Spacing", "Labels", "Hover highlight", "Animation"].map((chip) => (
               <span key={chip} className="rounded-full bg-muted px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -180,15 +256,17 @@ export function PowerUserSection() {
         </Reveal>
 
         {/* Smart Add — white card */}
-        <Reveal delay={80} className="flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-8">
+        <Reveal delay={80} className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 xl:max-w-none">
           <div>
             <h3 className="mb-3 text-xl font-bold text-foreground">{m.smartAddTitle}</h3>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{m.smartAddBody}</p>
           </div>
-          {/* suggestion mock */}
-          <div className="flex flex-col items-center gap-4 rounded-2xl bg-muted p-6">
-            <div className="grid w-full grid-cols-2 gap-3">
-              <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
+          {/* suggestion mock — AI Apps / Chat tiles at a FIXED width so they
+              never squish; per the design they stack one below the other and
+              stay centred at every viewport (no reflow, no full-width stretch). */}
+          <div className="flex flex-col items-center gap-4 rounded-2xl bg-muted p-5">
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex w-44 shrink-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
                 <span
                   className="squircle flex h-10 w-10 min-w-10 items-center justify-center"
                   style={{ background: isDarkSite ? DARK_TILE_BG : "linear-gradient(to bottom, #A78BFF, #7C3AED)" }}
@@ -204,7 +282,7 @@ export function PowerUserSection() {
                   <p className="text-[10px] text-muted-foreground">6 apps</p>
                 </span>
               </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
+              <div className="flex w-44 shrink-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
                 <span
                   className="squircle flex h-10 w-10 min-w-10 items-center justify-center"
                   style={{ background: isDarkSite ? DARK_TILE_BG : "linear-gradient(to bottom, #52DFA8, #10B981)" }}
@@ -237,7 +315,10 @@ export function PowerUserSection() {
         </Reveal>
 
         {/* Ghost Mode — dark card */}
-        <Reveal delay={160} className="relative flex flex-col justify-between gap-8 overflow-hidden rounded-3xl bg-zinc-900 p-8 text-white">
+        {/* Ghost card runs a charcoal gradient (lighter than the flat zinc-900
+            shells / pure-black CTA) so it reads as its OWN card and separates
+            cleanly from the black Final CTA when they stack on mobile. */}
+        <Reveal delay={160} className="relative mx-auto flex w-full max-w-md flex-col justify-between gap-8 overflow-hidden rounded-3xl bg-linear-to-b from-zinc-800 to-zinc-900 p-6 text-white xl:max-w-none">
           <div className="grain" />
           <div className="relative">
             <h3 className="mb-3 text-xl font-bold">{m.ghostTitle}</h3>
