@@ -28,8 +28,12 @@ wrapper owns everything DockTile-specific. Behaviour rules — each was hard-won
 - **The popover anchors to the clicked icon** (the app's signature interaction): body centred over
   the tile, clamped to an 8px viewport gutter, arrow at the icon centre; scale-pop from the arrow
   origin (`dock-scale-in/out`); starts **closed**; no dock-icon bounce.
-- Widths mirror the product's tiers: grid = 324px (5-col medium), list = 240px (medium list). The
-  Media tile is list-layout on purpose — the demo must show both layouts.
+- Widths mirror the product's tiers: grid = 324px (5-col medium), list = 240px (medium list),
+  capped at `viewport − 16px` so sub-340px phones keep the 8px gutters. The Media tile is
+  list-layout on purpose — the demo must show both layouts.
+- **Configure navigates, never dead-ends**: the grid header's gear and the list's "Configure…" row
+  close the popover and smooth-scroll to `/#features` (auto under reduced motion) — the site's
+  stand-in for the real app's "open the configurator" deep link.
 - Tile faces mirror app truth: 22.5% squircle radius, 58% glyph-to-tile ratio, and in dark theme
   the app's Dark icon style (neutral near-black background, the tile's tint moves to the glyph).
 - **Auto-showcase**: hard-stops the instant the real pointer enters or the user clicks; resumes
@@ -37,10 +41,18 @@ wrapper owns everything DockTile-specific. Behaviour rules — each was hard-won
   chase the magnifying icons), then a two-step live "aim" + ±7px jitter lands the click;
   magnification is driven by synthesising `mousemove` at the fake cursor every frame. Fully
   disabled under reduced motion.
+- **Touch resume model (critical — keeps the demo alive on phones)**: hover semantics don't exist
+  on touch — a finger's `pointerleave` fires right after every tap-up, so resuming on leave (the
+  mouse rule) would let the showcase barge back over a popover the user just opened, and *not*
+  resuming would leave the demo dead after the first tap. So resume-on-leave is mouse-only; touch
+  re-arms on tap-up / `pointercancel` / outside-tap dismiss / same-tile toggle-close (via
+  `lastPointerTypeRef`, since click handlers fire after the pointer events). A tap that OPENS a
+  popover survives because `handleAppClick`'s stop cancels the pending resume. `resume` is a no-op
+  unless the showcase is stopped — touch fires it liberally, and re-arming a running showcase
+  would spawn a second concurrent `step()` walker.
 - Finder / System Settings bookend the dock — non-clickable, tooltip only.
-- Known bug (fix pending): rapidly reopening during the close animation hits `close()`'s stale
-  timeout and shuts the new popover. Fix: keep the timer in a `closeTimer` ref, clear it in both
-  `open()` and `close()`.
+- Reopening during the 200ms close animation is safe: the close timer lives in `closeTimerRef`
+  and `open()` cancels it (a stale timeout used to shut the new popover the moment it appeared).
 
 ## Bento popover showcase (`home-sections.tsx` PopoverShowcase)
 

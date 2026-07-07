@@ -193,7 +193,12 @@ export function DockDemo({ className = "" }: { className?: string }) {
   const [launching, setLaunching] = React.useState<string | null>(null);
   const [focusIndex, setFocusIndex] = React.useState(-1);
   const [reduced, setReduced] = React.useState(false);
-  const [pos, setPos] = React.useState({ left: 0, arrow: GRID_WIDTH / 2, bottom: 0 });
+  const [pos, setPos] = React.useState({
+    left: 0,
+    arrow: GRID_WIDTH / 2,
+    bottom: 0,
+    width: GRID_WIDTH,
+  });
 
   // Auto-demo cursor (idle showcase): a human-like pointer that glides between
   // tiles and clicks. moveDur varies per hop; rings are the click ripples.
@@ -209,32 +214,46 @@ export function DockDemo({ className = "" }: { className?: string }) {
   const stopAutoRef = React.useRef<() => void>(() => {});
   const resumeAutoRef = React.useRef<() => void>(() => {});
   const autoDrivingRef = React.useRef(false);
+  // Pointer type of the interaction in flight — click handlers fire after the
+  // pointer events and need it to decide the touch-only resume paths.
+  const lastPointerTypeRef = React.useRef("mouse");
 
   const openTile = TILES.find((t) => t.id === openId) ?? null;
-  const popWidth = widthFor(openTile);
 
   // Anchor a tile's popover to its icon (centre over the icon; clamp to viewport;
   // sit just above the icon's top — holds even while the icon is magnified).
+  // Width rides in `pos` because narrow phones clamp it below the product tier.
   const anchor = React.useCallback((id: string, rect: DOMRect | null) => {
     const root = rootRef.current;
     const tile = TILES.find((t) => t.id === id);
     if (!root || !rect || !tile) return false;
     const rootBox = root.getBoundingClientRect();
     if (rootBox.width === 0) return false;
-    const width = widthFor(tile);
+    // Product-tier width, capped so the popover keeps its 8px gutters even on
+    // viewports narrower than the grid tier (320px phones).
+    const width = Math.min(widthFor(tile), window.innerWidth - 16);
     const centre = rect.left + rect.width / 2 - rootBox.left;
     let left = centre - width / 2;
     const minLeft = 8 - rootBox.left;
     const maxLeft = window.innerWidth - 8 - width - rootBox.left;
     left = Math.max(minLeft, Math.min(left, maxLeft));
     const bottom = rootBox.bottom - rect.top + 14; // 14px gap above the icon
-    setPos({ left, arrow: centre - left, bottom });
+    setPos({ left, arrow: centre - left, bottom, width });
     return true;
   }, []);
+
+  // Pending close-animation timer. open() must cancel it: a reopen during the
+  // 200ms scale-out otherwise hits the stale timeout, which shuts the NEW
+  // popover the moment it appears.
+  const closeTimerRef = React.useRef(0);
 
   const open = React.useCallback(
     (id: string, rect: DOMRect | null) => {
       if (!anchor(id, rect)) return;
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = 0;
+      }
       setClosing(false);
       setOpenId(id);
       setFocusIndex(-1);
@@ -244,23 +263,40 @@ export function DockDemo({ className = "" }: { className?: string }) {
 
   const close = React.useCallback(() => {
     setClosing(true);
-    window.setTimeout(() => {
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = 0;
       setOpenId(null);
       setClosing(false);
       setFocusIndex(-1);
     }, 200); // matches the scale-out duration
   }, []);
 
+  // Configure (the gear in the grid header / the "Configure…" list row) stands
+  // in for the real app's deep link into Tile Detail: on the site it walks you
+  // to the first feature story instead.
+  const configure = React.useCallback(() => {
+    close();
+    document
+      .getElementById("features")
+      ?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  }, [close, reduced]);
+
   // Reduced-motion probe.
   React.useEffect(() => {
     setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }, []);
 
-  // Outside-click + Escape dismiss.
+  // Outside-click + Escape dismiss. A touch dismiss also re-arms the showcase:
+  // unlike a mouse, a finger is never "hovering" the demo afterwards, so
+  // pointerleave will never fire to do it.
   React.useEffect(() => {
     if (!openId) return;
     const onPointerDown = (e: PointerEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) close();
+      if (!rootRef.current?.contains(e.target as Node)) {
+        close();
+        if (e.pointerType !== "mouse") resumeAutoRef.current();
+      }
     };
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
@@ -434,6 +470,10 @@ export function DockDemo({ className = "" }: { className?: string }) {
       setCursor((c) => ({ ...c, visible: false, pressing: false }));
     };
     resumeAutoRef.current = () => {
+      // Only a stopped showcase may re-arm — touch fires resume liberally
+      // (every tap-up, every outside dismiss), and re-arming a RUNNING
+      // showcase would spawn a second concurrent step() walker.
+      if (!stopped) return;
       if (resumeTimer) window.clearTimeout(resumeTimer);
       resumeTimer = window.setTimeout(() => {
         stopped = false;
@@ -457,8 +497,15 @@ export function DockDemo({ className = "" }: { className?: string }) {
   const handleAppClick = (id: string, rect: DOMRect | null) => {
     if (!TILE_IDS.has(id)) return; // Finder / Settings: tooltip only, no popover
     stopAutoRef.current(); // hard-stop the showcase so clicks never conflict
-    if (openId === id) close();
-    else open(id, rect);
+    if (openId === id) {
+      close();
+      // Toggle-close by touch: stopAuto just swallowed the tap-up's pending
+      // resume, and no pointerleave is coming — re-arm here or the showcase
+      // stays dead for good.
+      if (lastPointerTypeRef.current !== "mouse") resumeAutoRef.current();
+    } else {
+      open(id, rect);
+    }
   };
 
   const handleLaunch = (appName: string) => {
@@ -499,8 +546,26 @@ export function DockDemo({ className = "" }: { className?: string }) {
     <div
       ref={rootRef}
       className={`relative inline-block ${className}`}
+      // Any pointer coming in hard-stops the showcase. Resuming is per-type:
+      // a mouse resumes when it LEAVES (hover semantics); touch has no hover —
+      // its pointerleave fires right after every tap-up, which would let the
+      // showcase barge back while the user reads the popover they just opened.
+      // Touch instead resumes on tap-up / cancelled tap (scroll), and open()
+      // via handleAppClick stop-cancels the pending resume when a tap opened a
+      // popover, so it stays up until the user dismisses it.
+      onPointerDownCapture={(e) => {
+        lastPointerTypeRef.current = e.pointerType;
+      }}
       onPointerEnter={() => stopAutoRef.current()}
-      onPointerLeave={() => resumeAutoRef.current()}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "mouse") resumeAutoRef.current();
+      }}
+      onPointerUp={(e) => {
+        if (e.pointerType !== "mouse") resumeAutoRef.current();
+      }}
+      onPointerCancel={(e) => {
+        if (e.pointerType !== "mouse") resumeAutoRef.current();
+      }}
     >
       {/* Popover — anchored above the clicked tile */}
       {openTile && (
@@ -512,7 +577,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
             openTile.layout === "list" ? "p-2" : "p-3 pt-0"
           }`}
           style={{
-            width: popWidth,
+            width: pos.width,
             left: pos.left,
             bottom: pos.bottom,
             transformOrigin: `${pos.arrow}px 100%`,
@@ -564,7 +629,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
               <div className="mx-3 my-1 border-t border-black/10 dark:border-white/10" />
               <button
                 type="button"
-                onClick={close}
+                onClick={configure}
                 className="flex w-full items-center gap-2.5 rounded px-3 py-1 text-left text-[13px] text-zinc-700 outline-none transition-colors duration-150 hover:bg-black/5 dark:text-zinc-300 dark:hover:bg-white/10"
               >
                 <Settings2 className="h-3 w-4 text-zinc-500 dark:text-zinc-400" />
@@ -582,7 +647,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
                   type="button"
                   aria-label="Configure Tile"
                   title="Configure Tile"
-                  onClick={close}
+                  onClick={configure}
                   className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-black/5 dark:text-zinc-400 dark:hover:bg-white/10"
                 >
                   <Settings2 className="h-3.5 w-3.5" />
