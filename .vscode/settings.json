@@ -13,7 +13,7 @@
     "package-lock.json": true,
     "yarn.lock": true
   },
-  "workbench.colorTheme": "Monokai",
+  "workbench.colorTheme": "Monokai Dimmed",
   "editor.fontSize": 13.5,
   "editor.lineHeight": 1.92,
   "editor.suggestLineHeight": 0,
