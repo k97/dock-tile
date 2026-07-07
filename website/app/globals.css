@@ -49,23 +49,23 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.985 0.012 85.0); /* sand-50 ~#fdfaf6 */
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.967 0.001 286.375); /* zinc-100 #f4f4f5 */
+  --foreground: oklch(0.21 0.006 285.885); /* zinc-900 */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.21 0.006 285.885); /* zinc-900 */
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.21 0.006 285.885); /* zinc-900 */
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted: oklch(0.967 0.001 286.375); /* zinc-100 */
+  --muted-foreground: oklch(0.552 0.016 285.938); /* zinc-500 */
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.92 0.004 286.32); /* zinc-200 */
+  --input: oklch(0.92 0.004 286.32); /* zinc-200 */
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -83,18 +83,18 @@
 }
 
 .dark {
-  --background: oklch(0.13 0.028 261.692); /* gray-950 #030712 */
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: oklch(0.141 0.005 285.823); /* zinc-950 */
+  --foreground: oklch(0.985 0 0); /* zinc-50 */
+  --card: oklch(0.21 0.006 285.885); /* zinc-900 */
+  --card-foreground: oklch(0.985 0 0); /* zinc-50 */
+  --popover: oklch(0.21 0.006 285.885); /* zinc-900 */
+  --popover-foreground: oklch(0.985 0 0); /* zinc-50 */
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted: oklch(0.274 0.006 286.033); /* zinc-800 — lighter "elevated" tray on the zinc-900 card */
+  --muted-foreground: oklch(0.705 0.015 286.067); /* zinc-400 */
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -129,14 +129,6 @@
    DockTile v2 design system — dark glass + grain + emerald
    Reference: .superdesign/design-system.md
 --------------------------------------------------------------------------- */
-
-/* The v2 marketing design is a fixed light/dark rhythm — pin the page
-   backdrop to the light zinc so a dark system theme can't leak a black
-   strip above/below the rounded section shells. */
-html,
-body {
-  background: #f4f4f5;
-}
 
 /* Smooth in-page anchor jumps (e.g. nav "Features" → #features), motion-safe */
 @media (prefers-reduced-motion: no-preference) {
@@ -243,7 +235,9 @@ body {
   }
 }
 
-/* macOS popover surface (web recreation of NSPopover vibrancy) */
+/* macOS popover surface (web recreation of NSPopover vibrancy). Real NSPopover
+   vibrancy follows the system's own light/dark appearance, so this flips with
+   the site theme too — light vibrancy in light mode, dark vibrancy in dark. */
 .popover-surface {
   background: rgba(246, 246, 248, 0.82);
   backdrop-filter: blur(40px) saturate(180%);
@@ -251,6 +245,13 @@ body {
   box-shadow:
     0 10px 22px rgba(0, 0, 0, 0.28),
     0 30px 60px rgba(0, 0, 0, 0.25);
+}
+.dark .popover-surface {
+  background: rgba(38, 38, 40, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.45),
+    0 30px 60px rgba(0, 0, 0, 0.4);
 }
 
 /* Entry reveal — fade-in-up, staggered via --reveal-delay */
@@ -365,13 +366,17 @@ body {
   }
 }
 
-/* Hero wallpaper — full-bleed macOS-style wallpaper behind the hero content.
-   A legibility scrim over the top keeps the white headline/CTA readable. */
+/* Hero wallpaper — full-bleed dithered macOS wallpaper behind the hero content.
+   A legibility scrim over the top keeps the white headline/CTA readable. The
+   image URL itself is set inline by the component so it can swap Light/Dark
+   Ventura dithers with the theme (same crop + halftone, reads as a recolour). */
 .hero-texture {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: url("/assets/hero-bg.webp") center / cover no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   pointer-events: none;
 }
 
@@ -546,6 +551,143 @@ body {
   animation: bounce-subtle 2s infinite ease-in-out;
 }
 
+/* Dock Lock demo — the Dock roams between the two screens, then locks
+   onto the anchor. Three synced loops: horizontal travel, a snap-scale on
+   lock, and an open→closed lock-icon cross-fade. */
+/* Centre the pill on each screen via left+calc (pill is w-20 = 80px, so
+   offset half its width). Centring lives here, NOT in a translateX — a
+   base translate would stack with the compositor-run snap transform. */
+@keyframes dock-lock-travel {
+  0% { left: calc(25% - 40px); }
+  10% { left: calc(25% - 40px); }
+  22% { left: calc(75% - 40px); }
+  32% { left: calc(75% - 40px); }
+  44% { left: calc(25% - 40px); }
+  54% { left: calc(25% - 40px); }
+  66% { left: calc(75% - 40px); }
+  100% { left: calc(75% - 40px); }
+}
+@keyframes dock-lock-snap {
+  0%,
+  64% {
+    transform: scale(1);
+  }
+  68% {
+    transform: scale(1.18);
+  }
+  74%,
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes dock-lock-open-vis {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  66%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes dock-lock-closed-vis {
+  0%,
+  60% {
+    opacity: 0;
+  }
+  66%,
+  100% {
+    opacity: 1;
+  }
+}
+/* Highlight tint tracks the lock state: blue (sky-400) while the Dock roams
+   unlocked, snapping to green (emerald-400) as it locks onto the anchor at
+   ~64% — the same beat as the scale snap and the open→closed padlock swap. */
+@keyframes dock-lock-tint {
+  0%,
+  63% {
+    border-color: rgba(56, 189, 248, 0.6);
+    background-color: rgba(56, 189, 248, 0.22);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
+  }
+  70%,
+  100% {
+    border-color: rgba(52, 211, 153, 0.6);
+    background-color: rgba(52, 211, 153, 0.25);
+    box-shadow: 0 0 14px rgba(52, 211, 153, 0.45);
+  }
+}
+@keyframes dock-lock-anchor-tint {
+  0%,
+  63% {
+    border-color: rgba(56, 189, 248, 0.3);
+  }
+  70%,
+  100% {
+    border-color: rgba(52, 211, 153, 0.3);
+  }
+}
+.dock-lock-pill {
+  animation:
+    dock-lock-travel 6.5s var(--ease-in-out-strong) infinite,
+    dock-lock-snap 6.5s var(--ease-out-strong) infinite,
+    dock-lock-tint 6.5s var(--ease-in-out-strong) infinite;
+}
+.dock-lock-anchor {
+  animation: dock-lock-anchor-tint 6.5s var(--ease-in-out-strong) infinite;
+}
+.dock-lock-open {
+  opacity: 0;
+  animation: dock-lock-open-vis 6.5s linear infinite;
+}
+.dock-lock-closed {
+  opacity: 1;
+  animation: dock-lock-closed-vis 6.5s linear infinite;
+}
+
+/* Ghost Mode — a Cmd+Tab app-switcher mock. The selection highlight tabs
+   across the real apps and skips the Dock Tile slot, which stays a dashed,
+   phasing ghost (tiles never appear in the App Switcher). */
+@keyframes app-switch-sel {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  20%,
+  35% {
+    transform: translateX(56px);
+  }
+  40%,
+  55% {
+    transform: translateX(168px);
+  }
+  60%,
+  75% {
+    transform: translateX(224px);
+  }
+  80%,
+  100% {
+    transform: translateX(0);
+  }
+}
+.app-switch-sel {
+  animation: app-switch-sel 5.5s var(--ease-out-strong) infinite;
+}
+@keyframes ghost-phase {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(0.94);
+  }
+}
+.ghost-phase {
+  animation: ghost-phase 2.6s ease-in-out infinite;
+}
+
 /* Pressables acknowledge the press */
 .pressable {
   transition: transform 160ms var(--ease-out-strong);
@@ -563,6 +705,16 @@ body {
     transition: none;
   }
   .animate-bounce-subtle {
+    animation: none;
+  }
+  .dock-lock-pill,
+  .dock-lock-anchor,
+  .dock-lock-open,
+  .dock-lock-closed {
+    animation: none;
+  }
+  .app-switch-sel,
+  .ghost-phase {
     animation: none;
   }
 }

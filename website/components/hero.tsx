@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
 import { trackReleaseNotesClick } from "@/lib/analytics";
@@ -12,16 +13,31 @@ export function Hero() {
   const { content } = useLocale();
   const m = content.marketing;
 
+  // Swap the Ventura dither with the theme: Light in light mode, Dark in dark.
+  // Set inline (not via CSS) so it tracks resolvedTheme without a flash. Before
+  // mount, resolvedTheme is undefined → default to the light wallpaper.
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const wallpaper =
+    mounted && resolvedTheme === "dark"
+      ? "/assets/hero-bg-dark.webp"
+      : "/assets/hero-bg.webp";
+
   return (
     <section
       data-nav-tone="dark"
       className="relative mx-3 mt-3 flex min-h-[92vh] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] bg-black px-4 pb-16 pt-28 md:mx-4 md:mt-4"
     >
-      {/* Full-bleed macOS wallpaper */}
-      <div className="hero-texture" aria-hidden />
-      {/* Legibility scrim — light touch up top so the wallpaper stays bright,
-          a little more toward the bottom to carry the CTA + meta text */}
-      <div className="absolute inset-0 bg-linear-to-b from-black/5 via-black/12 to-black/50" />
+      {/* Full-bleed macOS wallpaper — Light/Dark Ventura dither by theme */}
+      <div
+        className="hero-texture"
+        style={{ backgroundImage: `url("${wallpaper}")` }}
+        aria-hidden
+      />
+      {/* Bright-to-dark scrim — wallpaper at full brightness up top, ramping
+          to a deep dark at the bottom so the CTA/meta read and it settles down */}
+      <div className="absolute inset-0 bg-linear-to-b from-transparent from-0% via-black/30 via-55% to-black/95 to-92%" />
       <div className="grain" />
       {/* Headline */}
       <div className="relative z-10 text-center">
@@ -43,7 +59,7 @@ export function Hero() {
         >
           {m.heroHeadlineA}
           <br />
-          {m.heroHeadlineB}
+          <span className="text-white/60 dark:text-white/40">{m.heroHeadlineB}</span>
         </h1>
         <p
           className="reveal mx-auto mt-5 max-w-md text-xl text-white/90"
