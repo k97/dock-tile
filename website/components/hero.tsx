@@ -1,159 +1,111 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
-import { Download, Loader2, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useTheme } from "next-themes";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
-import { trackDownloadClick, trackReleaseNotesClick } from "@/lib/analytics";
+import { trackReleaseNotesClick } from "@/lib/analytics";
+import { DockDemo } from "@/components/dock-demo";
+import { DownloadActionButton } from "@/components/action-button";
 
 export function Hero() {
   const { content } = useLocale();
-  const iconRef = React.useRef<HTMLDivElement>(null);
+  const m = content.marketing;
 
-  // Download button state machine
-  const [downloadState, setDownloadState] = React.useState<
-    "ready" | "downloading" | "downloaded"
-  >("ready");
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!iconRef.current) return;
-
-    const rect = iconRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = (y - centerY) / 10;
-    const rotateY = (centerX - x) / 10;
-
-    iconRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
-  };
-
-  const handleMouseLeave = () => {
-    if (!iconRef.current) return;
-    iconRef.current.style.transform =
-      "perspective(1000px) rotateX(0) rotateY(0) scale(1)";
-  };
-
-  const handleDownload = () => {
-    // Track analytics
-    trackDownloadClick();
-
-    // Change to downloading state
-    setDownloadState("downloading");
-
-    // Initiate download
-    window.location.href = siteConfig.downloadUrl;
-
-    // After 2 seconds, assume download started and show "Downloaded"
-    setTimeout(() => {
-      setDownloadState("downloaded");
-
-      // After 4 more seconds, reset to ready
-      setTimeout(() => {
-        setDownloadState("ready");
-      }, 4000);
-    }, 2000);
-  };
+  // Swap the Ventura dither with the theme: Light in light mode, Dark in dark.
+  // Set inline (not via CSS) so it tracks resolvedTheme without a flash. Before
+  // mount, resolvedTheme is undefined → default to the light wallpaper.
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const wallpaper =
+    mounted && resolvedTheme === "dark"
+      ? "/assets/hero-bg-dark.webp"
+      : "/assets/hero-bg.webp";
 
   return (
     <section
-      id="hero-section"
-      className="flex flex-col items-center text-center px-4 pt-16 pb-8 md:pt-24 md:pb-12"
+      data-nav-tone="dark"
+      className="relative mx-3 mt-3 flex min-h-[92vh] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] bg-black px-4 pb-16 pt-28 md:mx-4 md:mt-4"
     >
-      {/* App Icon with 3D tilt effect and macOS glass styling */}
+      {/* Full-bleed macOS wallpaper — Light/Dark Ventura dither by theme */}
       <div
-        ref={iconRef}
-        className="w-32 h-32 md:w-40 md:h-40 transition-transform duration-200 ease-out will-change-transform"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        {/* macOS-style glass container */}
-        <div className="relative w-full h-full rounded-[22%] bg-white/80 dark:bg-white/10 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.2)] border border-white/20 dark:border-white/10 overflow-hidden">
-          {/* Inner highlight for glass effect */}
-          <div className="absolute inset-0 rounded-[22%] bg-gradient-to-b from-white/40 to-transparent dark:from-white/10 dark:to-transparent pointer-events-none" />
-
-          {/* SVG Icon centered */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Image
-              src="/assets/dock-tile-icon-only.svg"
-              alt={`${siteConfig.appName} icon`}
-              width={120}
-              height={120}
-              className="w-full h-full object-contain"
-              priority
-            />
-          </div>
-        </div>
+        className="hero-texture"
+        style={{ backgroundImage: `url("${wallpaper}")` }}
+        aria-hidden
+      />
+      {/* Bright-to-dark scrim — wallpaper at full brightness up top, ramping
+          to a deep dark at the bottom so the CTA/meta read and it settles down */}
+      <div className="absolute inset-0 bg-linear-to-b from-transparent from-0% via-black/30 via-55% to-black/95 to-92%" />
+      <div className="grain" />
+      {/* Headline */}
+      <div className="relative z-10 text-center">
+        {/* Soft readability blur — lifts the copy off the wallpaper, edges
+            feathered by a radial mask so there's no hard boxy edge */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-x-8 -inset-y-8 -z-10 rounded-[2.5rem] bg-black/15 backdrop-blur-md mask-[radial-gradient(ellipse_at_center,black_20%,transparent_72%)]"
+        />
+        <span
+          className="reveal mb-3 block text-[12px] font-bold uppercase tracking-[0.2em] text-white/60"
+          style={{ "--reveal-delay": "0ms" } as React.CSSProperties}
+        >
+          {m.heroEyebrow}
+        </span>
+        <h1
+          className="reveal text-4xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-5xl"
+          style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
+        >
+          {m.heroHeadlineA}
+          <br />
+          <span className="text-white/60 dark:text-white/40">{m.heroHeadlineB}</span>
+        </h1>
+        <p
+          className="reveal mx-auto mt-5 max-w-md text-xl text-white/90"
+          style={{ "--reveal-delay": "160ms" } as React.CSSProperties}
+        >
+          {m.heroSub}
+        </p>
       </div>
 
-      {/* App Name - uses Special Gothic font */}
-      <h1 className="mt-6 text-4xl md:text-5xl font-display tracking-tight">
-        {siteConfig.appName}
-      </h1>
+      {/* Popover zone — reserved so the open popover clears the headline. Extra
+          top margin drops the Dock lower, giving the popover room to genie up. */}
+      <div
+        className="reveal relative z-20 mt-64 flex flex-col items-center md:mt-72"
+        style={{ "--reveal-delay": "280ms" } as React.CSSProperties}
+      >
+        <DockDemo />
+      </div>
 
-      {/* Tagline */}
-      <p className="mt-3 text-lg md:text-xl text-muted-foreground">
-        {content.tagline}
-      </p>
-
-      {/* Description */}
-      <p className="mt-4 max-w-lg text-muted-foreground">
-        {content.description}
-      </p>
-
-      {/* CTA Buttons */}
+      {/* CTA + meta */}
       <div
         id="hero-cta"
-        className="mt-8 flex flex-col sm:flex-row items-center gap-3"
+        className="reveal relative z-10 mt-12 flex flex-col items-center gap-5"
+        style={{ "--reveal-delay": "440ms" } as React.CSSProperties}
       >
-        <Button
-          size="lg"
-          onClick={handleDownload}
-          disabled={downloadState !== "ready"}
-          className="gap-2 px-8 py-6 rounded-xl text-md cursor-pointer"
-        >
-          {downloadState === "ready" && (
-            <>
-              <Download className="h-4 w-4" />
-              {content.downloadButton}
-            </>
-          )}
-          {downloadState === "downloading" && (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Downloading...
-            </>
-          )}
-          {downloadState === "downloaded" && (
-            <>
-              <Check className="h-4 w-4" />
-              Downloaded
-            </>
-          )}
-        </Button>
+        <DownloadActionButton tone="light" size="lg" label={content.downloadButton} />
+        <p className="flex items-center gap-3 text-xs font-medium text-white/40">
+          <Link
+            href="/release-notes"
+            onClick={trackReleaseNotesClick}
+            className="underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
+          >
+            v{siteConfig.latestVersion}
+          </Link>
+          <span className="h-1 w-1 rounded-full bg-white/20" />
+          <a
+            href={siteConfig.githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-white"
+          >
+            GitHub
+          </a>
+          <span className="h-1 w-1 rounded-full bg-white/20" />
+          <span>macOS 26+</span>
+        </p>
       </div>
-
-      {/* Version & System Requirements */}
-      <p className="mt-4 text-sm text-muted-foreground">
-        <a
-          href={siteConfig.releaseNotesUrl}
-          className="text-foreground hover:underline underline-offset-4"
-          onClick={trackReleaseNotesClick}
-        >
-          v{siteConfig.latestVersion}
-        </a>
-        {" · "}<a
-          href={siteConfig.githubUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:underline underline-offset-4"
-        >
-          GitHub
-        </a>{" · macOS 26+"}
-      </p>
     </section>
   );
 }

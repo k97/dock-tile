@@ -1,21 +1,24 @@
 import { Hero } from "@/components/hero";
-import { ScreenCapCarousel } from "@/components/screenshot";
-import { Features } from "@/components/features";
-import { FAQ } from "@/components/faq";
-import { Support } from "@/components/support";
+import {
+  CustomTilesStory,
+  PowerUserSection,
+  DockLockStory,
+  FinalCta,
+} from "@/components/home-sections";
 import { Footer } from "@/components/footer";
+import { JsonLd } from "@/components/json-ld";
+import { softwareApplicationSchema } from "@/lib/schema";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1">
-        <Hero />
-        <ScreenCapCarousel />
-        <Features />
-        <FAQ />
-        <Support />
-      </main>
+    <main className="bg-background">
+      <JsonLd data={softwareApplicationSchema} />
+      <Hero />
+      <CustomTilesStory />
+      <DockLockStory />
+      <PowerUserSection />
+      <FinalCta />
       <Footer />
-    </div>
+    </main>
   );
 }

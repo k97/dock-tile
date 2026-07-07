@@ -27,7 +27,7 @@ export function Features() {
       className="scroll-mt-24 px-4 py-12 md:py-16 max-w-5xl mx-auto"
     >
       <div className="text-center mb-10 md:mb-12">
-        <h2 className="text-2xl md:text-3xl font-display">
+        <h2 className="text-xl md:text-2xl font-display">
           {content.featuresTitle}
         </h2>
         <p className="mt-3 text-muted-foreground">{content.featuresSubtitle}</p>

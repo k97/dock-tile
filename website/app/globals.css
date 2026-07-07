@@ -49,23 +49,23 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.985 0.012 85.0); /* sand-50 ~#fdfaf6 */
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.967 0.001 286.375); /* zinc-100 #f4f4f5 */
+  --foreground: oklch(0.21 0.006 285.885); /* zinc-900 */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.21 0.006 285.885); /* zinc-900 */
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.21 0.006 285.885); /* zinc-900 */
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted: oklch(0.967 0.001 286.375); /* zinc-100 */
+  --muted-foreground: oklch(0.552 0.016 285.938); /* zinc-500 */
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.92 0.004 286.32); /* zinc-200 */
+  --input: oklch(0.92 0.004 286.32); /* zinc-200 */
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -83,18 +83,18 @@
 }
 
 .dark {
-  --background: oklch(0.13 0.028 261.692); /* gray-950 #030712 */
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: oklch(0.141 0.005 285.823); /* zinc-950 */
+  --foreground: oklch(0.985 0 0); /* zinc-50 */
+  --card: oklch(0.21 0.006 285.885); /* zinc-900 */
+  --card-foreground: oklch(0.985 0 0); /* zinc-50 */
+  --popover: oklch(0.21 0.006 285.885); /* zinc-900 */
+  --popover-foreground: oklch(0.985 0 0); /* zinc-50 */
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted: oklch(0.274 0.006 286.033); /* zinc-800 — lighter "elevated" tray on the zinc-900 card */
+  --muted-foreground: oklch(0.705 0.015 286.067); /* zinc-400 */
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
@@ -122,5 +122,599 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   DockTile v2 design system — dark glass + grain + emerald
+   Reference: .superdesign/design-system.md
+--------------------------------------------------------------------------- */
+
+/* Smooth in-page anchor jumps (e.g. nav "Features" → #features), motion-safe */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+:root {
+  --emerald: #34d399;
+  --radius-major: 2.5rem;
+  --ease-entry: cubic-bezier(0.16, 1, 0.3, 1); /* spec: fade-in-up entries */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1); /* snappy UI interactions */
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Film grain over dark sections — prevents banding, adds analog depth */
+.grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.15;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Glass recipes — every glass element carries the 1px white/10 edge.
+   NOTE: write only the standard `backdrop-filter`; the build (Lightning CSS)
+   adds vendor prefixes. Hand-writing `-webkit-backdrop-filter` made the
+   compiler drop the unprefixed property, so Chrome rendered no blur. */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Adaptive floating nav — contrasts with whatever section is behind it.
+   Gentle blur; the pill flips light/dark based on the backdrop tone. */
+.glass-nav {
+  backdrop-filter: blur(10px) saturate(135%);
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    box-shadow 300ms ease;
+}
+/* Over a DARK section → light frosted pill (dark content lives inside) */
+.glass-nav[data-over="dark"] {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+/* Over a LIGHT section → dark frosted pill, the inverse (light content) */
+.glass-nav[data-over="light"] {
+  background: rgba(9, 9, 11, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* True Apple squircle — a rounded rectangle whose corners follow a SUPERELLIPSE
+   (flat edges, continuous-curvature corners), the exact shape iOS/macOS app
+   icons use. A plain `border-radius` (or `corner-shape: superellipse(2)`, which
+   is just a circle) reads visibly rounder than the real app-icon PNGs. The mask
+   is a normalised 100×100 superellipse path (r = 22.5% = size·0.225, exponent
+   ≈ 5); it scales to any square tile via `mask-size: 100% 100%` and works in
+   every mask-capable browser (Safari included), unlike `corner-shape`.
+   NOTE (Lightning CSS): write only the standard `mask` — the build adds the
+   `-webkit-` prefix; hand-writing it makes the compiler drop the unprefixed one.
+   `border-radius` stays as the graceful fallback for a no-mask engine. */
+.squircle {
+  aspect-ratio: 1 / 1;
+  border-radius: 22.5%;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%20preserveAspectRatio='none'%3E%3Cpath%20d='M22.5,0L77.5,0L85.058,0.019L87.465,0.077L89.202,0.174L90.603,0.31L91.79,0.485L92.822,0.701L93.735,0.959L94.552,1.258L95.286,1.601L95.949,1.99L96.547,2.426L97.087,2.913L97.574,3.453L98.01,4.051L98.399,4.714L98.742,5.448L99.041,6.265L99.299,7.178L99.515,8.21L99.69,9.397L99.826,10.798L99.923,12.535L99.981,14.942L100,22.5L100,77.5L99.981,85.058L99.923,87.465L99.826,89.202L99.69,90.603L99.515,91.79L99.299,92.822L99.041,93.735L98.742,94.552L98.399,95.286L98.01,95.949L97.574,96.547L97.087,97.087L96.547,97.574L95.949,98.01L95.286,98.399L94.552,98.742L93.735,99.041L92.822,99.299L91.79,99.515L90.603,99.69L89.202,99.826L87.465,99.923L85.058,99.981L77.5,100L22.5,100L14.942,99.981L12.535,99.923L10.798,99.826L9.397,99.69L8.21,99.515L7.178,99.299L6.265,99.041L5.448,98.742L4.714,98.399L4.051,98.01L3.453,97.574L2.913,97.087L2.426,96.547L1.99,95.949L1.601,95.286L1.258,94.552L0.959,93.735L0.701,92.822L0.485,91.79L0.31,90.603L0.174,89.202L0.077,87.465L0.019,85.058L0,77.5L0,22.5L0.019,14.942L0.077,12.535L0.174,10.798L0.31,9.397L0.485,8.21L0.701,7.178L0.959,6.265L1.258,5.448L1.601,4.714L1.99,4.051L2.426,3.453L2.913,2.913L3.453,2.426L4.051,1.99L4.714,1.601L5.448,1.258L6.265,0.959L7.178,0.701L8.21,0.485L9.397,0.31L10.798,0.174L12.535,0.077L14.942,0.019L22.5,0Z'%20fill='%23000'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+
+/* macOS Tahoe Dock — "Liquid Glass" shelf (web recreation).
+   The real Dock is one pane of translucent glass that lightens/darkens with
+   the wallpaper: a bright specular rim along the top edge, a hairline glass
+   edge all round, a shaded inner base, and a soft layered drop shadow. The
+   near-vertical background gradient supplies the top gloss; the box-shadow
+   stack supplies the rim + depth. Continuous corners like the tiles. */
+.dock-shelf {
+  position: relative;
+  border-radius: 27px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.1) 46%,
+    rgba(150, 158, 176, 0.08)
+  );
+  backdrop-filter: blur(28px) saturate(200%);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.5),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.14),
+    inset 0 -8px 18px -10px rgba(0, 0, 0, 0.35),
+    0 1px 1px 0 rgba(0, 0, 0, 0.35),
+    0 22px 44px -14px rgba(0, 0, 0, 0.6);
+}
+@supports (corner-shape: superellipse(2)) {
+  .dock-shelf {
+    corner-shape: superellipse(1.8);
+  }
+}
+
+/* macOS popover surface (web recreation of NSPopover vibrancy). Real NSPopover
+   vibrancy follows the system's own light/dark appearance, so this flips with
+   the site theme too — light vibrancy in light mode, dark vibrancy in dark. */
+.popover-surface {
+  background: rgba(246, 246, 248, 0.82);
+  backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.28),
+    0 30px 60px rgba(0, 0, 0, 0.25);
+}
+.dark .popover-surface {
+  background: rgba(38, 38, 40, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.45),
+    0 30px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Entry reveal — fade-in-up, staggered via --reveal-delay */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.reveal {
+  opacity: 0;
+  animation: reveal-up 0.8s var(--ease-entry) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.8s var(--ease-entry),
+    transform 0.8s var(--ease-entry);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------------------------------------------------------------------------
+   Golden Gate aurora — macOS-wallpaper-style gradient motion.
+   Fully blurred blobs drifting behind dark-section content; the section's
+   own gradient overlay + grain sit on top so the glass language survives.
+--------------------------------------------------------------------------- */
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Match the host section's rounded corners and keep the screen-blended
+     blobs inside this layer — without isolation the blend escapes the
+     border-radius clip and paints square corners over the section. */
+  border-radius: inherit;
+  isolation: isolate;
+}
+.aurora__blob {
+  position: absolute;
+  width: 55vw;
+  height: 55vw;
+  min-width: 480px;
+  min-height: 480px;
+  border-radius: 9999px;
+  filter: blur(110px);
+  mix-blend-mode: screen;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+/* Golden Gate at dusk: international orange, golden amber, dusk magenta, deep indigo */
+.aurora__blob--orange {
+  top: -18%;
+  left: -12%;
+  background: radial-gradient(circle at 40% 40%, rgba(255, 107, 53, 0.5), transparent 65%);
+  animation: aurora-a 26s var(--ease-in-out-strong) infinite alternate;
+}
+.aurora__blob--amber {
+  top: 4%;
+  right: -14%;
+  background: radial-gradient(circle at 55% 45%, rgba(255, 179, 71, 0.38), transparent 65%);
+  animation: aurora-b 32s var(--ease-in-out-strong) infinite alternate;
+}
+.aurora__blob--magenta {
+  bottom: -22%;
+  left: 14%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 84, 130, 0.32), transparent 65%);
+  animation: aurora-c 38s var(--ease-in-out-strong) infinite alternate;
+}
+.aurora__blob--indigo {
+  bottom: -8%;
+  right: 6%;
+  background: radial-gradient(circle at 50% 55%, rgba(76, 29, 149, 0.45), transparent 68%);
+  animation: aurora-a 44s var(--ease-in-out-strong) infinite alternate-reverse;
+}
+@keyframes aurora-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(14vw, 8vh, 0) scale(1.25);
+  }
+}
+@keyframes aurora-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.15);
+  }
+  to {
+    transform: translate3d(-16vw, 12vh, 0) scale(0.9);
+  }
+}
+@keyframes aurora-c {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+  to {
+    transform: translate3d(10vw, -10vh, 0) scale(1.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora__blob {
+    animation: none;
+  }
+}
+
+/* Hero wallpaper — full-bleed dithered macOS wallpaper behind the hero content.
+   A legibility scrim over the top keeps the white headline/CTA readable. The
+   image URL itself is set inline by the component so it can swap Light/Dark
+   Ventura dithers with the theme (same crop + halftone, reads as a recolour). */
+.hero-texture {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* Dock demo popover motion — 200ms in (matches the app's 0.25s), faster out */
+@keyframes dock-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes dock-pop-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+}
+@keyframes dock-app-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Genie — the popover is sucked up out of the clicked tile, macOS-style.
+   Origin-aware: transform-origin is set inline to the tile's arrow point, so it
+   grows from the icon, not its own centre. The differential scaleX/scaleY is a
+   squash-&-stretch: a thin neck at the Dock that stretches tall then blooms
+   wide with a small overshoot (follow-through). Compositor-only (transform +
+   opacity + a whiff of blur to "materialise"). */
+@keyframes dock-genie-in {
+  0% {
+    opacity: 0;
+    transform: translateY(26px) scaleX(0.16) scaleY(0.04);
+    filter: blur(2px);
+  }
+  24% {
+    opacity: 1;
+    transform: translateY(13px) scaleX(0.4) scaleY(0.62);
+    filter: blur(0.5px);
+  }
+  58% {
+    transform: translateY(0) scaleX(1.03) scaleY(1.05);
+    filter: blur(0);
+  }
+  78% {
+    transform: translateY(0) scaleX(0.995) scaleY(0.99);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+@keyframes dock-genie-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  38% {
+    opacity: 1;
+    transform: translateY(7px) scaleX(0.48) scaleY(0.68);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(24px) scaleX(0.14) scaleY(0.04);
+    filter: blur(1.5px);
+  }
+}
+
+/* Popover scale-pop — the real macOS NSPopover / Dock-stack open: the surface
+   scales up from the clicked tile (transform-origin set inline to the arrow
+   point) with a small overshoot and fade. Subtler and cleaner than the genie;
+   compositor-only (transform + opacity). */
+@keyframes dock-scale-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.86);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0) scale(1.015);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes dock-scale-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+}
+
+/* Auto-demo cursor — an SVG pointer that drives the Dock while idle. */
+.dock-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  pointer-events: none;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+  transition: opacity 260ms ease;
+}
+/* Press feedback — a quick scale-down of the cursor at the moment of "click". */
+.dock-cursor[data-pressing="true"] .dock-cursor__arrow {
+  transform: scale(0.78);
+}
+.dock-cursor__arrow {
+  transform-origin: 20% 20%;
+  transition: transform 130ms var(--ease-out-strong);
+}
+/* Ripple — a ring expanding from the click point, confirming the press. */
+.dock-click-ring {
+  position: absolute;
+  z-index: 39;
+  height: 34px;
+  width: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: dock-click-ring 480ms var(--ease-out-strong) forwards;
+}
+@keyframes dock-click-ring {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+/* Reduced motion: the auto cursor never runs (gated in JS); should any
+   genie class still apply, collapse it to a plain fade. */
+@media (prefers-reduced-motion: reduce) {
+  .dock-cursor,
+  .dock-click-ring {
+    display: none;
+  }
+}
+
+@keyframes bounce-subtle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s infinite ease-in-out;
+}
+
+/* Dock Lock demo — the Dock roams between the two screens, then locks
+   onto the anchor. Three synced loops: horizontal travel, a snap-scale on
+   lock, and an open→closed lock-icon cross-fade. */
+/* Centre the pill on each screen via left+calc (pill is w-20 = 80px, so
+   offset half its width). Centring lives here, NOT in a translateX — a
+   base translate would stack with the compositor-run snap transform. */
+@keyframes dock-lock-travel {
+  0% { left: calc(25% - 40px); }
+  10% { left: calc(25% - 40px); }
+  22% { left: calc(75% - 40px); }
+  32% { left: calc(75% - 40px); }
+  44% { left: calc(25% - 40px); }
+  54% { left: calc(25% - 40px); }
+  66% { left: calc(75% - 40px); }
+  100% { left: calc(75% - 40px); }
+}
+@keyframes dock-lock-snap {
+  0%,
+  64% {
+    transform: scale(1);
+  }
+  68% {
+    transform: scale(1.18);
+  }
+  74%,
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes dock-lock-open-vis {
+  0%,
+  60% {
+    opacity: 1;
+  }
+  66%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes dock-lock-closed-vis {
+  0%,
+  60% {
+    opacity: 0;
+  }
+  66%,
+  100% {
+    opacity: 1;
+  }
+}
+/* Highlight tint tracks the lock state: blue (sky-400) while the Dock roams
+   unlocked, snapping to green (emerald-400) as it locks onto the anchor at
+   ~64% — the same beat as the scale snap and the open→closed padlock swap. */
+@keyframes dock-lock-tint {
+  0%,
+  63% {
+    border-color: rgba(56, 189, 248, 0.6);
+    background-color: rgba(56, 189, 248, 0.22);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
+  }
+  70%,
+  100% {
+    border-color: rgba(52, 211, 153, 0.6);
+    background-color: rgba(52, 211, 153, 0.25);
+    box-shadow: 0 0 14px rgba(52, 211, 153, 0.45);
+  }
+}
+@keyframes dock-lock-anchor-tint {
+  0%,
+  63% {
+    border-color: rgba(56, 189, 248, 0.3);
+  }
+  70%,
+  100% {
+    border-color: rgba(52, 211, 153, 0.3);
+  }
+}
+.dock-lock-pill {
+  animation:
+    dock-lock-travel 6.5s var(--ease-in-out-strong) infinite,
+    dock-lock-snap 6.5s var(--ease-out-strong) infinite,
+    dock-lock-tint 6.5s var(--ease-in-out-strong) infinite;
+}
+.dock-lock-anchor {
+  animation: dock-lock-anchor-tint 6.5s var(--ease-in-out-strong) infinite;
+}
+.dock-lock-open {
+  opacity: 0;
+  animation: dock-lock-open-vis 6.5s linear infinite;
+}
+.dock-lock-closed {
+  opacity: 1;
+  animation: dock-lock-closed-vis 6.5s linear infinite;
+}
+
+/* Ghost Mode — a Cmd+Tab app-switcher mock. The selection highlight tabs
+   across the real apps and skips the Dock Tile slot, which stays a dashed,
+   phasing ghost (tiles never appear in the App Switcher). */
+@keyframes app-switch-sel {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  20%,
+  35% {
+    transform: translateX(56px);
+  }
+  40%,
+  55% {
+    transform: translateX(168px);
+  }
+  60%,
+  75% {
+    transform: translateX(224px);
+  }
+  80%,
+  100% {
+    transform: translateX(0);
+  }
+}
+.app-switch-sel {
+  animation: app-switch-sel 5.5s var(--ease-out-strong) infinite;
+}
+@keyframes ghost-phase {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(0.94);
+  }
+}
+.ghost-phase {
+  animation: ghost-phase 2.6s ease-in-out infinite;
+}
+
+/* Pressables acknowledge the press */
+.pressable {
+  transition: transform 160ms var(--ease-out-strong);
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-on-scroll {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .animate-bounce-subtle {
+    animation: none;
+  }
+  .dock-lock-pill,
+  .dock-lock-anchor,
+  .dock-lock-open,
+  .dock-lock-closed {
+    animation: none;
+  }
+  .app-switch-sel,
+  .ghost-phase {
+    animation: none;
   }
 }

@@ -4,7 +4,9 @@ import { Inter, Special_Gothic_Expanded_One } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LocaleProvider } from "@/components/locale-provider";
 import { Header } from "@/components/header";
+import { JsonLd } from "@/components/json-ld";
 import { siteConfig } from "@/lib/config";
+import { websiteSchema } from "@/lib/schema";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import "./globals.css";
 
@@ -19,23 +21,29 @@ const specialGothic = Special_Gothic_Expanded_One({
   weight: "400",
   subsets: ["latin"],
   display: "swap",
+  // This font has no metric data in next/font, so the auto-generated
+  // metrics-matched fallback fails ("Failed to find font override values").
+  // Opt out and supply our own fallback chain (mirrors --font-display).
+  adjustFontFallback: false,
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
   title: `${siteConfig.appName} - ${siteConfig.tagline}`,
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.siteUrl),
+  alternates: { canonical: "/" },
   openGraph: {
-    title: siteConfig.appName,
-    description: siteConfig.tagline,
-    url: siteConfig.siteUrl,
+    title: `${siteConfig.appName} - ${siteConfig.tagline}`,
+    description: siteConfig.description,
+    url: "/",
     siteName: siteConfig.appName,
     type: "website",
   },
+  // Card type only — X/Twitter falls back to each page's og:title/description/
+  // image, so subpages don't inherit the homepage's text here.
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.appName,
-    description: siteConfig.tagline,
   },
   icons: {
     icon: [
@@ -76,6 +84,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${specialGothic.variable} font-sans antialiased `}
       >
+        <JsonLd data={websiteSchema} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

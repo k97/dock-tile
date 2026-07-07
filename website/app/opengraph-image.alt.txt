@@ -1,0 +1,1 @@
+Dock Tile for macOS — a custom Dock tile open over the Dock, showing a popover of grouped AI apps, with tiles for design and dev apps alongside. Caption: Organise your dock with apps & folders.
