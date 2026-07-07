@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
 import { siteConfig } from "@/lib/config";
+import { faqPageSchema } from "@/lib/schema";
 import { FaqContent } from "./faq-content";
 
 const title = `Frequently Asked Questions - ${siteConfig.appName}`;
@@ -22,5 +24,10 @@ export const metadata: Metadata = {
 };
 
 export default function FAQPage() {
-  return <FaqContent />;
+  return (
+    <>
+      <JsonLd data={faqPageSchema} />
+      <FaqContent />
+    </>
+  );
 }

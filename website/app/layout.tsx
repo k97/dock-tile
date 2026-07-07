@@ -4,7 +4,9 @@ import { Inter, Special_Gothic_Expanded_One } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LocaleProvider } from "@/components/locale-provider";
 import { Header } from "@/components/header";
+import { JsonLd } from "@/components/json-ld";
 import { siteConfig } from "@/lib/config";
+import { websiteSchema } from "@/lib/schema";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 import "./globals.css";
 
@@ -82,6 +84,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${specialGothic.variable} font-sans antialiased `}
       >
+        <JsonLd data={websiteSchema} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
