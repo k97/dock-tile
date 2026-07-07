@@ -1,7 +1,8 @@
 # Dock Tile Website
 
 Marketing site for the Dock Tile macOS app — Next.js 16 (App Router), React 19, Tailwind v4
-(CSS-first, no config file), shadcn (new-york/lucide), next-themes. Deployed by Vercel from `main`.
+(CSS-first, no config file), shadcn (new-york/lucide), next-themes. Deployed by Vercel from `main`
+at **docktile.app** (docktile.rkarthik.co is a redirecting alias that must stay — see SEO rule).
 
 The website is a satellite of the app; the app is the primary product (docs at the repo root).
 **Never edit the macOS app from a website session** — `DockTile/`, `*.swift`, the xcodeproj are
@@ -29,6 +30,7 @@ npx tsc --noEmit
 - [Design System & Theming](.claude/rules/design-system.md) — tokens, light/dark model, typography, motion, CSS/tooling gotchas
 - [Hero & Dock Demo](.claude/rules/hero-dock-demo.md) — wallpaper recipe, demo behaviour contract, app-icon assets, tile glyphs
 - [Content, Structure & i18n](.claude/rules/content-i18n.md) — page order, copy rules, locale model, releases page
+- [SEO, GEO & Domain](.claude/rules/seo-geo.md) — docktile.app primary + alias rules, per-page metadata/canonical pattern, JSON-LD, crawlability gotchas
 - [Website Assets](../.claude/rules/website-assets.md) (repo root) — favicon + webp generation, blur placeholders
 
 ## Verification
