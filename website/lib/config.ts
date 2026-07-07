@@ -18,7 +18,7 @@ export const siteConfig = {
   appName: "Dock Tile",
   tagline: "A native macOS launcher, built for the Dock",
   description:
-    "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders.",
+    "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders — native, open source, for macOS 26+.",
 
   // Meta
   siteUrl: "https://docktile.rkarthik.co",

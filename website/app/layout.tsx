@@ -30,17 +30,18 @@ export const metadata: Metadata = {
   title: `${siteConfig.appName} - ${siteConfig.tagline}`,
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.siteUrl),
+  alternates: { canonical: "/" },
   openGraph: {
-    title: siteConfig.appName,
-    description: siteConfig.tagline,
-    url: siteConfig.siteUrl,
+    title: `${siteConfig.appName} - ${siteConfig.tagline}`,
+    description: siteConfig.description,
+    url: "/",
     siteName: siteConfig.appName,
     type: "website",
   },
+  // Card type only — X/Twitter falls back to each page's og:title/description/
+  // image, so subpages don't inherit the homepage's text here.
   twitter: {
     card: "summary_large_image",
-    title: siteConfig.appName,
-    description: siteConfig.tagline,
   },
   icons: {
     icon: [

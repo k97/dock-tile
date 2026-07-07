@@ -6,9 +6,22 @@ import { Reveal } from "@/components/reveal";
 import { siteConfig } from "@/lib/config";
 import { releases } from "@/lib/releases";
 
+const title = `Release Notes - ${siteConfig.appName}`;
+const description = `Release notes and version history for ${siteConfig.appName} — new features, fixes, and improvements in every update to the macOS Dock utility.`;
+
 export const metadata: Metadata = {
-  title: `Release Notes - ${siteConfig.appName}`,
-  description: `Release notes and changelog for ${siteConfig.appName}, a macOS utility app.`,
+  title,
+  description,
+  alternates: { canonical: "/release-notes" },
+  openGraph: {
+    title,
+    description,
+    url: "/release-notes",
+    siteName: siteConfig.appName,
+    type: "website",
+    // Defining openGraph here drops the root file-convention image, so re-add it.
+    images: [{ url: "/opengraph-image.jpg", width: 1200, height: 630 }],
+  },
 };
 
 export default function ReleaseNotesPage() {
