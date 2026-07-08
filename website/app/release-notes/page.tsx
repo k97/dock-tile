@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Github, RefreshCw } from "lucide-react";
+import type { CSSProperties } from "react";
 import { Footer } from "@/components/footer";
 import { ReleaseTimeline } from "@/components/release-timeline";
 import { Reveal } from "@/components/reveal";
@@ -37,33 +37,29 @@ export default async function ReleaseNotesPage() {
         <div className="absolute inset-0 bg-linear-to-b from-transparent via-zinc-950/20 to-zinc-900/60" />
 
         <div className="relative z-10 mx-auto max-w-3xl px-6 md:px-8">
-          {/* Headline */}
-          <Reveal className="mb-16">
-            <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+          {/* Header — same centered treatment as the FAQ / Privacy pages */}
+          <div className="mb-16 text-center">
+            <span
+              className="reveal mb-3 block text-[12px] font-bold uppercase tracking-[0.2em] text-white/60"
+              style={{ "--reveal-delay": "0ms" } as CSSProperties}
+            >
               Release Notes
             </span>
-            <h1 className="mb-4 text-3xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-5xl">
-              What&apos;s new
+            <h1
+              className="reveal text-3xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-5xl"
+              style={{ "--reveal-delay": "80ms" } as CSSProperties}
+            >
+              What&apos;s
+              <br />
+              <span className="text-white/40">new.</span>
             </h1>
-            <p className="mb-8 text-lg font-light text-white/60">
+            <p
+              className="reveal mt-4 text-sm font-light text-white/40"
+              style={{ "--reveal-delay": "160ms" } as CSSProperties}
+            >
               {siteConfig.appName} checks for updates automatically.
             </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="glass flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/70">
-                <RefreshCw className="h-3 w-3 text-emerald-400" />
-                macOS 26+
-              </span>
-              <a
-                href={siteConfig.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="glass flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-              >
-                <Github className="h-3 w-3" />
-                GitHub
-              </a>
-            </div>
-          </Reveal>
+          </div>
 
           <ReleaseTimeline releases={releases} />
 
