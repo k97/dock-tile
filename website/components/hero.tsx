@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
+import { asset } from "@/lib/assets";
 import { trackReleaseNotesClick } from "@/lib/analytics";
 import { DockDemo } from "@/components/dock-demo";
 import { DownloadActionButton } from "@/components/action-button";
@@ -32,7 +33,7 @@ export function Hero() {
       {/* Full-bleed macOS wallpaper — Light/Dark Ventura dither by theme */}
       <div
         className="hero-texture"
-        style={{ backgroundImage: `url("${wallpaper}")` }}
+        style={{ backgroundImage: `url("${asset(wallpaper)}")` }}
         aria-hidden
       />
       {/* Bright-to-dark scrim — wallpaper at full brightness up top, ramping

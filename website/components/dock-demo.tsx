@@ -6,6 +6,7 @@ import { Settings2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { MacOSDock, type DockApp } from "@/components/ui/mac-os-dock";
 import { TileGlyph, type GlyphName } from "@/components/tile-glyph";
+import { asset } from "@/lib/assets";
 
 /**
  * DockTile hero demo — the interactive macOS Dock (magnification, click bounce)
@@ -145,7 +146,7 @@ function TileFace({ tile, isDark }: { tile: DemoTile; isDark: boolean }) {
 
 const iconFace = (lightSrc: string, darkSrc: string, isDark: boolean) => (
   <Image
-    src={isDark ? darkSrc : lightSrc}
+    src={asset(isDark ? darkSrc : lightSrc)}
     alt=""
     fill
     sizes="96px"
@@ -608,7 +609,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
                       }}
                     >
                       <Image
-                        src={app.src}
+                        src={asset(app.src)}
                         alt=""
                         width={24}
                         height={24}
@@ -673,7 +674,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
                       }}
                     >
                       <Image
-                        src={app.src}
+                        src={asset(app.src)}
                         alt=""
                         width={48}
                         height={48}

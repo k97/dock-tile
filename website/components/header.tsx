@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { siteConfig } from "@/lib/config";
+import { asset } from "@/lib/assets";
 import { DownloadActionButton } from "@/components/action-button";
 
 const navLinks = [
@@ -85,10 +86,11 @@ export function Header() {
           className={`flex shrink-0 items-center gap-2 rounded-full py-1.5 pl-1 pr-2.5 transition-colors duration-300 md:pr-3 ${logoHover}`}
         >
           <Image
-            src="/assets/dock-tile-icon-only.svg"
+            src={asset("/assets/dock-tile-icon-only.svg")}
             alt={siteConfig.appName}
             width={24}
             height={24}
+            unoptimized
             className="h-6 w-6 shrink-0"
           />
           {/* The wordmark stays visible on mobile too — with Download gone from

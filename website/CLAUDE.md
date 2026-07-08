@@ -12,10 +12,13 @@ off-limits (reading app source for product truth is fine and encouraged). Cloud 
 ## Commands
 
 ```bash
-npm run dev      # localhost:3000 (bun dev also works)
+npm run dev      # localhost:3010 — local assets (bun dev also works)
+npm run dev:r2   # localhost:3010 — assets from the R2 CDN (test the prod path)
 npm run lint
 npx tsc --noEmit
 ```
+
+**Dev port is 3010, not 3000** (Cloudflare local-dev is wired to it) — on a port conflict, free 3010, never switch.
 
 ## Non-obvious facts
 
@@ -23,6 +26,7 @@ npx tsc --noEmit
 - `lib/releases.ts` is static release data CI does **not** update — add an entry at the top when a version ships.
 - All user-facing copy goes through `lib/i18n.ts` (en-AU default) — never hardcode marketing strings.
 - Changed a static asset but kept its filename? Bump its `?v=N` query param or caches serve the old file.
+- Assets load from an R2 CDN in prod, `public/` in dev — route every `/assets/…` ref through `asset()` (`lib/assets.ts`); see assets-cdn rule. New/changed files must also be uploaded to R2.
 - Dead code, imported nowhere: `components/{features,screenshot,support,faq,theme-toggle}.tsx`.
 
 ## Rules
@@ -31,6 +35,7 @@ npx tsc --noEmit
 - [Hero & Dock Demo](.claude/rules/hero-dock-demo.md) — wallpaper recipe, demo behaviour contract, app-icon assets, tile glyphs
 - [Content, Structure & i18n](.claude/rules/content-i18n.md) — page order, copy rules, locale model, releases page
 - [SEO, GEO & Domain](.claude/rules/seo-geo.md) — docktile.app primary + alias rules, per-page metadata/canonical pattern, JSON-LD, crawlability gotchas
+- [Assets, CDN & Dev Port](.claude/rules/assets-cdn.md) — `asset()` local/R2 switch, `NEXT_PUBLIC_IMAGE_SOURCE`, remotePatterns, dev port 3010
 - [Website Assets](../.claude/rules/website-assets.md) (repo root) — favicon + webp generation, blur placeholders
 
 ## Verification

@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
+import { asset } from "@/lib/assets";
 import { trackContactClick, trackExternalLinkClick, trackReleaseNotesClick } from "@/lib/analytics";
 import { Reveal } from "@/components/reveal";
 import { DownloadActionButton } from "@/components/action-button";
@@ -96,7 +97,7 @@ function PopoverShowcase() {
             {gridApps.map((app) => (
               <span key={app.name} className="flex flex-col items-center gap-1.5 rounded-lg p-1.5">
                 <Image
-                  src={app.src}
+                  src={asset(app.src)}
                   alt={app.name}
                   width={48}
                   height={48}
@@ -117,7 +118,7 @@ function PopoverShowcase() {
             {listApps.map((app) => (
               <span key={app.name} className="flex min-h-7 items-center gap-2.5 rounded px-3 py-1">
                 <Image
-                  src={app.src}
+                  src={asset(app.src)}
                   alt=""
                   width={24}
                   height={24}
@@ -195,7 +196,7 @@ export function CustomTilesStory() {
       <Reveal delay={120}>
         <div className="relative mx-auto aspect-2048/1374 w-full max-w-md overflow-hidden rounded-3xl border border-border shadow-xl md:max-w-none">
           <Image
-            src={screenshotSrc}
+            src={asset(screenshotSrc)}
             alt={m.tilesCaption}
             fill
             sizes="(max-width: 768px) 100vw, 640px"
@@ -345,7 +346,7 @@ export function PowerUserSection() {
                   // exactly as macOS leaves most third-party apps in dark mode.
                   <span key={app.name ?? i} className="relative z-10 flex h-12 w-12 items-center justify-center">
                     <Image
-                      src={isDarkSite && app.darkSrc ? app.darkSrc : app.src}
+                      src={asset(isDarkSite && app.darkSrc ? app.darkSrc : app.src)}
                       alt={app.name}
                       width={44}
                       height={44}
@@ -492,10 +493,11 @@ export function FinalCta() {
           className="group glass mt-10 inline-flex items-center gap-3 rounded-full px-4 py-2 text-xs text-white/60 transition-colors duration-300 hover:text-white"
         >
           <Image
-            src="/assets/spades-audio-icon.svg"
+            src={asset("/assets/spades-audio-icon.svg")}
             alt=""
             width={20}
             height={20}
+            unoptimized
             className="h-5 w-5 rounded-full"
           />
           <span>
