@@ -28,7 +28,7 @@ CI, on tag push, will:
 - [ ] Commit, push main, then tag and push the tag
 - [ ] Wait for release.yml to finish (gh run watch)
 - [ ] Publish the draft + apply the notes (Step 11)
-- [ ] (optional, separate website session) add a curated entry to website/lib/releases.ts
+- [ ] (nothing else — the website's /release-notes fetches straight from GitHub Releases)
 ```
 
 ```bash
@@ -85,7 +85,8 @@ APP X.Y.Z
 EOF
 ```
 
-Match the calm, user-focused tone of the website's curated notes in `website/lib/releases.ts`.
+Match the calm, user-focused tone of the shipped notes (e.g. the `/release-notes` page, which now
+renders these GitHub release bodies directly).
 
 ## Release Checklist (manual fallback — non-CI repos only)
 
@@ -412,10 +413,10 @@ curl -sI -L "https://github.com/USER/REPO/releases/download/vX.X.X/APP-X.X.X.dmg
 # Should show: HTTP/2 302 then HTTP/2 200
 ```
 
-**Website:** CI already updates `website/lib/config.ts` (download URL + version) and commits it to
-`main` — **do not** edit it by hand. The only manual, optional website touch is adding a curated
-entry to `website/lib/releases.ts` (the human-readable release list). Per repo convention that is a
-**website change → do it in a separate website session**, not this app-release flow.
+**Website:** nothing to do. CI updates `website/lib/config.ts` (download URL + version) itself, and
+the `/release-notes` changelog fetches straight from **GitHub Releases** (`getReleases()`,
+revalidated hourly) — so applying the curated notes above IS the website update. There is no
+`releases.ts` list to maintain.
 
 ## Step 12: Final Verification
 
