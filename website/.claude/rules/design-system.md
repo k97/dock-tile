@@ -23,9 +23,15 @@ only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock."
 - **Signature-dark bands stay dark in BOTH themes** (they simulate macOS chrome or are brand
   moments): hero, Dock Lock story, Final CTA, Ghost Mode card, and the dark page headers on
   FAQ/release-notes/legal. Only neutral surfaces theme-flip.
-- **Theme-dependent assets swap via inline style off `resolvedTheme` (with a mounted guard), NOT
-  `.dark` CSS rules** — Turbopack doesn't reliably hot-reload `globals.css`, and the guard avoids
-  a hydration flash. Pattern lives in `hero.tsx`.
+- **Anything visible at load themes via CSS (`dark:` variants / `.dark` rules), NEVER a
+  `mounted && resolvedTheme` guard** — next-themes sets `.dark` on `<html>` before first paint, so
+  CSS-driven theming is right on frame 1; a mounted guard *guarantees* dark-theme visitors watch
+  the light variant swap after hydration (the load flash fixed in 2026-07). Patterns: background
+  images pass both URLs as CSS vars and `.dark` picks one (`hero.tsx` + `.hero-texture`); `<img>`
+  variants dual-render with `dark:hidden` / `hidden dark:block` (lazy `next/image`s only fetch the
+  visible one); tile mocks use the shared `.tile-face` rule + `--tile-bg`/`--tile-glyph-dark` vars.
+  (The Turbopack stale-`globals.css` quirk is a dev-workflow caveat — restart `next dev` — not a
+  reason to theme in JS.)
 - Cards have fixed theme character: the Ghost card is always dark (hardcoded whites are correct);
   the Smart Add card flips, so its colours must be theme-aware (`text-zinc-600 dark:text-white/80`).
   The Ghost card runs a charcoal gradient (`from-zinc-800 to-zinc-900`), NOT flat zinc-900 — flat

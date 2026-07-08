@@ -12,7 +12,9 @@ not invented. Product-truth spec of record: `.superdesign/refs/product-demo-spec
   Dark mode runs `13-Ventura-Dark.jpg` through the **same recipe** so it reads as a recolour, not
   a different image. Sources stay untouched in `docs/website/`; the ~800KB webp is accepted
   (halftone detail compresses poorly).
-- The wallpaper swaps by theme inline in `hero.tsx` (`resolvedTheme` + mount guard). The scrim
+- The wallpaper swaps by theme in CSS: `hero.tsx` passes both dither URLs as custom properties
+  (`--hero-bg` / `--hero-bg-dark`) and `.dark .hero-texture` picks the dark one — right on the
+  first frame, and only the used image downloads (no mount-guard JS swap). The scrim
   ramps bright-top → `black/95` bottom (wallpaper at full brightness up top, CTA on a settled dark
   base); the headline has its own radial-masked readability blur, independent of the scrim.
 - Headline: `heroHeadlineA` white + `heroHeadlineB` at `white/40` — the same dimmed-second-line
