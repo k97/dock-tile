@@ -24,6 +24,12 @@
       "skillPath": "skills/firebase-crashlytics/SKILL.md",
       "computedHash": "62a51efdc3240eed27697e14bbb8a29ebb8c94530fd3a1c851e747b90804d69b"
     },
+    "gen-release-notes": {
+      "source": "existential-birds/beagle",
+      "sourceType": "github",
+      "skillPath": "plugins/beagle-core/skills/gen-release-notes/SKILL.md",
+      "computedHash": "885c8e54cbf97608ce455d3ef87957867318c4e75b514b2b87ca0c566b83b4ae"
+    },
     "macos-developer": {
       "source": "404kidwiz/claude-supercode-skills",
       "sourceType": "github",
