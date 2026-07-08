@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
 import { asset } from "@/lib/assets";
@@ -14,26 +13,22 @@ export function Hero() {
   const { content } = useLocale();
   const m = content.marketing;
 
-  // Swap the Ventura dither with the theme: Light in light mode, Dark in dark.
-  // Set inline (not via CSS) so it tracks resolvedTheme without a flash. Before
-  // mount, resolvedTheme is undefined → default to the light wallpaper.
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
-  const wallpaper =
-    mounted && resolvedTheme === "dark"
-      ? "/assets/hero-bg-dark.webp"
-      : "/assets/hero-bg.webp";
-
   return (
     <section
       data-nav-tone="dark"
       className="relative mx-3 mt-3 flex min-h-[92vh] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] bg-black px-4 pb-16 pt-28 md:mx-4 md:mt-4"
     >
-      {/* Full-bleed macOS wallpaper — Light/Dark Ventura dither by theme */}
+      {/* Full-bleed macOS wallpaper — Light/Dark Ventura dither by theme.
+          Both URLs ride as CSS vars; `.dark .hero-texture` picks the dark one,
+          so the first frame is already correct (no post-hydration swap). */}
       <div
         className="hero-texture"
-        style={{ backgroundImage: `url("${asset(wallpaper)}")` }}
+        style={
+          {
+            "--hero-bg": `url("${asset("/assets/hero-bg.webp")}")`,
+            "--hero-bg-dark": `url("${asset("/assets/hero-bg-dark.webp")}")`,
+          } as React.CSSProperties
+        }
         aria-hidden
       />
       {/* Bright-to-dark scrim — wallpaper at full brightness up top, ramping

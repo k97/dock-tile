@@ -165,9 +165,13 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 /* Adaptive floating nav — contrasts with whatever section is behind it.
-   Gentle blur; the pill flips light/dark based on the backdrop tone. */
+   Gentle blur; the pill flips light/dark based on the backdrop tone.
+   The 300ms tone cross-fade only arms AFTER hydration ([data-ready], set in an
+   effect) so a load-time correction snaps instead of visibly animating. */
 .glass-nav {
   backdrop-filter: blur(10px) saturate(135%);
+}
+.glass-nav[data-ready] {
   transition:
     background-color 300ms ease,
     border-color 300ms ease,
@@ -189,6 +193,16 @@
     0 8px 24px rgba(0, 0, 0, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
+/* Site dark theme → always the dark frosted pill, whatever section is behind
+   (a bright frosted-white pill reads as "stuck in light mode" on a dark page).
+   Pure CSS off the pre-paint `.dark` class so the first frame is right. */
+.dark .glass-nav {
+  background: rgba(9, 9, 11, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
 
 /* True Apple squircle — a rounded rectangle whose corners follow a SUPERELLIPSE
    (flat edges, continuous-curvature corners), the exact shape iOS/macOS app
@@ -204,6 +218,19 @@
   aspect-ratio: 1 / 1;
   border-radius: 22.5%;
   mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%20preserveAspectRatio='none'%3E%3Cpath%20d='M22.5,0L77.5,0L85.058,0.019L87.465,0.077L89.202,0.174L90.603,0.31L91.79,0.485L92.822,0.701L93.735,0.959L94.552,1.258L95.286,1.601L95.949,1.99L96.547,2.426L97.087,2.913L97.574,3.453L98.01,4.051L98.399,4.714L98.742,5.448L99.041,6.265L99.299,7.178L99.515,8.21L99.69,9.397L99.826,10.798L99.923,12.535L99.981,14.942L100,22.5L100,77.5L99.981,85.058L99.923,87.465L99.826,89.202L99.69,90.603L99.515,91.79L99.299,92.822L99.041,93.735L98.742,94.552L98.399,95.286L98.01,95.949L97.574,96.547L97.087,97.087L96.547,97.574L95.949,98.01L95.286,98.399L94.552,98.742L93.735,99.041L92.822,99.299L91.79,99.515L90.603,99.69L89.202,99.826L87.465,99.923L85.058,99.981L77.5,100L22.5,100L14.942,99.981L12.535,99.923L10.798,99.826L9.397,99.69L8.21,99.515L7.178,99.299L6.265,99.041L5.448,98.742L4.714,98.399L4.051,98.01L3.453,97.574L2.913,97.087L2.426,96.547L1.99,95.949L1.601,95.286L1.258,94.552L0.959,93.735L0.701,92.822L0.485,91.79L0.31,90.603L0.174,89.202L0.077,87.465L0.019,85.058L0,77.5L0,22.5L0.019,14.942L0.077,12.535L0.174,10.798L0.31,9.397L0.485,8.21L0.701,7.178L0.959,6.265L1.258,5.448L1.601,4.714L1.99,4.051L2.426,3.453L2.913,2.913L3.453,2.426L4.051,1.99L4.714,1.601L5.448,1.258L6.265,0.959L7.178,0.701L8.21,0.485L9.397,0.31L10.798,0.174L12.535,0.077L14.942,0.019L22.5,0Z'%20fill='%23000'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+
+/* DockTile tile face — gradient squircle that flattens to the app's Dark icon
+   style (see docs/rules/icon-system.md): neutral near-black background, with
+   the tile's own tint moving to the glyph. Each face passes its gradient via
+   --tile-bg; the dark background is THE shared constant for every tile mock on
+   the site (hero dock demo + Smart Add cards), so it lives here once. Keyed
+   off the pre-paint `.dark` class → correct on the first frame, no JS swap. */
+.tile-face {
+  background: var(--tile-bg);
+}
+.dark .tile-face {
+  background: linear-gradient(to bottom, #3a3a3c, #1c1c1e);
 }
 
 /* macOS Tahoe Dock — "Liquid Glass" shelf (web recreation).
@@ -368,16 +395,21 @@
 
 /* Hero wallpaper — full-bleed dithered macOS wallpaper behind the hero content.
    A legibility scrim over the top keeps the white headline/CTA readable. The
-   image URL itself is set inline by the component so it can swap Light/Dark
-   Ventura dithers with the theme (same crop + halftone, reads as a recolour). */
+   component passes BOTH Light/Dark Ventura dither URLs as custom properties and
+   the `.dark` rule picks one, so the first paint is already the right theme
+   (no hydration swap) and only the used image is ever downloaded. */
 .hero-texture {
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  background-image: var(--hero-bg);
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
   pointer-events: none;
+}
+.dark .hero-texture {
+  background-image: var(--hero-bg-dark);
 }
 
 /* Dock demo popover motion — 200ms in (matches the app's 0.25s), faster out */

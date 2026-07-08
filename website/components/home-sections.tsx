@@ -1,11 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useMounted } from "@/lib/use-mounted";
 import { ArrowUpRight, Clock, EyeOff, Ghost, Lock, LockOpen, Settings2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useTheme } from "next-themes";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
 import { asset } from "@/lib/assets";
@@ -141,10 +139,9 @@ function PopoverShowcase() {
   );
 }
 
-// DockTile's own Dark icon style (see docs/rules/icon-system.md — and the
-// matching hero dock-demo.tsx): neutral near-black background, tile tint
-// moves to the glyph. Kept in sync with dock-demo.tsx's DARK_TILE_BG.
-const DARK_TILE_BG = "linear-gradient(to bottom, #3a3a3c, #1c1c1e)";
+// DockTile's own Dark icon style (see docs/rules/icon-system.md) is the shared
+// `.tile-face` rule in globals.css — one source for the hero dock demo AND the
+// Smart Add mocks below, applied by CSS off the pre-paint `.dark` class.
 
 /* Ghost Mode — the Cmd+Tab switcher line-up. The `ghost` slot is where a
    Dock Tile tile would sit; it stays hidden, so the selection skips it.
@@ -166,16 +163,6 @@ const switcherApps = [
 export function CustomTilesStory() {
   const { content } = useLocale();
   const m = content.marketing;
-  const { resolvedTheme } = useTheme();
-  const mounted = useMounted();
-
-  // Two screenshots of the same window (light + dark Customise Tile), swapped
-  // by the site's own theme rather than the OS-follow used elsewhere in this
-  // file — this is a real screenshot, not a mock, so it must match exactly.
-  const screenshotSrc =
-    mounted && resolvedTheme === "dark"
-      ? "/assets/stage/customise-tile-dark.webp"
-      : "/assets/stage/customise-tile.webp";
 
   return (
     <section
@@ -194,13 +181,26 @@ export function CustomTilesStory() {
         </p>
       </Reveal>
       <Reveal delay={120}>
+        {/* Two screenshots of the same window (light + dark Customise Tile) —
+            both render and CSS shows the theme's one, so the first frame is
+            already right. They're lazy `next/image`s, so the display:none twin
+            never intersects the viewport and is only fetched if the user
+            actually switches theme. Real screenshots, not mocks — each theme
+            must match the app exactly. */}
         <div className="relative mx-auto aspect-2048/1374 w-full max-w-md overflow-hidden rounded-3xl border border-border shadow-xl md:max-w-none">
           <Image
-            src={asset(screenshotSrc)}
+            src={asset("/assets/stage/customise-tile.webp")}
             alt={m.tilesCaption}
             fill
             sizes="(max-width: 768px) 100vw, 640px"
-            className="object-contain"
+            className="object-contain dark:hidden"
+          />
+          <Image
+            src={asset("/assets/stage/customise-tile-dark.webp")}
+            alt={m.tilesCaption}
+            fill
+            sizes="(max-width: 768px) 100vw, 640px"
+            className="hidden object-contain dark:block"
           />
         </div>
         <p className="mt-6 text-center text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -218,9 +218,6 @@ export function CustomTilesStory() {
 export function PowerUserSection() {
   const { content } = useLocale();
   const m = content.marketing;
-  const { resolvedTheme } = useTheme();
-  const mounted = useMounted();
-  const isDarkSite = mounted && resolvedTheme === "dark";
 
   return (
     <section className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-32">
@@ -269,13 +266,17 @@ export function PowerUserSection() {
             <div className="flex flex-col items-center gap-3">
               <div className="flex w-44 shrink-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
                 <span
-                  className="squircle flex h-10 w-10 min-w-10 items-center justify-center"
-                  style={{ background: isDarkSite ? DARK_TILE_BG : "linear-gradient(to bottom, #A78BFF, #7C3AED)" }}
+                  className="tile-face squircle flex h-10 w-10 min-w-10 items-center justify-center"
+                  style={
+                    {
+                      "--tile-bg": "linear-gradient(to bottom, #A78BFF, #7C3AED)",
+                      "--tile-glyph-dark": "#A78BFF",
+                    } as React.CSSProperties
+                  }
                 >
                   <TileGlyph
                     name="sparkles"
-                    className="h-6 w-6"
-                    style={{ color: isDarkSite ? "#A78BFF" : "white" }}
+                    className="h-6 w-6 text-white dark:text-(--tile-glyph-dark)"
                   />
                 </span>
                 <span>
@@ -285,13 +286,17 @@ export function PowerUserSection() {
               </div>
               <div className="flex w-44 shrink-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
                 <span
-                  className="squircle flex h-10 w-10 min-w-10 items-center justify-center"
-                  style={{ background: isDarkSite ? DARK_TILE_BG : "linear-gradient(to bottom, #52DFA8, #10B981)" }}
+                  className="tile-face squircle flex h-10 w-10 min-w-10 items-center justify-center"
+                  style={
+                    {
+                      "--tile-bg": "linear-gradient(to bottom, #52DFA8, #10B981)",
+                      "--tile-glyph-dark": "#52DFA8",
+                    } as React.CSSProperties
+                  }
                 >
                   <TileGlyph
                     name="chat"
-                    className="h-6 w-6"
-                    style={{ color: isDarkSite ? "#52DFA8" : "white" }}
+                    className="h-6 w-6 text-white dark:text-(--tile-glyph-dark)"
                   />
                 </span>
                 <span>
@@ -342,18 +347,31 @@ export function PowerUserSection() {
                 ) : (
                   // Every icon renders at the SAME 44px — never resized. Dark
                   // mode swaps in a bespoke dark rendition where one exists
-                  // (e.g. Finder); otherwise the regular icon shows unchanged,
-                  // exactly as macOS leaves most third-party apps in dark mode.
+                  // (e.g. Finder) — both render, CSS shows the theme's one so
+                  // the first frame is right; otherwise the regular icon shows
+                  // unchanged, exactly as macOS leaves most third-party apps
+                  // in dark mode.
                   <span key={app.name ?? i} className="relative z-10 flex h-12 w-12 items-center justify-center">
                     <Image
-                      src={asset(isDarkSite && app.darkSrc ? app.darkSrc : app.src)}
+                      src={asset(app.src)}
                       alt={app.name}
                       width={44}
                       height={44}
                       unoptimized
                       draggable={false}
-                      className="h-11 w-11"
+                      className={`h-11 w-11 ${app.darkSrc ? "dark:hidden" : ""}`}
                     />
+                    {app.darkSrc && (
+                      <Image
+                        src={asset(app.darkSrc)}
+                        alt={app.name}
+                        width={44}
+                        height={44}
+                        unoptimized
+                        draggable={false}
+                        className="hidden h-11 w-11 dark:block"
+                      />
+                    )}
                   </span>
                 ),
               )}

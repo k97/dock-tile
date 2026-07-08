@@ -6,9 +6,13 @@ import { siteConfig } from "@/lib/config";
 import { trackDownloadClick } from "@/lib/analytics";
 
 /**
- * Signature CTA: pill with a nested circular icon. Two tones —
+ * Signature CTA: pill with a nested circular icon. Two fixed tones —
  * "light" (white pill, dark circle) for dark sections, "dark" inverted
- * for light sections. Whole button scales on hover, circle shifts tone.
+ * for light sections — plus "adaptive": the dark button that inverts to
+ * light under the site's dark theme, purely via CSS `dark:` variants (the
+ * header uses it on the light-frost pill, which the dark theme forces to
+ * dark frost before first paint). Whole button scales on hover, circle
+ * shifts tone.
  */
 export function ActionButton({
   children,
@@ -21,7 +25,7 @@ export function ActionButton({
 }: {
   children: React.ReactNode;
   icon?: React.ReactNode;
-  tone?: "light" | "dark";
+  tone?: "light" | "dark" | "adaptive";
   size?: "sm" | "md" | "lg";
   onClick?: () => void;
   href?: string;
@@ -30,11 +34,15 @@ export function ActionButton({
   const pill =
     tone === "light"
       ? "bg-white text-zinc-900"
-      : "bg-zinc-900 text-white";
+      : tone === "adaptive"
+        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+        : "bg-zinc-900 text-white";
   const circle =
     tone === "light"
       ? "bg-zinc-900 text-white group-hover:bg-zinc-700"
-      : "bg-white text-zinc-900 group-hover:bg-zinc-200";
+      : tone === "adaptive"
+        ? "bg-white text-zinc-900 group-hover:bg-zinc-200 dark:bg-zinc-900 dark:text-white dark:group-hover:bg-zinc-700"
+        : "bg-white text-zinc-900 group-hover:bg-zinc-200";
   const dims =
     size === "lg"
       ? { pad: "pl-7 pr-2 py-2 gap-4", text: "text-base font-semibold", circ: "h-12 w-12" }
@@ -75,7 +83,7 @@ export function DownloadActionButton({
   label,
   className = "",
 }: {
-  tone?: "light" | "dark";
+  tone?: "light" | "dark" | "adaptive";
   size?: "sm" | "md" | "lg";
   label?: string;
   className?: string;

@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
 import { siteConfig } from "@/lib/config";
 import { asset } from "@/lib/assets";
 import { DownloadActionButton } from "@/components/action-button";
@@ -18,9 +17,11 @@ const navLinks = [
 export function Header() {
   const pathname = usePathname();
   const navRef = React.useRef<HTMLElement>(null);
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
+  // Arms the pill's 300ms tone cross-fade only after hydration (CSS
+  // `.glass-nav[data-ready]`), so any load-time tone correction snaps into
+  // place instead of visibly animating on first paint.
+  const [ready, setReady] = React.useState(false);
+  React.useEffect(() => setReady(true), []);
   // Which tone of section sits behind the nav right now. Drives an inverse
   // pill: light frost over dark sections, dark frost over light ones.
   const [overDark, setOverDark] = React.useState(true);
@@ -52,24 +53,29 @@ export function Header() {
   }, [pathname]);
 
   // The site's own dark theme takes over the pill's tone outright: a bright
-  // frosted-white pill reading as "stuck in light mode" against an otherwise
-  // dark page. Light theme keeps today's section-tone sampling unchanged.
-  const isDarkSite = mounted && resolvedTheme === "dark";
-  const pillOverDark = isDarkSite ? false : overDark;
-
+  // frosted-white pill reads as "stuck in light mode" against an otherwise
+  // dark page. That override is pure CSS (`.dark .glass-nav` + the `dark:`
+  // variants below) keyed off the pre-paint `.dark` class — NOT React state —
+  // so the first frame is already right for dark-theme visitors. Light theme
+  // keeps the section-tone sampling unchanged.
+  //
   // Content colours flip to stay legible on whichever pill tone is showing.
   // Logo, each link, and the download button all share this exact horizontal
   // rhythm (px-2.5 → md:px-3) so the three gaps between them — logo↔links,
   // link↔link, link↔button — resolve to the same visual distance instead of
   // stacking mismatched paddings on top of the nav's own `gap`.
+  // The !overDark branch already IS the dark-pill look, so only the overDark
+  // branch needs `dark:` overrides.
   const linkBase =
     "rounded-full px-2.5 py-1.5 text-center text-[13px] transition-colors duration-300 md:px-3";
-  const linkIdle = pillOverDark
-    ? "text-zinc-600 hover:bg-black/5 hover:text-zinc-900"
+  const linkIdle = overDark
+    ? "text-zinc-600 hover:bg-black/5 hover:text-zinc-900 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
     : "text-white/80 hover:bg-white/10 hover:text-white";
-  const linkActive = pillOverDark ? "bg-black/5 text-zinc-900" : "bg-white/10 text-white";
-  const logoHover = pillOverDark ? "hover:bg-black/5" : "hover:bg-white/10";
-  const logoText = pillOverDark ? "text-zinc-900" : "text-white";
+  const linkActive = overDark
+    ? "bg-black/5 text-zinc-900 dark:bg-white/10 dark:text-white"
+    : "bg-white/10 text-white";
+  const logoHover = overDark ? "hover:bg-black/5 dark:hover:bg-white/10" : "hover:bg-white/10";
+  const logoText = overDark ? "text-zinc-900 dark:text-white" : "text-white";
 
   return (
     // The hero sits mt-3 (md:mt-4) off the viewport; the nav repeats that same
@@ -78,7 +84,8 @@ export function Header() {
     <header className="fixed top-6 left-1/2 z-50 -translate-x-1/2 md:top-8">
       <nav
         ref={navRef}
-        data-over={pillOverDark ? "dark" : "light"}
+        data-over={overDark ? "dark" : "light"}
+        data-ready={ready || undefined}
         className="glass-nav flex items-center gap-1 rounded-full py-1.5 pl-2 pr-2 md:pl-3 md:pr-1.5"
       >
         <Link
@@ -126,7 +133,7 @@ export function Header() {
             links are the contextual actions there (the hero + final CTA still
             offer Download), and the pill fits the viewport without it. */}
         <DownloadActionButton
-          tone={pillOverDark ? "dark" : "light"}
+          tone={overDark ? "adaptive" : "light"}
           size="sm"
           label="Download"
           className="max-md:hidden md:ml-3"

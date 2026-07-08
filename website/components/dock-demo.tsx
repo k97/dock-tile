@@ -3,7 +3,6 @@
 import * as React from "react";
 import Image from "next/image";
 import { Settings2 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { MacOSDock, type DockApp } from "@/components/ui/mac-os-dock";
 import { TileGlyph, type GlyphName } from "@/components/tile-glyph";
 import { asset } from "@/lib/assets";
@@ -27,10 +26,10 @@ type DemoTile = {
   layout?: "grid" | "list"; // per-tile, like the app's layoutMode
 };
 
-// DockTile's own Dark icon style (see docs/rules/icon-system.md): a neutral
-// near-black background with the tile's tint carried by the glyph instead —
-// applied here to the hero demo so it mirrors the site's own dark theme.
-const DARK_TILE_BG = "linear-gradient(to bottom, #3a3a3c, #1c1c1e)";
+// DockTile's own Dark icon style (neutral near-black background, tint moves to
+// the glyph — see docs/rules/icon-system.md) is the shared `.tile-face` rule in
+// globals.css, keyed off the pre-paint `.dark` class so tiles render the right
+// theme on the first frame.
 
 // Popover widths per product spec: grid = 5-col medium tier, list = medium 240pt
 const GRID_WIDTH = 324;
@@ -111,32 +110,32 @@ const ICON_CONTENT_RATIO = "90.625%";
 /* A DockTile tile face — gradient squircle + glyph, inset to match the real
    Finder/Settings icons' safe area (see ICON_CONTENT_RATIO above).
    Dark icon style (matches the real app): background flattens to a neutral
-   near-black, and the tile's own tint moves to the glyph instead. */
-function TileFace({ tile, isDark }: { tile: DemoTile; isDark: boolean }) {
+   near-black, and the tile's own tint moves to the glyph instead. All of the
+   theming is CSS (`.tile-face` + `dark:` variants) off the pre-paint `.dark`
+   class, so a dark-theme load never flashes the light face. */
+function TileFace({ tile }: { tile: DemoTile }) {
   return (
     <div className="relative flex h-full w-full items-center justify-center">
       <div
-        className="squircle relative flex items-center justify-center overflow-hidden"
-        style={{
-          width: ICON_CONTENT_RATIO,
-          height: ICON_CONTENT_RATIO,
-          background: isDark ? DARK_TILE_BG : tile.gradient,
-          boxShadow: isDark
-            ? "inset 0 1px 1px rgba(255,255,255,0.12), inset 0 -1px 2px rgba(0,0,0,0.4)"
-            : "inset 0 1px 1px rgba(255,255,255,0.35), inset 0 -1px 2px rgba(0,0,0,0.12)",
-        }}
+        className="tile-face squircle relative flex items-center justify-center overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-1px_2px_rgba(0,0,0,0.12)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.12),inset_0_-1px_2px_rgba(0,0,0,0.4)]"
+        style={
+          {
+            width: ICON_CONTENT_RATIO,
+            height: ICON_CONTENT_RATIO,
+            "--tile-bg": tile.gradient,
+            "--tile-glyph-dark": tile.darkGlyph,
+          } as React.CSSProperties
+        }
       >
-        {!isDark && (
-          <span
-            aria-hidden
-            className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-white/25 to-transparent"
-          />
-        )}
+        {/* top gloss — light theme only; the Dark icon style is matte */}
+        <span
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-white/25 to-transparent dark:hidden"
+        />
         <span className="relative" style={{ width: "58%", height: "58%" }}>
           <TileGlyph
             name={tile.glyph}
-            className="h-full w-full drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.28)]"
-            style={{ color: isDark ? tile.darkGlyph : "white" }}
+            className="h-full w-full text-white drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.28)] dark:text-(--tile-glyph-dark)"
           />
         </span>
       </div>
@@ -144,51 +143,58 @@ function TileFace({ tile, isDark }: { tile: DemoTile; isDark: boolean }) {
   );
 }
 
-const iconFace = (lightSrc: string, darkSrc: string, isDark: boolean) => (
-  <Image
-    src={asset(isDark ? darkSrc : lightSrc)}
-    alt=""
-    fill
-    sizes="96px"
-    priority
-    unoptimized
-    draggable={false}
-    className="object-contain"
-  />
+/* Both renditions render; CSS shows the one matching the pre-paint `.dark`
+   class, so the right icon is up on the first frame (no post-mount rebuild).
+   The hidden twin's extra fetch is a ~6KB PNG — accepted. */
+const iconFace = (lightSrc: string, darkSrc: string) => (
+  <>
+    <Image
+      src={asset(lightSrc)}
+      alt=""
+      fill
+      sizes="96px"
+      priority
+      unoptimized
+      draggable={false}
+      className="object-contain dark:hidden"
+    />
+    <Image
+      src={asset(darkSrc)}
+      alt=""
+      fill
+      sizes="96px"
+      priority
+      unoptimized
+      draggable={false}
+      className="hidden object-contain dark:block"
+    />
+  </>
 );
 
-// Dock line-up: Finder · the four tiles · System Settings. Rebuilt per theme
-// so Finder/Settings swap to their Dark icon-style renditions (see
-// docs/rules/icon-system.md) alongside the tiles above.
-function buildApps(isDark: boolean): DockApp[] {
-  return [
-    // Finder/Settings PNGs are cropped to their solid squircle (full-bleed), so the
-    // visible icon fills the box at the same 64px the tile squircles do — the raw
-    // macOS icons bake ~8% shadow/keyline padding that shrank them otherwise. ?v=3
-    // busts any cache of the earlier padded versions.
-    {
-      id: "finder",
-      name: "Finder",
-      content: iconFace("/assets/app-icons/finder.png?v=3", "/assets/app-icons/finder-dark.png?v=4", isDark),
-    },
-    ...TILES.map((t) => ({ id: t.id, name: t.name, content: <TileFace tile={t} isDark={isDark} /> })),
-    {
-      id: "settings",
-      name: "System Settings",
-      content: iconFace("/assets/app-icons/settings.png?v=3", "/assets/app-icons/settings-dark.png?v=1", isDark),
-    },
-  ];
-}
+// Dock line-up: Finder · the four tiles · System Settings. Static — every
+// face carries both its Light and Dark icon-style renditions (see
+// docs/rules/icon-system.md) and CSS picks per theme.
+const APPS: DockApp[] = [
+  // Finder/Settings PNGs are cropped to their solid squircle (full-bleed), so the
+  // visible icon fills the box at the same 64px the tile squircles do — the raw
+  // macOS icons bake ~8% shadow/keyline padding that shrank them otherwise. ?v=3
+  // busts any cache of the earlier padded versions.
+  {
+    id: "finder",
+    name: "Finder",
+    content: iconFace("/assets/app-icons/finder.png?v=3", "/assets/app-icons/finder-dark.png?v=4"),
+  },
+  ...TILES.map((t) => ({ id: t.id, name: t.name, content: <TileFace tile={t} /> })),
+  {
+    id: "settings",
+    name: "System Settings",
+    content: iconFace("/assets/app-icons/settings.png?v=3", "/assets/app-icons/settings-dark.png?v=1"),
+  },
+];
 
 const TILE_IDS = new Set(TILES.map((t) => t.id));
 
 export function DockDemo({ className = "" }: { className?: string }) {
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
-  const isDarkSite = mounted && resolvedTheme === "dark";
-  const apps = React.useMemo(() => buildApps(isDarkSite), [isDarkSite]);
-
   const [openId, setOpenId] = React.useState<string | null>(null);
   const [closing, setClosing] = React.useState(false);
   const [launching, setLaunching] = React.useState<string | null>(null);
@@ -708,7 +714,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
         </div>
       )}
 
-      <MacOSDock apps={apps} onAppClick={handleAppClick} openApps={[]} />
+      <MacOSDock apps={APPS} onAppClick={handleAppClick} openApps={[]} />
 
       {/* Idle-demo click ripples — a ring expands from each auto-click point. */}
       {rings.map((r) => (
