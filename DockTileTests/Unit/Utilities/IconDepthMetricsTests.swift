@@ -31,11 +31,25 @@ struct IconDepthMetricsTests {
         #expect(IconDepthMetrics.glyphSizeRatio(iconScale: 20, iconType: .sfSymbol, iconValue: "star.fill") == IconDepthMetrics.maxSafeRatio)
     }
 
-    @Test("Emoji gets a +0.05 weight offset, still capped at the safe area")
+    @Test("Emoji gets a +0.05 weight offset, capped at the emoji ceiling")
     func emojiRatioOffsetAndCap() {
         expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 14, iconType: .emoji, iconValue: "🚀"), 0.49)
-        // scale 20 → 0.65 + 0.05 = 0.70 uncapped → capped 0.60
-        #expect(IconDepthMetrics.glyphSizeRatio(iconScale: 20, iconType: .emoji, iconValue: "🚀") == IconDepthMetrics.maxSafeRatio)
+        // scale 23 → 0.755 + 0.05 = 0.805 uncapped → capped at the emoji ceiling (0.78)
+        #expect(IconDepthMetrics.glyphSizeRatio(iconScale: 23, iconType: .emoji, iconValue: "🚀") == IconDepthMetrics.emojiMaxSafeRatio)
+    }
+
+    @Test("Emoji stepper range 17–22 stays distinct under the emoji ceiling (no dead steps)")
+    func emojiTopStepsDistinct() {
+        // The 0.60 SF cap used to flatten everything past 17 to 0.60; the 0.78 emoji ceiling
+        // keeps every stepper step meaningful up to the top step at 22.
+        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 17, iconType: .emoji, iconValue: "🚀"), 0.595)
+        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 18, iconType: .emoji, iconValue: "🚀"), 0.63)
+        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 19, iconType: .emoji, iconValue: "🚀"), 0.665)
+        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 20, iconType: .emoji, iconValue: "🚀"), 0.70)
+        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 21, iconType: .emoji, iconValue: "🚀"), 0.735)
+        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 22, iconType: .emoji, iconValue: "🚀"), 0.77)
+        // Symbols are untouched by the emoji ceiling: scale 19 still clamps to 0.60.
+        #expect(IconDepthMetrics.glyphSizeRatio(iconScale: 19, iconType: .sfSymbol, iconValue: "star.fill") == IconDepthMetrics.maxSafeRatio)
     }
 
     @Test("Brand logo uses its own curve/ceiling, not the SF-Symbol cap")
@@ -55,6 +69,72 @@ struct IconDepthMetricsTests {
         // maxSafeRatio / warningThreshold are the documented magnitudes.
         #expect(IconDepthMetrics.maxSafeRatio == 0.60)
         #expect(IconDepthMetrics.warningThreshold == 0.57)
+        #expect(IconDepthMetrics.emojiMaxSafeRatio == 0.78)
+    }
+
+    @Test("Emoji safe-area warning keys off the emoji ceiling — only the top step fires")
+    func emojiSafeAreaLimitUsesOwnThreshold() {
+        // Emoji threshold = 0.78 × 0.95 = 0.741: scale 22 (0.77) warns, 21 (0.735) and
+        // below don't. (Under the old shared 0.57 threshold the warning fired from 17 up —
+        // constant noise across the opened-up emoji range.)
+        #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 19, iconType: .emoji) == false)
+        #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 21, iconType: .emoji) == false)
+        #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 22, iconType: .emoji) == true)
+        // Symbols keep the original 0.57 threshold: 18 (0.58) warns, 17 (0.545) doesn't.
+        #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 17, iconType: .sfSymbol) == false)
+        #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 18, iconType: .sfSymbol) == true)
+    }
+
+    // MARK: - Emoji ink fit (artwork normalisation)
+
+    @Test("Full-em ink draws at exactly the target size with no offset")
+    func inkFitFullCell() {
+        let fit = IconDepthMetrics.emojiInkFit(
+            tileSize: 256, targetRatio: 0.77,
+            inkPerPoint: CGRect(x: 0, y: 0, width: 1, height: 1),
+            typographicSizePerPoint: CGSize(width: 1, height: 1)
+        )
+        expectClose(fit.fontSize, 256 * 0.77)
+        expectClose(fit.inkCenterOffset.x, 0)
+        expectClose(fit.inkCenterOffset.y, 0)
+    }
+
+    @Test("Sparse ink scales the font up so the artwork hits the target")
+    func inkFitSparse() {
+        // Ink fills 0.7 of the em, centred → font grows by 1/0.7, no recentring needed.
+        let fit = IconDepthMetrics.emojiInkFit(
+            tileSize: 256, targetRatio: 0.77,
+            inkPerPoint: CGRect(x: 0.15, y: 0.15, width: 0.7, height: 0.7),
+            typographicSizePerPoint: CGSize(width: 1, height: 1)
+        )
+        expectClose(fit.fontSize, 256 * 0.77 / 0.7)
+        expectClose(fit.inkCenterOffset.x, 0)
+        expectClose(fit.inkCenterOffset.y, 0)
+    }
+
+    @Test("Off-centre ink produces the recentring offset")
+    func inkFitOffCentre() {
+        // Ink hugs the left/bottom of the em (like 🍕's left-heavy artwork).
+        let fit = IconDepthMetrics.emojiInkFit(
+            tileSize: 256, targetRatio: 0.5,
+            inkPerPoint: CGRect(x: 0, y: 0, width: 0.8, height: 0.8),
+            typographicSizePerPoint: CGSize(width: 1, height: 1)
+        )
+        expectClose(fit.fontSize, 256 * 0.5 / 0.8)
+        // Ink centre (0.4, 0.4) vs typo centre (0.5, 0.5) → −0.1 × fontSize on each axis.
+        expectClose(fit.inkCenterOffset.x, -0.1 * fit.fontSize)
+        expectClose(fit.inkCenterOffset.y, -0.1 * fit.fontSize)
+    }
+
+    @Test("Pathologically sparse ink is clamped so the font can't blow up unboundedly")
+    func inkFitClampsTinyInk() {
+        let fit = IconDepthMetrics.emojiInkFit(
+            tileSize: 256, targetRatio: 0.77,
+            inkPerPoint: CGRect(x: 0.45, y: 0.45, width: 0.1, height: 0.1),
+            typographicSizePerPoint: CGSize(width: 1, height: 1)
+        )
+        // maxInk clamps to emojiMinInkFraction (0.55), not the measured 0.1.
+        expectClose(fit.fontSize, 256 * 0.77 / IconDepthMetrics.emojiMinInkFraction)
     }
 
     // MARK: - Inner glass stroke

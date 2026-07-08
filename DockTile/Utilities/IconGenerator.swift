@@ -569,9 +569,94 @@ struct IconGenerator {
         return output
     }
 
+    // MARK: - Emoji Ink Measurement
+
+    /// Tight artwork bounds of an emoji, measured from RENDERED PIXELS — font metrics can't
+    /// provide this: Apple Color Emoji reports the same em-square glyph bounds for every
+    /// emoji (`.usesDeviceMetrics` returns the bitmap cell, not the artwork), while the real
+    /// art fills anywhere from ~65% (🧊) to ~100% (🟥) of that cell. Values are normalised
+    /// to a 1pt font, in the unflipped (y-up) string-drawing space, relative to the
+    /// `draw(at:)` point.
+    struct EmojiInkMetrics: Equatable {
+        var ink: CGRect
+        var typographicSize: CGSize
+    }
+
+    private static var emojiInkCache: [String: EmojiInkMetrics] = [:]
+
+    /// Rasterises the emoji once at a reference size and alpha-scans the tight ink rect.
+    /// Cached per emoji for the process lifetime. Returns nil if the glyph renders no ink
+    /// (callers fall back to legacy em-box sizing).
+    static func emojiInkMetrics(for emoji: String) -> EmojiInkMetrics? {
+        if let cached = emojiInkCache[emoji] { return cached }
+
+        let ref: CGFloat = 100
+        let attr = NSAttributedString(string: emoji, attributes: [.font: NSFont.systemFont(ofSize: ref)])
+        let typo = attr.size()
+        // Margin catches artwork that overflows the typographic box in any direction.
+        let margin = ref * 0.5
+        let pixelW = Int((typo.width + margin * 2).rounded())
+        let pixelH = Int((typo.height + margin * 2).rounded())
+        guard pixelW > 0, pixelH > 0,
+              let rep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: pixelW,
+                pixelsHigh: pixelH,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 0
+              ),
+              let gctx = NSGraphicsContext(bitmapImageRep: rep) else {
+            return nil
+        }
+        rep.size = CGSize(width: CGFloat(pixelW), height: CGFloat(pixelH))
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = gctx
+        attr.draw(at: CGPoint(x: margin, y: margin))
+        NSGraphicsContext.restoreGraphicsState()
+
+        guard let data = rep.bitmapData else { return nil }
+        let rowBytes = rep.bytesPerRow
+        var minX = pixelW, minRow = pixelH, maxX = -1, maxRow = -1
+        for row in 0..<pixelH {
+            for x in 0..<pixelW {
+                if data[row * rowBytes + x * 4 + 3] > 8 {
+                    if x < minX { minX = x }
+                    if x > maxX { maxX = x }
+                    if row < minRow { minRow = row }
+                    if row > maxRow { maxRow = row }
+                }
+            }
+        }
+        guard maxX >= 0 else { return nil }
+
+        // Bitmap rows are top-down; convert to the y-up drawing space and make the rect
+        // relative to the draw point (margin, margin), then normalise per 1pt of font.
+        let metrics = EmojiInkMetrics(
+            ink: CGRect(
+                x: (CGFloat(minX) - margin) / ref,
+                y: (CGFloat(pixelH - 1 - maxRow) - margin) / ref,
+                width: CGFloat(maxX - minX + 1) / ref,
+                height: CGFloat(maxRow - minRow + 1) / ref
+            ),
+            typographicSize: CGSize(width: typo.width / ref, height: typo.height / ref)
+        )
+        emojiInkCache[emoji] = metrics
+        return metrics
+    }
+
     // MARK: - Emoji Drawing
 
-    private static func drawEmoji(
+    /// `fontSize` arrives as the seam's target side (glyph ratio × tile) — the emoji is then
+    /// ink-normalised so its measured ARTWORK fills that target, optically centred (see
+    /// `IconDepthMetrics.emojiInkFit`). Internal (not private) so EmojiInkFitTests can scan
+    /// the real drawing path's pixels.
+    static func drawEmoji(
         emoji: String,
         rect: CGRect,
         fontSize: CGFloat,
@@ -581,7 +666,22 @@ struct IconGenerator {
         // Emojis keep their full color ("Sticker on Glass" metaphor)
         // No foregroundColor applied - let the emoji render naturally
 
-        let font = NSFont.systemFont(ofSize: fontSize)
+        let font: NSFont
+        let inkCenterOffset: CGPoint
+        if let metrics = emojiInkMetrics(for: emoji) {
+            let fit = IconDepthMetrics.emojiInkFit(
+                tileSize: rect.width,
+                targetRatio: fontSize / rect.width,
+                inkPerPoint: metrics.ink,
+                typographicSizePerPoint: metrics.typographicSize
+            )
+            font = NSFont.systemFont(ofSize: fit.fontSize)
+            inkCenterOffset = fit.inkCenterOffset
+        } else {
+            // No measurable ink — legacy em-box sizing.
+            font = NSFont.systemFont(ofSize: fontSize)
+            inkCenterOffset = .zero
+        }
 
         // Create attributed string without foreground color (keeps emoji colors)
         var attributes: [NSAttributedString.Key: Any] = [
@@ -600,9 +700,9 @@ struct IconGenerator {
         let attributedString = NSAttributedString(string: emoji, attributes: attributes)
         let stringSize = attributedString.size()
 
-        // Center the emoji
-        let x = (rect.width - stringSize.width) / 2
-        let y = (rect.height - stringSize.height) / 2
+        // Centre the ARTWORK: typographic centring shifted by the measured ink offset.
+        let x = (rect.width - stringSize.width) / 2 - inkCenterOffset.x
+        let y = (rect.height - stringSize.height) / 2 - inkCenterOffset.y
         let drawPoint = CGPoint(x: x, y: y)
 
         attributedString.draw(at: drawPoint)

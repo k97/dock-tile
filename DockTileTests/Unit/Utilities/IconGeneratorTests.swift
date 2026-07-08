@@ -62,11 +62,13 @@ struct IconGeneratorTests {
         #expect(sfAtLimit16 == false)
         #expect(emojiAtLimit16 == false)  // 0.56 < 0.57
 
-        // At scale 17:
-        // SF Symbol: 0.30 + 0.245 = 0.545
-        // Emoji: 0.545 + 0.05 = 0.595, capped at 0.60, but 0.595 > 0.57
-        let emojiAtLimit17 = IconGenerator.isAtSafeAreaLimit(iconScale: 17, iconType: .emoji)
-        #expect(emojiAtLimit17 == true)  // Emoji at 17 is at limit, SF Symbol is not
+        // At scale 19:
+        // Emoji: 0.615 + 0.05 = 0.665 — under the emoji ceiling's warning threshold
+        // (0.78 × 0.95 = 0.741), so no warning; only the top step (22 → 0.77) fires.
+        let emojiAtLimit19 = IconGenerator.isAtSafeAreaLimit(iconScale: 19, iconType: .emoji)
+        let emojiAtLimit22 = IconGenerator.isAtSafeAreaLimit(iconScale: 22, iconType: .emoji)
+        #expect(emojiAtLimit19 == false)
+        #expect(emojiAtLimit22 == true)
     }
 
     // MARK: - Safe Area Limit

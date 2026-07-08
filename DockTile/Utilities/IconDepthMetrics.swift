@@ -29,14 +29,34 @@ enum IconDepthMetrics {
     // MARK: - Glyph size ratio (safe-area cap)
 
     /// Maximum safe ratio — matches the outer guide circle (~60% of icon bounds). SF Symbols
-    /// and emojis are capped here so they never crowd the tile. The brand logo uses its own
-    /// (higher) curve in `SFSymbolCatalog.brandRatio`.
+    /// are capped here so they never crowd the tile. The brand logo uses its own (higher)
+    /// curve in `SFSymbolCatalog.brandRatio`, and emoji their own ceiling below.
     static let maxSafeRatio: CGFloat = 0.60
+
+    /// Emoji ceiling — a "sticker" isn't bound by the SF-Symbol guide circle, so emoji may
+    /// grow past 0.60. Sits just above scale 22's uncapped 0.77 so every emoji stepper step
+    /// 17–22 stays distinct (0.595 … 0.77) instead of clamping flat — the same own-ceiling
+    /// pattern as the brand glyph's 0.78. Because emoji are ink-normalised (`emojiInkFit`),
+    /// the ratio bounds the measured ARTWORK, keeping every emoji inside the squircle's
+    /// ~0.86 centred-square limit with margin.
+    static let emojiMaxSafeRatio: CGFloat = 0.78
+
+    /// The type's own ceiling: SF Symbols 0.60, emoji 0.67 (brand is handled upstream).
+    static func maxSafeRatio(for iconType: IconType) -> CGFloat {
+        iconType == .emoji ? emojiMaxSafeRatio : maxSafeRatio
+    }
 
     /// Threshold for the customiser's "near the edge" warning (95% of the safe area).
     static let warningThreshold: CGFloat = 0.57
 
-    /// Fraction of the tile the glyph should fill for a given Icon Scale (10–20).
+    /// Per-type warning threshold — 95% of the type's own ceiling, so the warning means
+    /// "near YOUR limit" for emoji too instead of firing across their whole upper range.
+    static func warningThreshold(for iconType: IconType) -> CGFloat {
+        maxSafeRatio(for: iconType) * 0.95
+    }
+
+    /// Fraction of the tile the glyph should fill for a given Icon Scale (10–19 symbols,
+    /// 10–26 emoji).
     /// Single source of truth for BOTH renderers — the preview previously duplicated this
     /// inline and dropped the `maxSafeRatio` cap, drawing symbols larger than the baked icon.
     static func glyphSizeRatio(iconScale: Int, iconType: IconType, iconValue: String) -> CGFloat {
@@ -49,16 +69,55 @@ enum IconDepthMetrics {
 
     /// The uncapped-then-capped ratio for SF Symbols / emojis (excludes the brand logo).
     private static func cappedSymbolRatio(iconScale: Int, iconType: IconType) -> CGFloat {
-        // Base ratio: maps iconScale 10–20 to approximately 0.30–0.65.
+        // Base ratio: 0.035 per step above scale 10 (symbols step to 19, emoji to 26).
         let base = 0.30 + (CGFloat(iconScale - 10) * 0.035)
         // Emoji gets +5% offset for visual weight.
         let ratio = iconType == .emoji ? base + 0.05 : base
-        return min(ratio, maxSafeRatio)
+        return min(ratio, maxSafeRatio(for: iconType))
     }
 
-    /// True when the (non-brand) glyph is at or past the safe-area warning threshold.
+    /// True when the (non-brand) glyph is at or past the type's safe-area warning threshold.
     static func isAtSafeAreaLimit(iconScale: Int, iconType: IconType) -> Bool {
-        cappedSymbolRatio(iconScale: iconScale, iconType: iconType) >= warningThreshold
+        cappedSymbolRatio(iconScale: iconScale, iconType: iconType) >= warningThreshold(for: iconType)
+    }
+
+    // MARK: - Emoji ink fit (per-emoji artwork normalisation)
+
+    /// How to draw an emoji so its MEASURED artwork ("ink"), not its font em box, fills the
+    /// tile at the requested ratio. Apple Color Emoji reports identical glyph bounds for
+    /// every emoji (the bitmap cell), while the actual art fills anywhere from ~65% (🧊) to
+    /// ~100% (🟥) of that cell and can sit off-centre (🍕) — so sizing by font em made some
+    /// emoji render visibly larger than others at the same Icon Size and let full-cell art
+    /// crowd the safe area. Measurement lives in `IconGenerator.emojiInkMetrics(for:)`
+    /// (pixel scan, cached); this seam is the pure arithmetic both renderers share.
+    struct EmojiInkFit: Equatable {
+        /// Font size that makes the artwork's larger dimension equal `tileSize × targetRatio`.
+        var fontSize: CGFloat
+        /// The artwork centre's offset from the typographic box centre, in points at
+        /// `fontSize`, in the y-up measurement space. Renderers subtract this from the
+        /// typographic-centred position (SwiftUI flips the y sign) to optically centre the art.
+        var inkCenterOffset: CGPoint
+    }
+
+    /// Artwork is assumed to fill at least this fraction of the em box — a measured ink below
+    /// it is clamped so a pathologically sparse glyph can't blow the font size up unboundedly.
+    static let emojiMinInkFraction: CGFloat = 0.55
+
+    /// `inkPerPoint` / `typographicSizePerPoint` are the measured metrics normalised to a
+    /// 1pt font (see `IconGenerator.EmojiInkMetrics`).
+    static func emojiInkFit(
+        tileSize: CGFloat,
+        targetRatio: CGFloat,
+        inkPerPoint: CGRect,
+        typographicSizePerPoint: CGSize
+    ) -> EmojiInkFit {
+        let maxInk = max(inkPerPoint.width, inkPerPoint.height, emojiMinInkFraction)
+        let fontSize = tileSize * targetRatio / maxInk
+        let offset = CGPoint(
+            x: (inkPerPoint.midX - typographicSizePerPoint.width / 2) * fontSize,
+            y: (inkPerPoint.midY - typographicSizePerPoint.height / 2) * fontSize
+        )
+        return EmojiInkFit(fontSize: fontSize, inkCenterOffset: offset)
     }
 
     // MARK: - Inner glass stroke

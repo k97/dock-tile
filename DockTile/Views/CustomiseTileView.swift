@@ -245,10 +245,13 @@ struct CustomiseTileView: View {
 
     // MARK: - Tile Icon Size Section
 
-    /// Maximum allowed scale value based on icon type (keeps icon within safe area)
+    /// Maximum allowed scale value (keeps icon within its type's safe area)
     private var maxIconScale: Int {
-        // Emoji has +5% offset, so needs lower max to stay within safe area
-        editedConfig.iconType == .emoji ? 16 : 19
+        // Symbols step to 19 (clamped at IconDepthMetrics.maxSafeRatio, 0.60). Emoji step
+        // to 22 under their own ceiling (emojiMaxSafeRatio, 0.78) — and because emoji are
+        // ink-normalised (emojiInkFit), the ratio bounds the measured artwork, so every
+        // emoji stays inside the safe area at every step.
+        editedConfig.iconType == .emoji ? 22 : 19
     }
 
     /// Combined row: Icon Size stepper on the left, Icon Weight pull-down on the

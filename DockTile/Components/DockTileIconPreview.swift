@@ -20,7 +20,7 @@ struct DockTileIconPreview: View {
     let tintColor: TintColor
     let iconType: IconType
     let iconValue: String
-    let iconScale: Int  // 10-20 range, default 14
+    let iconScale: Int  // 10–19 symbols / 10–22 emoji, default 14
     let iconWeight: IconWeight  // SF Symbol stroke weight (ignored for emojis)
     let size: CGFloat
 
@@ -216,8 +216,12 @@ struct DockTileIconPreview: View {
         case .emoji:
             // Emojis: "Sticker on Glass" metaphor — full colour + a subtle contact shadow in
             // every style (seam-driven), topped by a gentle glossy-sticker specular sheen.
+            // Ink-normalised via the shared measurement + seam so the ARTWORK fills the
+            // seam ratio and is optically centred — identical to the baked `.icns`.
+            let fit = emojiInkFit
+            let emojiFontSize = fit?.fontSize ?? symbolSize
             Text(iconValue)
-                .font(.system(size: symbolSize))
+                .font(.system(size: emojiFontSize))
                 .overlay {
                     if let sheen = glyphSheen {
                         LinearGradient(
@@ -229,7 +233,7 @@ struct DockTileIconPreview: View {
                             endPoint: .bottom
                         )
                         // Mask the gloss to the emoji's silhouette (its rendered alpha).
-                        .mask(Text(iconValue).font(.system(size: symbolSize)))
+                        .mask(Text(iconValue).font(.system(size: emojiFontSize)))
                     }
                 }
                 .shadow(
@@ -237,7 +241,28 @@ struct DockTileIconPreview: View {
                     radius: glyphShadow?.blur ?? 0,
                     y: glyphShadow?.offset ?? 0
                 )
+                // Seam offset is y-up (AppKit drawing space); SwiftUI is y-down, so flip y.
+                .offset(
+                    x: -(fit?.inkCenterOffset.x ?? 0),
+                    y: fit?.inkCenterOffset.y ?? 0
+                )
         }
+    }
+
+    /// Ink-normalised emoji fit — the same measurement (`IconGenerator.emojiInkMetrics`) and
+    /// seam arithmetic (`IconDepthMetrics.emojiInkFit`) the baked renderer uses, so the
+    /// preview and the `.icns` cannot drift. Nil for non-emoji or unmeasurable glyphs.
+    private var emojiInkFit: IconDepthMetrics.EmojiInkFit? {
+        guard iconType == .emoji,
+              let metrics = IconGenerator.emojiInkMetrics(for: iconValue) else { return nil }
+        return IconDepthMetrics.emojiInkFit(
+            tileSize: size,
+            targetRatio: IconDepthMetrics.glyphSizeRatio(
+                iconScale: iconScale, iconType: iconType, iconValue: iconValue
+            ),
+            inkPerPoint: metrics.ink,
+            typographicSizePerPoint: metrics.typographicSize
+        )
     }
 }
 

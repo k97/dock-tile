@@ -16,7 +16,7 @@
 
 **Glass effect**: White inner stroke, line width scales proportionally (0.5pt at 160pt). Opacity + width now come from the shared `IconDepthMetrics` seam (see below), not inline constants.
 
-**Content**: SF Symbols (white, `.semibold`) or emojis. Size controlled by `iconScale` (10-20, default 14).
+**Content**: SF Symbols (white, `.semibold`) or emojis. Size controlled by `iconScale` (10–19 symbols / 10–22 emoji, default 14). Emoji are **ink-normalised** — see Icon Scale Safe Area below.
 
 **Output**: All 10 sizes (16, 32, 128, 256, 512 @ 1x and 2x) via `iconutil`.
 
@@ -76,7 +76,26 @@ renderer (`IconGenerator`) and the live preview (`DockTileIconPreview`) so they 
 
 ## Icon Scale Safe Area
 
-Max ratio: 0.60 of icon size. Stepper capped at 17 (SF Symbols) / 16 (emojis).
+Stepper runs 10–19 for SF Symbols, 10–22 for emoji. Per-type ceilings in
+`IconDepthMetrics.maxSafeRatio(for:)`: SF Symbols 0.60 of icon size; emoji 0.78
+(`emojiMaxSafeRatio` — stickers aren't bound by the symbol guide circle; steps 17–22 stay
+distinct at 0.595 … 0.77 instead of clamping flat at 0.60). The safe-area warning fires at
+95% of the type's own ceiling (symbols ≥18, emoji at 22 only). Guarded by
+`IconDepthMetricsTests`.
+
+**Emoji ink normalisation (critical)**: the emoji ratio bounds the **measured artwork**, not
+the font em. Apple Color Emoji reports identical glyph bounds for every emoji (the bitmap
+cell — `.usesDeviceMetrics` can't see the art), while real artwork fills ~65% (🧊) to ~100%
+(🟥) of that cell and can sit off-centre (🍕) — em-sized emoji therefore rendered visibly
+different sizes at the same Icon Size and full-cell art crowded the safe area.
+`IconGenerator.emojiInkMetrics(for:)` rasterises each emoji once (reference size, alpha-scan,
+cached per process) and the pure seam `IconDepthMetrics.emojiInkFit` computes the font size
+that makes the artwork's larger dimension hit `ratio × tile`, plus an optical-centring offset
+(`emojiMinInkFraction` 0.55 clamps pathological sparse glyphs). BOTH renderers route through
+it — `IconGenerator.drawEmoji` and `DockTileIconPreview` (preview flips the offset's y for
+SwiftUI) — so every emoji fills the same fraction, is optically centred, and stays inside the
+safe area at every step by construction. Guarded by `EmojiInkFitRenderTests` (real drawing
+path, pixel-scanned) + the `emojiInkFit` cases in `IconDepthMetricsTests`.
 
 ## Icon Weight (v7)
 
