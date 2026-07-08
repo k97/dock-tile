@@ -9,23 +9,12 @@ import { trackThemeChange } from "@/lib/analytics";
 type Theme = "light" | "system" | "dark";
 
 export function ThemeSwitcher() {
+  // `theme` is undefined on the server AND the first client render (next-themes
+  // resolves it after mount), so the buttons render identically pre/post
+  // hydration with no active highlight — it fades in once the theme is known.
+  // No mounted guard: the old empty-circles placeholder visibly popped into
+  // icons on every load.
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    // Return placeholder with same dimensions to prevent layout shift
-    return (
-      <div className="flex items-center gap-0.5 p-1 rounded-full bg-muted/50">
-        <div className="w-7 h-7" />
-        <div className="w-7 h-7" />
-        <div className="w-7 h-7" />
-      </div>
-    );
-  }
 
   const themes: { value: Theme; icon: React.ReactNode; label: string }[] = [
     { value: "light", icon: <Sun className="h-4 w-4" />, label: "Light" },
