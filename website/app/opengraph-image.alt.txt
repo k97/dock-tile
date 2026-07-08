@@ -1,1 +1,1 @@
-Dock Tile for macOS — a custom Dock tile open over the Dock, showing a popover of grouped AI apps, with tiles for design and dev apps alongside. Caption: Organise your dock with apps & folders.
+Dock Tile for macOS — the app logo and wordmark beside the tagline "Organise your Mac Dock with ease.", with Pin, Group and Launch feature labels, and a macOS Dock showing a custom Dock tile open with a "DockTile" tooltip alongside Finder, Safari, Messages, Notion, Slack and Figma. URL: docktile.app.
