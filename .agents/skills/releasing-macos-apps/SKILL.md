@@ -7,7 +7,87 @@ description: Create notarized macOS app releases with Sparkle auto-updates, DMG 
 
 Complete workflow for creating notarized macOS app releases with Sparkle auto-updates, DMG installers, and GitHub releases.
 
-## Release Checklist
+## Dock Tile: CI-driven release (start here)
+
+**This repo releases through CI.** Pushing a version tag (`vX.Y.Z`) triggers
+`.github/workflows/release.yml`, which does the heavy lifting automatically — so the manual
+**Steps 2–10 below are done for you** and are only a fallback for a repo without this CI.
+
+CI, on tag push, will:
+- Build → sign → notarize the DMG
+- Generate the Sparkle EdDSA signature
+- Insert the new `appcast.xml` entry (newest first)
+- Update `website/lib/config.ts` (download URL + version) and commit it to `main`
+- Create the GitHub Release and upload the DMG + SHA256
+
+**So the human flow is just:**
+
+```
+- [ ] Bump MARKETING_VERSION + CURRENT_PROJECT_VERSION in DockTile/Config/Base.xcconfig (+ CLAUDE.md header)
+- [ ] Generate release notes from git history (see next section)
+- [ ] Commit, push main, then tag and push the tag
+- [ ] Wait for release.yml to finish (gh run watch)
+- [ ] Publish the draft + apply the notes (Step 11)
+- [ ] (optional, separate website session) add a curated entry to website/lib/releases.ts
+```
+
+```bash
+# 1. bump versions in Base.xcconfig + CLAUDE.md, then:
+git add DockTile/Config/Base.xcconfig CLAUDE.md
+git commit -m "chore: Bump version to X.Y.Z"
+git push origin main                 # pushes pending commits; triggers CI + Vercel
+git tag -a vX.Y.Z -m "Release X.Y.Z"
+git push origin vX.Y.Z               # triggers release.yml
+```
+
+⚠️ **Do not push to `main` again between tagging and the release job finishing** — the pipeline
+commits `appcast.xml`/`config.ts` back to `main` and needs a fast-forward. Pushing in between
+breaks the release (this bit the 1.8.3 release). `git pull` after it completes.
+
+See `.claude/rules/ci-release.md` for the authoritative pipeline description.
+
+## Generate Release Notes
+
+Produce curated, user-facing notes from the commits since the last release tag, as part of *this*
+flow — no separate `gen-release-notes` pass, and no `CHANGELOG.md` required. The notes go straight
+onto the GitHub Release in Step 11 (and, optionally, the website's curated list).
+
+**1. List the commits since the last release tag:**
+```bash
+PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)   # last release tag before HEAD
+echo "since ${PREV_TAG}:"
+git log "${PREV_TAG}..HEAD" --no-merges --pretty=format:'%h %s'
+```
+
+**2. Keep only user-facing *app* changes.** Include `feat`/`fix`/`perf` commits that touch the app
+(`DockTile/**`). **Exclude** `website(...)`, `docs`, `chore`, `test`, `ci`, `style`, and
+tooling/skill commits — those never belong in app release notes. When in doubt, read the commit
+body (`git show -s <hash>`) to write the line accurately.
+
+**3. Rewrite each kept commit as one user-facing line** — imperative, benefit-first, *what changed
+for the user*, never *how it was implemented*. Group under `### Fixed` / `### Changed` / `### Added`
+(map `fix→Fixed`, `perf→Changed`, `feat→Added` or `Changed`). Be specific; never "various fixes".
+
+**4. Write the notes to a file** for Step 11:
+```bash
+cat > /tmp/release-notes-vX.Y.Z.md << 'EOF'
+APP X.Y.Z
+
+<one-line summary of the release>
+
+### Fixed
+- <user-facing fix>
+
+### Changed
+- <user-facing change>
+
+**Full Changelog**: https://github.com/USER/REPO/compare/vPREV...vX.Y.Z
+EOF
+```
+
+Match the calm, user-focused tone of the website's curated notes in `website/lib/releases.ts`.
+
+## Release Checklist (manual fallback — non-CI repos only)
 
 Copy this checklist and track progress:
 
@@ -24,8 +104,8 @@ Release Progress:
 - [ ] Step 9: Update appcast.xml with new signature
 - [ ] Step 10: Commit and push changes
 - [ ] Step 11: Update GitHub release assets
-- [ ] Step 12: Publish release & update website (⚠️ CRITICAL)
-- [ ] Step 13: Verify DMG and Sparkle updates
+- [ ] Step 11: Publish release & apply notes (⚠️ CRITICAL)
+- [ ] Step 12: Final verification (DMG + Sparkle updates)
 ```
 
 ## Prerequisites
@@ -311,14 +391,20 @@ gh release upload vX.X.X /tmp/APP.dmg
 gh release view vX.X.X --json assets -q '.assets[] | "\(.name) - \(.size) bytes"'
 ```
 
-## Step 11: Publish Release & Update Website
+## Step 11: Publish Release & Apply Notes
 
-⚠️ **CRITICAL**: GitHub releases created by CI are **drafts** (`draft: true`). Draft release assets return **404** for unauthenticated downloads. Sparkle will show "Update Error — An error occurred while downloading the update" until the release is published.
-
-**Publish the release:**
+Wait for `release.yml` to finish before this step:
 ```bash
-gh release edit vX.X.X --draft=false
+gh run watch "$(gh run list --workflow=release.yml --limit 1 --json databaseId -q '.[0].databaseId')" --exit-status
 ```
+
+**Apply the curated notes and publish in one command** — replaces CI's auto-generated notes with
+the file from [Generate Release Notes](#generate-release-notes):
+```bash
+gh release edit vX.X.X --draft=false --notes-file /tmp/release-notes-vX.X.X.md
+```
+
+⚠️ **CRITICAL**: GitHub releases created by CI may be **drafts** (`draft: true`). Draft release assets return **404** for unauthenticated downloads, so Sparkle shows "Update Error — An error occurred while downloading the update" until published. `--draft=false` above is a no-op if it's already public, so it's safe to always run.
 
 **Verify the DMG is publicly downloadable:**
 ```bash
@@ -326,25 +412,10 @@ curl -sI -L "https://github.com/USER/REPO/releases/download/vX.X.X/APP-X.X.X.dmg
 # Should show: HTTP/2 302 then HTTP/2 200
 ```
 
-**Update website config** (`website/lib/config.ts`):
-```typescript
-downloadUrl: "https://github.com/USER/REPO/releases/download/vX.X.X/APP-X.X.X.dmg",
-releaseNotesUrl: "https://github.com/USER/REPO/releases/tag/vX.X.X",
-latestVersion: "X.X.X",
-```
-
-**Update release notes page** (`website/app/release-notes/page.tsx`):
-- Add a new `<section>` block at the top for the new version
-- Include date, summary, and changelog items
-
-**Commit and push website updates:**
-```bash
-git add website/lib/config.ts website/app/release-notes/page.tsx
-git commit -m "chore: Update website for vX.X.X release"
-git push
-```
-
-This triggers a Vercel deploy. The website will reflect the new version within ~60 seconds.
+**Website:** CI already updates `website/lib/config.ts` (download URL + version) and commits it to
+`main` — **do not** edit it by hand. The only manual, optional website touch is adding a curated
+entry to `website/lib/releases.ts` (the human-readable release list). Per repo convention that is a
+**website change → do it in a separate website session**, not this app-release flow.
 
 ## Step 12: Final Verification
 
