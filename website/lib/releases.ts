@@ -94,7 +94,9 @@ export async function getReleases(): Promise<Release[]> {
     return data
       .filter((release) => !release.draft)
       .map((release) => ({
-        version: release.tag_name.replace(/^v/, ""),
+        // Display clean semver: drop the leading "v" and any prerelease suffix,
+        // so the v1.0.0-beta tag renders as 1.0.0.
+        version: release.tag_name.replace(/^v/, "").replace(/-.*$/, ""),
         date: formatDate(release.published_at),
         ...parseBody(release.body ?? ""),
       }));
