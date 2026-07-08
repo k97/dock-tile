@@ -4,7 +4,7 @@ import { Footer } from "@/components/footer";
 import { ReleaseTimeline } from "@/components/release-timeline";
 import { Reveal } from "@/components/reveal";
 import { siteConfig } from "@/lib/config";
-import { releases } from "@/lib/releases";
+import { getReleases } from "@/lib/releases";
 
 const title = `Release Notes - ${siteConfig.appName}`;
 const description = `Release notes and version history for ${siteConfig.appName} — new features, fixes, and improvements in every update to the macOS Dock utility.`;
@@ -24,7 +24,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ReleaseNotesPage() {
+// Revalidate hourly so edited notes / new releases appear without a redeploy.
+export const revalidate = 3600;
+
+export default async function ReleaseNotesPage() {
+  const releases = await getReleases();
   return (
     <main className="bg-background">
       {/* Dark shell */}

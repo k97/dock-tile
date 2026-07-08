@@ -9,9 +9,10 @@ import type { Release } from "@/lib/releases";
 const PAGE_SIZE = 6;
 
 /** Progressive release timeline: shows the latest PAGE_SIZE versions, then
- *  reveals PAGE_SIZE more per "Load more" click. All data is static — no
- *  network requests. Release copy is written in AU/GB English; `localiseText`
- *  swaps spellings for US visitors rather than duplicating the dataset. */
+ *  reveals PAGE_SIZE more per "Load more" click. Data is fetched from GitHub
+ *  Releases server-side (see `getReleases` in lib/releases). Release copy is
+ *  written in AU/GB English; `localiseText` swaps spellings for US visitors
+ *  rather than duplicating the dataset. */
 export function ReleaseTimeline({ releases }: { releases: Release[] }) {
   const { locale } = useLocale();
   const [visibleCount, setVisibleCount] = React.useState(PAGE_SIZE);

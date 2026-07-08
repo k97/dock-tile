@@ -23,7 +23,7 @@ npx tsc --noEmit
 ## Non-obvious facts
 
 - `lib/config.ts` (version, download URL) is **CI-written on each release** — don't hand-bump it.
-- `lib/releases.ts` is static release data CI does **not** update — add an entry at the top when a version ships.
+- `lib/releases.ts` `getReleases()` fetches the `/release-notes` changelog from **GitHub Releases** (server-side, revalidated hourly) — the source of truth is each GitHub release's notes; there's no static list to maintain. To change what the site shows, edit the release on GitHub.
 - All user-facing copy goes through `lib/i18n.ts` (en-AU default) — never hardcode marketing strings.
 - Changed a static asset but kept its filename? Bump its `?v=N` query param or caches serve the old file.
 - Assets load from an R2 CDN in prod, `public/` in dev — route every `/assets/…` ref through `asset()` (`lib/assets.ts`); see assets-cdn rule. New/changed files must also be uploaded to R2.

@@ -32,6 +32,9 @@
 
 ## Releases page
 
-- `lib/releases.ts` is static data (the site never calls the GitHub API); the timeline shows 6
-  entries and loads 6 more per click. **CI updates `lib/config.ts` only — each new release needs
-  its `releases.ts` entry added by hand** (top of the array).
+- `lib/releases.ts` `getReleases()` fetches the changelog from **GitHub Releases** server-side
+  (ISR, revalidated hourly); the timeline shows 6 entries and loads 6 more per click. **The source
+  of truth is each GitHub release's notes — nothing to hand-maintain.** New releases and note edits
+  appear automatically; to change what the site shows, edit the release on GitHub. Bodies are parsed
+  as a lead paragraph + `### heading` / `- bullet` groups (author them in AU/GB spelling so
+  `localiseText` can swap US spellings).
