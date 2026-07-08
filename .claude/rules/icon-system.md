@@ -53,8 +53,14 @@ renderer (`IconGenerator`) and the live preview (`DockTileIconPreview`) so they 
        the glyph alpha (`sheenGlyph`, mirroring `gradientFilledGlyph`'s proven orientation) rather
        than clipping the main context (which would flip vertically); the preview overlays a gradient
        `.mask`ed by a second copy of the glyph. For **emoji** (full-colour) the mask can't key off
-       luminance, so the baked path isolates the silhouette by compositing the emoji over the gloss
-       with `.destinationIn` (`emojiSheenImage`); the preview masks with `Text(emoji)`.
+       luminance, so the baked path (`emojiSheenImage`) draws the emoji FIRST and paints the gloss
+       through its alpha with `.sourceIn` (+ `.drawsAfterEndLocation` so the below-gloss emoji
+       pixels erase to transparent); the preview masks with `Text(emoji)`. **Never the reverse
+       (gloss first, emoji composited over it with `.destinationIn`)** — CoreText colour-glyph
+       drawing does not honour the context blend mode, which produced the INVERSE mask: a
+       translucent gloss rectangle (the glyph's typographic box minus the emoji) baked behind
+       every emoji tile as a visible plate/bevel. Guarded by `EmojiSheenMaskTests` (pixel-level:
+       typographic-box corners must stay transparent).
 - **Size gate (`minDetailSize`, critical)**: all depth is suppressed below ~22px so the tiny 16px
   `.icns` renditions stay crisp instead of muddy; medium/large baked variants and every in-app
   preview clear the gate.

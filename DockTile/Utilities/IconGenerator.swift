@@ -616,10 +616,14 @@ struct IconGenerator {
     }
 
     /// Build a top→transparent white gloss confined to an emoji's silhouette. Because an emoji is
-    /// full-colour, the glyph shape is isolated by compositing the emoji over the gloss with
-    /// `.destinationIn` (keep the gloss only where the emoji is opaque) rather than a luminance
-    /// clip, which would key off the emoji's colours instead of its shape.
-    private static func emojiSheenImage(
+    /// full-colour, a luminance clip would key off its colours instead of its shape — so the
+    /// silhouette is isolated by drawing the emoji FIRST and then painting the gloss through its
+    /// alpha with `.sourceIn`. The order matters: gradient drawing is plain Core Graphics and
+    /// honours the context blend mode, whereas CoreText colour-glyph drawing does NOT — the old
+    /// gloss-first `.destinationIn` arrangement produced the INVERSE mask (gloss across the whole
+    /// typographic box with the emoji punched out), baking a visible "plate"/bevel behind every
+    /// emoji tile. Internal (not private) so EmojiSheenMaskTests can guard the mask directly.
+    static func emojiSheenImage(
         emoji: String,
         font: NSFont,
         size: CGSize,
@@ -651,7 +655,17 @@ struct IconGenerator {
         NSGraphicsContext.current = gctx
         let cg = gctx.cgContext
 
-        // 1. Paint the top-down white gloss across the whole bounds.
+        // 1. Draw the emoji itself (plain sourceOver — always honoured), establishing the
+        //    silhouette's alpha in the bitmap.
+        NSAttributedString(string: emoji, attributes: [.font: font]).draw(at: .zero)
+
+        // 2. Replace it with the top-down gloss, kept only where the emoji is opaque:
+        //    `.sourceIn` multiplies the gradient by the destination (emoji) alpha. See the
+        //    doc comment for why the emoji must be the destination, never the blended source.
+        //    `.drawsAfterEndLocation` extends the transparent end colour to the bottom edge so
+        //    the emoji pixels below the gloss band are erased too — the returned image must be
+        //    ONLY the gloss, never a second emoji copy.
+        cg.setBlendMode(.sourceIn)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         if let gradient = CGGradient(
             colorsSpace: colorSpace,
@@ -665,13 +679,9 @@ struct IconGenerator {
                 gradient,
                 start: CGPoint(x: bounds.midX, y: bounds.maxY),
                 end: CGPoint(x: bounds.midX, y: bounds.maxY - bounds.height * heightFraction),
-                options: []
+                options: [.drawsAfterEndLocation]
             )
         }
-
-        // 2. Keep the gloss only where the emoji is opaque (silhouette mask via alpha compositing).
-        cg.setBlendMode(.destinationIn)
-        NSAttributedString(string: emoji, attributes: [.font: font]).draw(at: .zero)
 
         NSGraphicsContext.restoreGraphicsState()
 
