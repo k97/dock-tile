@@ -96,7 +96,7 @@ export function Hero() {
             rel="noopener noreferrer"
             className="transition-colors hover:text-white"
           >
-            GitHub
+            {m.ctaMetaOpenSource}
           </a>
           <span className="h-1 w-1 rounded-full bg-white/20" />
           <span>macOS 26+</span>
