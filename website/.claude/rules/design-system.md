@@ -52,6 +52,26 @@ The header samples the section under the nav via `elementFromPoint` and flips to
 `[data-nav-tone]`. **Every dark section must be tagged `data-nav-tone="dark"`**; light is the
 untagged default — `"light"` is never set, so don't test for it.
 
+**The Safari-only pill overflow (critical — two guards, keep both).** On every iPhone the nav pill
+rendered 24px narrower than its own content and "FAQ" spilled out onto the wallpaper; desktop
+Chrome was correct at every window width, so this is invisible without a WebKit check. Two causes
+compounded, verified in Playwright WebKit against the real page:
+
+1. **Source**: Tailwind preflight sets `img { max-width: 100% }`. WebKit counts an `<img>` with a
+   **percentage** max-width as contributing **0** to its flex container's min-content width (the
+   percentage can't resolve against an indefinite size during intrinsic sizing; Chromium falls back
+   to the definite `width`). So the logo icon vanished from the pill's min-content: 295.69px in
+   WebKit vs 319.69px in Chromium. Guard: **`max-w-none` on the logo `<Image>`**.
+2. **Amplifier**: `position:fixed; left:50%; width:auto` is shrink-to-fit against an available width
+   of only `100vw − 50vw`, so the used width lands on that too-small min-content. Guard: **centre
+   with `inset-x-0 flex justify-center`, NEVER `left-1/2 -translate-x-1/2`.** The full-width strip is
+   `pointer-events-none` (so it can't swallow hero clicks), the pill opts back in with
+   `pointer-events-auto`, and `px-3` guarantees the gutters.
+
+Either guard alone fixes it; both are kept because each is independently correct. The general lesson:
+**any `w-fit`/shrink-to-fit box containing an `<img>` is exposed** — verify layout in WebKit
+(`npx playwright install webkit`), not just Chrome.
+
 Below `md` the pill drops **Download** (`max-md:hidden`) and keeps logo + wordmark + the three
 text links inline — on a phone nobody installs a macOS app from the nav, and the links are the
 contextual actions (the hero + Final CTA still offer Download). No hamburger. The wordmark stays

@@ -81,24 +81,42 @@ export function Header() {
     // The hero sits mt-3 (md:mt-4) off the viewport; the nav repeats that same
     // gap inside the hero, so viewport→hero and hero→nav read as one rhythm:
     // top = hero inset ×2 (12+12px, md 16+16px).
-    <header className="fixed top-6 left-1/2 z-50 -translate-x-1/2 md:top-8">
+    //
+    // Centred by `inset-x-0 flex justify-center`, NOT `left-1/2 -translate-x-1/2`
+    // (critical). A fixed box with `left:50%` and `width:auto` is shrink-to-fit
+    // against an available width of only `100vw - 50vw` — half the viewport.
+    // Chrome resolves that to the nav's min-content and everything fits; Safari
+    // clamps it narrower than the content, and the pill's last flex child (FAQ)
+    // spilled out past the frosted background onto the wallpaper on every phone.
+    // Spanning the full viewport removes the ambiguity: the pill measures itself
+    // against the whole width, and `px-3` guarantees the gutters. The strip is
+    // `pointer-events-none` so a full-width header can't swallow hero clicks;
+    // the pill itself opts back in.
+    <header className="pointer-events-none fixed inset-x-0 top-6 z-50 flex justify-center px-3 md:top-8">
       <nav
         ref={navRef}
         data-over={overDark ? "dark" : "light"}
         data-ready={ready || undefined}
-        className="glass-nav flex items-center gap-1 rounded-full py-1.5 pl-2 pr-2 md:pl-3 md:pr-1.5"
+        className="glass-nav pointer-events-auto flex items-center gap-1 rounded-full py-1.5 pl-2 pr-2 md:pl-3 md:pr-1.5"
       >
         <Link
           href="/"
           className={`flex shrink-0 items-center gap-2 rounded-full py-1.5 pl-1 pr-2.5 transition-colors duration-300 md:pr-3 ${logoHover}`}
         >
+          {/* `max-w-none` overrides Tailwind preflight's `img { max-width: 100% }`
+              (critical). WebKit counts an <img> with a PERCENTAGE max-width as
+              contributing 0 to its flex container's min-content width — the
+              percentage can't resolve against an indefinite size during intrinsic
+              sizing, and WebKit floors it to 0 where Chromium falls back to the
+              definite `width: 24px`. That made the pill's min-content 24px short
+              in Safari only. Harmless here: the icon is a fixed 24px box. */}
           <Image
             src={asset("/assets/dock-tile-icon-only.svg")}
             alt={siteConfig.appName}
             width={24}
             height={24}
             unoptimized
-            className="h-6 w-6 shrink-0"
+            className="h-6 w-6 max-w-none shrink-0"
           />
           {/* The wordmark stays visible on mobile too — with Download gone from
               the mobile pill there's room, and nothing else on a phone screen
