@@ -70,6 +70,19 @@ const bg = "bg-black/10 dark:bg-white/10";
 
 Reserve `useTheme()` / `resolvedTheme` only for non-class logic (inline style values, conditional rendering).
 
+**If you must branch on `theme` in render, gate it on mount.** next-themes reads `localStorage` in
+its lazy `useState` initialiser, so `theme` is already populated on the first *client* render while
+the server rendered `undefined` — comparing it directly (e.g. a theme switcher's active state) is a
+guaranteed hydration mismatch, not a safe read:
+
+```tsx
+const [mounted, setMounted] = useState(false);
+useEffect(() => setMounted(true), []);
+const active = mounted ? theme : undefined; // matches SSR on the hydration render
+```
+
+Gate only the theme-dependent bit; render everything else (icons, layout) eagerly.
+
 ## Verification
 - Toggle theme — colors should interpolate smoothly over 0.6s
 - No flash of wrong theme on page load

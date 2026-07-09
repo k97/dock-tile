@@ -24,7 +24,7 @@ only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock."
   moments): hero, Dock Lock story, Final CTA, Ghost Mode card, and the dark page headers on
   FAQ/release-notes/legal. Only neutral surfaces theme-flip.
 - **Anything visible at load themes via CSS (`dark:` variants / `.dark` rules), NEVER a
-  `mounted && resolvedTheme` guard** — next-themes sets `.dark` on `<html>` before first paint, so
+  `mounted && resolvedTheme` guard** (one exception, next bullet) — next-themes sets `.dark` on `<html>` before first paint, so
   CSS-driven theming is right on frame 1; a mounted guard *guarantees* dark-theme visitors watch
   the light variant swap after hydration (the load flash fixed in 2026-07). Patterns: background
   images pass both URLs as CSS vars and `.dark` picks one (`hero.tsx` + `.hero-texture`); `<img>`
@@ -32,6 +32,15 @@ only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock."
   visible one); tile mocks use the shared `.tile-face` rule + `--tile-bg`/`--tile-glyph-dark` vars.
   (The Turbopack stale-`globals.css` quirk is a dev-workflow caveat — restart `next dev` — not a
   reason to theme in JS.)
+- **The lone exception: which theme is *selected* (`ThemeSwitcher`'s active pill).** `<html>` only
+  ever carries the *resolved* theme (`light`/`dark`), never the fact that the user picked
+  `"system"` — so CSS can't express this control's active state and it alone must wait for mount.
+  Defer **only the highlight, never the icons**: `const active = mounted ? theme : undefined`.
+  Do NOT compare `theme` directly in render — next-themes seeds it from `localStorage` inside its
+  lazy `useState` initialiser, i.e. during the FIRST **client** render, while the server rendered
+  `undefined`; that mismatches the active button's `className` on every load (shipped in `cd8d437`
+  on a wrong premise, fixed 2026-07-09). The whole-component `if (!mounted) return <placeholder/>`
+  guard stays banned — that's the empty-circles pop `cd8d437` rightly removed.
 - Cards have fixed theme character: the Ghost card is always dark (hardcoded whites are correct);
   the Smart Add card flips, so its colours must be theme-aware (`text-zinc-600 dark:text-white/80`).
   The Ghost card runs a charcoal gradient (`from-zinc-800 to-zinc-900`), NOT flat zinc-900 — flat
