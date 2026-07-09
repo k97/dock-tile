@@ -412,6 +412,109 @@
   background-image: var(--hero-bg-dark);
 }
 
+/* ---------------------------------------------------------------------------
+   Branded load veil (HeroVeil) — a Dock Tile splash that hides the hero
+   wallpaper's late pop-in on the FIRST load of a session, then lifts the moment
+   the wallpaper has decoded (driven from JS, capped ~1.2s). The fade is CSS so
+   it stays smooth while the page is still busy loading (a JS/rAF fade drops
+   frames there). Skipped with NO flash on repeat-session loads (pre-paint
+   `[data-veil-shown]`), under reduced motion, and with JS off (<noscript>) —
+   see the skip rules at the end of this block and the head bits in layout.tsx.
+--------------------------------------------------------------------------- */
+.hero-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Neutral near-black matching the hero's own black, so the veil→hero handoff
+     is seamless; a faint warm pocket picks up the mark's international orange. */
+  background: radial-gradient(115% 85% at 50% 42%, #1b1a19 0%, #08080a 58%, #000 100%);
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+  /* Keep in sync with LIFT_MS in hero-veil.tsx. */
+  transition:
+    opacity 640ms var(--ease-entry),
+    transform 640ms var(--ease-entry),
+    filter 640ms var(--ease-entry);
+  will-change: opacity, transform, filter;
+}
+/* Lift — fade + a gentle zoom-through + blur clearing reads as a focus-pull
+   into the page (the blur masks the crossfade; Emil's imperfect-transition
+   trick). transform-origin stays centre: this is a full-screen veil, not an
+   anchored popover. */
+.hero-veil[data-lift] {
+  opacity: 0;
+  transform: scale(1.06);
+  filter: blur(8px);
+  pointer-events: none;
+}
+.hero-veil__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+/* The mark breathes while we wait — alive, not a frozen frame — and casts a
+   soft orange glow on the black via drop-shadow. */
+.hero-veil__logo {
+  width: 92px;
+  height: 92px;
+  filter: drop-shadow(0 0 34px rgba(250, 73, 27, 0.4));
+  animation: hero-veil-breathe 1.9s var(--ease-in-out-strong) infinite;
+}
+@keyframes hero-veil-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+/* Slim indeterminate shimmer — a whisper of "loading" without faking a %. */
+.hero-veil__bar {
+  position: relative;
+  width: 128px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+.hero-veil__bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+  animation: hero-veil-slide 1.15s var(--ease-in-out-strong) infinite;
+}
+@keyframes hero-veil-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+/* Skip — repeat-session loads (pre-paint attr on <html>) + reduced motion.
+   In CSS so the decision lands before first paint (no veil flash). */
+[data-veil-shown] .hero-veil {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-veil {
+    display: none;
+  }
+}
+
 /* Dock demo popover motion — 200ms in (matches the app's 0.25s), faster out */
 @keyframes dock-pop-in {
   from {

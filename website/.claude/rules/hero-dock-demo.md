@@ -17,6 +17,22 @@ not invented. Product-truth spec of record: `.superdesign/refs/product-demo-spec
   first frame, and only the used image downloads (no mount-guard JS swap). The scrim
   ramps bright-top → `black/95` bottom (wallpaper at full brightness up top, CTA on a settled dark
   base); the headline has its own radial-masked readability blur, independent of the scrim.
+- **Load veil** (`components/hero-veil.tsx` + the `<link rel=preload>`s in `app/page.tsx`): the
+  wallpaper is a CSS `background-image`, discovered only *after* first paint, so it used to pop in
+  late (the residual load flash the theme fixes never touched). Two-part fix. **(1)** A
+  theme-matched preload on the homepage — `<link rel="preload" as="image" media="(prefers-color-scheme:…)">`
+  so only the shown scheme downloads (React 19 re-emits manually-authored preloads; harmless — both
+  copies keep `media`, so it stays **one** fetch per scheme, and `ReactDOM.preload` can't be used
+  because it has no `media`). **(2)** A branded splash (`HeroVeil`) — Dock Tile mark on near-black —
+  that covers the viewport on the **first load of a session** and lifts the instant the wallpaper
+  *decodes* (floor 320ms so a warm cache doesn't blink, hard cap 1.2s so it never blocks). The lift
+  is **CSS** (a JS/rAF fade drops frames while the page loads); the JS probe reads the pre-paint
+  `.dark` class so a manual theme override waits for the *right* image. Skipped with **NO flash** on
+  repeat-session loads (pre-paint `data-veil-shown` on `<html>` via the inline script + sessionStorage
+  in `layout.tsx`), reduced motion (CSS `@media`), and no-JS (`<noscript>`) — every skip decided
+  *before* first paint, same CSS-first-decision discipline as the theming rule. Don't drop the
+  `<noscript>` (no-JS would strand behind an unliftable veil) or the pre-paint script (repeat loads
+  would flash the veil).
 - Headline: `heroHeadlineA` white + `heroHeadlineB` at `white/40` — the same dimmed-second-line
   treatment as the FAQ header ("Questions, / answered."); keep the two consistent. The copy
   ("Group your apps. / Declutter your Dock.") was chosen spelling-neutral so it needs no US override.

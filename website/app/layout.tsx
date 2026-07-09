@@ -68,6 +68,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Pre-paint: after the first load of a session, flag <html> so the
+            branded load veil is skipped with NO flash (CSS: [data-veil-shown]
+            .hero-veil). The first load sets the session key and lets it play.
+            Runs before the veil is parsed, so a repeat load never shows it. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var k='dt-veil-shown';if(sessionStorage.getItem(k)){document.documentElement.setAttribute('data-veil-shown','')}else{sessionStorage.setItem(k,'1')}}catch(e){}})();",
+          }}
+        />
+        {/* No JS → the veil can never lift, so never show it. */}
+        <noscript>
+          <style>{".hero-veil{display:none!important}"}</style>
+        </noscript>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
