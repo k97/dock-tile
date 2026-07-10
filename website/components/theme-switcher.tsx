@@ -37,7 +37,11 @@ export function ThemeSwitcher() {
             trackThemeChange(value);
           }}
           className={cn(
-            "flex items-center justify-center w-7 h-7 rounded-full transition-all duration-200",
+            // `hit-area` lifts the 28px segment to a 40px-tall target without
+            // resizing the pill; the pseudo-element stays inside the segment's
+            // own width so neighbouring segments never overlap.
+            "hit-area flex items-center justify-center w-7 h-7 rounded-full",
+            "transition-[color,background-color,box-shadow,scale] duration-200 active:scale-96",
             active === value
               ? "bg-background shadow-sm text-foreground"
               : "text-muted-foreground hover:text-foreground"

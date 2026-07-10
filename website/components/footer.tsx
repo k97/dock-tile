@@ -33,13 +33,13 @@ export function Footer() {
       <div className="order-3 flex items-center gap-6 justify-self-center text-sm md:justify-self-end">
         <Link
           href="/privacy"
-          className="text-muted-foreground transition-colors duration-300 hover:text-foreground"
+          className="hit-area text-muted-foreground transition-colors duration-300 hover:text-foreground"
         >
           {content.privacy}
         </Link>
         <Link
           href="/terms"
-          className="text-muted-foreground transition-colors duration-300 hover:text-foreground"
+          className="hit-area text-muted-foreground transition-colors duration-300 hover:text-foreground"
         >
           {content.terms}
         </Link>
@@ -47,7 +47,7 @@ export function Footer() {
           href={siteConfig.githubUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-muted-foreground transition-colors duration-300 hover:text-foreground"
+          className="hit-area text-muted-foreground transition-colors duration-300 hover:text-foreground"
           onClick={() => trackExternalLinkClick(siteConfig.githubUrl, "footer")}
         >
           GitHub

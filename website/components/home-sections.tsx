@@ -187,7 +187,10 @@ export function CustomTilesStory() {
             never intersects the viewport and is only fetched if the user
             actually switches theme. Real screenshots, not mocks — each theme
             must match the app exactly. */}
-        <div className="relative mx-auto aspect-2048/1374 w-full max-w-md overflow-hidden rounded-3xl border border-border shadow-xl md:max-w-none">
+        {/* `image-edge`, not `border-border`: a screenshot's hairline must be
+            pure black (light) / pure white (dark). The tinted zinc border picked
+            up the surface beneath it and read as dirt along the image edge. */}
+        <div className="image-edge relative mx-auto aspect-2048/1374 w-full max-w-md overflow-hidden rounded-3xl shadow-xl md:max-w-none">
           <Image
             src={asset("/assets/stage/customise-tile.webp")}
             alt={m.tilesCaption}
@@ -333,7 +336,10 @@ export function PowerUserSection() {
           {/* Cmd+Tab app switcher — the selection tabs across real apps and
               skips the ghosted Dock Tile slot */}
           <div className="relative flex flex-col items-center gap-4">
-            <div className="relative flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.07] p-3 backdrop-blur-xl">
+            {/* Concentric: the 12px slot radius + the 12px `p-3` inset ⇒ a 24px
+                (rounded-3xl) shell. At rounded-2xl the shell's corners were
+                tighter than the icon slots tucked into them. */}
+            <div className="relative flex items-center gap-2 rounded-3xl border border-white/10 bg-white/[0.07] p-3 backdrop-blur-xl">
               {/* moving selection highlight (sits behind the icons) */}
               <span className="app-switch-sel absolute left-3 top-3 h-12 w-12 rounded-xl bg-white/15 ring-1 ring-white/25" />
               {switcherApps.map((app, i) =>
@@ -476,7 +482,7 @@ export function FinalCta() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackExternalLinkClick(siteConfig.githubUrl, "final_cta")}
-            className="underline decoration-white/20 underline-offset-4 transition-colors duration-300 hover:text-white"
+            className="hit-area underline decoration-white/20 underline-offset-4 transition-colors duration-300 hover:text-white"
           >
             {m.ctaMetaOpenSource}
           </a>
@@ -484,7 +490,7 @@ export function FinalCta() {
           <Link
             href="/release-notes"
             onClick={trackReleaseNotesClick}
-            className="underline decoration-white/20 underline-offset-4 transition-colors duration-300 hover:text-white"
+            className="hit-area underline decoration-white/20 underline-offset-4 transition-colors duration-300 hover:text-white"
           >
             v{siteConfig.latestVersion}
           </Link>

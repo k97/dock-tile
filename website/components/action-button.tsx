@@ -60,7 +60,9 @@ export function ActionButton({
       </span>
     </>
   );
-  const base = `group pressable inline-flex items-center rounded-full ${dims.pad} ${pill} transition-transform duration-300 ease-(--ease-out-strong) hover:scale-105 ${className}`;
+  // `transition-transform` covers `scale` in Tailwind v4, so one declaration
+  // animates both the hover growth and `.pressable:active`'s 0.96 press.
+  const base = `group pressable inline-flex items-center rounded-full ${dims.pad} ${pill} transition-transform duration-200 ease-(--ease-out-strong) hover:scale-105 ${className}`;
 
   if (href) {
     return (
@@ -103,14 +105,30 @@ export function DownloadActionButton({
     }, 2000);
   };
 
-  const icon =
-    state === "downloading" ? (
-      <Loader2 className="h-[45%] w-[45%] animate-spin" />
-    ) : state === "downloaded" ? (
-      <Check className="h-[45%] w-[45%]" />
-    ) : (
-      <Download className="h-[45%] w-[45%]" />
-    );
+  // Every glyph stays mounted and the three cross-fade in place — scale 0.25→1,
+  // opacity 0→1, blur 4px→0. Swapping by unmount gives you an enter with no
+  // exit; keeping them stacked gives both, with no motion library.
+  const glyphs = [
+    { key: "ready", node: <Download className="h-full w-full" /> },
+    { key: "downloading", node: <Loader2 className="h-full w-full animate-spin" /> },
+    { key: "downloaded", node: <Check className="h-full w-full" /> },
+  ] as const;
+
+  const icon = (
+    <span className="relative flex h-[45%] w-[45%] items-center justify-center">
+      {glyphs.map(({ key, node }) => (
+        <span
+          key={key}
+          aria-hidden={state !== key}
+          className={`absolute inset-0 flex items-center justify-center transition-[opacity,scale,filter] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+            state === key ? "scale-100 opacity-100 blur-none" : "scale-25 opacity-0 blur-xs"
+          }`}
+        >
+          {node}
+        </span>
+      ))}
+    </span>
+  );
 
   return (
     <ActionButton

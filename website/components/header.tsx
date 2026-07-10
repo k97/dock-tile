@@ -66,8 +66,11 @@ export function Header() {
   // stacking mismatched paddings on top of the nav's own `gap`.
   // The !overDark branch already IS the dark-pill look, so only the overDark
   // branch needs `dark:` overrides.
+  // `hit-area` grows each link's clickable box to 40px tall via a pseudo-element
+  // — the pill's height and the Safari min-content maths are untouched, and the
+  // pseudo stays inside the link's own width so neighbours never overlap.
   const linkBase =
-    "rounded-full px-2.5 py-1.5 text-center text-[13px] transition-colors duration-300 md:px-3";
+    "hit-area rounded-full px-2.5 py-1.5 text-center text-[13px] transition-colors duration-300 md:px-3";
   const linkIdle = overDark
     ? "text-zinc-600 hover:bg-black/5 hover:text-zinc-900 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
     : "text-white/80 hover:bg-white/10 hover:text-white";

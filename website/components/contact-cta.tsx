@@ -29,7 +29,7 @@ export function ContactCta({ title, subtitle }: { title: string; subtitle: strin
           <a
             href={`mailto:${siteConfig.contactEmail}`}
             onClick={trackContactClick}
-            className="pressable flex items-center gap-2 rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/5"
+            className="pressable flex items-center gap-2 rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-white transition-[color,background-color,scale] duration-200 hover:bg-white/5"
           >
             <Mail className="h-4 w-4" />
             Contact support

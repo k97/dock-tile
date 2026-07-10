@@ -85,7 +85,7 @@ export function Hero() {
           <Link
             href="/release-notes"
             onClick={trackReleaseNotesClick}
-            className="underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
+            className="hit-area underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
           >
             v{siteConfig.latestVersion}
           </Link>
@@ -94,7 +94,7 @@ export function Hero() {
             href={siteConfig.githubUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="transition-colors hover:text-white"
+            className="hit-area transition-colors hover:text-white"
           >
             {m.ctaMetaOpenSource}
           </a>

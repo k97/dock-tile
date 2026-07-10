@@ -131,7 +131,7 @@ export function PrivacyContent() {
           href="https://docs.github.com/en/site-policy/privacy-policies"
           target="_blank"
           rel="noopener noreferrer"
-          className="font-medium text-emerald-600 underline underline-offset-4 transition-colors hover:text-emerald-500"
+          className="font-medium text-emerald-600 underline decoration-emerald-600/40 underline-offset-4 transition-colors hover:text-emerald-500 hover:decoration-emerald-500 dark:text-emerald-400 dark:decoration-emerald-400/40 dark:hover:text-emerald-300 dark:hover:decoration-emerald-300"
         >
           GitHub&apos;s Privacy Policy
         </a>
@@ -143,7 +143,7 @@ export function PrivacyContent() {
         If you have questions about this privacy policy, please{" "}
         <a
           href={`mailto:${siteConfig.contactEmail}`}
-          className="font-medium text-emerald-600 underline underline-offset-4 transition-colors hover:text-emerald-500"
+          className="font-medium text-emerald-600 underline decoration-emerald-600/40 underline-offset-4 transition-colors hover:text-emerald-500 hover:decoration-emerald-500 dark:text-emerald-400 dark:decoration-emerald-400/40 dark:hover:text-emerald-300 dark:hover:decoration-emerald-300"
         >
           get in touch
         </a>

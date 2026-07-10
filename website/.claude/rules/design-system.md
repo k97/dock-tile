@@ -100,6 +100,33 @@ row overflow phones and forced the (since removed) hamburger.
 - **Every animation needs a `prefers-reduced-motion` fallback** — a sensible static resting state,
   not just "off".
 - The pre-shadcn Motion-based dock demo is preserved on `feature/dock-motion-build`; don't resurrect it.
+- **Never `transition: all`** — name the properties. Icon state swaps (e.g. the Download button's
+  ready → downloading → downloaded glyph) keep every glyph mounted and absolutely stacked, and
+  cross-fade `scale 0.25→1` / `opacity 0→1` / `blur 4px→0` on `cubic-bezier(0.2, 0, 0, 1)`;
+  unmounting the old glyph gives an enter with no exit.
+
+## Shared polish primitives (globals.css)
+
+Three unlayered helpers, used instead of re-deriving them per component:
+
+- **`.pressable`** — `:active { scale: 0.96 }`, and **nothing else**. It deliberately declares no
+  `transition`: the rule is *unlayered*, so a `transition` shorthand here **silently beats and
+  erases** any `transition-colors`/`transition-transform` utility on the same element (unlayered CSS
+  outranks every `@layer`). That bug shipped: the download button's `hover:scale-105` snapped with no
+  animation and the Contact-support hover fill never faded. The transition belongs to the call site.
+  Press uses the **`scale` property, not `transform`** — Tailwind v4 emits `scale:` for `scale-*`, so
+  `transition: transform` doesn't cover it, and `scale` composes with a hover `scale-105`.
+- **`.hit-area`** — a pseudo-element that grows a small control to the 40px minimum target with **zero
+  layout change** (critical for the nav pill, whose min-content width is a WebKit landmine). It only
+  expands vertically and stays inside the control's own horizontal edges, so adjacent targets
+  (nav links, the 28px theme-switcher segments, footer links) can never overlap.
+- **`.image-edge`** — the hairline on app screenshots: pure `black/10` (light) / `white/10` (dark),
+  as a radius-following `outline` with `outline-offset: -1px` so it survives `overflow-hidden`. Never
+  `border-border` on a photographic surface — the tinted zinc picks up the colour beneath it and
+  reads as dirt along the image edge.
+
+Headings get `text-wrap: balance` and body copy `text-wrap: pretty` from the base layer — don't
+re-apply per component unless overriding.
 
 ## CSS / tooling gotchas (each cost real debugging time)
 

@@ -123,6 +123,18 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Headlines break on meaning, body copy never leaves an orphan. Set once at
+     the base layer so every page inherits it; utilities still win locally. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+  p,
+  li {
+    text-wrap: pretty;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -823,12 +835,42 @@
   animation: ghost-phase 2.6s ease-in-out infinite;
 }
 
-/* Pressables acknowledge the press */
-.pressable {
-  transition: transform 160ms var(--ease-out-strong);
-}
+/* Pressables acknowledge the press. Only the :active state lives here — the
+   transition belongs to the call site, because this rule is UNLAYERED and a
+   `transition` shorthand here would silently beat (and erase) any
+   `transition-colors`/`transition-transform` utility on the same element.
+   `scale` (not `transform`) so it composes with a hover `scale-105` and is
+   covered by Tailwind's `transition-transform`. */
 .pressable:active {
-  transform: scale(0.97);
+  scale: 0.96;
+}
+
+/* Grows a small control's clickable box to the 40px minimum touch target
+   WITHOUT touching layout. The pseudo-element only expands vertically and
+   stays inside the control's own horizontal edges, so two adjacent targets
+   (nav links, theme-switcher segments) can never overlap each other. */
+.hit-area {
+  position: relative;
+}
+.hit-area::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: max(100%, 40px);
+  transform: translateY(-50%);
+}
+
+/* Photographic surfaces (app screenshots) carry a hairline edge so they sit on
+   any background with consistent depth. Pure black / pure white — a tinted
+   neutral picks up the surface underneath and reads as dirt on the edge. */
+.image-edge {
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  outline-offset: -1px;
+}
+.dark .image-edge {
+  outline-color: rgba(255, 255, 255, 0.1);
 }
 
 @media (prefers-reduced-motion: reduce) {
