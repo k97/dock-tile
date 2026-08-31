@@ -34,7 +34,9 @@ touching real CFPreferences/FileManager — untestable, so unguarded. When a reg
 **decision** lives in a singleton/view, extract the rule into a `nonisolated static func` (or
 plain `static` on an already-`@MainActor` type) taking plain values, delegate the call site to
 it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resolveDockVisibility`,
-`IconStyle.from(…isDarkMode:)`, `shouldReregisterOnLaunch`, `classifyForMigration`,
+`IconStyle.from(…isDarkMode:)` / `.resolve(…isDarkMode:)` (unrecognised value → nil = don't act, never Default; the observed macOS value set is guarded by `IconStyleResolveTests`),
+`HelperBundleManager.iconMatchesStyle` (launch self-heal: live icon vs the resolved style's variant, byte-compared; unanswerable → match — guarded by `HelperIconMatchTests`),
+`shouldReregisterOnLaunch`, `classifyForMigration`,
 `runRegenerationBatch`, `helperInfoPlist` / `stripMainAppIcons`, `Debouncer`,
 `AppInstallChecker.classifyInstallStatus`, `PopoverMetrics` / `PopoverSettings.resolve`,
 `SmartAddEngine.rankGroups` (app + identity de-dup — no two cards share a name/icon) / `.score` / `.coLaunchClusters` / `.dominantCategory` (nil without signal, never a silent `.productivity`) / `SmartAddCategory.identity` + `Identity.coLaunch` backstop,

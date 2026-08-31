@@ -144,11 +144,11 @@ macOS Tahoe has an independent "Icon and widget style" setting (separate from Li
 | Clear | `"ClearAutomatic"` | Light gray, dark gray symbol (grayscale only) |
 | Tinted | `"TintedAutomatic"` | Medium gray, white symbol (grayscale only) |
 
-`IconStyle.from()` resolves `"RegularAutomatic"`/`"Automatic"` via `systemAppearanceIsDark` (reads `AppleInterfaceStyle` through CFPreferences, no `NSApplication` dependency). Because `IconStyle.current` resolves dynamically, the 2-second poll also catches a Light↔Dark appearance toggle while in Automatic mode (the enum flips, `switchIcon` fires).
+`IconStyle.resolve()` maps values via `systemAppearanceIsDark` for the Automatic case (reads `AppleInterfaceStyle` through CFPreferences, no `NSApplication` dependency); an unrecognised value resolves to `nil` (don't act), never Default. **Detection is event-driven with no timer** — see [Icon Style Detection](icon-style-detection.md) for the signal hierarchy, the seal re-signing, the launch self-heal, and the observed value set (this table's values are illustrative, not exhaustive: light/dark spellings like `"ClearLight"` are real too).
 
-- Single `IconStyleManager.shared` with 2-second polling (notifications unreliable)
+- Single `IconStyleManager.shared` is the sole detector per process (KVO-primary, no polling)
 - All 4 variants generated upfront during `installHelper()` (~200-400ms)
-- Style switching is instant file copy, no regeneration
+- Style switching is a file copy + immediate ad-hoc re-seal (the swap breaks the bundle signature otherwise)
 - Reference `iconStyleManager.currentStyle` in view body with `let _ =` to trigger re-renders
 - **Dark variant rationale + HIG sources**: [docs/dark-mode-icon-rendering.md](../../docs/dark-mode-icon-rendering.md) (darkened-own-tint background + white symbol, and why)
 

@@ -45,3 +45,16 @@ Auth comes from the Google App ID inside the plist — no extra GitHub secret.
 1. Register the macOS app in the Firebase console under bundle id **`com.docktile.app`**.
 2. Add the downloaded `GoogleService-Info.plist` to `DockTile/Resources/` and into the DockTile
    target (Xcode: drag in, "Copy items if needed", target = DockTile). Commit it (client config, not secret).
+
+## Reading the data back (GA4)
+
+- Property **542196919** (account 102059710), provisioned via Firebase project `dock-tile`. The app
+  stream has NO `G-` measurement ID (app streams never do — the committed `GOOGLE_APP_ID` is its
+  identity); the marketing site's `G-PP04F8Z0EP` is a different stream entirely.
+- **Unregistered event parameters are DISCARDED from all GA4 reports** — every param we send
+  (`source`, `app_count`, `layout`, `setting`, `style`, …) and the `app_role` user property are
+  invisible until registered as custom definitions in the GA4 console. Registering is forward-only.
+- API reads need the `ga4-fetch@dock-tile.iam.gserviceaccount.com` service account
+  (`gcloud auth print-access-token --account=… --scopes=…analytics.readonly`); user-credential ADC
+  is blocked by Google for the analytics scope. Property ID is recoverable without analytics scope
+  via `firebase.googleapis.com/v1beta1/projects/dock-tile/analyticsDetails` (+ `x-goog-user-project`).

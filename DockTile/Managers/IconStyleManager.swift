@@ -6,10 +6,14 @@
 //  This is SEPARATE from Appearance (Light/Dark) - Tahoe has two independent settings
 //
 //  ARCHITECTURE:
-//  - Single source of truth for icon style across the app
+//  - Single source of truth for icon style across the app — detection lives ONLY here.
+//    HelperAppDelegate used to run its own parallel detection; that is why two pollers existed.
 //  - Views use @StateObject/@ObservedObject to react to changes
-//  - Only ONE polling timer exists (here), not scattered across views
-//  - Posts .iconStyleDidChange notification for non-SwiftUI components (e.g., HelperAppDelegate)
+//  - Fully event-driven: NO timer. UserDefaults KVO is primary (the only documented cross-process
+//    settings signal, and measured fastest); one distributed notification is the Light/Dark
+//    secondary; wake and popover-show are reconciliation moments, not polls.
+//  - Posts .iconStyleDidChange notification for non-SwiftUI components (HelperAppDelegate, which
+//    rewrites the Dock icon)
 //
 //  Swift 6 - Strict Concurrency
 //
@@ -28,15 +32,25 @@ enum IconStyle: String, CaseIterable, Sendable {
     /// The UserDefaults key for icon style
     static let userDefaultsKey = "AppleIconAppearanceTheme"
 
-    /// Returns the current icon style from system preferences
-    static var current: IconStyle {
-        // Read from global UserDefaults using CFPreferences for reliability
-        let value = CFPreferencesCopyAppValue(
+    /// The raw `AppleIconAppearanceTheme` value as stored (nil = key not set).
+    /// Read from global UserDefaults using CFPreferences for reliability.
+    static var rawPreferencesValue: String? {
+        CFPreferencesCopyAppValue(
             userDefaultsKey as CFString,
             kCFPreferencesAnyApplication
         ) as? String
+    }
 
-        return from(preferencesValue: value)
+    /// Returns the current icon style from system preferences
+    static var current: IconStyle {
+        from(preferencesValue: rawPreferencesValue)
+    }
+
+    /// Returns the current icon style, or `nil` when the stored value is an UNRECOGNISED string.
+    /// Use this wherever a read is compared against a cached style to detect a *change* — an
+    /// unresolved read must not be mistaken for a switch to Default.
+    static var currentResolved: IconStyle? {
+        resolve(preferencesValue: rawPreferencesValue)
     }
 
     /// Convert from UserDefaults value to IconStyle
@@ -51,11 +65,31 @@ enum IconStyle: String, CaseIterable, Sendable {
         from(preferencesValue: preferencesValue, isDarkMode: systemAppearanceIsDark)
     }
 
+    /// Strict variant of `from(preferencesValue:)`, reading the live system appearance.
+    /// Returns `nil` for an unrecognised string — see `resolve(preferencesValue:isDarkMode:)`.
+    static func resolve(preferencesValue: String?) -> IconStyle? {
+        resolve(preferencesValue: preferencesValue, isDarkMode: systemAppearanceIsDark)
+    }
+
+    /// SEEDED mapping seam: like `resolve(preferencesValue:isDarkMode:)` but falls back to
+    /// `.defaultStyle` for an unrecognised value. Correct only where an INITIAL style must be
+    /// picked (launch, previews); a *change* detector must use `resolve` so an unrecognised read
+    /// doesn't masquerade as a switch to Default.
+    static func from(preferencesValue: String?, isDarkMode: Bool) -> IconStyle {
+        resolve(preferencesValue: preferencesValue, isDarkMode: isDarkMode) ?? .defaultStyle
+    }
+
     /// Pure mapping seam: resolves the `AppleIconAppearanceTheme` string to an `IconStyle` with
     /// the system appearance INJECTED, so the Automatic-follows-appearance behaviour (the Tahoe
     /// default, and the most regression-prone case) is unit-testable without CFPreferences.
-    /// The argument-less `systemAppearanceIsDark` is read only at the call site above.
-    static func from(preferencesValue: String?, isDarkMode: Bool) -> IconStyle {
+    /// The argument-less `systemAppearanceIsDark` is read only at the call sites above.
+    ///
+    /// - Returns: the mapped style; `.defaultStyle` when the key is genuinely ABSENT (documented
+    ///   Apple behaviour: not set = Default); `nil` when the value is a string we do not
+    ///   recognise. `nil` means UNRESOLVED — "don't act" — never "Default". Apple publishes no
+    ///   list of valid values, so a value a future macOS adds lands here rather than being
+    ///   reported as a real style change.
+    static func resolve(preferencesValue: String?, isDarkMode: Bool) -> IconStyle? {
         guard let value = preferencesValue else {
             return .defaultStyle // Key not set = Default
         }
@@ -72,16 +106,19 @@ enum IconStyle: String, CaseIterable, Sendable {
         // Light/Default style (explicit)
         case "RegularLight", "Light":
             return .defaultStyle
-        // Clear style (semi-transparent gray)
-        case "ClearAutomatic", "Clear", "RegularClear":
+        // Clear style (semi-transparent gray). "ClearLight" and "ClearDark" are REAL values,
+        // observed being written by macOS 26.6.2 on 2026-08-31 when the light/dark Clear options
+        // are picked in System Settings — not the `*Automatic` ones. Both map to `.clear`: the
+        // tile art is grayscale and macOS applies its own light/dark treatment on top.
+        case "ClearAutomatic", "Clear", "RegularClear", "ClearLight", "ClearDark":
             return .clear
-        // Tinted style (wallpaper-derived colors)
-        case "TintedAutomatic", "Tinted", "RegularTinted":
+        // Tinted style (wallpaper-derived colors). "TintedDark" observed the same way;
+        // "TintedLight" is included by symmetry — unobserved, but the alternative is silently
+        // ignoring a real user selection, and `.tinted` is the only sane mapping for the name.
+        case "TintedAutomatic", "Tinted", "RegularTinted", "TintedLight", "TintedDark":
             return .tinted
         default:
-            // Log unknown values for debugging - helps discover new values
-            print("[IconStyleManager] Unknown AppleIconAppearanceTheme value: \(value)")
-            return .defaultStyle
+            return nil // Unresolved — caller decides whether to seed or ignore
         }
     }
 
@@ -128,11 +165,16 @@ final class IconStyleManager: ObservableObject {
     /// Current icon style - views observing this will automatically update
     @Published private(set) var currentStyle: IconStyle = .defaultStyle
 
-    /// Distributed notification observers (for system notifications)
-    private var distributedObservers: [any NSObjectProtocol] = []
+    /// KVO bridge for the two appearance keys.
+    private var defaultsObserver: DefaultsKeyObserver?
 
-    /// Single polling timer for the entire app (2-second interval is sufficient)
-    private var pollTimer: Timer?
+    /// True once ANY event-based signal (KVO or distributed notification) has been received.
+    /// If a reconcile keeps finding changes the events never announced, the event path is broken
+    /// on this OS and we must say so rather than let detection degrade silently.
+    private var signalReceived = false
+
+    /// Set once we have complained about the event path, so we complain once per process.
+    private var reportedSilentEventPath = false
 
     private init() {
         // Initial state
@@ -143,63 +185,161 @@ final class IconStyleManager: ObservableObject {
     }
 
     private func setupObservers() {
-        // Observe distributed notifications that might indicate icon style changes
-        // macOS Tahoe may use various notification names
-        let notificationNames = [
-            "AppleIconAppearanceThemeChangedNotification",
-            "AppleInterfaceThemeChangedNotification",
-            "com.apple.desktop.darkModeChanged"
-        ]
+        // PRIMARY: KVO on UserDefaults. This is the only DOCUMENTED cross-process settings signal
+        // ("Key-value observing reports all updates to setting values, regardless of which process
+        // made the change"). Apple documents it for an app's own domain and says nothing about
+        // NSGlobalDomain fall-through keys, so it was verified empirically on 2026-08-31: it fires
+        // for AppleInterfaceStyle inside a windowless .accessory process, AHEAD of every other
+        // channel including the distributed notification. See
+        // docs/macos-appearance-detection-research.md §E.
+        defaultsObserver = DefaultsKeyObserver(
+            keys: [IconStyle.userDefaultsKey, "AppleInterfaceStyle"],
+            manager: self
+        )
 
-        for name in notificationNames {
-            let observer = DistributedNotificationCenter.default().addObserver(
-                forName: NSNotification.Name(name),
-                object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                let notificationName = name
-                Task { @MainActor in
-                    print("[IconStyleManager] Received notification: \(notificationName)")
-                    self?.checkAndUpdateStyle()
-                }
-            }
-            distributedObservers.append(observer)
-        }
+        // SECONDARY: the one distributed name that still exists on macOS 26. The other two we used
+        // to observe ("AppleIconAppearanceThemeChangedNotification", "com.apple.desktop.
+        // darkModeChanged") do NOT exist on this OS and were inert registrations — removed.
+        // Registered .deliverImmediately: AppKit is documented to suspend delivery while an app is
+        // inactive, and a Ghost helper is never active. (Measured delivery was immediate even under
+        // the Coalesce default, so this is defensive rather than a fix.)
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(systemAppearanceNotification),
+            name: NSNotification.Name("AppleInterfaceThemeChangedNotification"),
+            object: nil,
+            suspensionBehavior: .deliverImmediately
+        )
 
-        // Single polling timer as fallback (2 seconds is responsive enough)
-        // This is the ONLY polling timer in the app for icon style
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.checkAndUpdateStyle()
-            }
-        }
+        // RECOVERY: there is no timer. Apple guarantees delivery on no transport, so instead of
+        // polling we re-check at moments where a missed event would otherwise become visible.
+        // Wake is the one path events genuinely may not survive: a change made while the machine
+        // slept has no observer running to hear it. `reconcile(reason:)` is also called when a
+        // tile's popover is shown (see HelperAppDelegate).
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
 
-        print("[IconStyleManager] Observers set up (1 poll timer, \(distributedObservers.count) notification observers)")
+        print("[IconStyleManager] Observers set up (KVO + distributed notification + wake reconcile; no timer)")
     }
 
-    /// Check for style change and update if needed
-    /// Called by both notifications and polling timer
-    private func checkAndUpdateStyle() {
-        let newStyle = IconStyle.current
+    /// Re-resolve the style at a moment where a missed event would otherwise show as a wrong icon.
+    ///
+    /// Not a poll: these are discrete, event-driven moments (wake, popover shown). Measured on
+    /// 2026-08-31, KVO was first or tied on 13/13 transitions and the 1s poll never once caught
+    /// something the events missed — so the recovery path exists for the case the measurement
+    /// could NOT cover (a change made while asleep), not as a routine safety net.
+    func reconcile(reason: String) {
+        checkAndUpdateStyle(source: "reconcile:\(reason)")
+    }
+
+    @objc private func systemDidWake() {
+        reconcile(reason: "wake")
+    }
+
+    /// Distributed-notification entry point. `@objc` so it can be registered with an explicit
+    /// suspension behaviour, which the block-based `addObserver(forName:...)` cannot express.
+    @objc private func systemAppearanceNotification() {
+        signalReceived = true
+        checkAndUpdateStyle(source: "notification")
+    }
+
+    /// KVO entry point, called on the main actor by `DefaultsKeyObserver`.
+    fileprivate func defaultsKeyChanged() {
+        signalReceived = true
+        checkAndUpdateStyle(source: "kvo")
+    }
+
+    /// Check for style change and update if needed.
+    /// Called by every trigger (KVO, distributed notification, wake/popover reconcile).
+    ///
+    /// An UNRESOLVED read (unrecognised `AppleIconAppearanceTheme` value) must change nothing —
+    /// it used to fall back to `.defaultStyle`, which this comparison then read as a real
+    /// transition, republishing `currentStyle` and posting `.iconStyleDidChange` twice (out and
+    /// back) for a single anomalous read. Mirrors the guard in `HelperAppDelegate`.
+    private func checkAndUpdateStyle(source: String) {
+        guard let newStyle = IconStyle.currentResolved else {
+            DiagnosticsLog.shared.log(
+                "icon-style",
+                "Unresolved \(IconStyle.userDefaultsKey) value '\(IconStyle.rawPreferencesValue ?? "nil")' (\(source)) — keeping \(currentStyle.rawValue)"
+            )
+            return
+        }
         guard newStyle != currentStyle else { return }
 
-        print("[IconStyleManager] Style changed: \(currentStyle.rawValue) → \(newStyle.rawValue)")
+        // Self-test: a change first noticed by a RECONCILE, when no event has ever been received,
+        // means every event transport is silent on this system — the failure mode that would
+        // otherwise be invisible, because the icon would still (eventually) be right and nobody
+        // would know detection had degraded. Report once per process.
+        if source.hasPrefix("reconcile") && !signalReceived && !reportedSilentEventPath {
+            reportedSilentEventPath = true
+            DiagnosticsLog.shared.log(
+                "icon-style",
+                "⚠︎ Style change found by \(source) with no event ever received — "
+                + "KVO and the distributed notification are both silent for appearance on this system"
+            )
+        }
+
+        print("[IconStyleManager] Style changed (\(source)): \(currentStyle.rawValue) → \(newStyle.rawValue)")
+        DiagnosticsLog.shared.log("icon-style", "Style \(currentStyle.rawValue) → \(newStyle.rawValue) (\(source))")
         currentStyle = newStyle
 
-        // Post notification for non-SwiftUI components (HelperAppDelegate, etc.)
+        // Post notification for non-SwiftUI components (HelperAppDelegate switches the Dock icon).
         NotificationCenter.default.post(name: .iconStyleDidChange, object: newStyle)
     }
 
     /// Clean up observers (called on app termination)
     func cleanup() {
-        pollTimer?.invalidate()
-        pollTimer = nil
-        for observer in distributedObservers {
-            DistributedNotificationCenter.default().removeObserver(observer)
-        }
-        distributedObservers.removeAll()
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+        defaultsObserver?.invalidate()
+        defaultsObserver = nil
+        DistributedNotificationCenter.default().removeObserver(self)
         print("[IconStyleManager] Cleaned up observers")
     }
+}
+
+// MARK: - UserDefaults KVO bridge
+
+/// Bridges classic key-path KVO to `IconStyleManager`.
+///
+/// Exists because KVO requires an `NSObject` observer and `IconStyleManager` is a plain
+/// `ObservableObject`, and because `UserDefaults`'s block-based `observe(_:)` needs a declared
+/// Swift key path — unavailable for system keys like `AppleInterfaceStyle` that we reach through
+/// the `NSGlobalDomain` fall-through.
+private final class DefaultsKeyObserver: NSObject {
+
+    private let keys: [String]
+    private weak var manager: IconStyleManager?
+
+    init(keys: [String], manager: IconStyleManager) {
+        self.keys = keys
+        self.manager = manager
+        super.init()
+        for key in keys {
+            UserDefaults.standard.addObserver(self, forKeyPath: key, options: [.new], context: nil)
+        }
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?,
+                               change: [NSKeyValueChangeKey: Any]?,
+                               context: UnsafeMutableRawPointer?) {
+        // KVO for a cross-process defaults change is not documented to arrive on any particular
+        // thread, so hop to the main actor rather than assuming.
+        Task { @MainActor [weak manager] in
+            manager?.defaultsKeyChanged()
+        }
+    }
+
+    func invalidate() {
+        for key in keys {
+            UserDefaults.standard.removeObserver(self, forKeyPath: key)
+        }
+    }
+
+    deinit { invalidate() }
 }
 
 // MARK: - Notification Name

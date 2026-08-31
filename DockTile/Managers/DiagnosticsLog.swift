@@ -36,6 +36,7 @@ import AppKit
 import Darwin
 import Foundation
 import OSLog
+import Security
 
 final class DiagnosticsLog: @unchecked Sendable {
     static let shared = DiagnosticsLog()
@@ -277,7 +278,46 @@ final class DiagnosticsLog: @unchecked Sendable {
                 out.append(Self.spinExcerpt(from: text))
             }
         }
+
+        let seals = helperSealReport()
+        if !seals.isEmpty {
+            out.append("")
+            out.append("Helper bundle signatures:")
+            out.append(contentsOf: seals)
+        }
         return out.joined(separator: "\n")
+    }
+
+    /// Per-tile code-signature state, one line each.
+    ///
+    /// WHY this is worth a line in every report: switching a tile's icon rewrites `AppIcon.icns`
+    /// inside an already-signed bundle, which breaks the signature seal — verified, a tile that has
+    /// switched styles fails with "a sealed resource is missing or invalid / file modified:
+    /// …/AppIcon.icns" while one that never switched verifies clean. So this doubles as a free,
+    /// on-disk indicator of WHICH tiles have been flipping appearance, with no telemetry at all.
+    private func helperSealReport() -> [String] {
+        let fm = FileManager.default
+        guard let entries = try? fm.contentsOfDirectory(
+            at: AppEnvironment.supportURL, includingPropertiesForKeys: nil
+        ) else { return [] }
+
+        let bundles = entries.filter { $0.pathExtension == "app" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
+        guard !bundles.isEmpty else { return [] }
+
+        return bundles.map { bundle in
+            var staticCode: SecStaticCode?
+            let created = SecStaticCodeCreateWithPath(bundle as CFURL, [], &staticCode)
+            guard created == errSecSuccess, let code = staticCode else {
+                return "  \(bundle.lastPathComponent): unreadable (OSStatus \(created))"
+            }
+            let status = SecStaticCodeCheckValidity(code, [], nil)
+            if status == errSecSuccess {
+                return "  \(bundle.lastPathComponent): seal valid"
+            }
+            // errSecCSBadResource (-67635) is the icon-swap signature: a sealed resource changed.
+            let note = (status == errSecCSBadResource) ? " (sealed resource modified — icon swap)" : ""
+            return "  \(bundle.lastPathComponent): SEAL BROKEN, OSStatus \(status)\(note)"
+        }
     }
 
     /// Build the report and place it on the general pasteboard (NSPasteboard → main thread).

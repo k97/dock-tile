@@ -22,6 +22,7 @@
 //
 
 import AppKit
+import CoreServices
 import Foundation
 
 @MainActor
@@ -715,6 +716,67 @@ final class HelperBundleManager {
         }
     }
 
+    /// Whether the bundle's live `AppIcon.icns` is already the variant for `style`.
+    ///
+    /// WHY: a helper seeds its cached style at launch but nothing applied it, so a bundle whose
+    /// on-disk icon disagreed with the resolved style stayed wrong until the style next *changed*
+    /// — which could be days. Two ways in: the process missed a change while it wasn't running,
+    /// or it missed an event while it was. Comparing bytes heals both, and costs one file
+    /// comparison at launch that answers "already correct" in the overwhelmingly common case.
+    ///
+    /// Returns `true` when they match OR when the comparison can't be made (missing variant), so
+    /// an unanswerable question never triggers a needless rewrite-and-reseal.
+    nonisolated static func iconMatchesStyle(bundlePath: URL, style: IconStyle) -> Bool {
+        let resources = bundlePath.appendingPathComponent("Contents/Resources")
+        let live = resources.appendingPathComponent("AppIcon.icns").path
+        let variant = resources.appendingPathComponent(iconFilename(for: style)).path
+
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: live), fm.fileExists(atPath: variant) else { return true }
+        return fm.contentsEqual(atPath: live, andPath: variant)
+    }
+
+    /// Re-seal a helper bundle after its `AppIcon.icns` was swapped in place.
+    ///
+    /// WHY (critical): a bundle's resources are covered by its code signature, so rewriting
+    /// `AppIcon.icns` inside an already-signed helper **breaks the seal** — verified on a live
+    /// install, which failed `codesign --verify` with "a sealed resource is missing or invalid /
+    /// file modified: …/AppIcon.icns" while helpers that had never switched style verified clean.
+    /// Apple's guidance is to avoid modifying an app the user has already run; short of the
+    /// copy-modify-swap dance that would imply, re-sealing immediately restores a valid signature.
+    ///
+    /// Deliberately NOT `--deep`, unlike `codesignHelper`: only a resource of the outer bundle
+    /// changed, so the nested Sparkle/Firebase frameworks keep their existing, still-valid
+    /// signatures. Re-signing them on every appearance change would cost far more and Apple
+    /// discourages `--deep` for signing in any case.
+    ///
+    /// Failure is logged, not thrown: the icon HAS changed by this point, and leaving the tile
+    /// showing a stale icon would be worse than leaving the seal as broken as it is today.
+    private func resealAfterIconSwap(at helperPath: URL) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
+        process.arguments = ["--force", "--sign", "-", helperPath.path]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+            guard process.terminationStatus == 0 else {
+                DiagnosticsLog.shared.log(
+                    "helper",
+                    "Re-seal FAILED (status \(process.terminationStatus)) after icon swap for \(helperPath.lastPathComponent) — signature left invalid"
+                )
+                return
+            }
+        } catch {
+            DiagnosticsLog.shared.log(
+                "helper",
+                "Re-seal could not run after icon swap for \(helperPath.lastPathComponent): \(error.localizedDescription)"
+            )
+        }
+    }
+
     /// Touch bundle to invalidate icon cache and re-register with Launch Services
     /// This forces macOS to reload the icon from the .icns file
     /// Invalidate macOS icon cache and re-register with Launch Services.
@@ -722,9 +784,9 @@ final class HelperBundleManager {
     /// Two-step process:
     /// 1. **Update modification date** — macOS uses mtime to detect when an app bundle has changed.
     ///    Without this, `iconservicesd` may serve stale cached icons even after the .icns file is replaced.
-    /// 2. **Re-register with Launch Services** (`lsregister -f -R`) — Forces the LS database to
-    ///    re-index the app bundle, picking up the new `CFBundleIconFile` and any plist changes.
-    ///    The `-f` flag forces re-registration even if the bundle appears unchanged.
+    /// 2. **Re-register with Launch Services** (`LSRegisterURL(_:inUpdate:)`) — Forces the LS
+    ///    database to re-index the app bundle, picking up the new `CFBundleIconFile` and any plist
+    ///    changes. `inUpdate: true` forces re-registration even if the bundle appears unchanged.
     private func touchBundle(at helperPath: URL) {
         let now = Date()
         let fm = FileManager.default
@@ -734,15 +796,25 @@ final class HelperBundleManager {
         let iconFilePath = helperPath.appendingPathComponent("Contents/Resources/AppIcon.icns").path
         try? fm.setAttributes([.modificationDate: now], ofItemAtPath: iconFilePath)
 
-        // Step 2: Re-register with Launch Services to refresh its index
-        let lsregisterPath = "/System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister"
-        let lsProcess = Process()
-        lsProcess.executableURL = URL(fileURLWithPath: lsregisterPath)
-        lsProcess.arguments = ["-f", "-R", helperPath.path]
-        lsProcess.standardOutput = FileHandle.nullDevice
-        lsProcess.standardError = FileHandle.nullDevice
-        try? lsProcess.run()
-        lsProcess.waitUntilExit()
+        // Step 2: Re-register with Launch Services to refresh its index.
+        //
+        // Uses the PUBLIC `LSRegisterURL` (macOS 10.3+, not deprecated) rather than spawning the
+        // `lsregister` tool. Apple DTS is explicit that lsregister is "for debugging only; ... not
+        // considered API" and "do not ship anything that depends on the presence or output of this
+        // tool" — and we were shipping it on a path driven by an appearance poll. `inUpdate: true`
+        // is the same semantic as the `-f` (force) flag we passed.
+        //
+        // This also drops two costs: the synchronous `waitUntilExit()` that blocked the calling
+        // actor while a subprocess launched, and the `-R` recursive descent, which walked into the
+        // bundled Sparkle, Firebase and Google frameworks on every single icon change for no
+        // benefit — only the app bundle itself needs re-registering.
+        let status = LSRegisterURL(helperPath as CFURL, true)
+        if status != noErr {
+            DiagnosticsLog.shared.log(
+                "helper",
+                "LSRegisterURL failed for \(helperPath.lastPathComponent) (OSStatus \(status))"
+            )
+        }
     }
 
     // MARK: - Icon Path Helpers
@@ -750,7 +822,7 @@ final class HelperBundleManager {
     /// Get the icon filename for a given icon style
     /// - Parameter style: The icon style
     /// - Returns: The filename (e.g., "AppIcon-dark.icns")
-    private static func iconFilename(for style: IconStyle) -> String {
+    nonisolated private static func iconFilename(for style: IconStyle) -> String {
         switch style {
         case .defaultStyle:
             return "AppIcon-default.icns"
@@ -816,6 +888,11 @@ final class HelperBundleManager {
             try? FileManager.default.removeItem(at: destIconPath)
             try FileManager.default.copyItem(at: actualSourcePath, to: destIconPath)
             print("[HelperBundleManager] Switched icon to: \(sourceIconName) (style: \(iconStyle.rawValue))")
+
+            // Restore the signature seal the icon rewrite just broke. MUST happen before
+            // touchBundle: codesign writes _CodeSignature and bumps the bundle's mtime itself, so
+            // re-registering with Launch Services afterwards indexes the final, sealed state.
+            HelperBundleManager.shared.resealAfterIconSwap(at: bundlePath)
 
             // Touch bundle and refresh icon cache
             HelperBundleManager.shared.touchBundle(at: bundlePath)

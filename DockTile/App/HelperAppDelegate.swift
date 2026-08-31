@@ -52,12 +52,6 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// can never be closed from the Dock.
     private let dismissReshowGuard: CFAbsoluteTime = 0.25
 
-    /// Observers for icon style changes (distributed notifications)
-    private var iconStyleObservers: [any NSObjectProtocol] = []
-
-    /// Poll timer for icon style changes (reliable fallback)
-    private var iconStylePollTimer: Timer?
-
     /// Current icon style (Default/Dark/Clear/Tinted)
     private var currentIconStyle: IconStyle = .defaultStyle
 
@@ -244,6 +238,11 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     private func showPopover(withKeyboardFocus: Bool) {
         print("📍 Showing popover for helper tile (keyboard focus: \(withKeyboardFocus))")
+
+        // A click is a reconciliation moment: cheap, and it covers the one gap events can't —
+        // an appearance change made while this Mac was asleep, with no observer running to hear
+        // it. Two preference reads, only on an explicit user action.
+        IconStyleManager.shared.reconcile(reason: "popover")
 
         // Get configuration
         let config = getCurrentConfiguration()
@@ -490,63 +489,62 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     // NOTE: This observes "Icon and widget style" setting (Default/Dark/Clear/Tinted)
     // This is SEPARATE from "Appearance" (Light/Dark) - macOS Tahoe has two independent settings
 
-    /// Set up observers for icon style changes
+    /// Subscribe to icon style changes.
+    ///
+    /// DETECTION IS NOT DONE HERE. `IconStyleManager` is the single owner of "what is the current
+    /// icon style" for the whole process; this delegate only reacts by rewriting the Dock icon.
+    /// Previously both ran their own detection — this delegate polled every 1s and the manager
+    /// every 2s, each with its own copy of the resolve logic and its own set of distributed
+    /// observers. Nobody intended two; the concern simply had no owner, so it got implemented
+    /// twice and the two could disagree.
     private func setupIconStyleObservation() {
-        // Observe distributed notifications that might indicate icon style changes
-        // macOS Tahoe may use various notification names for this setting
-        let notificationNames = [
-            "AppleIconAppearanceThemeChangedNotification",
-            "AppleInterfaceThemeChangedNotification",  // May also fire for icon style
-            "com.apple.desktop.darkModeChanged"
-        ]
+        // Touch the singleton so its observers exist even if no popover has ever been built.
+        // In a helper, IconStyleManager was previously only constructed lazily by the SwiftUI
+        // popover views, so a tile that had never been clicked had no manager at all.
+        let manager = IconStyleManager.shared
+        currentIconStyle = manager.currentStyle
 
-        for name in notificationNames {
-            let observer = DistributedNotificationCenter.default().addObserver(
-                forName: NSNotification.Name(name),
-                object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                // Capture notification name for logging (avoid sending Notification across actors)
-                let notificationName = name
-                Task { @MainActor in
-                    print("[HelperAppDelegate] Notification received: \(notificationName)")
-                    self?.handleIconStyleChange()
-                }
-            }
-            iconStyleObservers.append(observer)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(iconStyleDidChange),
+            name: .iconStyleDidChange,
+            object: nil
+        )
+
+        // Heal a stale icon at launch. Seeding `currentIconStyle` only records what the style IS;
+        // it never checked what is actually on disk, so a tile whose icon disagreed stayed wrong
+        // until the style next CHANGED. That covers both gaps events cannot: a change made while
+        // this helper wasn't running, and an event this helper missed while it was.
+        if !HelperBundleManager.iconMatchesStyle(bundlePath: currentBundlePath, style: currentIconStyle) {
+            DiagnosticsLog.shared.log(
+                "helper",
+                "Icon on disk did not match resolved style \(currentIconStyle.rawValue) at launch — correcting"
+            )
+            updateIconForCurrentStyle()
         }
 
-        // Set up polling as a reliable fallback (every 1 second)
-        iconStylePollTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.checkForIconStyleChange()
-            }
-        }
-
-        print("   ✓ Icon style observation set up")
+        print("   ✓ Icon style observation set up (IconStyleManager owns detection)")
     }
 
-    /// Handle icon style change by switching the dock icon
-    private func handleIconStyleChange() {
-        let newStyle = IconStyle.current
+    /// `IconStyleManager` resolved a genuinely different style — adopt it on the Dock icon.
+    @objc private func iconStyleDidChange(_ note: Notification) {
+        guard let newStyle = note.object as? IconStyle else { return }
+        applyIconStyle(newStyle, detectedBy: "IconStyleManager")
+    }
+
+    /// Adopt a resolved icon style on the Dock icon.
+    ///
+    /// The caller has already established that this is a genuine, resolved style — an
+    /// unrecognised `AppleIconAppearanceTheme` value never reaches here, because
+    /// `IconStyleManager` does not publish one. That guard matters: an unresolved read used to
+    /// fall back to `.defaultStyle`, which read as a real transition, so a single anomalous read
+    /// cost two style changes (out and back) and two icon rewrites on disk.
+    private func applyIconStyle(_ newStyle: IconStyle, detectedBy source: String) {
         guard newStyle != currentIconStyle else {
             return // No change
         }
 
-        print("🎨 Icon style changed: \(currentIconStyle.rawValue) → \(newStyle.rawValue)")
-        AnalyticsService.shared.log(.iconStyleChanged, ["style": newStyle.rawValue])
-        currentIconStyle = newStyle
-        updateIconForCurrentStyle()
-    }
-
-    /// Check for icon style change (called by poll timer)
-    private func checkForIconStyleChange() {
-        let newStyle = IconStyle.current
-        guard newStyle != currentIconStyle else {
-            return // No change
-        }
-
-        print("🎨 Poll detected icon style change: \(currentIconStyle.rawValue) → \(newStyle.rawValue)")
+        print("🎨 Icon style changed (\(source)): \(currentIconStyle.rawValue) → \(newStyle.rawValue)")
         AnalyticsService.shared.log(.iconStyleChanged, ["style": newStyle.rawValue])
         currentIconStyle = newStyle
         updateIconForCurrentStyle()
@@ -566,13 +564,10 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Clean up observers when the app terminates
+    /// Clean up observers when the app terminates.
+    /// Detection lives in `IconStyleManager`, so there is nothing here but our subscription.
     private func cleanupIconStyleObservation() {
-        iconStylePollTimer?.invalidate()
-        iconStylePollTimer = nil
-        for observer in iconStyleObservers {
-            DistributedNotificationCenter.default().removeObserver(observer)
-        }
-        iconStyleObservers.removeAll()
+        NotificationCenter.default.removeObserver(self, name: .iconStyleDidChange, object: nil)
+        IconStyleManager.shared.cleanup()
     }
 }

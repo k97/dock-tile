@@ -38,6 +38,7 @@ Controlled via Info.plist variables (`DTEnvironment`, `DTHelperPrefix`, `DTPrefs
 - [CI & Release](/.claude/rules/ci-release.md) — GitHub Actions, Sparkle updates, code signing
 - [Localization](/.claude/rules/localization-macos.md) — String Catalogs, US/UK/AU English
 - [Icon System](/.claude/rules/icon-system.md) — Tahoe icon generation, icon styles, Icon Composer
+- [Icon Style Detection](/.claude/rules/icon-style-detection.md) — Event-driven (no timer), KVO-primary, unresolved→no-op, seal re-signing, launch self-heal
 - [Analytics](/.claude/rules/analytics.md) — Firebase Analytics + Crashlytics, consent gating, dSYM upload
 - [Website](/website/CLAUDE.md) — Marketing site (Next.js); own CLAUDE.md + rules in `website/.claude/rules/`. Keep app and website changes in separate sessions.
 - [Diagnostics](/.claude/rules/diagnostics.md) — Cross-process Copy Diagnostics, dev-verbose/prod-quiet, `ui()` click tracing, `measure()` workflow timing
