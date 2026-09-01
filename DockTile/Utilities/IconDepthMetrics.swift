@@ -41,7 +41,7 @@ enum IconDepthMetrics {
     /// ~0.86 centred-square limit with margin.
     static let emojiMaxSafeRatio: CGFloat = 0.78
 
-    /// The type's own ceiling: SF Symbols 0.60, emoji 0.67 (brand is handled upstream).
+    /// The type's own ceiling: SF Symbols 0.60, emoji 0.78 (brand is handled upstream).
     static func maxSafeRatio(for iconType: IconType) -> CGFloat {
         iconType == .emoji ? emojiMaxSafeRatio : maxSafeRatio
     }
@@ -56,7 +56,7 @@ enum IconDepthMetrics {
     }
 
     /// Fraction of the tile the glyph should fill for a given Icon Scale (10–19 symbols,
-    /// 10–26 emoji).
+    /// 10–22 emoji — the stepper's own ranges).
     /// Single source of truth for BOTH renderers — the preview previously duplicated this
     /// inline and dropped the `maxSafeRatio` cap, drawing symbols larger than the baked icon.
     static func glyphSizeRatio(iconScale: Int, iconType: IconType, iconValue: String) -> CGFloat {
@@ -69,7 +69,7 @@ enum IconDepthMetrics {
 
     /// The uncapped-then-capped ratio for SF Symbols / emojis (excludes the brand logo).
     private static func cappedSymbolRatio(iconScale: Int, iconType: IconType) -> CGFloat {
-        // Base ratio: 0.035 per step above scale 10 (symbols step to 19, emoji to 26).
+        // Base ratio: 0.035 per step above scale 10 (symbols step to 19, emoji to 22).
         let base = 0.30 + (CGFloat(iconScale - 10) * 0.035)
         // Emoji gets +5% offset for visual weight.
         let ratio = iconType == .emoji ? base + 0.05 : base
@@ -118,6 +118,22 @@ enum IconDepthMetrics {
             y: (inkPerPoint.midY - typographicSizePerPoint.height / 2) * fontSize
         )
         return EmojiInkFit(fontSize: fontSize, inkCenterOffset: offset)
+    }
+
+    // MARK: - Icon-grid content inset
+
+    /// Apple's icon-grid proportion: the icon shape occupies 206 of a 256-unit canvas, leaving a
+    /// transparent margin all round. A compiled `.icon` gets this geometry from the system; the
+    /// fallback `.icns` bakes it, and the live preview draws it, so all three are the same
+    /// picture. Shared here rather than owned by a renderer for exactly that reason — an
+    /// inlined second copy of this number is how the preview and the bake drift apart.
+    static let contentInsetRatio: CGFloat = 25.0 / 256.0   // (256 - 206) / 2 / 256
+
+    /// Side of the drawn shape on a canvas of `nominalSize` — the canvas minus that margin on
+    /// both sides (206/256 of it). Used by the preview and by the customiser's guide-grid
+    /// overlay, which must cover the shape, not the whole canvas.
+    static func contentSide(nominalSize: CGFloat) -> CGFloat {
+        nominalSize * (1 - 2 * contentInsetRatio)
     }
 
     // MARK: - Inner glass stroke

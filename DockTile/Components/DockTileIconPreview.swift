@@ -74,8 +74,23 @@ struct DockTileIconPreview: View {
         self.size = size
     }
 
+    /// Apple's icon-grid margin, from the shared seam (never inlined — an inlined geometry
+    /// constant is exactly the preview-vs-baked drift `IconDepthMetrics` exists to prevent).
+    /// Applied on EVERY macOS version, deliberately: the pipeline's availability seam
+    /// (`IconPipeline.isDeclarative`) has exactly three activation points and the preview is not
+    /// one of them, and the pre-Tahoe legacy bake is frozen for deletion. The accepted trade-off
+    /// is that a macOS 15 user's preview reads slightly smaller than their full-bleed tile.
+    private var contentInset: CGFloat {
+        size * IconDepthMetrics.contentInsetRatio
+    }
+
+    /// Side of the drawn squircle — the canvas minus the icon-grid margin on both sides.
+    private var contentSide: CGFloat {
+        IconDepthMetrics.contentSide(nominalSize: size)
+    }
+
     private var cornerRadius: CGFloat {
-        size * 0.225  // 18pt for 80pt, 36pt for 160pt
+        contentSide * 0.225  // same 22.5% of the SHAPE the baked renderer uses
     }
 
     private var symbolSize: CGFloat {
@@ -126,6 +141,11 @@ struct DockTileIconPreview: View {
 
     var body: some View {
         ZStack {
+            // The tile shape sits inside the icon-grid margin (`contentInset`), matching what
+            // macOS draws for the compiled icon and what the fallback `.icns` bakes. The GLYPH
+            // is deliberately NOT inset — its geometry is measured against the full canvas in
+            // both renderers, so it must be here too.
+
             // Gradient background with squircle shape (icon style-aware)
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(
@@ -135,6 +155,7 @@ struct DockTileIconPreview: View {
                         endPoint: .bottom
                     )
                 )
+                .padding(contentInset)
 
             // Beveled glass effect (inner stroke) — opacity + width from the shared seam.
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -142,8 +163,11 @@ struct DockTileIconPreview: View {
                     Color.white.opacity(IconDepthMetrics.strokeOpacity(style: iconStyle)),
                     lineWidth: IconDepthMetrics.strokeLineWidth(nominalSize: size)
                 )
+                .padding(contentInset)
 
             // Liquid-Glass surface sheen: soft top specular gloss, clipped to the squircle.
+            // Kept as a stand-in for the system's Liquid Glass pass, which nothing outside the
+            // real Dock can reproduce.
             if surfaceSheenAlpha > 0 {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(
@@ -156,6 +180,7 @@ struct DockTileIconPreview: View {
                             endPoint: .bottom
                         )
                     )
+                    .padding(contentInset)
             }
 
             // Icon content (SF Symbol or Emoji)

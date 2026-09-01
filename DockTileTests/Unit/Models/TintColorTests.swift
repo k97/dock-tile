@@ -352,25 +352,40 @@ struct DarkGlyphTreatmentTests {
         #expect(bgTop.blueComponent > bgTop.redComponent)
     }
 
-    @Test("SwiftUI colors(for:) mirrors nsColors(for:) in Dark for both icon types")
+    @Test("SwiftUI colors(for:) mirrors nsColors(for:) in EVERY style, for both icon types")
     func swiftUIMirrorsNSColors() throws {
-        for iconType in [IconType.sfSymbol, .emoji] {
-            let tint = TintColor.custom("#5F00FF")
-            let ns = tint.nsColors(for: .dark, iconType: iconType)
-            let sw = tint.colors(for: .dark, iconType: iconType)
+        // The doc on `nsColors(for:iconType:)` claims it is "kept in lock-step" with
+        // `colors(for:iconType:)`; this proves it across the whole matrix (it used to cover
+        // only `.dark`, so a drifted Clear/Tinted/Default value could ship unnoticed — the
+        // preview would then show one tile and the baked `.icns` another).
+        let tints: [TintColor] = [.custom("#5F00FF"), .preset(.blue), .preset(.orange)]
+        for style in IconStyle.allCases {
+            for iconType in [IconType.sfSymbol, .emoji] {
+                for tint in tints {
+                    let ns = tint.nsColors(for: style, iconType: iconType)
+                    let sw = tint.colors(for: style, iconType: iconType)
+                    let label = "\(style) / \(iconType) / \(tint)"
 
-            let nsFg = try #require(ns.foreground.usingColorSpace(.deviceRGB))
-            let swFg = try #require(NSColor(sw.foreground).usingColorSpace(.deviceRGB))
-            #expect(abs(nsFg.redComponent - swFg.redComponent) < 0.01)
-            #expect(abs(nsFg.greenComponent - swFg.greenComponent) < 0.01)
-            #expect(abs(nsFg.blueComponent - swFg.blueComponent) < 0.01)
-
-            let nsBg = try #require(ns.backgroundTop.usingColorSpace(.deviceRGB))
-            let swBg = try #require(NSColor(sw.backgroundTop).usingColorSpace(.deviceRGB))
-            #expect(abs(nsBg.redComponent - swBg.redComponent) < 0.01)
-            #expect(abs(nsBg.greenComponent - swBg.greenComponent) < 0.01)
-            #expect(abs(nsBg.blueComponent - swBg.blueComponent) < 0.01)
+                    try expectSameColour(ns.foreground, sw.foreground, "foreground \(label)")
+                    try expectSameColour(ns.backgroundTop, sw.backgroundTop, "backgroundTop \(label)")
+                    try expectSameColour(ns.backgroundBottom, sw.backgroundBottom, "backgroundBottom \(label)")
+                }
+            }
         }
+    }
+
+    /// Compare an AppKit colour against its SwiftUI twin in one colour space.
+    private func expectSameColour(
+        _ ns: NSColor,
+        _ swiftUI: Color,
+        _ label: String,
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) throws {
+        let a = try #require(ns.usingColorSpace(.deviceRGB), "\(label): NSColor not convertible", sourceLocation: sourceLocation)
+        let b = try #require(NSColor(swiftUI).usingColorSpace(.deviceRGB), "\(label): Color not convertible", sourceLocation: sourceLocation)
+        #expect(abs(a.redComponent - b.redComponent) < 0.01, "\(label) red: \(a.redComponent) vs \(b.redComponent)", sourceLocation: sourceLocation)
+        #expect(abs(a.greenComponent - b.greenComponent) < 0.01, "\(label) green: \(a.greenComponent) vs \(b.greenComponent)", sourceLocation: sourceLocation)
+        #expect(abs(a.blueComponent - b.blueComponent) < 0.01, "\(label) blue: \(a.blueComponent) vs \(b.blueComponent)", sourceLocation: sourceLocation)
     }
 
     @Test("Non-Dark styles ignore iconType (Default is unchanged for symbol and emoji)")

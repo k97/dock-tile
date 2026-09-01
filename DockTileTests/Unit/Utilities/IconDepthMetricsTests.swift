@@ -259,6 +259,18 @@ struct IconDepthMetricsTests {
         #expect(emoji.heightFraction == 0.53)
     }
 
+    // MARK: - Icon-grid content inset (declarative geometry)
+
+    @Test("Content inset is Apple's icon-grid margin: 206 of a 256 canvas")
+    func contentInsetMatchesIconGrid() {
+        // (256 - 206) / 2 / 256 — the transparent margin on each side.
+        expectClose(IconDepthMetrics.contentInsetRatio, 25.0 / 256.0)
+        // The squircle therefore spans 206/256 of the canvas.
+        expectClose(1 - 2 * IconDepthMetrics.contentInsetRatio, 206.0 / 256.0)
+        // Concretely at the 1024 bake: a 100px margin, an 824px shape.
+        expectClose(1024 * IconDepthMetrics.contentInsetRatio, 100)
+    }
+
     @Test("Glyph sheen is suppressed below the size gate (symbol and emoji)")
     func glyphSheenSizeGate() {
         #expect(IconDepthMetrics.glyphSheen(style: .defaultStyle, iconType: .sfSymbol, nominalSize: 16) == nil)

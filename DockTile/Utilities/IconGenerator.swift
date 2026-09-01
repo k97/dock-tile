@@ -249,8 +249,14 @@ struct IconGenerator {
 
     // MARK: - Beveled Glass Effect
 
-    /// Draw the beveled glass inner stroke effect matching DockTileIconPreview
-    /// White stroke with configurable opacity, 0.5pt line width (scaled proportionally)
+    /// Draw the beveled glass INNER stroke effect matching DockTileIconPreview's `strokeBorder`.
+    /// White stroke with configurable opacity, width from the shared seam.
+    ///
+    /// Clipping to the squircle and stroking at DOUBLE width is the inner-stroke equivalence:
+    /// CoreGraphics centres a stroke on the path, so the previous unclipped single-width stroke
+    /// painted half its width OUTSIDE the shape (a ~1.6px half-opacity white halo tracing the
+    /// tile at the 1024px bake) and left only half of it visible inside — half the width the
+    /// preview draws. Guarded by `IconStrokeGeometryTests`.
     private static func drawBeveledStroke(
         context: CGContext,
         path: CGPath,
@@ -262,12 +268,14 @@ struct IconGenerator {
         // Scale line width proportionally (shared seam — matches the live preview).
         let lineWidth = IconDepthMetrics.strokeLineWidth(nominalSize: size.width)
 
-        // Set stroke properties
+        // Clip to the shape so the outer half of the stroke is discarded…
+        context.addPath(path)
+        context.clip()
+
+        // …and stroke at 2× width so the surviving inner half is the full seam width.
         context.addPath(path)
         context.setStrokeColor(NSColor.white.withAlphaComponent(strokeOpacity).cgColor)
-        context.setLineWidth(lineWidth)
-
-        // Stroke the path
+        context.setLineWidth(lineWidth * 2)
         context.strokePath()
 
         context.restoreGState()
@@ -1067,11 +1075,6 @@ extension IconGenerator {
         return pngData
     }
 
-    /// Apple's icon-grid proportion: the icon shape occupies 206 of a 256-unit canvas, leaving a
-    /// transparent margin all round. A compiled `.icon` gets this geometry from the system; the
-    /// fallback `.icns` bakes it so the loose icon and the catalog icon are the same picture.
-    static let contentInsetRatio: CGFloat = 25.0 / 256.0   // (256 - 206) / 2 / 256
-
     /// The declarative pipeline's fallback `.icns` — ONE file, not four style variants.
     ///
     /// macOS renders every appearance from the per-tile `Assets.car`; this exists only for the
@@ -1132,7 +1135,8 @@ extension IconGenerator {
         // The margin must stay transparent, so clear before drawing anything.
         context.clear(rect)
 
-        let inset = size.width * contentInsetRatio
+        // Icon-grid margin from the shared seam — the live preview draws the same inset.
+        let inset = size.width * IconDepthMetrics.contentInsetRatio
         let contentRect = rect.insetBy(dx: inset, dy: inset)
         let squirclePath = createSquirclePath(
             in: contentRect, cornerRadius: contentRect.width * 0.225
@@ -1201,17 +1205,45 @@ extension IconGenerator {
 // MARK: - NSImage Extension for Tinting
 
 extension NSImage {
+    /// A copy of this image flat-filled with `color`, preserving its alpha.
+    ///
+    /// Rendered into an explicit-pixel `NSBitmapImageRep` — never `lockFocus`, which builds a
+    /// Retina-scaled backing store and yields the wrong pixel count (the rule this file's own
+    /// `generateIcon` header states). Mirrors `gradientFilledGlyph` / `sheenGlyph`, which
+    /// already build their glyph copies this way. Returns `self` if a context can't be made,
+    /// which is the same "draw it untinted" degradation the caller already tolerates.
     func tinted(with color: NSColor) -> NSImage {
-        let image = self.copy() as! NSImage
-        image.lockFocus()
+        let pixelW = Int(size.width.rounded())
+        let pixelH = Int(size.height.rounded())
+        guard pixelW > 0, pixelH > 0,
+              let rep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: pixelW,
+                pixelsHigh: pixelH,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 0
+              ),
+              let graphicsContext = NSGraphicsContext(bitmapImageRep: rep) else {
+            return self
+        }
+        rep.size = size
 
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = graphicsContext
+        let bounds = NSRect(origin: .zero, size: size)
+        draw(in: bounds)
         color.set()
+        bounds.fill(using: .sourceAtop)
+        NSGraphicsContext.restoreGraphicsState()
 
-        let imageRect = NSRect(origin: .zero, size: image.size)
-        imageRect.fill(using: .sourceAtop)
-
-        image.unlockFocus()
-        return image
+        let output = NSImage(size: size)
+        output.addRepresentation(rep)
+        return output
     }
 }
 

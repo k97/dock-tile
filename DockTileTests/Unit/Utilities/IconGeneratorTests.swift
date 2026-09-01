@@ -277,6 +277,37 @@ struct IconGeneratorTests {
         #expect(fileSize > 0)
     }
 
+    @Test("generateIcns packs exactly the 10 standard renditions at the right pixel sizes")
+    func generateIcnsHasTenRenditions() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("IconGeneratorTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let outputURL = tempDir.appendingPathComponent("renditions.icns")
+        try IconGenerator.generateIcns(
+            tintColor: .blue,
+            iconType: .sfSymbol,
+            iconValue: "star.fill",
+            iconScale: 14,
+            outputURL: outputURL
+        )
+
+        // 16/32/128/256/512 at 1x and 2x. This is the wrong-pixel-count regression class the
+        // "NSBitmapImageRep with explicit pixel dimensions, never lockFocus" rule exists for:
+        // a Retina-scaled backing store silently yields renditions iconutil sizes wrongly.
+        let allReps = try #require(NSBitmapImageRep.imageReps(withContentsOf: outputURL))
+        let reps = allReps.compactMap { $0 as? NSBitmapImageRep }
+        let widths: [Int] = reps.map { $0.pixelsWide }.sorted()
+        let heights: [Int] = reps.map { $0.pixelsHigh }.sorted()
+        #expect(widths == [16, 32, 32, 64, 128, 256, 256, 512, 512, 1024], "got \(widths)")
+        #expect(heights == [16, 32, 32, 64, 128, 256, 256, 512, 512, 1024], "got \(heights)")
+        // Every rendition is square.
+        for rep in reps {
+            #expect(rep.pixelsWide == rep.pixelsHigh)
+        }
+    }
+
     @Test("generateIcns with emoji")
     func generateIcnsEmoji() throws {
         let tempDir = FileManager.default.temporaryDirectory
