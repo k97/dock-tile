@@ -467,6 +467,7 @@
 			buildPhases = (
 				AA0014 /* Sources */,
 				AA000A /* Frameworks */,
+				AAICMP01 /* Bundle Icon Compiler */,
 				AA0015 /* Resources */,
 				AACOPY01 /* Copy Login Item Launcher */,
 			);
@@ -556,6 +557,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		AAICMP01 /* Bundle Icon Compiler */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Vendor/actool/target/release/docktile-actool",
+			);
+			name = "Bundle Icon Compiler";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/docktile-actool",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "BIN=\"${SRCROOT}/Vendor/actool/target/release/docktile-actool\"\nif [ ! -f \"$BIN\" ]; then\n  echo \"error: run Scripts/build-compiler.sh once (requires Rust)\"\n  exit 1\nfi\nDEST=\"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nmkdir -p \"$DEST\"\ncp \"$BIN\" \"$DEST/docktile-actool\"\nchmod +x \"$DEST/docktile-actool\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		25901D932F30773B001B32FE /* Sources */ = {
