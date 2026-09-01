@@ -32,25 +32,42 @@ enum IconStyle: String, CaseIterable, Sendable {
     /// The UserDefaults key for icon style
     static let userDefaultsKey = "AppleIconAppearanceTheme"
 
-    /// The raw `AppleIconAppearanceTheme` value as stored (nil = key not set).
-    /// Read from global UserDefaults using CFPreferences for reliability.
-    static var rawPreferencesValue: String? {
+    /// The raw `AppleIconAppearanceTheme` value as stored, UNTYPED (nil = key genuinely not set).
+    /// Read from global UserDefaults using CFPreferences for reliability. Kept untyped because
+    /// `as? String` collapsed a present-but-non-string value (a future macOS, a stray
+    /// `defaults write -int`) into "key absent" — a confident `.defaultStyle` instead of
+    /// unresolved, which is the oscillation-amplifier bug through the type door.
+    static var rawPreferencesObject: Any? {
         CFPreferencesCopyAppValue(
             userDefaultsKey as CFString,
             kCFPreferencesAnyApplication
-        ) as? String
+        )
     }
 
     /// Returns the current icon style from system preferences
     static var current: IconStyle {
-        from(preferencesValue: rawPreferencesValue)
+        resolve(preferencesObject: rawPreferencesObject, isDarkMode: systemAppearanceIsDark)
+            ?? .defaultStyle
     }
 
-    /// Returns the current icon style, or `nil` when the stored value is an UNRECOGNISED string.
-    /// Use this wherever a read is compared against a cached style to detect a *change* — an
-    /// unresolved read must not be mistaken for a switch to Default.
+    /// Returns the current icon style, or `nil` when the stored value is an UNRECOGNISED string
+    /// or not a string at all. Use this wherever a read is compared against a cached style to
+    /// detect a *change* — an unresolved read must not be mistaken for a switch to Default.
     static var currentResolved: IconStyle? {
-        resolve(preferencesValue: rawPreferencesValue)
+        resolve(preferencesObject: rawPreferencesObject, isDarkMode: systemAppearanceIsDark)
+    }
+
+    /// Pure typing seam ahead of `resolve(preferencesValue:isDarkMode:)`: an ABSENT value (nil)
+    /// is Default (documented Apple behaviour — the Default option deletes the key), but a
+    /// present value of a non-string TYPE is UNRESOLVED (`nil`) — don't act, never Default.
+    static func resolve(preferencesObject: Any?, isDarkMode: Bool) -> IconStyle? {
+        guard let object = preferencesObject else {
+            return .defaultStyle // Key not set = Default
+        }
+        guard let string = object as? String else {
+            return nil // Present but not a string — unresolved, do not act
+        }
+        return resolve(preferencesValue: string, isDarkMode: isDarkMode)
     }
 
     /// Convert from UserDefaults value to IconStyle
@@ -264,7 +281,7 @@ final class IconStyleManager: ObservableObject {
         guard let newStyle = IconStyle.currentResolved else {
             DiagnosticsLog.shared.log(
                 "icon-style",
-                "Unresolved \(IconStyle.userDefaultsKey) value '\(IconStyle.rawPreferencesValue ?? "nil")' (\(source)) — keeping \(currentStyle.rawValue)"
+                "Unresolved \(IconStyle.userDefaultsKey) value '\(IconStyle.rawPreferencesObject.map(String.init(describing:)) ?? "nil")' (\(source)) — keeping \(currentStyle.rawValue)"
             )
             return
         }
@@ -333,7 +350,14 @@ private final class DefaultsKeyObserver: NSObject {
         }
     }
 
+    private var invalidated = false
+
+    /// Idempotent: `cleanup()` calls this explicitly and then releases the observer, whose
+    /// `deinit` calls it again — a second `removeObserver` for the same key paths raises
+    /// NSRangeException (a crash-at-exit on every clean helper termination).
     func invalidate() {
+        guard !invalidated else { return }
+        invalidated = true
         for key in keys {
             UserDefaults.standard.removeObserver(self, forKeyPath: key)
         }

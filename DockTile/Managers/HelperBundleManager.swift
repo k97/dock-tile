@@ -884,10 +884,8 @@ final class HelperBundleManager {
         }
 
         do {
-            // Remove current icon and copy the new one
-            try? FileManager.default.removeItem(at: destIconPath)
-            try FileManager.default.copyItem(at: actualSourcePath, to: destIconPath)
-            print("[HelperBundleManager] Switched icon to: \(sourceIconName) (style: \(iconStyle.rawValue))")
+            try replaceIconAtomically(source: actualSourcePath, destination: destIconPath)
+            print("[HelperBundleManager] Switched icon to: \(actualSourcePath.lastPathComponent) (style: \(iconStyle.rawValue))")
 
             // Restore the signature seal the icon rewrite just broke. MUST happen before
             // touchBundle: codesign writes _CodeSignature and bumps the bundle's mtime itself, so
@@ -906,6 +904,25 @@ final class HelperBundleManager {
         } catch {
             print("[HelperBundleManager] Failed to switch icon: \(error)")
             return false
+        }
+    }
+
+    /// Atomically replace the live `AppIcon.icns` with `source`. The old two-step
+    /// (remove, then copy) was interruptible: a thrown copy or a process killed between the
+    /// calls left the helper with NO icon at all plus a broken seal, unrepaired until the
+    /// once-per-session self-heal — and only if the tile was pinned. Stages the copy in the
+    /// temp directory and swaps via `replaceItemAt`, so the destination either keeps its old
+    /// bytes or has the new ones — never neither. Guarded by `IconSwapAtomicityTests`.
+    nonisolated static func replaceIconAtomically(source: URL, destination: URL) throws {
+        let fm = FileManager.default
+        let staged = fm.temporaryDirectory
+            .appendingPathComponent("docktile-icon-\(UUID().uuidString).icns")
+        try fm.copyItem(at: source, to: staged)
+        defer { try? fm.removeItem(at: staged) }
+        if fm.fileExists(atPath: destination.path) {
+            _ = try fm.replaceItemAt(destination, withItemAt: staged)
+        } else {
+            try fm.moveItem(at: staged, to: destination)
         }
     }
 

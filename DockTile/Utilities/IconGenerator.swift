@@ -807,10 +807,14 @@ struct IconGenerator {
         // Each needs 1x and @2x versions
         let baseSizes: [Int] = [16, 32, 128, 256, 512]
 
-        // Create iconset directory
-        let iconsetURL = outputURL.deletingPathExtension().appendingPathExtension("iconset")
-        try? FileManager.default.removeItem(at: iconsetURL)
+        // Create iconset scratch OUTSIDE the destination (which is typically a helper bundle's
+        // Resources/): building it beside outputURL meant any thrown save or a killed process
+        // left a stray `.iconset` inside the bundle — the exact killed-mid-generation damage
+        // `helperIconsComplete` exists to detect. Temp dir + defer keeps failures clean.
+        let iconsetURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("docktile-iconset-\(UUID().uuidString).iconset")
         try FileManager.default.createDirectory(at: iconsetURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: iconsetURL) }
 
         // Generate all sizes (1x and @2x for each base size)
         for baseSize in baseSizes {
@@ -851,9 +855,6 @@ struct IconGenerator {
 
         try process.run()
         process.waitUntilExit()
-
-        // Clean up iconset directory
-        try? FileManager.default.removeItem(at: iconsetURL)
 
         guard process.terminationStatus == 0 else {
             let errorData = pipe.fileHandleForReading.readDataToEndOfFile()

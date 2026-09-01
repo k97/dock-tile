@@ -45,6 +45,33 @@ struct IconStyleResolveTests {
         #expect(IconStyle.resolve(preferencesValue: nil, isDarkMode: false) == .defaultStyle)
     }
 
+    // MARK: - The type door: a present-but-non-string value is unresolved, never Default
+
+    // The old `as? String` read collapsed a wrong-TYPE value into "key absent" = a confident
+    // `.defaultStyle` — the same amplifier bug the string seam guards against, reachable via a
+    // path that seam never saw. Absent stays Default; wrong type is "don't act".
+
+    @Test("Absent object (nil) resolves to .defaultStyle", arguments: [true, false])
+    func absentObjectIsDefaultStyle(_ isDarkMode: Bool) {
+        #expect(IconStyle.resolve(preferencesObject: nil, isDarkMode: isDarkMode) == .defaultStyle)
+    }
+
+    @Test("Present but non-string values are unresolved (nil)", arguments: [true, false])
+    func nonStringObjectsAreUnresolved(_ isDarkMode: Bool) {
+        #expect(IconStyle.resolve(preferencesObject: 1, isDarkMode: isDarkMode) == nil)
+        #expect(IconStyle.resolve(preferencesObject: true, isDarkMode: isDarkMode) == nil)
+        #expect(IconStyle.resolve(preferencesObject: ["RegularDark"], isDarkMode: isDarkMode) == nil)
+        #expect(IconStyle.resolve(preferencesObject: 2.5, isDarkMode: isDarkMode) == nil)
+    }
+
+    @Test("String objects pass through to the string seam unchanged")
+    func stringObjectsResolveExactly() {
+        #expect(IconStyle.resolve(preferencesObject: "RegularDark", isDarkMode: false) == .dark)
+        #expect(IconStyle.resolve(preferencesObject: "RegularAutomatic", isDarkMode: true) == .dark)
+        #expect(IconStyle.resolve(preferencesObject: "RegularAutomatic", isDarkMode: false) == .defaultStyle)
+        #expect(IconStyle.resolve(preferencesObject: "SomeFutureStyle", isDarkMode: false) == nil)
+    }
+
     // MARK: - Every previously recognised value keeps its exact mapping
 
     @Test("Automatic family still follows the system appearance", arguments: ["RegularAutomatic", "Automatic"])

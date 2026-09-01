@@ -125,13 +125,13 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // samples itself into <support>/spins/ and Copy Diagnostics carries the hottest frames.
         SpinWatchdog.shared.start()
 
-        // Set up icon style observation for dynamic icon switching
-        // NOTE: This observes "Icon and widget style" setting, NOT "Appearance" (Light/Dark)
+        // Set up icon style observation for dynamic icon switching.
+        // NOTE: This observes "Icon and widget style" setting, NOT "Appearance" (Light/Dark).
+        // Seeding AND the guarded on-disk heal both live inside — do NOT follow this with an
+        // unconditional icon switch: that rewrote + re-signed every bundle on every launch,
+        // bulldozing the iconMatchesStyle guard and opening the killed-mid-swap seal window
+        // at each login-item spawn.
         setupIconStyleObservation()
-
-        // Set initial icon based on current icon style
-        currentIconStyle = IconStyle.current
-        updateIconForCurrentStyle()
 
         // Observe configure notification from popover gear icon
         NotificationCenter.default.addObserver(
