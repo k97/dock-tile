@@ -683,12 +683,12 @@ final class HelperBundleManager {
         let tinted = config.tintColor.nsColors(for: .tinted, iconType: config.iconType)
 
         let json = IconDocumentBuilder.iconJSON(
-            fillTopP3: Self.p3Components(light.backgroundTop),
-            fillBottomP3: Self.p3Components(light.backgroundBottom),
-            darkFillTopP3: Self.p3Components(dark.backgroundTop),
-            darkFillBottomP3: Self.p3Components(dark.backgroundBottom),
-            tintedFillTopP3: Self.p3Components(tinted.backgroundTop),
-            tintedFillBottomP3: Self.p3Components(tinted.backgroundBottom),
+            fillTopP3: try Self.p3Components(light.backgroundTop),
+            fillBottomP3: try Self.p3Components(light.backgroundBottom),
+            darkFillTopP3: try Self.p3Components(dark.backgroundTop),
+            darkFillBottomP3: try Self.p3Components(dark.backgroundBottom),
+            tintedFillTopP3: try Self.p3Components(tinted.backgroundTop),
+            tintedFillBottomP3: try Self.p3Components(tinted.backgroundBottom),
             layers: specs
         )
 
@@ -743,9 +743,8 @@ final class HelperBundleManager {
         for config: DockTileConfiguration
     ) throws -> (specs: [IconDocumentBuilder.LayerSpec], pngs: [String: Data]) {
         func layerPNG(_ appearance: IconAppearance) throws -> Data {
-            // iconScale + iconWeight passed EXPLICITLY: the renderer defaults to
-            // `ConfigurationDefaults`, so omitting them would silently bake the default size and
-            // weight instead of the user's.
+            // Every value comes from the tile's own config — the renderer has no defaults for
+            // scale or weight, so the user's settings cannot be silently substituted here.
             try IconGenerator.generateGlyphLayerPNG(
                 appearance: appearance,
                 tintColor: config.tintColor,
@@ -778,9 +777,14 @@ final class HelperBundleManager {
 
     /// Display-P3 components for an icon.json fill stop. The document format is P3-native, so the
     /// colour is converted rather than reinterpreted.
-    nonisolated private static func p3Components(_ color: NSColor) -> (r: Double, g: Double, b: Double) {
+    ///
+    /// THROWS rather than substituting a fallback colour. Every colour reaching here comes from
+    /// `nsColors(for:iconType:)` and is component-backed, so the conversion should not fail — which
+    /// is exactly why a silent `(0, 0, 0)` would be so damaging: it would bake a black-gradient
+    /// tile, with no error in the diagnostics log and nothing for the user to report.
+    nonisolated private static func p3Components(_ color: NSColor) throws -> (r: Double, g: Double, b: Double) {
         guard let converted = color.usingColorSpace(.displayP3) ?? color.usingColorSpace(.sRGB) else {
-            return (0, 0, 0)
+            throw IconGeneratorError.colorConversionFailed
         }
         return (
             Double(converted.redComponent),
@@ -818,8 +822,8 @@ final class HelperBundleManager {
     ///   • `CFBundleIconName = "AppIcon"` on the declarative path ONLY — names the icon inside the
     ///     per-tile compiled `Assets.car`. Set ALONGSIDE `CFBundleIconFile`, never instead of it:
     ///     the catalog is what the Dock renders, the loose `.icns` remains the fallback for
-    ///     contexts that read it. On the legacy path the key is *removed*, since the main app's
-    ///     plist carries one and a legacy helper has no catalog for it to point at.
+    ///     contexts that read it. The legacy path is left exactly as it has always been — it
+    ///     inherits whatever the main app's plist carried, which is inert without a catalog.
     ///   • Ghost vs App mode via `LSUIElement` (set when hidden from Cmd+Tab, removed otherwise).
     ///   • Strip Sparkle keys — helpers must never self-update; only the main app does.
     ///   • Strip `CFBundleURLTypes` — only the main app handles `docktile://` deep links.
@@ -842,8 +846,6 @@ final class HelperBundleManager {
 
         if declarative {
             plist["CFBundleIconName"] = "AppIcon"
-        } else {
-            plist.removeValue(forKey: "CFBundleIconName")
         }
 
         // Ghost Mode (default): LSUIElement hides the helper from Cmd+Tab.

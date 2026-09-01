@@ -52,25 +52,16 @@ struct HelperInfoPlistTests {
         #expect(out["CFBundleIconFile"] as? String == "AppIcon")
     }
 
-    @Test("Legacy helpers omit CFBundleIconName (there is no asset catalog to point at)")
-    func legacyOmitsIconName() {
+    @Test("The legacy path does not ADD CFBundleIconName (it has no catalog to name)")
+    func legacyDoesNotAddIconName() {
+        // Scoped deliberately to "not added": whatever the main app's plist happened to carry is
+        // passed through untouched, because the legacy transform is frozen — it ships to macOS 15
+        // users on a path this machine cannot exercise, so it gets no edits it does not need.
         let out = HelperBundleManager.helperInfoPlist(
             from: mainAppPlist(), bundleId: "com.docktile.helper.x", appName: "My Tile",
             showInAppSwitcher: false, declarative: false)
         #expect(out["CFBundleIconName"] == nil)
         #expect(out["CFBundleIconFile"] as? String == "AppIcon")
-    }
-
-    @Test("A CFBundleIconName inherited from the main app is removed on the legacy path")
-    func legacyStripsInheritedIconName() {
-        // The main app ships its own Assets.car and therefore its own CFBundleIconName. A legacy
-        // helper has no catalog, so a surviving key would point macOS at nothing.
-        var base = mainAppPlist()
-        base["CFBundleIconName"] = "AppIcon"
-        let out = HelperBundleManager.helperInfoPlist(
-            from: base, bundleId: "com.docktile.helper.x", appName: "My Tile",
-            showInAppSwitcher: false, declarative: false)
-        #expect(out["CFBundleIconName"] == nil)
     }
 
     @Test("Bundle identity is rewritten to the helper's")

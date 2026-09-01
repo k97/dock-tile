@@ -967,13 +967,20 @@ extension IconGenerator {
     ///
     /// Geometry is the existing `IconDepthMetrics` ratio applied to the new canvas — same
     /// ratios, larger canvas — so the declarative tile matches the legacy bake and the preview.
+    ///
+    /// `iconScale` and `iconWeight` are deliberately **without defaults**. Defaulting them to
+    /// `ConfigurationDefaults` would let a call site omit the user's actual size or weight and
+    /// silently bake the wrong tile — a defect no test could catch, since the only production
+    /// caller sits inside a private method of this `@MainActor`, filesystem-bound pipeline.
+    /// Omission is a compile error instead. (`canvas` keeps its default: it is a real knob with
+    /// one correct value, not a per-tile setting.)
     static func generateGlyphLayerPNG(
         appearance: IconAppearance,
         tintColor: TintColor,
         iconType: IconType,
         iconValue: String,
-        iconScale: Int = ConfigurationDefaults.iconScale,
-        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
+        iconScale: Int,
+        iconWeight: IconWeight,
         canvas: Int = 1024
     ) throws -> Data {
         let side = CGFloat(canvas)
@@ -1197,6 +1204,10 @@ enum IconGeneratorError: Error {
     case imageConversionFailed
     case pngExportFailed
     case icnsConversionFailed
+    /// A tile colour could not be converted to the colour space a renderer needs. Thrown rather
+    /// than substituted: a silent fallback colour would bake a wrong-coloured tile with nothing
+    /// anywhere to say so.
+    case colorConversionFailed
 
     var localizedDescription: String {
         switch self {
@@ -1206,6 +1217,8 @@ enum IconGeneratorError: Error {
             return "Failed to export PNG data"
         case .icnsConversionFailed:
             return "Failed to convert iconset to .icns file"
+        case .colorConversionFailed:
+            return "Failed to convert a tile colour to the required colour space"
         }
     }
 }
