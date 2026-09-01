@@ -92,4 +92,42 @@ struct IconWeightTests {
         )
         #expect(decoded.iconWeight == .bold)
     }
+
+    /// `Codable` on a raw-value String enum THROWS on an unrecognised raw value — and
+    /// `decodeIfPresent` does not save the caller, because the key IS present, it's just the
+    /// value that's unrecognised. Without a tolerant `init(from:)`, a config written by a newer
+    /// app version (or hand-edited) would fail to decode `IconWeight` in isolation.
+    @Test("Unknown IconWeight raw value decodes to .medium (whole-config decode must survive)")
+    func unknownWeightDecodesToMedium() throws {
+        let weight = try JSONDecoder().decode(IconWeight.self, from: Data(#""futureUltraBlack""#.utf8))
+        #expect(weight == .medium)
+    }
+
+    /// The isolated-enum case above proves `IconWeight` itself is tolerant; this proves the
+    /// tolerance actually saves the WHOLE tile — an older binary reading a config a newer
+    /// version wrote (or a hand-edited file) with an unrecognised `iconWeight` must still decode
+    /// every other field, not fail the entire `DockTileConfiguration` decode.
+    @Test("A future-unknown iconWeight in a full config JSON does not fail the whole decode")
+    func unknownWeightInFullConfigDoesNotFailWholeDecode() throws {
+        let json = """
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440001",
+            "name": "Future Tile",
+            "tintColor": {"type": "preset", "value": "blue"},
+            "symbolEmoji": "star",
+            "layoutMode": "grid",
+            "appItems": [],
+            "isVisibleInDock": true,
+            "bundleIdentifier": "com.future.tile",
+            "iconType": "sfSymbol",
+            "iconValue": "folder.fill",
+            "iconScale": 14,
+            "iconWeight": "futureUltraBlack"
+        }
+        """
+
+        let config = try JSONDecoder().decode(DockTileConfiguration.self, from: json.data(using: .utf8)!)
+        #expect(config.name == "Future Tile")
+        #expect(config.iconWeight == .medium)
+    }
 }

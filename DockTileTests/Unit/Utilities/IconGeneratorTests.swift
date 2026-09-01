@@ -406,12 +406,57 @@ struct IconGeneratorErrorTests {
         let errors: [IconGeneratorError] = [
             .imageConversionFailed,
             .pngExportFailed,
-            .icnsConversionFailed
+            .icnsConversionFailed,
+            .colorConversionFailed,
+            .symbolUnresolvable(name: "not.a.real.symbol"),
+            .brandGlyphMissing
         ]
 
         for error in errors {
             #expect(!error.localizedDescription.isEmpty)
         }
+    }
+
+    /// `error.localizedDescription` on an `any Error` existential (the shape
+    /// `DockTileDetailView`'s generic `catch` actually holds) resolves through the NSError
+    /// bridge, which only reads a real message when the type conforms to `LocalizedError`.
+    /// Without that conformance every case here reads as the generic
+    /// "The operation couldn't be completed." — this proves the real messages actually surface.
+    @Test("localizedDescription on the any-Error existential surfaces the real message, not the NSError default")
+    func localizedDescriptionSurfacesOnErrorExistential() {
+        let error: any Error = IconGeneratorError.colorConversionFailed
+        #expect(error.localizedDescription == "Failed to convert a tile colour to the required colour space")
+    }
+
+    /// The brand-glyph-missing case names a missing bundled resource — a different failure from
+    /// an unresolvable symbol name — so it must not share text with the generic symbol case.
+    @Test("brandGlyphMissing has its own message, distinct from symbolUnresolvable")
+    func brandGlyphMissingHasOwnMessage() throws {
+        let brandMessage = try #require(IconGeneratorError.brandGlyphMissing.errorDescription)
+        let symbolMessage = try #require(IconGeneratorError.symbolUnresolvable(name: "bogus.symbol").errorDescription)
+        #expect(brandMessage != symbolMessage)
+        #expect(symbolMessage.contains("bogus.symbol"))
+    }
+}
+
+// MARK: - IconGenerator Fallback Reason Tests
+
+/// Guards the pure decision of WHICH error a caller reports when an SF Symbol image fails to
+/// resolve — the brand sentinel vs. an ordinary unknown symbol name are different failures
+/// (missing bundled resource vs. bad/unsupported symbol name) and must not be conflated.
+@Suite("IconGenerator Fallback Reason Tests")
+struct IconGeneratorFallbackReasonTests {
+
+    @Test("The brand glyph sentinel name reports brandGlyphMissing")
+    func brandSentinelReportsBrandGlyphMissing() {
+        let reason = IconGenerator.fallbackReason(forUnresolvedSymbol: SFSymbolCatalog.brandSymbolName)
+        #expect(reason == .brandGlyphMissing)
+    }
+
+    @Test("An ordinary unresolved symbol name reports symbolUnresolvable with that name")
+    func ordinarySymbolReportsSymbolUnresolvable() {
+        let reason = IconGenerator.fallbackReason(forUnresolvedSymbol: "not.a.real.symbol")
+        #expect(reason == .symbolUnresolvable(name: "not.a.real.symbol"))
     }
 }
 

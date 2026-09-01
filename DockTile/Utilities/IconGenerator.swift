@@ -334,12 +334,29 @@ struct IconGenerator {
         // Get the SF Symbol image
         guard let symbolImage = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config) else {
-            // Fallback to a default symbol if the requested one doesn't exist
+            // Fallback to a default symbol if the requested one doesn't exist. This silently
+            // changes what the tile looks like, so it must be loud (see fallbackReason).
+            reportIconFallback(fallbackReason(forUnresolvedSymbol: symbolName), iconValue: symbolName)
             drawFallbackSymbol(rect: rect, fontSize: fontSize, weight: weight, color: color, shadow: shadow, bottomDarken: bottomDarken, sheen: sheen)
             return
         }
 
         drawGlyphMask(symbolImage, rect: rect, color: color, shadow: shadow, bottomDarken: bottomDarken, sheen: sheen)
+    }
+
+    /// Which fallback error applies when a glyph name fails to resolve to an `NSImage`. Pure so
+    /// the brand-sentinel-vs-ordinary-symbol distinction is unit-tested without NSImage/AppKit —
+    /// they are different failures (a missing bundled resource vs. a bad/unsupported symbol
+    /// name) and must not share a message.
+    nonisolated static func fallbackReason(forUnresolvedSymbol symbolName: String) -> IconGeneratorError {
+        symbolName == SFSymbolCatalog.brandSymbolName ? .brandGlyphMissing : .symbolUnresolvable(name: symbolName)
+    }
+
+    /// Records that a tile's requested glyph could not be resolved and the placeholder star icon
+    /// was baked instead — silent wrong icons are against this codebase's loud-failure posture.
+    private static func reportIconFallback(_ error: IconGeneratorError, iconValue: String) {
+        DiagnosticsLog.shared.log("icon", "\(error.errorDescription ?? "Icon glyph unresolved") — fell back to star.fill for '\(iconValue)'")
+        AnalyticsService.shared.record(error, context: "IconGenerator.drawSFSymbol", keys: ["icon_value": iconValue])
     }
 
     private static func drawFallbackSymbol(
@@ -1200,7 +1217,7 @@ extension NSImage {
 
 // MARK: - Errors
 
-enum IconGeneratorError: Error {
+enum IconGeneratorError: Error, LocalizedError, Equatable {
     case imageConversionFailed
     case pngExportFailed
     case icnsConversionFailed
@@ -1208,8 +1225,20 @@ enum IconGeneratorError: Error {
     /// than substituted: a silent fallback colour would bake a wrong-coloured tile with nothing
     /// anywhere to say so.
     case colorConversionFailed
+    /// The requested SF Symbol name doesn't resolve on this OS (typo, renamed, or a symbol not
+    /// available at the deployment target) — not thrown, just recorded, since the tile still
+    /// gets a placeholder star icon rather than failing generation outright.
+    case symbolUnresolvable(name: String)
+    /// The bundled DockTile brand glyph resource (`DockTileGlyph.png`) failed to load — a missing
+    /// bundle resource, distinct from an unresolvable symbol name. Also not thrown; recorded so
+    /// the silent star-icon substitution isn't invisible.
+    case brandGlyphMissing
 
-    var localizedDescription: String {
+    /// Conforming to `LocalizedError` is what makes this message actually surface: a generic
+    /// `catch { error.localizedDescription }` on the `any Error` existential resolves through
+    /// the NSError bridge, which only reads a real message when the type conforms here. Without
+    /// this, every case read as the generic "The operation couldn't be completed."
+    var errorDescription: String? {
         switch self {
         case .imageConversionFailed:
             return "Failed to convert NSImage to CGImage"
@@ -1219,6 +1248,10 @@ enum IconGeneratorError: Error {
             return "Failed to convert iconset to .icns file"
         case .colorConversionFailed:
             return "Failed to convert a tile colour to the required colour space"
+        case .symbolUnresolvable(let name):
+            return "SF Symbol '\(name)' could not be found — used a placeholder star icon instead. Choose a different symbol in Customise Tile."
+        case .brandGlyphMissing:
+            return "The DockTile brand glyph resource is missing from the app bundle — used a placeholder star icon instead. Reinstalling Dock Tile should restore it."
         }
     }
 }

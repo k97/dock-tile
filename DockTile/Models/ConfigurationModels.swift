@@ -201,6 +201,17 @@ enum IconWeight: String, Codable, CaseIterable, Hashable {
         case .heavy: return .heavy
         }
     }
+
+    /// `Codable`'s default `RawRepresentable` decoding THROWS on an unrecognised raw value —
+    /// and `decodeIfPresent` at the call site does not protect against that, because the key IS
+    /// present, it's just the value that's unrecognised. Without this override, a config written
+    /// by a newer app version (or a hand-edited file) with a future weight case would fail to
+    /// decode the ENTIRE `DockTileConfiguration`, not just this field. Fall back to the same
+    /// `.medium` default the missing-key case already uses.
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = IconWeight(rawValue: raw) ?? .medium
+    }
 }
 
 // MARK: - Tint Color

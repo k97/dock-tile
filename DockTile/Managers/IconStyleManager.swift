@@ -181,14 +181,24 @@ final class IconStyleManager: ObservableObject {
 
     /// Current icon style - views observing this will automatically update.
     ///
-    /// Deliberately has NO declared default. Swift's two-phase init then REQUIRES this to be
-    /// assigned before `init()` may call any instance method (including `setupObservers()`) —
-    /// so a future edit that moved the seed below the detection guard, or deleted it outright,
-    /// fails the BUILD rather than silently leaving this at a stale/wrong value that a runtime
-    /// test might not catch (a prior test here compared against `IconStyle.current`, which
-    /// collapses to the same `.defaultStyle` as the removed-default's implicit value whenever
-    /// the system icon style is Default — the common case — so it couldn't discriminate the
-    /// regression it was meant to guard).
+    /// Deliberately has NO declared default. Swift's two-phase init then REQUIRES SOME assignment
+    /// before `init()` may call any instance method (including `setupObservers()`) — so a naive
+    /// edit that simply deletes the seed line below, or moves it after `setupObservers()`, fails
+    /// the BUILD rather than silently leaving this at a stale/wrong value that a runtime test
+    /// might not catch (a prior test here compared against `IconStyle.current`, which collapses
+    /// to the same `.defaultStyle` as the removed-default's implicit value whenever the system
+    /// icon style is Default — the common case — so it couldn't discriminate the regression it
+    /// was meant to guard).
+    ///
+    /// **This guarantee is narrower than it looks**: definite-initialization only requires SOME
+    /// assignment before first use of `self`, not the FINAL one. A two-step restructuring —
+    /// assign a placeholder here, then assign the real `IconStyle.current` later inside a gated
+    /// block of `setupObservers()` — would still compile and would silently reintroduce the bug
+    /// the missing-default was meant to catch. The compiler catches the naive one-line
+    /// reorder/delete; it does not catch a restructuring like that.
+    /// (`HelperAppDelegate.currentIconStyle` carries the same shape of risk in weaker form: it
+    /// has a declared default, `= .defaultStyle`, so it gets no compile-time protection at all —
+    /// a stale seed there can only be caught by a runtime test.)
     @Published private(set) var currentStyle: IconStyle
 
     /// KVO bridge for the two appearance keys.
