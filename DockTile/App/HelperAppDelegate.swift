@@ -502,8 +502,12 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // In a helper, IconStyleManager was previously only constructed lazily by the SwiftUI
         // popover views, so a tile that had never been clicked had no manager at all.
         let manager = IconStyleManager.shared
-        // Passive read — stays even under the declarative pipeline: popover views key
-        // third-party app icons on this value, so it must keep tracking Light/Dark.
+        // Seeded ONCE at launch — a passive read, not a live subscription. Under the declarative
+        // pipeline the popover-show reconcile is quarantined too, so this value is never
+        // refreshed again for this process's lifetime. Sufficient because popover views use it
+        // only as a re-render trigger; the actual pixels are re-resolved via
+        // AppIconLoader/NSWorkspace on every rebuild (every popover show()), so they stay current
+        // even though this cached value doesn't.
         currentIconStyle = manager.currentStyle
 
         // Under the declarative pipeline macOS renders every appearance itself: no swap, no

@@ -194,9 +194,14 @@ final class IconStyleManager: ObservableObject {
     private var reportedSilentEventPath = false
 
     private init() {
-        // Initial state — a passive read, kept even under the declarative pipeline: helper
-        // popovers key third-party app icon views on `currentStyle` (`.id("\(app.id)-\(style)")`)
-        // so those icons keep tracking Light/Dark.
+        // Seeded ONCE at process launch — a passive read, not a live subscription. Under the
+        // declarative pipeline every re-check is quarantined too (`reconcile(reason:)`, including
+        // the popover-show reconcile), so this value is never refreshed again for the life of the
+        // process. That's sufficient: popover views key third-party app icon views on
+        // `currentStyle` only as a re-render TRIGGER (`.id("\(app.id)-\(style)")`) — the actual
+        // pixels come from `AppIconLoader`/`NSWorkspace.icon(forFile:)`, re-resolved on every
+        // call, and the popover content is rebuilt on every `show()`, so what's drawn stays
+        // current even though `currentStyle` itself doesn't change mid-process.
         currentStyle = IconStyle.current
         print("[IconStyleManager] Initialized with style: \(currentStyle.rawValue)")
 

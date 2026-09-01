@@ -23,4 +23,18 @@ struct IconStyleQuarantineTests {
     func legacyKeepsDetectionRunning() {
         #expect(IconStyleManager.shouldRunDetection(isDeclarative: false) == true)
     }
+
+    /// Guards the readability half of the interface contract — a named "Produces" bullet of the
+    /// task that quarantined detection, and otherwise unguarded: nothing else asserts on
+    /// `currentStyle` itself. Today it's correct only because `IconStyleManager.init` seeds it
+    /// UNCONDITIONALLY, before `setupObservers()` consults the gate. This test exists so a future
+    /// edit that reorders those two lines — moving the seed below the guard, or making it
+    /// conditional — fails loudly here instead of silently breaking helper popovers' and the
+    /// main-app preview's re-render trigger with no test catching it. Do not delete this as
+    /// "redundant with the boolean gate tests above": it exercises the property, not the gate.
+    @MainActor
+    @Test("currentStyle is seeded from IconStyle.current regardless of the detection gate")
+    func currentStyleStaysReadableUnderQuarantine() {
+        #expect(IconStyleManager.shared.currentStyle == IconStyle.current)
+    }
 }
