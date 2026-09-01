@@ -26,12 +26,16 @@ struct IconPreviewGeometryTests {
     private static let side: CGFloat = 256
 
     /// Render the preview at 1 pixel per point so pixel indices are point coordinates.
-    private func render(iconType: IconType = .sfSymbol, iconValue: String = "star.fill") throws -> NSBitmapImageRep {
+    private func render(
+        iconType: IconType = .sfSymbol,
+        iconValue: String = "star.fill",
+        iconScale: Int = 14
+    ) throws -> NSBitmapImageRep {
         let view = DockTileIconPreview(
             tintColor: .blue,
             iconType: iconType,
             iconValue: iconValue,
-            iconScale: 14,
+            iconScale: iconScale,
             iconWeight: .medium,
             size: Self.side
         )
@@ -49,20 +53,61 @@ struct IconPreviewGeometryTests {
 
     /// First x on the given row whose alpha clears the anti-aliasing floor.
     private func firstOpaqueColumn(_ rep: NSBitmapImageRep, row: Int) throws -> Int {
-        for x in 0..<rep.pixelsWide {
-            if try alpha(rep, x, row) > 0.5 { return x }
+        var found: Int?
+        for x in 0..<rep.pixelsWide where found == nil {
+            if try alpha(rep, x, row) > 0.5 { found = x }
         }
-        Issue.record("row \(row) is fully transparent")
-        return -1
+        return try #require(found, "row \(row) is fully transparent")
     }
 
     /// First y in the given column whose alpha clears the anti-aliasing floor.
     private func firstOpaqueRow(_ rep: NSBitmapImageRep, column: Int) throws -> Int {
-        for y in 0..<rep.pixelsHigh {
-            if try alpha(rep, column, y) > 0.5 { return y }
+        var found: Int?
+        for y in 0..<rep.pixelsHigh where found == nil {
+            if try alpha(rep, column, y) > 0.5 { found = y }
         }
-        Issue.record("column \(column) is fully transparent")
-        return -1
+        return try #require(found, "column \(column) is fully transparent")
+    }
+
+    // MARK: - The tile shape (as pixels, so containment is measured, not assumed)
+
+    /// The squircle the preview actually draws: the canvas inset by the icon-grid margin, with
+    /// the corner radius taken off the SHAPE — filled white into a bitmap so any render can be
+    /// compared against it pixel by pixel.
+    static func shapeMask(side: CGFloat) -> NSBitmapImageRep? {
+        let px = Int(side)
+        guard let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px,
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
+              let ctx = NSGraphicsContext(bitmapImageRep: rep) else { return nil }
+        rep.size = CGSize(width: side, height: side)
+        let inset = side * IconDepthMetrics.contentInsetRatio
+        let shape = CGRect(x: 0, y: 0, width: side, height: side).insetBy(dx: inset, dy: inset)
+        let path = RoundedRectangle(cornerRadius: shape.width * 0.225, style: .continuous)
+            .path(in: shape).cgPath
+        ctx.cgContext.clear(CGRect(x: 0, y: 0, width: side, height: side))
+        ctx.cgContext.addPath(path)
+        ctx.cgContext.setFillColor(NSColor.white.cgColor)
+        ctx.cgContext.fillPath()
+        return rep
+    }
+
+    /// Pixels painted where the tile shape isn't — i.e. artwork escaping the tile.
+    ///
+    /// `artworkAlpha` (0.25) is above the glyph's soft contact shadow (peak 0.18 for symbols,
+    /// 0.126 for emoji) so a legitimate shadow feathering past the edge is not counted; a pixel
+    /// counts as inside if the shape covers it at all, so the shape's own AA never counts either.
+    static func escapedPixels(_ render: NSBitmapImageRep, mask: NSBitmapImageRep) -> Int {
+        var escaped = 0
+        for y in 0..<render.pixelsHigh {
+            for x in 0..<render.pixelsWide {
+                guard let pixel = render.colorAt(x: x, y: y), pixel.alphaComponent >= 0.25 else { continue }
+                let covered = mask.colorAt(x: x, y: y)?.alphaComponent ?? 0
+                if covered <= 0.02 { escaped += 1 }
+            }
+        }
+        return escaped
     }
 
     @Test("Preview leaves the icon-grid margin transparent on every edge")
@@ -101,6 +146,63 @@ struct IconPreviewGeometryTests {
         let top = CGFloat(try firstOpaqueRow(rep, column: mid))
         #expect(abs(left - expected) <= 1, "left edge at \(left), expected \(expected)")
         #expect(abs(top - expected) <= 1, "top edge at \(top), expected \(expected)")
+    }
+
+    // MARK: - Glyph containment at MAXIMUM Icon Scale
+
+    /// The guard that should have existed before the margin landed: the earlier tests scanned the
+    /// SHAPE's edges but never the glyph, so a glyph sized against the canvas could overflow the
+    /// (smaller) shape unnoticed. The stepper's top step is the only step that can fail, so that
+    /// is what is pinned — for every icon type.
+    ///
+    /// Symbols and the brand logo stop at 19, emoji at 22 (`CustomiseTileView.maxIconScale`).
+    /// The emoji cases are the measured worst cases: 🟥 fills its whole cell (square, corner to
+    /// corner), 🧊 is the sparsest, 🍕 the most off-centre.
+    @Test("Nothing escapes the tile at maximum Icon Scale", arguments: [
+        (IconType.sfSymbol, "square.fill", 19),
+        (IconType.sfSymbol, "star.fill", 19),
+        (IconType.sfSymbol, SFSymbolCatalog.brandSymbolName, 19),
+        (IconType.emoji, "🟥", IconDepthMetrics.emojiScaleMax),
+        (IconType.emoji, "🧊", IconDepthMetrics.emojiScaleMax),
+        (IconType.emoji, "🍕", IconDepthMetrics.emojiScaleMax)
+    ])
+    func glyphStaysInsideTheShapeAtMaxScale(_ type: IconType, _ value: String, _ scale: Int) throws {
+        let rep = try render(iconType: type, iconValue: value, iconScale: scale)
+        let mask = try #require(Self.shapeMask(side: Self.side))
+        let escaped = Self.escapedPixels(rep, mask: mask)
+        #expect(escaped == 0, "\(value) at scale \(scale): \(escaped) painted pixels outside the tile")
+    }
+
+    /// Why the emoji ceiling is what it is, measured rather than asserted: the shape is a
+    /// squircle, so the artwork's bounding box must fit its largest CENTRED SQUARE, not its side.
+    /// (Comparing the ratio against the shape's side — treating the squircle as a square — is the
+    /// arithmetic that let max-scale emoji overflow.)
+    @Test("The emoji ceiling fits inside the shape's largest centred square")
+    func emojiCeilingFitsTheInscribedSquare() throws {
+        let mask = try #require(Self.shapeMask(side: Self.side))
+        let centre = Int(Self.side) / 2
+
+        // The squircle is convex, so a centred square is inside exactly when its corners are.
+        var halfSide = 0
+        var inside = true
+        while inside && halfSide < centre {
+            let next = halfSide + 1
+            for (dx, dy) in [(-next, -next), (next, -next), (-next, next), (next, next)] {
+                let covered = mask.colorAt(x: centre + dx, y: centre + dy)?.alphaComponent ?? 0
+                if covered <= 0.5 { inside = false }
+            }
+            if inside { halfSide = next }
+        }
+        let inscribedRatio = CGFloat(halfSide * 2) / Self.side
+
+        #expect(IconDepthMetrics.emojiMaxSafeRatio <= inscribedRatio,
+                "emoji ceiling \(IconDepthMetrics.emojiMaxSafeRatio) exceeds the measured inscribed square \(inscribedRatio)")
+        // SF Symbols are bounded by the same square rule and clear it with room to spare.
+        #expect(IconDepthMetrics.maxSafeRatio <= inscribedRatio)
+        // The brand logo is deliberately NOT asserted here: it is a circular ring, and the
+        // largest centred CIRCLE in a squircle is wider than the largest centred square, so the
+        // square rule would reject a ratio (0.725 at its top step) that demonstrably fits. Its
+        // containment is proven by pixels in `glyphStaysInsideTheShapeAtMaxScale` instead.
     }
 
     @Test("Emoji tiles get the same margined geometry as symbol tiles")

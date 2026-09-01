@@ -120,6 +120,13 @@ struct DockTileIconPreview: View {
         IconDepthMetrics.surfaceSheenAlpha(style: iconStyle, nominalSize: size)
     }
 
+    /// Stroke width for the drawn shape. Measured against `contentSide`, not the canvas: the
+    /// stroke is drawn ON the shape, and the baked renderer scales it by the size of what it
+    /// strokes. (Glyph magnitudes stay canvas-relative — that is what both renderers use.)
+    private var strokeLineWidth: CGFloat {
+        IconDepthMetrics.strokeLineWidth(nominalSize: contentSide)
+    }
+
     /// Liquid-Glass specular sheen for SF Symbols / brand glyph (nil for emoji / too small).
     private var glyphSheen: IconDepthMetrics.GlyphSheen? {
         IconDepthMetrics.glyphSheen(style: iconStyle, iconType: iconType, nominalSize: size)
@@ -161,7 +168,7 @@ struct DockTileIconPreview: View {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .strokeBorder(
                     Color.white.opacity(IconDepthMetrics.strokeOpacity(style: iconStyle)),
-                    lineWidth: IconDepthMetrics.strokeLineWidth(nominalSize: size)
+                    lineWidth: strokeLineWidth
                 )
                 .padding(contentInset)
 

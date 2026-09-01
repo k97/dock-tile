@@ -33,15 +33,39 @@ enum IconDepthMetrics {
     /// curve in `SFSymbolCatalog.brandRatio`, and emoji their own ceiling below.
     static let maxSafeRatio: CGFloat = 0.60
 
-    /// Emoji ceiling — a "sticker" isn't bound by the SF-Symbol guide circle, so emoji may
-    /// grow past 0.60. Sits just above scale 22's uncapped 0.77 so every emoji stepper step
-    /// 17–22 stays distinct (0.595 … 0.77) instead of clamping flat — the same own-ceiling
-    /// pattern as the brand glyph's 0.78. Because emoji are ink-normalised (`emojiInkFit`),
-    /// the ratio bounds the measured ARTWORK, keeping every emoji inside the squircle's
-    /// ~0.86 centred-square limit with margin.
-    static let emojiMaxSafeRatio: CGFloat = 0.78
+    /// Emoji ceiling — a "sticker" isn't bound by the SF-Symbol guide circle, so emoji may grow
+    /// past 0.60, but not past the SHAPE.
+    ///
+    /// **The bound is the squircle's largest centred SQUARE, not its side (critical).** Emoji are
+    /// ink-normalised (`emojiInkFit`), so the ratio bounds the artwork's bounding BOX — and a box
+    /// only fits a squircle if it fits that inscribed square (~0.868 of the shape's side). With
+    /// the icon-grid margin the shape is `1 - 2 × contentInsetRatio` = 0.805 of the canvas, so the
+    /// real limit is ≈0.699 of the canvas; measured against the rendered shape it is **0.6875**
+    /// (`IconPreviewGeometryTests.emojiCeilingFitsTheInscribedSquare`, which re-derives it from
+    /// pixels rather than trusting this comment). This sits under that with margin.
+    ///
+    /// Comparing the ratio against the shape's side instead — treating the squircle as a square —
+    /// is what let the old 0.78 ceiling ship: at scale 22 a full-cell emoji (🟥, 🧊) put tens of
+    /// thousands of opaque pixels outside the tile at the 1024 bake.
+    static let emojiMaxSafeRatio: CGFloat = 0.67
 
-    /// The type's own ceiling: SF Symbols 0.60, emoji 0.78 (brand is handled upstream).
+    /// Emoji ratio at the lowest Icon Scale (the 0.30 symbol base plus the +0.05 weight offset
+    /// emoji have always carried). The low end is unchanged by the ceiling correction.
+    static let emojiBaseRatio: CGFloat = 0.35
+
+    /// Top Icon Scale step for emoji — the customiser's stepper bound, and the step the emoji
+    /// curve is scaled to land on the ceiling. Symbols and the brand logo stop at 19.
+    static let emojiScaleMax = 22
+
+    /// Per-step growth for emoji, derived so the TOP step lands exactly on the ceiling. Emoji get
+    /// their own slope rather than the symbols' 0.035: clamping the shared slope at a lower
+    /// ceiling would flatten the top steps into each other, and every stepper step must stay
+    /// visually distinct — so the whole curve is rescaled, shrinking most where it was unsafe.
+    static var emojiRatioStep: CGFloat {
+        (emojiMaxSafeRatio - emojiBaseRatio) / CGFloat(emojiScaleMax - 10)
+    }
+
+    /// The type's own ceiling: SF Symbols 0.60, emoji 0.67 (brand is handled upstream).
     static func maxSafeRatio(for iconType: IconType) -> CGFloat {
         iconType == .emoji ? emojiMaxSafeRatio : maxSafeRatio
     }
@@ -69,11 +93,15 @@ enum IconDepthMetrics {
 
     /// The uncapped-then-capped ratio for SF Symbols / emojis (excludes the brand logo).
     private static func cappedSymbolRatio(iconScale: Int, iconType: IconType) -> CGFloat {
-        // Base ratio: 0.035 per step above scale 10 (symbols step to 19, emoji to 22).
-        let base = 0.30 + (CGFloat(iconScale - 10) * 0.035)
-        // Emoji gets +5% offset for visual weight.
-        let ratio = iconType == .emoji ? base + 0.05 : base
-        return min(ratio, maxSafeRatio(for: iconType))
+        if iconType == .emoji {
+            // Emoji run on their own slope (see `emojiRatioStep`), from `emojiBaseRatio` at
+            // scale 10 to the ceiling at `emojiScaleMax`. The `min` only guards a stored scale
+            // above the stepper's range.
+            let ratio = emojiBaseRatio + (CGFloat(iconScale - 10) * emojiRatioStep)
+            return min(ratio, emojiMaxSafeRatio)
+        }
+        // Symbols: 0.035 per step above scale 10 (they step to 19), capped at the guide circle.
+        return min(0.30 + (CGFloat(iconScale - 10) * 0.035), maxSafeRatio)
     }
 
     /// True when the (non-brand) glyph is at or past the type's safe-area warning threshold.

@@ -132,6 +132,25 @@ struct GlyphLayerRenderTests {
         #expect(centre == 1)
     }
 
+    /// The compiled icon draws the shape itself and composites this layer over it, so a glyph
+    /// that outgrows the icon-grid shape spills past the tile in the Dock (or gets clipped by
+    /// the system) — neither is what the customiser shows. The preview carries the same guard
+    /// (`IconPreviewGeometryTests.glyphStaysInsideTheShapeAtMaxScale`); this one pins the pixels
+    /// macOS actually receives, at the real 1024 canvas.
+    @Test("Max-scale glyph layers stay inside the icon-grid shape", arguments: [
+        (IconType.emoji, "🟥"), (IconType.emoji, "🧊"), (IconType.emoji, "🍕"),
+        (IconType.sfSymbol, "square.fill"), (IconType.sfSymbol, SFSymbolCatalog.brandSymbolName)
+    ])
+    func maxScaleLayerStaysInsideTheShape(_ type: IconType, _ value: String) throws {
+        let scale = type == .emoji ? IconDepthMetrics.emojiScaleMax : 19
+        let rep = try bitmap(try IconGenerator.generateGlyphLayerPNG(
+            appearance: .light, tintColor: .green, iconType: type,
+            iconValue: value, iconScale: scale, iconWeight: .medium))
+        let mask = try #require(IconPreviewGeometryTests.shapeMask(side: CGFloat(Self.canvas)))
+        let escaped = IconPreviewGeometryTests.escapedPixels(rep, mask: mask)
+        #expect(escaped == 0, "\(value) at scale \(scale): \(escaped) layer pixels outside the shape")
+    }
+
     @Test("Brand glyph routes like a symbol: tintable, appearance-swapped, seam-sized")
     func brandGlyphRoutesLikeASymbol() throws {
         let brand = SFSymbolCatalog.brandSymbolName

@@ -31,24 +31,39 @@ struct IconDepthMetricsTests {
         #expect(IconDepthMetrics.glyphSizeRatio(iconScale: 20, iconType: .sfSymbol, iconValue: "star.fill") == IconDepthMetrics.maxSafeRatio)
     }
 
-    @Test("Emoji gets a +0.05 weight offset, capped at the emoji ceiling")
-    func emojiRatioOffsetAndCap() {
-        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 14, iconType: .emoji, iconValue: "🚀"), 0.49)
-        // scale 23 → 0.755 + 0.05 = 0.805 uncapped → capped at the emoji ceiling (0.78)
+    @Test("Emoji start at the same base and reach the ceiling exactly at the top step")
+    func emojiRatioBaseAndCeiling() {
+        // Base (scale 10) is the symbols' 0.30 + the emoji weight offset — unchanged.
+        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 10, iconType: .emoji, iconValue: "🚀"), 0.35)
+        // The top step lands ON the ceiling by construction, not by clamping.
+        expectClose(
+            IconDepthMetrics.glyphSizeRatio(iconScale: IconDepthMetrics.emojiScaleMax, iconType: .emoji, iconValue: "🚀"),
+            IconDepthMetrics.emojiMaxSafeRatio)
+        // A stored scale past the stepper's range still can't exceed the ceiling.
         #expect(IconDepthMetrics.glyphSizeRatio(iconScale: 23, iconType: .emoji, iconValue: "🚀") == IconDepthMetrics.emojiMaxSafeRatio)
     }
 
     @Test("Emoji stepper range 17–22 stays distinct under the emoji ceiling (no dead steps)")
     func emojiTopStepsDistinct() {
-        // The 0.60 SF cap used to flatten everything past 17 to 0.60; the 0.78 emoji ceiling
-        // keeps every stepper step meaningful up to the top step at 22.
-        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 17, iconType: .emoji, iconValue: "🚀"), 0.595)
-        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 18, iconType: .emoji, iconValue: "🚀"), 0.63)
-        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 19, iconType: .emoji, iconValue: "🚀"), 0.665)
-        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 20, iconType: .emoji, iconValue: "🚀"), 0.70)
-        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 21, iconType: .emoji, iconValue: "🚀"), 0.735)
-        expectClose(IconDepthMetrics.glyphSizeRatio(iconScale: 22, iconType: .emoji, iconValue: "🚀"), 0.77)
-        // Symbols are untouched by the emoji ceiling: scale 19 still clamps to 0.60.
+        // UPDATED (deliberately) when the emoji ceiling was corrected from 0.78 to 0.67: the old
+        // ceiling was measured against the shape's SIDE, but the shape is a squircle, so an
+        // emoji's bounding box must fit its inscribed square (~0.6875 of the canvas). The curve
+        // was rescaled rather than clamped precisely so these steps stay distinct — they are
+        // 0.02667 apart now instead of 0.035, and none of them repeats.
+        let step = IconDepthMetrics.emojiRatioStep
+        expectClose(step, (0.67 - 0.35) / 12)
+        for scale in 17...IconDepthMetrics.emojiScaleMax {
+            expectClose(
+                IconDepthMetrics.glyphSizeRatio(iconScale: scale, iconType: .emoji, iconValue: "🚀"),
+                0.35 + CGFloat(scale - 10) * step)
+        }
+        // Distinctness is the property that matters: consecutive steps differ by a full step.
+        for scale in 10..<IconDepthMetrics.emojiScaleMax {
+            let lower = IconDepthMetrics.glyphSizeRatio(iconScale: scale, iconType: .emoji, iconValue: "🚀")
+            let upper = IconDepthMetrics.glyphSizeRatio(iconScale: scale + 1, iconType: .emoji, iconValue: "🚀")
+            expectClose(upper - lower, step)
+        }
+        // Symbols are untouched by the emoji curve: scale 19 still clamps to 0.60.
         #expect(IconDepthMetrics.glyphSizeRatio(iconScale: 19, iconType: .sfSymbol, iconValue: "star.fill") == IconDepthMetrics.maxSafeRatio)
     }
 
@@ -69,16 +84,20 @@ struct IconDepthMetricsTests {
         // maxSafeRatio / warningThreshold are the documented magnitudes.
         #expect(IconDepthMetrics.maxSafeRatio == 0.60)
         #expect(IconDepthMetrics.warningThreshold == 0.57)
-        #expect(IconDepthMetrics.emojiMaxSafeRatio == 0.78)
+        // 0.78 until the squircle-inscribed-square correction; the geometry is re-derived from
+        // rendered pixels in IconPreviewGeometryTests.emojiCeilingFitsTheInscribedSquare.
+        #expect(IconDepthMetrics.emojiMaxSafeRatio == 0.67)
     }
 
-    @Test("Emoji safe-area warning keys off the emoji ceiling — only the top step fires")
+    @Test("Emoji safe-area warning keys off the emoji ceiling — only the top steps fire")
     func emojiSafeAreaLimitUsesOwnThreshold() {
-        // Emoji threshold = 0.78 × 0.95 = 0.741: scale 22 (0.77) warns, 21 (0.735) and
-        // below don't. (Under the old shared 0.57 threshold the warning fired from 17 up —
-        // constant noise across the opened-up emoji range.)
+        // Emoji threshold = 0.67 × 0.95 = 0.6365: scale 22 (0.67) and 21 (0.6433) warn, 20
+        // (0.6167) and below don't. UPDATED with the ceiling correction — 21 now warns where it
+        // used to sit clear of the old (too generous) 0.741 threshold, which is the honest
+        // reading of "within 5% of your limit" against the true geometric limit.
         #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 19, iconType: .emoji) == false)
-        #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 21, iconType: .emoji) == false)
+        #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 20, iconType: .emoji) == false)
+        #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 21, iconType: .emoji) == true)
         #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 22, iconType: .emoji) == true)
         // Symbols keep the original 0.57 threshold: 18 (0.58) warns, 17 (0.545) doesn't.
         #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 17, iconType: .sfSymbol) == false)
