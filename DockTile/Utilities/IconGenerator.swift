@@ -938,6 +938,125 @@ struct IconGenerator {
     }
 }
 
+// MARK: - Lean Glyph Layer (declarative .icon pipeline)
+
+extension IconGenerator {
+
+    /// A single transparent-background layer PNG for an Icon Composer `.icon` document:
+    /// **the glyph and nothing else**.
+    ///
+    /// WHY THIS IS NOT `generateIcon`: a legacy `.icns` gets no system treatment, so
+    /// `generateIcon` bakes the whole tile — squircle, gradient background, glass stroke,
+    /// surface sheen, glyph sheen. A COMPILED icon is different: macOS applies its own Liquid
+    /// Glass pass at render time (that is how the Clear appearance exists at all) and the
+    /// background comes from the document's JSON fill gradient, not from pixels. Baking our
+    /// emulated effects under the system's real ones doubles them. So this path KEEPS only the
+    /// glyph-intrinsic depth — the shading gradient and the contact shadow — and DROPS the
+    /// shape, the background, the stroke and both sheens. Everything outside the glyph stays
+    /// fully transparent.
+    ///
+    /// Appearance is a LAYER SWAP (the document hides/shows whole layers; a layer `fill` does
+    /// not recolour a glyph), so the colour is baked here: `.light`/`.tinted` → white (the
+    /// system tints what we supply), `.dark` → the tile's tint lifted for visibility. All three
+    /// come from the existing `TintColor.nsColors(for:iconType:)` — the luminance floor is not
+    /// re-derived. **Emoji ignore appearance entirely**: they are colour glyphs that cannot be
+    /// recoloured, so one full-colour layer serves every appearance (verified 2026-09-01 —
+    /// the system's tinted pass renders emoji as a legible monochrome relief, even for flat
+    /// single-colour artwork). The brand glyph is a tintable raster and routes as a symbol.
+    ///
+    /// Geometry is the existing `IconDepthMetrics` ratio applied to the new canvas — same
+    /// ratios, larger canvas — so the declarative tile matches the legacy bake and the preview.
+    static func generateGlyphLayerPNG(
+        appearance: IconAppearance,
+        tintColor: TintColor,
+        iconType: IconType,
+        iconValue: String,
+        iconScale: Int = ConfigurationDefaults.iconScale,
+        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
+        canvas: Int = 1024
+    ) throws -> Data {
+        let side = CGFloat(canvas)
+        let size = CGSize(width: side, height: side)
+
+        // Explicit pixel dimensions (never `lockFocus`, which builds a Retina-scaled backing
+        // store and yields the wrong pixel count).
+        guard let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: canvas,
+            pixelsHigh: canvas,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ), let graphicsContext = NSGraphicsContext(bitmapImageRep: bitmapRep) else {
+            throw IconGeneratorError.imageConversionFailed
+        }
+        bitmapRep.size = size
+
+        let rect = CGRect(origin: .zero, size: size)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = graphicsContext
+        // A freshly allocated bitmap's contents are undefined — and unlike `generateIcon`
+        // nothing paints an opaque background here, so clear it explicitly. This transparency
+        // IS the contract: no baked squircle, no plate behind the glyph.
+        graphicsContext.cgContext.clear(rect)
+
+        // Emoji ride ONE shared layer, so their depth must not vary by appearance either.
+        let style = depthStyle(for: appearance, iconType: iconType)
+        let colors = tintColor.nsColors(for: style, iconType: iconType)
+        let fontSize = side * IconDepthMetrics.glyphSizeRatio(
+            iconScale: iconScale, iconType: iconType, iconValue: iconValue
+        )
+        let shadow = IconDepthMetrics.glyphShadow(
+            style: style, iconType: iconType, nominalSize: side
+        )
+        let bottomDarken = IconDepthMetrics.glyphBottomDarken(
+            style: style, iconType: iconType, nominalSize: side
+        )
+
+        switch iconType {
+        case .sfSymbol:
+            // `sheen: nil` — the specular gloss is the system's job on a compiled icon.
+            drawSFSymbol(
+                symbolName: iconValue,
+                rect: rect,
+                fontSize: fontSize,
+                weight: iconWeight.nsFontWeight,
+                color: colors.foreground,
+                shadow: shadow,
+                bottomDarken: bottomDarken,
+                sheen: nil
+            )
+        case .emoji:
+            drawEmoji(emoji: iconValue, rect: rect, fontSize: fontSize, shadow: shadow, sheen: nil)
+        }
+
+        NSGraphicsContext.restoreGraphicsState()
+
+        guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
+            throw IconGeneratorError.pngExportFailed
+        }
+        return pngData
+    }
+
+    /// Which style's depth magnitudes the layer borrows from the seam.
+    ///
+    /// `.tinted` deliberately resolves to the SAME treatment as `.light`: the tinted glyph is
+    /// the light glyph (mono, system-tinted), so the two layers are byte-identical and the
+    /// document can reuse one PNG for both. Emoji pin to `.defaultStyle` regardless of
+    /// appearance — one shared layer cannot carry per-appearance depth.
+    private static func depthStyle(for appearance: IconAppearance, iconType: IconType) -> IconStyle {
+        guard iconType != .emoji else { return .defaultStyle }
+        switch appearance {
+        case .light, .tinted: return .defaultStyle
+        case .dark:           return .dark
+        }
+    }
+}
+
 // MARK: - NSImage Extension for Tinting
 
 extension NSImage {
