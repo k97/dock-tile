@@ -184,6 +184,28 @@ entry's icon source changes kind) → single Dock restart.
   renders correctly in every mode; understand (likely extra pre-rendered sizes) before shipping,
   not a blocker.
 
+## Absorbed defect: Dock tile size flap (reported 2026-09-01)
+
+Pre-spike prod builds sometimes draw 1–2 tiles visibly larger than neighbouring Dock icons —
+random onset, self-heals sometimes, always healed by Update (which re-seats the Dock entry).
+Evidence gathered read-only on the live prod install: every helper's `.icns` rep table is
+canonical and identical (correct pixel counts, 72 dpi), so the artwork is constant; 4 of 5 prod
+helpers carry broken seals from the 1.8.8 swap-without-reseal path. Localisation: the flap is in
+the Dock/IconServices render cache — Tahoe scales legacy full-bleed `.icns` art into its icon grid
+on some render generations and draws it raw full-bleed on others; the prod swap path (in-place
+file swap + `touchBundle` + re-registration) keeps invalidating exactly those cache paths.
+
+- **Structural fix, not a targeted one**: the declarative path deletes both triggers on Tahoe (no
+  runtime swap/re-registration ever; native format at native grid geometry, so no legacy treatment
+  to apply-or-skip). The flap is Tahoe-specific, so the macOS 15 legacy path does not carry it.
+- **Diagnostics (capture-at-incident)**: the Dock's drawn size is not observable via any API, so
+  Copy Diagnostics gains a per-pinned-helper **icon inventory** — live icon byte-match against
+  variants (legacy path), rep-table summary, seal state, mtimes, and car rendition summary
+  (declarative path). One Copy Diagnostics press while a flap is visible becomes evidence.
+- **Verification**: post-ship, any recurrence report goes through the icon inventory; if the class
+  survives the rewrite on Tahoe, the cache-generation hypothesis is wrong and it gets a fresh
+  systematic-debugging pass with the inventory as the instrument.
+
 ## Risks
 
 - **Apple changes the `.car` format or `icon.json` schema silently** (both undocumented). Same
