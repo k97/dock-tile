@@ -133,9 +133,9 @@ Three days account for 1,731 of August's 1,867 events. Crucially the bursts land
 **below-average** user activity (Aug 24, the busiest day of the month at 245 popover opens, produced
 2 flips) — an idle-machine, environmental trigger, not interaction-driven.
 
-Nobody toggles appearance 548 times a day. This is the signal that led to
-[macos-appearance-detection-research.md](macos-appearance-detection-research.md) and the eventual
-rework. **The root cause was never reproduced** — it did not recur on the maintainer's Mac — so this
+Nobody toggles appearance 548 times a day. This is the signal that led to the appearance-detection
+investigation and the eventual rework (record folded into
+[icon-rendering-history.md](icon-rendering-history.md)). **The root cause was never reproduced** — it did not recur on the maintainer's Mac — so this
 table is the only evidence it happened, and the metric to watch after the fix ships.
 
 ## Configuration problems found — 1, 2 and 3 FIXED 2026-09-01

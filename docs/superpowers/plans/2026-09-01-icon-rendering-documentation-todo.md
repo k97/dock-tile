@@ -1,6 +1,16 @@
 # TODO — document how Dock Tile renders icons (for future agents)
 
-Raised by Karthik 2026-09-01, during the declarative-icon spike. **Not started.**
+Raised by Karthik 2026-09-01, during the declarative-icon spike.
+
+**DONE 2026-09-01.** (1) Focused review ran: 2 Critical + 6 Important findings; (2) the confirmed
+critical/frozen-path defects were verified and fixed as Batch A (`763dcd9` — launch no longer
+force-rewrites, atomic icon swap, type-safe style read, idempotent observer teardown, iconset
+scratch out of the bundle), with the surviving-code items folded into the declarative
+implementation plan as Batch B; (3) the repo skill exists at
+[.claude/skills/icon-rendering/SKILL.md](../../../.claude/skills/icon-rendering/SKILL.md),
+baseline-tested (141k tokens / 19 reads to re-derive without it; 94k / 8 targeted reads with it).
+The three working docs are folded into
+[docs/icon-rendering-history.md](../../icon-rendering-history.md) and deleted.
 
 ## Why
 
@@ -22,7 +32,7 @@ Launch Services → Dock — or the **invariants that keep the baked renderer an
 drifting** (`IconDepthMetrics` is the shared seam precisely because they drifted before).
 
 This matters more now, not less: the declarative-icon work (see
-[runtime-icon-packaging-research.md](../../runtime-icon-packaging-research.md)) will add a **second**
+[icon-rendering-history.md](../../icon-rendering-history.md)) will add a **second**
 rendering path alongside the legacy one, gated on macOS version. Two paths with no map is how the
 duplicate-poller class of bug happens.
 

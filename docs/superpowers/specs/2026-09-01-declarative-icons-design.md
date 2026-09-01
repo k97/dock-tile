@@ -2,9 +2,9 @@
 
 **2026-09-01.** Replaces runtime icon-style detection and in-place `.icns` swapping on macOS 26
 (Tahoe) with a per-tile compiled `Assets.car` that macOS renders itself in every appearance.
-Feasibility proven in [runtime-icon-packaging-research.md](../../runtime-icon-packaging-research.md)
-(§5–§7); the investigation that led here, including every closed dead end, is
-[icon-investigation-trail.md](../../icon-investigation-trail.md). Do not reopen a dead end without
+Feasibility proven in the 2026-09-01 spike; the evidence, the investigation that led here, and
+every closed dead end are folded into
+[icon-rendering-history.md](../../icon-rendering-history.md). Do not reopen a dead end without
 new evidence.
 
 ## Decided constraints (inputs to this design, not up for re-litigation)

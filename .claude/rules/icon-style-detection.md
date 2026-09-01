@@ -1,9 +1,9 @@
 # Icon Style Detection (event-driven, no timer)
 
-How helpers learn the Tahoe icon style changed. Redesigned 2026-08-31; full evidence trail in
-[docs/macos-appearance-detection-research.md](../../docs/macos-appearance-detection-research.md).
-**Why this subsystem may not survive**, and every dead end already closed:
-[docs/icon-investigation-trail.md](../../docs/icon-investigation-trail.md) — read it before
+How helpers learn the Tahoe icon style changed. Redesigned 2026-08-31. Under the approved
+declarative-icons design this whole path becomes the quarantined pre-macOS-26 fallback. The
+evidence it rests on, why it is being deleted for Tahoe, and every dead end already closed:
+[docs/icon-rendering-history.md](../../docs/icon-rendering-history.md) — read it before
 reopening any option.
 
 ## Ownership & signals

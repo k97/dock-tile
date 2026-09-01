@@ -1,7 +1,7 @@
 # Icon spike fixtures
 
-Preserved from the 2026-09-01 declarative-icon spike. See
-[../runtime-icon-packaging-research.md](../runtime-icon-packaging-research.md) §5–§7.
+Preserved from the 2026-09-01 declarative-icon spike. Evidence and compiler-defect record:
+[../icon-rendering-history.md](../icon-rendering-history.md).
 
 ## `devtile-fix.icon`
 
