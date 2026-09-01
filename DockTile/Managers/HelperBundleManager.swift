@@ -152,31 +152,9 @@ final class HelperBundleManager {
             showInAppSwitcher: config.showInAppSwitcher
         )
 
-        // 2. Generate icons for ALL icon styles (Default/Dark/Clear/Tinted)
-        // We generate all styles upfront so switching is instant at runtime
-        let resourcesPath = helperPath.appendingPathComponent("Contents/Resources")
-
-        for style in IconStyle.allCases {
-            let iconPath = self.iconPath(for: style, in: resourcesPath)
-            try IconGenerator.generateIcns(
-                tintColor: config.tintColor,
-                iconType: config.iconType,
-                iconValue: config.iconValue,
-                iconScale: config.iconScale,
-                iconWeight: config.iconWeight,
-                outputURL: iconPath,
-                iconStyle: style
-            )
-            print("   ✓ Generated \(style.rawValue) style icon")
-        }
-
-        // Copy appropriate icon to AppIcon.icns based on current icon style
-        let currentStyle = IconStyle.current
-        let sourceIconPath = iconPath(for: currentStyle, in: resourcesPath)
-        let iconDestPath = resourcesPath.appendingPathComponent("AppIcon.icns")
-        try? FileManager.default.removeItem(at: iconDestPath)
-        try FileManager.default.copyItem(at: sourceIconPath, to: iconDestPath)
-        print("   ✓ Set active icon (style: \(currentStyle.rawValue))")
+        // 2. Write the tile icon into the bundle (declarative Assets.car on macOS 26+, the
+        // four baked style variants before that) — after the strip, before signing.
+        try installTileIcons(for: config, at: helperPath)
 
         // 3. Code sign the bundle
         AnalyticsService.shared.setBreadcrumb("codesign", for: "install_step")
@@ -606,20 +584,38 @@ final class HelperBundleManager {
         // is replaced by the generated one). macOS icon priority is Assets.car > CFBundleIconFile,
         // so without removing the asset catalog the helper shows the main DockTile icon instead of
         // its custom generated one.
-        Self.stripMainAppIcons(inBundle: helperPath)
+        Self.stripMainAppIcons(inBundle: helperPath, declarative: IconPipeline.isDeclarative)
         print("   ✓ Removed main app icon assets (Assets.car)")
 
         // Note: We keep the full binary copy (no symlink) because codesign
         // requires the main executable to be a regular file, not a symlink
     }
 
-    /// Remove the main app's baked icon assets from a freshly-copied helper bundle: the asset
-    /// catalog (`Assets.car`) AND the template `AppIcon.icns` (replaced by the generated icon).
+    /// Which `Contents/Resources` entries a freshly-copied helper must not keep.
+    ///
+    /// Always: the main app's asset catalog (`Assets.car`) and its template `AppIcon.icns` —
     /// macOS resolves icons `Assets.car` > `CFBundleIconFile`, so the catalog MUST go or the
-    /// helper renders the main app icon. Returns what was present (for logging/tests). Missing
+    /// helper renders the main app icon. (On the declarative path the helper's OWN compiled
+    /// catalog is written back afterwards; the copy that comes out of the main app is still the
+    /// wrong one.)
+    ///
+    /// Declarative only: `docktile-actool`. The compiler is bundled for the Tahoe pipeline, and
+    /// only the MAIN app ever compiles — `IconCompiler.bundledCompilerURL` documents it as absent
+    /// from helpers, and this strip is what makes that true. Deleting it also spares every tile a
+    /// multi-megabyte copy of a binary it can never use.
+    nonisolated static func resourcesToStripFromHelper(declarative: Bool) -> [String] {
+        var names = ["Assets.car", "AppIcon.icns"]
+        if declarative { names.append("docktile-actool") }
+        return names
+    }
+
+    /// Remove the resources named by `resourcesToStripFromHelper` from a freshly-copied helper
+    /// bundle. Returns whether the two icon entries were present (for logging/tests). Missing
     /// files are not an error — a no-op is fine.
     @discardableResult
-    nonisolated static func stripMainAppIcons(inBundle helperPath: URL) -> (assetsCar: Bool, icns: Bool) {
+    nonisolated static func stripMainAppIcons(
+        inBundle helperPath: URL, declarative: Bool
+    ) -> (assetsCar: Bool, icns: Bool) {
         let resources = helperPath.appendingPathComponent("Contents/Resources")
         let assetsCar = resources.appendingPathComponent("Assets.car")
         let icns = resources.appendingPathComponent("AppIcon.icns")
@@ -627,10 +623,174 @@ final class HelperBundleManager {
         let hadAssetsCar = FileManager.default.fileExists(atPath: assetsCar.path)
         let hadIcns = FileManager.default.fileExists(atPath: icns.path)
 
-        try? FileManager.default.removeItem(at: icns)
-        try? FileManager.default.removeItem(at: assetsCar)
+        for name in resourcesToStripFromHelper(declarative: declarative) {
+            try? FileManager.default.removeItem(at: resources.appendingPathComponent(name))
+        }
 
         return (hadAssetsCar, hadIcns)
+    }
+
+    // MARK: - Tile Icon Installation
+
+    /// Write the tile's icon into a freshly-generated helper bundle.
+    ///
+    /// THE availability branch for icon generation (activation point 1 of the three
+    /// `IconPipeline.isDeclarative` consults). Called by BOTH `installHelper` and
+    /// `regenerateHelperBundle` so the two flows cannot diverge, and always AFTER
+    /// `generateHelperBundle` (which strips the main app's catalog) and BEFORE `codesignHelper`
+    /// — nothing may write into the bundle once it is sealed.
+    private func installTileIcons(for config: DockTileConfiguration, at helperPath: URL) throws {
+        let resourcesPath = helperPath.appendingPathComponent("Contents/Resources")
+
+        guard IconPipeline.isDeclarative else {
+            // LEGACY (pre-macOS-26): bake all four style variants upfront so the runtime style
+            // switch is a file copy, and seed the live icon from the style in effect right now.
+            for style in IconStyle.allCases {
+                let iconPath = self.iconPath(for: style, in: resourcesPath)
+                try IconGenerator.generateIcns(
+                    tintColor: config.tintColor,
+                    iconType: config.iconType,
+                    iconValue: config.iconValue,
+                    iconScale: config.iconScale,
+                    iconWeight: config.iconWeight,
+                    outputURL: iconPath,
+                    iconStyle: style
+                )
+                print("   ✓ Generated \(style.rawValue) style icon")
+            }
+
+            let currentStyle = IconStyle.current
+            let sourceIconPath = iconPath(for: currentStyle, in: resourcesPath)
+            let iconDestPath = resourcesPath.appendingPathComponent("AppIcon.icns")
+            try? FileManager.default.removeItem(at: iconDestPath)
+            try FileManager.default.copyItem(at: sourceIconPath, to: iconDestPath)
+            print("   ✓ Set active icon (style: \(currentStyle.rawValue))")
+            return
+        }
+
+        try installDeclarativeIcon(for: config, resourcesPath: resourcesPath)
+        print("   ✓ Compiled declarative icon (Assets.car + fallback AppIcon.icns)")
+    }
+
+    /// macOS 26+: author an Icon Composer `.icon` document for this tile, compile it to a
+    /// per-tile `Assets.car`, and drop one fallback `.icns` beside it. The system then renders
+    /// every appearance itself — no variants, no detection, and the bundle's icon is never
+    /// touched again after signing.
+    private func installDeclarativeIcon(for config: DockTileConfiguration, resourcesPath: URL) throws {
+        let (specs, pngs) = try declarativeLayerSpecs(for: config)
+
+        // Backgrounds are JSON fills, not pixels — and they are exactly the colours the legacy
+        // bake uses (near-black for a Dark symbol tile, darkened-own-tint for a Dark emoji tile),
+        // read from the same `nsColors(for:iconType:)` seam so the two paths cannot drift.
+        let light = config.tintColor.nsColors(for: .defaultStyle, iconType: config.iconType)
+        let dark = config.tintColor.nsColors(for: .dark, iconType: config.iconType)
+        let tinted = config.tintColor.nsColors(for: .tinted, iconType: config.iconType)
+
+        let json = IconDocumentBuilder.iconJSON(
+            fillTopP3: Self.p3Components(light.backgroundTop),
+            fillBottomP3: Self.p3Components(light.backgroundBottom),
+            darkFillTopP3: Self.p3Components(dark.backgroundTop),
+            darkFillBottomP3: Self.p3Components(dark.backgroundBottom),
+            tintedFillTopP3: Self.p3Components(tinted.backgroundTop),
+            tintedFillBottomP3: Self.p3Components(tinted.backgroundBottom),
+            layers: specs
+        )
+
+        // Scratch lives in the TEMP dir with `defer` cleanup — never inside the helper bundle.
+        // A process killed mid-generation must not leave a stray `.icon`/`Assets.car` staging
+        // directory sealed into a tile (the killed-mid-generation damage class the self-heal
+        // exists to detect).
+        let scratch = FileManager.default.temporaryDirectory
+            .appendingPathComponent("docktile-icon-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: scratch) }
+
+        let document = try IconDocumentBuilder.writeDocument(
+            json: json, layerPNGs: pngs, name: "AppIcon", parent: scratch
+        )
+        guard let compiler = IconCompiler.bundledCompilerURL else {
+            throw IconCompilerError.compilerMissing
+        }
+        let car = try IconCompiler.compile(
+            document: document,
+            outputDir: scratch.appendingPathComponent("compiled"),
+            compilerURL: compiler
+        )
+
+        let carDestination = resourcesPath.appendingPathComponent("Assets.car")
+        try? FileManager.default.removeItem(at: carDestination)
+        try FileManager.default.copyItem(at: car, to: carDestination)
+
+        // ONE fallback `.icns` (not four variants) for the contexts that read `CFBundleIconFile`.
+        try IconGenerator.generateFallbackIcns(
+            tintColor: config.tintColor,
+            iconType: config.iconType,
+            iconValue: config.iconValue,
+            iconScale: config.iconScale,
+            iconWeight: config.iconWeight,
+            outputURL: resourcesPath.appendingPathComponent("AppIcon.icns")
+        )
+    }
+
+    /// The glyph layers of this tile's `.icon` document, with their rendered PNGs.
+    ///
+    /// TWO layers for a symbol/brand tile, never three: the `.tinted` render is byte-identical to
+    /// `.light` (guarded by `GlyphLayerRenderTests`), so the document reuses the light layer for
+    /// tinted rather than shipping a duplicate asset in every tile. `exclusiveTo` is only ever
+    /// `.light`/`.dark` — its polarity formula is undefined for `.tinted`, which would compile
+    /// cleanly into a layer hidden in EVERY appearance.
+    ///
+    /// ONE layer for an emoji tile: a colour glyph cannot be recoloured, so a single full-colour
+    /// layer (`exclusiveTo: nil` — visible everywhere) serves every appearance and the dark
+    /// treatment lives entirely in the background fill.
+    private func declarativeLayerSpecs(
+        for config: DockTileConfiguration
+    ) throws -> (specs: [IconDocumentBuilder.LayerSpec], pngs: [String: Data]) {
+        func layerPNG(_ appearance: IconAppearance) throws -> Data {
+            // iconScale + iconWeight passed EXPLICITLY: the renderer defaults to
+            // `ConfigurationDefaults`, so omitting them would silently bake the default size and
+            // weight instead of the user's.
+            try IconGenerator.generateGlyphLayerPNG(
+                appearance: appearance,
+                tintColor: config.tintColor,
+                iconType: config.iconType,
+                iconValue: config.iconValue,
+                iconScale: config.iconScale,
+                iconWeight: config.iconWeight
+            )
+        }
+
+        switch config.iconType {
+        case .emoji:
+            return (
+                [.init(name: "glyph", imageName: "glyph.png", exclusiveTo: nil)],
+                ["glyph.png": try layerPNG(.light)]
+            )
+        case .sfSymbol:
+            return (
+                [
+                    .init(name: "glyph-light", imageName: "glyph-light.png", exclusiveTo: .light),
+                    .init(name: "glyph-dark", imageName: "glyph-dark.png", exclusiveTo: .dark)
+                ],
+                [
+                    "glyph-light.png": try layerPNG(.light),
+                    "glyph-dark.png": try layerPNG(.dark)
+                ]
+            )
+        }
+    }
+
+    /// Display-P3 components for an icon.json fill stop. The document format is P3-native, so the
+    /// colour is converted rather than reinterpreted.
+    nonisolated private static func p3Components(_ color: NSColor) -> (r: Double, g: Double, b: Double) {
+        guard let converted = color.usingColorSpace(.displayP3) ?? color.usingColorSpace(.sRGB) else {
+            return (0, 0, 0)
+        }
+        return (
+            Double(converted.redComponent),
+            Double(converted.greenComponent),
+            Double(converted.blueComponent)
+        )
     }
 
     private func updateInfoPlist(at helperPath: URL, bundleId: String, appName: String, showInAppSwitcher: Bool) throws {
@@ -644,7 +804,8 @@ final class HelperBundleManager {
             from: base,
             bundleId: bundleId,
             appName: appName,
-            showInAppSwitcher: showInAppSwitcher
+            showInAppSwitcher: showInAppSwitcher,
+            declarative: IconPipeline.isDeclarative
         )
 
         // Write back
@@ -658,6 +819,11 @@ final class HelperBundleManager {
     /// the helper invariants so they are unit-testable without a real bundle on disk:
     ///   • `CFBundleIconFile = "AppIcon"` — so macOS uses the generated `.icns` (paired with the
     ///     `Assets.car` removal in `stripMainAppIcons`).
+    ///   • `CFBundleIconName = "AppIcon"` on the declarative path ONLY — names the icon inside the
+    ///     per-tile compiled `Assets.car`. Set ALONGSIDE `CFBundleIconFile`, never instead of it:
+    ///     the catalog is what the Dock renders, the loose `.icns` remains the fallback for
+    ///     contexts that read it. On the legacy path the key is *removed*, since the main app's
+    ///     plist carries one and a legacy helper has no catalog for it to point at.
     ///   • Ghost vs App mode via `LSUIElement` (set when hidden from Cmd+Tab, removed otherwise).
     ///   • Strip Sparkle keys — helpers must never self-update; only the main app does.
     ///   • Strip `CFBundleURLTypes` — only the main app handles `docktile://` deep links.
@@ -665,7 +831,8 @@ final class HelperBundleManager {
         from base: [String: Any],
         bundleId: String,
         appName: String,
-        showInAppSwitcher: Bool
+        showInAppSwitcher: Bool,
+        declarative: Bool
     ) -> [String: Any] {
         var plist = base
 
@@ -676,6 +843,12 @@ final class HelperBundleManager {
 
         // CRITICAL: use the generated icon at Contents/Resources/AppIcon.icns.
         plist["CFBundleIconFile"] = "AppIcon"
+
+        if declarative {
+            plist["CFBundleIconName"] = "AppIcon"
+        } else {
+            plist.removeValue(forKey: "CFBundleIconName")
+        }
 
         // Ghost Mode (default): LSUIElement hides the helper from Cmd+Tab.
         // App Mode: LSUIElement removed so the helper is a regular Cmd+Tab app with a context menu.
@@ -1433,27 +1606,8 @@ final class HelperBundleManager {
             showInAppSwitcher: config.showInAppSwitcher
         )
 
-        // 2. Generate icons for all styles
-        let resourcesPath = helperPath.appendingPathComponent("Contents/Resources")
-        for style in IconStyle.allCases {
-            let iconDest = self.iconPath(for: style, in: resourcesPath)
-            try IconGenerator.generateIcns(
-                tintColor: config.tintColor,
-                iconType: config.iconType,
-                iconValue: config.iconValue,
-                iconScale: config.iconScale,
-                iconWeight: config.iconWeight,
-                outputURL: iconDest,
-                iconStyle: style
-            )
-        }
-
-        // Copy current style icon to AppIcon.icns
-        let currentStyle = IconStyle.current
-        let sourceIconPath = iconPath(for: currentStyle, in: resourcesPath)
-        let iconDestPath = resourcesPath.appendingPathComponent("AppIcon.icns")
-        try? FileManager.default.removeItem(at: iconDestPath)
-        try FileManager.default.copyItem(at: sourceIconPath, to: iconDestPath)
+        // 2. Write the tile icon into the bundle (same branch as install)
+        try installTileIcons(for: config, at: helperPath)
 
         // 3. Code sign
         try codesignHelper(at: helperPath)

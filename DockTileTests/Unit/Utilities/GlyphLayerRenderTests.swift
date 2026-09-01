@@ -104,6 +104,34 @@ struct GlyphLayerRenderTests {
         #expect(a == c)
     }
 
+    @Test("Fallback icns bakes the icon-grid margin (transparent mid-edge, opaque centre)")
+    func fallbackIcnsIsMargined() throws {
+        let out = FileManager.default.temporaryDirectory
+            .appendingPathComponent("docktile-fallback-\(UUID().uuidString).icns")
+        defer { try? FileManager.default.removeItem(at: out) }
+
+        try IconGenerator.generateFallbackIcns(
+            tintColor: .green, iconType: .sfSymbol, iconValue: "square.fill",
+            iconScale: 14, iconWeight: .medium, outputURL: out)
+
+        let image = try #require(NSImage(contentsOf: out))
+        let rep = try #require(
+            image.representations.compactMap { $0 as? NSBitmapImageRep }
+                .max(by: { $0.pixelsWide < $1.pixelsWide }))
+        let width = rep.pixelsWide
+        #expect(width == 1024)   // 512@2x, the largest rendition
+
+        // Sampled at the MID-EDGE, not a corner: the corners of a full-bleed squircle are
+        // transparent too, so a corner probe cannot tell "margined" from "edge-to-edge". The
+        // vertical mid-edge is solid background on an unmargined icon and empty on this one.
+        let midEdge = try #require(rep.colorAt(x: 1, y: width / 2)?.alphaComponent)
+        #expect(midEdge == 0)
+
+        // …and the tile itself is really drawn.
+        let centre = try #require(rep.colorAt(x: width / 2, y: width / 2)?.alphaComponent)
+        #expect(centre == 1)
+    }
+
     @Test("Brand glyph routes like a symbol: tintable, appearance-swapped, seam-sized")
     func brandGlyphRoutesLikeASymbol() throws {
         let brand = SFSymbolCatalog.brandSymbolName

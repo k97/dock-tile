@@ -803,6 +803,23 @@ struct IconGenerator {
         outputURL: URL,
         iconStyle: IconStyle = IconStyle.current
     ) throws {
+        try buildIcns(outputURL: outputURL) { size in
+            generateIcon(
+                tintColor: tintColor,
+                iconType: iconType,
+                iconValue: iconValue,
+                iconScale: iconScale,
+                iconWeight: iconWeight,
+                size: size,
+                iconStyle: iconStyle
+            )
+        }
+    }
+
+    /// Render every standard `.icns` rendition with `render` and pack them with `iconutil`.
+    /// Shared by the legacy 4-variant bake and the declarative fallback so the two cannot drift
+    /// on rendition set or on scratch handling.
+    private static func buildIcns(outputURL: URL, render: (CGSize) -> NSImage) throws {
         // Standard macOS icon sizes for .icns (base sizes)
         // Each needs 1x and @2x versions
         let baseSizes: [Int] = [16, 32, 128, 256, 512]
@@ -819,28 +836,12 @@ struct IconGenerator {
         // Generate all sizes (1x and @2x for each base size)
         for baseSize in baseSizes {
             // 1x version
-            let image1x = generateIcon(
-                tintColor: tintColor,
-                iconType: iconType,
-                iconValue: iconValue,
-                iconScale: iconScale,
-                iconWeight: iconWeight,
-                size: CGSize(width: baseSize, height: baseSize),
-                iconStyle: iconStyle
-            )
+            let image1x = render(CGSize(width: baseSize, height: baseSize))
             let filename1x = "icon_\(baseSize)x\(baseSize).png"
             try saveAsPNG(image: image1x, url: iconsetURL.appendingPathComponent(filename1x))
 
             // @2x version (retina) - actual pixels are 2x the base size
-            let image2x = generateIcon(
-                tintColor: tintColor,
-                iconType: iconType,
-                iconValue: iconValue,
-                iconScale: iconScale,
-                iconWeight: iconWeight,
-                size: CGSize(width: baseSize * 2, height: baseSize * 2),
-                iconStyle: iconStyle
-            )
+            let image2x = render(CGSize(width: baseSize * 2, height: baseSize * 2))
             let filename2x = "icon_\(baseSize)x\(baseSize)@2x.png"
             try saveAsPNG(image: image2x, url: iconsetURL.appendingPathComponent(filename2x))
         }
@@ -1040,6 +1041,122 @@ extension IconGenerator {
             throw IconGeneratorError.pngExportFailed
         }
         return pngData
+    }
+
+    /// Apple's icon-grid proportion: the icon shape occupies 206 of a 256-unit canvas, leaving a
+    /// transparent margin all round. A compiled `.icon` gets this geometry from the system; the
+    /// fallback `.icns` bakes it so the loose icon and the catalog icon are the same picture.
+    static let contentInsetRatio: CGFloat = 25.0 / 256.0   // (256 - 206) / 2 / 256
+
+    /// The declarative pipeline's fallback `.icns` — ONE file, not four style variants.
+    ///
+    /// macOS renders every appearance from the per-tile `Assets.car`; this exists only for the
+    /// contexts that read `CFBundleIconFile` instead. It is the LIGHT composition at the same
+    /// margined geometry as the compiled icon: the tint gradient inside the inset squircle plus
+    /// the lean glyph — deliberately no glass stroke and no sheen, matching the layer PNGs,
+    /// because those are effects the system supplies for the real icon.
+    static func generateFallbackIcns(
+        tintColor: TintColor,
+        iconType: IconType,
+        iconValue: String,
+        iconScale: Int,
+        iconWeight: IconWeight,
+        outputURL: URL
+    ) throws {
+        try buildIcns(outputURL: outputURL) { size in
+            fallbackIcon(
+                tintColor: tintColor,
+                iconType: iconType,
+                iconValue: iconValue,
+                iconScale: iconScale,
+                iconWeight: iconWeight,
+                size: size
+            )
+        }
+    }
+
+    /// One rendition of the fallback icon: margined gradient squircle + the light lean glyph.
+    private static func fallbackIcon(
+        tintColor: TintColor,
+        iconType: IconType,
+        iconValue: String,
+        iconScale: Int,
+        iconWeight: IconWeight,
+        size: CGSize
+    ) -> NSImage {
+        guard let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(size.width),
+            pixelsHigh: Int(size.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ), let graphicsContext = NSGraphicsContext(bitmapImageRep: bitmapRep) else {
+            return NSImage(size: size)
+        }
+        bitmapRep.size = size
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = graphicsContext
+        let context = graphicsContext.cgContext
+
+        let rect = CGRect(origin: .zero, size: size)
+        // The margin must stay transparent, so clear before drawing anything.
+        context.clear(rect)
+
+        let inset = size.width * contentInsetRatio
+        let contentRect = rect.insetBy(dx: inset, dy: inset)
+        let squirclePath = createSquirclePath(
+            in: contentRect, cornerRadius: contentRect.width * 0.225
+        )
+
+        // Light appearance = the Default style's colours, from the shared seam.
+        let colors = tintColor.nsColors(for: .defaultStyle, iconType: iconType)
+        drawGradient(
+            context: context,
+            path: squirclePath,
+            topColor: colors.backgroundTop,
+            bottomColor: colors.backgroundBottom,
+            rect: contentRect
+        )
+
+        // Glyph geometry is measured against the FULL canvas, exactly as the layer PNGs are, so
+        // the fallback and the compiled icon place the glyph identically.
+        let fontSize = size.width * IconDepthMetrics.glyphSizeRatio(
+            iconScale: iconScale, iconType: iconType, iconValue: iconValue
+        )
+        let shadow = IconDepthMetrics.glyphShadow(
+            style: .defaultStyle, iconType: iconType, nominalSize: size.width
+        )
+        let bottomDarken = IconDepthMetrics.glyphBottomDarken(
+            style: .defaultStyle, iconType: iconType, nominalSize: size.width
+        )
+
+        switch iconType {
+        case .sfSymbol:
+            drawSFSymbol(
+                symbolName: iconValue,
+                rect: rect,
+                fontSize: fontSize,
+                weight: iconWeight.nsFontWeight,
+                color: colors.foreground,
+                shadow: shadow,
+                bottomDarken: bottomDarken,
+                sheen: nil
+            )
+        case .emoji:
+            drawEmoji(emoji: iconValue, rect: rect, fontSize: fontSize, shadow: shadow, sheen: nil)
+        }
+
+        NSGraphicsContext.restoreGraphicsState()
+
+        let image = NSImage(size: size)
+        image.addRepresentation(bitmapRep)
+        return image
     }
 
     /// Which style's depth magnitudes the layer borrows from the seam.

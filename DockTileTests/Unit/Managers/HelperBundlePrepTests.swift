@@ -36,15 +36,48 @@ struct HelperInfoPlistTests {
     func iconFileForcedToAppIcon() {
         let out = HelperBundleManager.helperInfoPlist(
             from: mainAppPlist(), bundleId: "com.docktile.helper.x", appName: "My Tile",
-            showInAppSwitcher: false)
+            showInAppSwitcher: false, declarative: false)
         #expect(out["CFBundleIconFile"] as? String == "AppIcon")
+    }
+
+    @Test("Declarative helpers set CFBundleIconName ALONGSIDE CFBundleIconFile")
+    func declarativeSetsIconNameAlongsideIconFile() {
+        // The compiled per-tile Assets.car is resolved by CFBundleIconName; the fallback .icns
+        // still needs CFBundleIconFile for Launch Services contexts that read the loose icon.
+        // BOTH, never either — dropping the icns key would strand the fallback.
+        let out = HelperBundleManager.helperInfoPlist(
+            from: mainAppPlist(), bundleId: "com.docktile.helper.x", appName: "My Tile",
+            showInAppSwitcher: false, declarative: true)
+        #expect(out["CFBundleIconName"] as? String == "AppIcon")
+        #expect(out["CFBundleIconFile"] as? String == "AppIcon")
+    }
+
+    @Test("Legacy helpers omit CFBundleIconName (there is no asset catalog to point at)")
+    func legacyOmitsIconName() {
+        let out = HelperBundleManager.helperInfoPlist(
+            from: mainAppPlist(), bundleId: "com.docktile.helper.x", appName: "My Tile",
+            showInAppSwitcher: false, declarative: false)
+        #expect(out["CFBundleIconName"] == nil)
+        #expect(out["CFBundleIconFile"] as? String == "AppIcon")
+    }
+
+    @Test("A CFBundleIconName inherited from the main app is removed on the legacy path")
+    func legacyStripsInheritedIconName() {
+        // The main app ships its own Assets.car and therefore its own CFBundleIconName. A legacy
+        // helper has no catalog, so a surviving key would point macOS at nothing.
+        var base = mainAppPlist()
+        base["CFBundleIconName"] = "AppIcon"
+        let out = HelperBundleManager.helperInfoPlist(
+            from: base, bundleId: "com.docktile.helper.x", appName: "My Tile",
+            showInAppSwitcher: false, declarative: false)
+        #expect(out["CFBundleIconName"] == nil)
     }
 
     @Test("Bundle identity is rewritten to the helper's")
     func bundleIdentityRewritten() {
         let out = HelperBundleManager.helperInfoPlist(
             from: mainAppPlist(), bundleId: "com.docktile.helper.x", appName: "My Tile",
-            showInAppSwitcher: false)
+            showInAppSwitcher: false, declarative: false)
         #expect(out["CFBundleIdentifier"] as? String == "com.docktile.helper.x")
         #expect(out["CFBundleName"] as? String == "My Tile")
         #expect(out["CFBundleDisplayName"] as? String == "My Tile")
@@ -54,7 +87,7 @@ struct HelperInfoPlistTests {
     func stripsSparkleAndURLScheme() {
         let out = HelperBundleManager.helperInfoPlist(
             from: mainAppPlist(), bundleId: "com.docktile.helper.x", appName: "My Tile",
-            showInAppSwitcher: false)
+            showInAppSwitcher: false, declarative: false)
 
         #expect(out["SUFeedURL"] == nil)
         #expect(out["SUPublicEDKey"] == nil)
@@ -68,12 +101,33 @@ struct HelperInfoPlistTests {
     @Test("Ghost mode sets LSUIElement; App mode removes it")
     func ghostVsAppMode() {
         let ghost = HelperBundleManager.helperInfoPlist(
-            from: mainAppPlist(), bundleId: "id", appName: "T", showInAppSwitcher: false)
+            from: mainAppPlist(), bundleId: "id", appName: "T", showInAppSwitcher: false,
+            declarative: false)
         #expect(ghost["LSUIElement"] as? Bool == true)
 
         let app = HelperBundleManager.helperInfoPlist(
-            from: ["LSUIElement": true], bundleId: "id", appName: "T", showInAppSwitcher: true)
+            from: ["LSUIElement": true], bundleId: "id", appName: "T", showInAppSwitcher: true,
+            declarative: false)
         #expect(app["LSUIElement"] == nil)
+    }
+}
+
+@Suite("Helper resource strip list")
+struct HelperStripListTests {
+
+    @Test("Declarative helpers also strip the bundled compiler")
+    func declarativeStripsCompiler() {
+        // A helper must never be able to compile an .icon document — it has no reason to and
+        // `IconCompiler.bundledCompilerURL` documents it as impossible. The binary being absent
+        // from the copy is what makes that true.
+        #expect(HelperBundleManager.resourcesToStripFromHelper(declarative: true)
+            == ["Assets.car", "AppIcon.icns", "docktile-actool"])
+    }
+
+    @Test("Legacy helpers strip the main app's catalog and template icns only")
+    func legacyStripsIconAssetsOnly() {
+        #expect(HelperBundleManager.resourcesToStripFromHelper(declarative: false)
+            == ["Assets.car", "AppIcon.icns"])
     }
 }
 
@@ -81,8 +135,8 @@ struct HelperInfoPlistTests {
 struct HelperIconStripTests {
 
     /// Build a throwaway `*.app/Contents/Resources` skeleton in the temp dir with optional
-    /// Assets.car / AppIcon.icns, and return the bundle root. Caller deletes it.
-    private func makeBundle(assetsCar: Bool, icns: Bool) throws -> URL {
+    /// Assets.car / AppIcon.icns / docktile-actool, and return the bundle root. Caller deletes it.
+    private func makeBundle(assetsCar: Bool, icns: Bool, compiler: Bool = false) throws -> URL {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent("docktile-test-\(UUID().uuidString)")
             .appendingPathComponent("Tile.app")
@@ -93,6 +147,9 @@ struct HelperIconStripTests {
         }
         if icns {
             try Data("icns".utf8).write(to: resources.appendingPathComponent("AppIcon.icns"))
+        }
+        if compiler {
+            try Data("mach-o".utf8).write(to: resources.appendingPathComponent("docktile-actool"))
         }
         return root
     }
@@ -106,7 +163,7 @@ struct HelperIconStripTests {
         let bundle = try makeBundle(assetsCar: true, icns: true)
         defer { try? FileManager.default.removeItem(at: bundle.deletingLastPathComponent()) }
 
-        let result = HelperBundleManager.stripMainAppIcons(inBundle: bundle)
+        let result = HelperBundleManager.stripMainAppIcons(inBundle: bundle, declarative: false)
 
         #expect(result.assetsCar == true)
         #expect(result.icns == true)
@@ -114,16 +171,27 @@ struct HelperIconStripTests {
         #expect(exists(bundle, "Contents/Resources/AppIcon.icns") == false)
     }
 
+    @Test("Declarative strip removes the compiler from the generated helper")
+    func declarativeRemovesCompiler() throws {
+        let bundle = try makeBundle(assetsCar: true, icns: true, compiler: true)
+        defer { try? FileManager.default.removeItem(at: bundle.deletingLastPathComponent()) }
+
+        HelperBundleManager.stripMainAppIcons(inBundle: bundle, declarative: true)
+
+        #expect(exists(bundle, "Contents/Resources/docktile-actool") == false)
+        #expect(exists(bundle, "Contents/Resources/Assets.car") == false)
+    }
+
     @Test("No-op (no throw) when the icon assets are absent")
     func noopWhenAbsent() throws {
         let bundle = try makeBundle(assetsCar: false, icns: false)
         defer { try? FileManager.default.removeItem(at: bundle.deletingLastPathComponent()) }
 
-        let result = HelperBundleManager.stripMainAppIcons(inBundle: bundle)
+        let result = HelperBundleManager.stripMainAppIcons(inBundle: bundle, declarative: false)
 
         #expect(result.assetsCar == false)
         #expect(result.icns == false)
-        // Resources dir still intact — we only target the two icon files.
+        // Resources dir still intact — we only target the icon files.
         #expect(exists(bundle, "Contents/Resources") == true)
     }
 }
