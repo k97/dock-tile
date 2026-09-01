@@ -1,11 +1,16 @@
 # Declarative Icons — Design
 
-**2026-09-01.** Replaces runtime icon-style detection and in-place `.icns` swapping on macOS 26
-(Tahoe) with a per-tile compiled `Assets.car` that macOS renders itself in every appearance.
-Feasibility proven in the 2026-09-01 spike; the evidence, the investigation that led here, and
-every closed dead end are folded into
+**2026-09-01. Status: IMPLEMENTED** (plan: `docs/superpowers/plans/2026-09-01-declarative-icons.md`,
+tasks 1–13, code-complete and reviewed; task 14's documentation pass is this update — its manual
+on-Dock appearance matrix and migration rehearsal are the maintainer's own run, not yet performed
+as of this writing). Replaced runtime icon-style detection and in-place `.icns` swapping on
+macOS 26 (Tahoe) with a per-tile compiled `Assets.car`
+that macOS renders itself in every appearance. Feasibility proven in the 2026-09-01 spike; the
+evidence, the investigation that led here, and every closed dead end are folded into
 [icon-rendering-history.md](../../icon-rendering-history.md). Do not reopen a dead end without
-new evidence.
+new evidence. The rest of this document is the design as approved; where implementation answered
+an open item or diverged, that is recorded in place below rather than rewritten as if it had been
+known from the start.
 
 ## Decided constraints (inputs to this design, not up for re-litigation)
 
@@ -178,11 +183,21 @@ entry's icon source changes kind) → single Dock restart.
 
 ### Open verification items (checked during implementation, each with a fallback)
 
-- **V1 — emoji under the system tinted pass**: 10-minute fixture check before the emoji path is
-  coded; fallback is baking a grayscale emoji variant for the `tinted` layer.
-- **V2 — car size discrepancy**: Apple 1.69 MB vs OSS 400 KB for identical input. The smaller car
-  renders correctly in every mode; understand (likely extra pre-rendered sizes) before shipping,
-  not a blocker.
+- **V1 — emoji under the system tinted pass. ANSWERED.** Checked via Icon Composer's own
+  appearance preview on a docktile-actool-compiled emoji `.icon` (not a Dock pin — production
+  helpers were running at the time and pinning would have made them rewrite and re-seal their own
+  bundles). Emoji render as a legible monochrome glass relief under the system's Tinted pass,
+  because that pass builds relief from the layer's alpha/shape rather than its luminance — even
+  the worst case (🟥, flat single-colour art with no internal luminance) comes out a clearly
+  visible raised glass square. The single-layer emoji model was kept as designed; the
+  grayscale-`tinted`-layer fallback below was **not** needed.
+- **V2 — car size discrepancy. NOT INVESTIGATED — left open, not resolved.** Apple 1.69 MB vs OSS
+  400 KB for identical input was observed during the spike. The smaller car renders correctly in
+  every style that was checked, so it was not a ship blocker, but the discrepancy itself (likely
+  extra pre-rendered sizes in Apple's output, per the spike's guess) was never root-caused during
+  implementation — this was explicitly out of scope for the docs-only task that closed out the
+  branch. Anyone later trying to explain a rendering or size difference against Apple's own
+  compiler should treat this as an open question, not something already answered.
 
 ## Absorbed defect: Dock tile size flap (reported 2026-09-01)
 

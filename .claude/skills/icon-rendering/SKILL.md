@@ -10,9 +10,10 @@ preview (`DockTileIconPreview`) — and history's recurring bug class is the two
 Every magnitude they share lives in one pure seam, `IconDepthMetrics`. Start every change by
 asking: which renderer(s), and does the value belong in the seam?
 
-**Pipeline status (2026-09-01):** the declarative rewrite is designed and approved
-([spec](../../../docs/superpowers/specs/2026-09-01-declarative-icons-design.md)) but NOT yet
-implemented — until it lands, the legacy path below runs on every macOS version.
+**Pipeline status (2026-09-01):** the declarative rewrite is implemented
+([spec](../../../docs/superpowers/specs/2026-09-01-declarative-icons-design.md)) and is what
+runs on macOS 26 (Tahoe) and later. The legacy path below is now the frozen pre-macOS-26
+fallback, quarantined behind one availability seam — it still runs verbatim on macOS 15.
 
 ## End-to-end flow
 
@@ -22,32 +23,39 @@ live; Add to Dock/Update → `HelperBundleManager.installHelper` → translocati
 copy main bundle → `stripMainAppIcons` (Assets.car AND template icns MUST go — the catalog
 outranks `CFBundleIconFile`).
 
-**Legacy path (today everywhere; post-rewrite: macOS 15 only, frozen):**
-`IconGenerator.generateIcns` bakes 4 style variants (`AppIcon-{default,dark,clear,tinted}.icns`,
-10 renditions each) → variant matching `IconStyle.current` copied to `AppIcon.icns` → ad-hoc
-sign → `touchBundle` + `LSRegisterURL` → Dock plist write (verify-after-write) → Dock restart.
-At runtime `IconStyleManager` (sole detector, KVO-primary, NO timers) detects style changes →
-`HelperBundleManager.switchIcon`: `replaceIconAtomically` (staged swap; a failure leaves the old
-icon intact) → `resealAfterIconSwap` (codesign, NOT `--deep`) BEFORE `touchBundle`. Launch
-self-heal byte-compares via `iconMatchesStyle` (unanswerable → match, never force-rewrite) —
-and nothing may follow it with an unconditional switch.
+**Legacy path (macOS 15 only now; frozen pre-Tahoe fallback):**
+`IconGenerator.generateIcns` bakes 4 full-bleed style variants (`AppIcon-{default,dark,clear,
+tinted}.icns`, 10 renditions each) → variant matching `IconStyle.current` copied to
+`AppIcon.icns` → ad-hoc sign → `touchBundle` + `LSRegisterURL` → Dock plist write
+(verify-after-write) → Dock restart. At runtime `IconStyleManager` (sole detector, KVO-primary,
+NO timers) detects style changes → `HelperBundleManager.switchIcon`: `replaceIconAtomically`
+(staged swap; a failure leaves the old icon intact) → `resealAfterIconSwap` (codesign, NOT
+`--deep`) BEFORE `touchBundle`. Launch self-heal byte-compares via `iconMatchesStyle`
+(unanswerable → match, never force-rewrite) — and nothing may follow it with an unconditional
+switch. `IconStyleManager.shouldRunDetection(isDeclarative:)` gates all of this — on macOS 26
+it returns `false` and none of it runs; `switchIcon` has no caller left reachable there.
 
-**Declarative path (macOS 26, once implemented):** `IconGenerator` lean entry point renders
-per-appearance glyph layer PNGs (glyph + shading + contact shadow ONLY — no squircle/stroke/
-sheen; the system draws shape and glass) → `IconDocumentBuilder` (pure seam) emits `.icon`
-(background = JSON fill gradient + specializations; glyph appearance = LAYER SWAP via
-`hidden-specializations`) → `IconCompiler` runs bundled `docktile-actool` → per-tile
-`Assets.car`, structurally validated (layered renditions present) before install → sign once,
-**never touched again**: no detection, no swap, no reseal — macOS renders all styles itself.
-One availability seam (`IconPipeline.isDeclarative`) at exactly three points: bundle
-generation, `IconStyleManager` activation (passive `currentStyle` reads stay — popovers key
-third-party icon `.id`s on it), migration/self-heal probes.
+**Declarative path (macOS 26 and later):** `IconGenerator`'s lean entry point
+(`generateGlyphLayerPNG`) renders per-appearance glyph layer PNGs (glyph + shading + contact
+shadow ONLY — no squircle/stroke/sheen; the system draws shape and glass) → `IconDocumentBuilder`
+(pure seam) emits `.icon` (background = JSON fill gradient + specializations; glyph appearance =
+LAYER SWAP via `hidden-specializations`) → `IconCompiler` runs the bundled `docktile-actool` →
+per-tile `Assets.car`, structurally validated (layered renditions present) before install →
+`IconGenerator.generateFallbackIcns` also bakes one margined `.icns` (Launch Services contexts
++ this same doc's preview) → sign once, **never touched again**: no detection, no swap, no
+reseal — macOS renders all styles itself. One availability seam (`IconPipeline.isDeclarative`)
+at exactly three points: bundle generation, `IconStyleManager` activation (event machinery goes
+no-op; `currentStyle` stays a passive read — popovers key third-party icon `.id`s on it, but on
+Tahoe it is seeded once at launch and never refreshed, so it is readable, not live-tracking),
+migration/self-heal probes (`helperIconsComplete` looks for `Assets.car` + the fallback `.icns`
+instead of the 4 variants).
 
 ## The seams (single sources of truth — never inline-copy their values)
 
 | Seam | Owns | Guarded by |
 |---|---|---|
-| `IconDepthMetrics` | glyph size ratio + safe-area caps (symbol 0.60 / emoji 0.78 / brand 0.78), stroke, sheens, shadows, `emojiInkFit`, `minDetailSize` gate (22px) | `IconDepthMetricsTests` |
+| `IconDepthMetrics` | glyph size ratio + safe-area caps (symbol 0.60 / emoji 0.67 / brand 0.78), stroke, sheens, shadows, `emojiInkFit`, `minDetailSize` gate (22px) | `IconDepthMetricsTests` |
+| `IconDepthMetrics.contentInsetRatio` | Apple's icon-grid margin (25/256 per side, content = 206/256 of canvas) — one number shared by the fallback `.icns` (`fallbackIcon`) and the live preview (`DockTileIconPreview`), applied on **every** macOS version even though only Tahoe helpers actually ship it live (the legacy 4-variant bake stays full-bleed; the preview is deliberately margined everywhere so it doesn't diverge across two geometries) | `IconPreviewGeometryTests` |
 | `IconWeight` dual mappings | `fontWeight` (SwiftUI) and `nsFontWeight` (AppKit) MUST agree; emoji/brand ignore weight | `IconWeightTests` |
 | `IconStyle.resolve` | style string → style; absent → Default; unrecognised string OR non-string type → nil = don't act, NEVER Default | `IconStyleResolveTests` |
 | `IconGenerator.emojiInkMetrics` + `emojiInkFit` | emoji sized by measured artwork, never font em | `EmojiInkFitRenderTests` |
@@ -65,7 +73,8 @@ third-party icon `.id`s on it), migration/self-heal probes.
 - Rewriting any resource in a signed bundle breaks the seal — re-sign immediately, before `touchBundle`.
 - Iconset scratch lives in the temp dir with `defer` cleanup, never inside the bundle.
 - Never remove an `AppleIconAppearanceTheme` value mapping without positive observation it isn't written ("absent observation is not observation of absence").
-- Unknown `IconWeight`/enum raw values: `Codable` on a String enum THROWS — an old binary reading a config with a new case fails the whole decode. Add tolerant decoding when adding cases (currently unguarded — flagged 2026-09-01).
+- Unknown `IconWeight`/enum raw values: `Codable` on a String enum decodes tolerantly to `.medium` (custom `init(from:)`) — an old binary reading a config with a new case must not fail the whole decode.
+- An emoji's safe-area ceiling must be measured against the squircle's largest **inscribed square** (~0.699 of canvas with the icon-grid margin), never against the shape's side — comparing against the side is what let `emojiMaxSafeRatio` ship at 0.78 and put tens of thousands of opaque pixels outside the tile at max scale before it was corrected to 0.67.
 
 ## Appearance authoring model (.icon → Assets.car) — hard-won, do not re-derive
 

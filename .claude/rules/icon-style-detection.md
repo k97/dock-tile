@@ -1,9 +1,16 @@
-# Icon Style Detection (event-driven, no timer)
+# Icon Style Detection (pre-macOS-26 legacy fallback, event-driven, no timer)
 
-How helpers learn the Tahoe icon style changed. Redesigned 2026-08-31. Under the approved
-declarative-icons design this whole path becomes the quarantined pre-macOS-26 fallback. The
-evidence it rests on, why it is being deleted for Tahoe, and every dead end already closed:
-[docs/icon-rendering-history.md](../../docs/icon-rendering-history.md) — read it before
+How helpers learn the icon style changed — **on macOS 15 only.** The declarative-icons rewrite
+shipped a per-tile compiled `Assets.car` that macOS 26 (Tahoe) renders itself in every
+appearance, so on Tahoe there is nothing for this subsystem to detect: `IconStyleManager
+.shouldRunDetection(isDeclarative:)` returns `false` there, which gates every entry point
+described below (KVO observer, distributed-notification listener, wake/popover reconcile,
+launch self-heal byte-compare, and `switchIcon` itself) to a no-op — none of it registers, none
+of it runs. Everything in this file is now a **frozen quarantined fallback**: it receives no
+further investment and is scheduled for deletion (not untangling) once the macOS floor rises
+past 26. It is preserved verbatim below because it is exactly what still runs, unchanged, on
+macOS 15. The evidence it rests on, why it was superseded on Tahoe, and every dead end already
+closed: [docs/icon-rendering-history.md](../../docs/icon-rendering-history.md) — read it before
 reopening any option.
 
 ## Ownership & signals
