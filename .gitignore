@@ -98,3 +98,5 @@ fastlane/test_output
 
 promo-video/node_modules/**
 promo-video/**
+# Subagent-driven development scratch (ledger, briefs, review packages)
+.superpowers/
