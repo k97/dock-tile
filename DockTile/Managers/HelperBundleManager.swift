@@ -374,23 +374,39 @@ final class HelperBundleManager {
 
     // MARK: - Self-heal integrity probes
 
-    /// True when a helper bundle carries a complete generated icon set: the active `AppIcon.icns`
-    /// plus all four style variants, each present and non-empty. Catches a helper left structurally
-    /// broken by a killed-mid-generation write (e.g. a leftover `.iconset` + only the stale template
-    /// `AppIcon-Dev.icns`, with `AppIcon.icns` and the variants absent) — which the Dock renders as
-    /// a generic/broken icon.
+    /// True when a helper bundle carries a complete generated icon set for the given pipeline.
+    /// Declarative bundles (macOS 26) need `Assets.car` + the active `AppIcon.icns`, both present
+    /// and non-empty — macOS renders every appearance from the car itself. Legacy bundles need
+    /// `AppIcon.icns` plus all four style variants, each present and non-empty. Pure over plain
+    /// byte sizes so it's unit-testable without touching a filesystem.
+    ///
+    /// A LEGACY-shaped bundle (four variants, no car) evaluated with `declarative: true` is
+    /// deliberately INCOMPLETE — that's the mechanism that makes every pre-declarative helper
+    /// regenerate into the new shape on its first launch of a declarative-pipeline app version.
+    nonisolated static func helperIconsComplete(resourcesContents: [String: Int], declarative: Bool) -> Bool {
+        let required = declarative
+            ? ["Assets.car", "AppIcon.icns"]
+            : ["AppIcon.icns"] + IconStyle.allCases.map { Self.iconFilename(for: $0) }
+        return required.allSatisfy { (resourcesContents[$0] ?? 0) > 0 }
+    }
+
+    /// Catches a helper left structurally broken by a killed-mid-generation write (e.g. a leftover
+    /// `.iconset` + only the stale template `AppIcon-Dev.icns`, with `AppIcon.icns`/`Assets.car`
+    /// absent) — which the Dock renders as a generic/broken icon. Reads the real bundle's
+    /// `Contents/Resources` and delegates the decision to the pure seam above, gated on the real
+    /// running OS's pipeline.
     func helperIconsComplete(at bundlePath: URL) -> Bool {
         let resources = bundlePath.appendingPathComponent("Contents/Resources")
-        let required = ["AppIcon.icns"] + IconStyle.allCases.map { Self.iconFilename(for: $0) }
+        let names = ["Assets.car", "AppIcon.icns"] + IconStyle.allCases.map { Self.iconFilename(for: $0) }
         let fm = FileManager.default
-        for name in required {
+        var sizes: [String: Int] = [:]
+        for name in names {
             let path = resources.appendingPathComponent(name).path
-            guard let attrs = try? fm.attributesOfItem(atPath: path),
-                  let size = attrs[.size] as? Int, size > 0 else {
-                return false
+            if let attrs = try? fm.attributesOfItem(atPath: path), let size = attrs[.size] as? Int {
+                sizes[name] = size
             }
         }
-        return true
+        return Self.helperIconsComplete(resourcesContents: sizes, declarative: IconPipeline.isDeclarative)
     }
 
     /// The marketing version baked into a helper bundle (its own `CFBundleShortVersionString`, set
