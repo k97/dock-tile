@@ -502,7 +502,16 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // In a helper, IconStyleManager was previously only constructed lazily by the SwiftUI
         // popover views, so a tile that had never been clicked had no manager at all.
         let manager = IconStyleManager.shared
+        // Passive read — stays even under the declarative pipeline: popover views key
+        // third-party app icons on this value, so it must keep tracking Light/Dark.
         currentIconStyle = manager.currentStyle
+
+        // Under the declarative pipeline macOS renders every appearance itself: no swap, no
+        // seal to re-sign, no stale icon to heal. Skip the subscription and the launch heal.
+        guard IconStyleManager.shouldRunDetection(isDeclarative: IconPipeline.isDeclarative) else {
+            print("   ✓ Icon style detection quarantined (declarative pipeline)")
+            return
+        }
 
         NotificationCenter.default.addObserver(
             self,

@@ -194,14 +194,29 @@ final class IconStyleManager: ObservableObject {
     private var reportedSilentEventPath = false
 
     private init() {
-        // Initial state
+        // Initial state — a passive read, kept even under the declarative pipeline: helper
+        // popovers key third-party app icon views on `currentStyle` (`.id("\(app.id)-\(style)")`)
+        // so those icons keep tracking Light/Dark.
         currentStyle = IconStyle.current
         print("[IconStyleManager] Initialized with style: \(currentStyle.rawValue)")
 
         setupObservers()
     }
 
+    /// Pure gate for the whole detection lifecycle (observer registration, reconciles). The
+    /// declarative pipeline (macOS 26) has macOS render every appearance itself — nothing to
+    /// detect, nothing to swap — so this is `!isDeclarative`. Deliberately trivial: the seam
+    /// exists so the decision is greppable and testable, not because the rule is complex.
+    nonisolated static func shouldRunDetection(isDeclarative: Bool) -> Bool {
+        !isDeclarative
+    }
+
     private func setupObservers() {
+        guard Self.shouldRunDetection(isDeclarative: IconPipeline.isDeclarative) else {
+            print("[IconStyleManager] Declarative pipeline — detection quarantined (no observers registered)")
+            return
+        }
+
         // PRIMARY: KVO on UserDefaults. This is the only DOCUMENTED cross-process settings signal
         // ("Key-value observing reports all updates to setting values, regardless of which process
         // made the change"). Apple documents it for an app's own domain and says nothing about
@@ -250,6 +265,7 @@ final class IconStyleManager: ObservableObject {
     /// something the events missed — so the recovery path exists for the case the measurement
     /// could NOT cover (a change made while asleep), not as a routine safety net.
     func reconcile(reason: String) {
+        guard Self.shouldRunDetection(isDeclarative: IconPipeline.isDeclarative) else { return }
         checkAndUpdateStyle(source: "reconcile:\(reason)")
     }
 
