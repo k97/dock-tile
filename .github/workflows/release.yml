@@ -62,6 +62,45 @@ jobs:
           echo "❌ Package resolution failed after 4 attempts"
           exit 1
 
+      # macos-26 ships Rust preinstalled (verified against actions/runner-images'
+      # macos-26-Readme.md), but pin to stable explicitly and fall back to rustup's own
+      # installer in case a future image drops it.
+      - name: Ensure Rust toolchain
+        run: |
+          if command -v rustup >/dev/null 2>&1; then
+            echo "✅ rustup found: $(rustup --version)"
+            rustup default stable
+          else
+            echo "⚠️ rustup not found — installing"
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          fi
+          cargo --version
+
+      # docktile-actool (the vendored actool reimplementation the app bundles — see Task 13 /
+      # Scripts/build-compiler.sh) is built from source in CI. Cache its target dir + the cargo
+      # registry keyed on Cargo.lock so an unchanged crate skips the rebuild entirely (mirrors
+      # the SwiftPM cache above).
+      - name: Cache Rust build (docktile-actool)
+        uses: actions/cache@v4
+        with:
+          path: |
+            Vendor/actool/target
+            ~/.cargo/registry
+          key: ${{ runner.os }}-actool-cargo-${{ hashFiles('Vendor/actool/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-actool-cargo-
+
+      - name: Build icon compiler (docktile-actool)
+        run: ./Scripts/build-compiler.sh
+
+      # Guards the compiler defect fix the whole declarative-icons feature depends on. Gates
+      # build-and-release below via `needs: test`, so this job is the one place it must run.
+      - name: Run icon compiler crate tests
+        run: |
+          cd Vendor/actool
+          cargo test
+
       - name: Run Unit Tests
         run: |
           xcodebuild test \
@@ -143,6 +182,37 @@ jobs:
           echo "❌ Package resolution failed after 4 attempts"
           exit 1
 
+      # macos-26 ships Rust preinstalled (verified against actions/runner-images'
+      # macos-26-Readme.md), but pin to stable explicitly and fall back to rustup's own
+      # installer in case a future image drops it.
+      - name: Ensure Rust toolchain
+        run: |
+          if command -v rustup >/dev/null 2>&1; then
+            echo "✅ rustup found: $(rustup --version)"
+            rustup default stable
+          else
+            echo "⚠️ rustup not found — installing"
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          fi
+          cargo --version
+
+      # Same cache as the test job above — this is a separate runner, so it needs its own
+      # restore. docktile-actool must exist on disk before Build Release, or the "Bundle Icon
+      # Compiler" Xcode build phase fails the build.
+      - name: Cache Rust build (docktile-actool)
+        uses: actions/cache@v4
+        with:
+          path: |
+            Vendor/actool/target
+            ~/.cargo/registry
+          key: ${{ runner.os }}-actool-cargo-${{ hashFiles('Vendor/actool/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-actool-cargo-
+
+      - name: Build icon compiler (docktile-actool)
+        run: ./Scripts/build-compiler.sh
+
       - name: Build Release
         run: |
           xcodebuild \
@@ -161,6 +231,16 @@ jobs:
           SIGNING_IDENTITY: "Developer ID Application: ${{ secrets.APPLE_DEVELOPER_NAME }} (${{ secrets.APPLE_TEAM_ID }})"
         run: |
           APP_PATH="./build/Build/Products/Release/${APP_NAME}.app"
+
+          # codesign --deep does NOT reach a loose Mach-O binary sitting directly in
+          # Contents/Resources/ — verified: its cargo-built ad-hoc/linker-signed signature
+          # survives an outer --deep re-sign completely untouched. Apple's own guidance is to
+          # sign nested code explicitly, inside-out, before the outer bundle. docktile-actool
+          # (Task 13's bundled icon compiler) lives there, so it must be signed here or
+          # notarization rejects the DMG over its unsigned/ad-hoc executable.
+          codesign --force --sign "$SIGNING_IDENTITY" \
+            --options runtime \
+            "$APP_PATH/Contents/Resources/docktile-actool"
 
           # Sign with hardened runtime
           codesign --force --deep --sign "$SIGNING_IDENTITY" \

@@ -95,6 +95,44 @@ jobs:
           echo "❌ Package resolution failed after 4 attempts"
           exit 1
 
+      # macos-26 ships Rust preinstalled (verified against actions/runner-images'
+      # macos-26-Readme.md), but pin to stable explicitly and fall back to rustup's own
+      # installer in case a future image drops it.
+      - name: Ensure Rust toolchain
+        run: |
+          if command -v rustup >/dev/null 2>&1; then
+            echo "✅ rustup found: $(rustup --version)"
+            rustup default stable
+          else
+            echo "⚠️ rustup not found — installing"
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+            echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          fi
+          cargo --version
+
+      # docktile-actool (the vendored actool reimplementation the app bundles — see Task 13 /
+      # Scripts/build-compiler.sh) is built from source in CI. Cache its target dir + the cargo
+      # registry keyed on Cargo.lock so an unchanged crate skips the rebuild entirely (mirrors
+      # the SwiftPM cache above).
+      - name: Cache Rust build (docktile-actool)
+        uses: actions/cache@v4
+        with:
+          path: |
+            Vendor/actool/target
+            ~/.cargo/registry
+          key: ${{ runner.os }}-actool-cargo-${{ hashFiles('Vendor/actool/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-actool-cargo-
+
+      - name: Build icon compiler (docktile-actool)
+        run: ./Scripts/build-compiler.sh
+
+      # Guards the compiler defect fix the whole declarative-icons feature depends on.
+      - name: Run icon compiler crate tests
+        run: |
+          cd Vendor/actool
+          cargo test
+
       - name: Build Debug
         run: |
           set -o pipefail
