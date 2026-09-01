@@ -48,6 +48,13 @@ Auth comes from the Google App ID inside the plist — no extra GitHub secret.
 
 ## Reading the data back (GA4)
 
+**Baseline numbers + findings: [docs/analytics-baseline-2026-08.md](../../docs/analytics-baseline-2026-08.md)**
+— the first production read (2026-06-18 → 2026-08-31, pre-icon-rework). Includes the ~43%
+never-create-a-tile activation gap, the 1.8.5 `icon_style_changed` anomaly that triggered the icon
+investigation, and the four open console problems (no custom dimensions, 2-month retention,
+default-only key events, site in a separate property). Compare against it after changes ship.
+
+
 - Property **542196919** (account 102059710), provisioned via Firebase project `dock-tile`. The app
   stream has NO `G-` measurement ID (app streams never do — the committed `GOOGLE_APP_ID` is its
   identity); the marketing site's `G-PP04F8Z0EP` is a different stream entirely.

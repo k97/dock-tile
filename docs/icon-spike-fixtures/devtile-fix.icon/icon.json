@@ -1,0 +1,130 @@
+{
+  "fill": {
+    "linear-gradient": [
+      "display-p3:0.41961,0.81176,0.49804,1.00000",
+      "display-p3:0.20392,0.78039,0.34902,1.00000"
+    ],
+    "orientation": {
+      "start": {
+        "x": 0.5,
+        "y": 0
+      },
+      "stop": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  },
+  "fill-specializations": [
+    {
+      "value": {
+        "linear-gradient": [
+          "display-p3:0.41961,0.81176,0.49804,1.00000",
+          "display-p3:0.20392,0.78039,0.34902,1.00000"
+        ],
+        "orientation": {
+          "start": {
+            "x": 0.5,
+            "y": 0
+          },
+          "stop": {
+            "x": 0.5,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "linear-gradient": [
+          "display-p3:0.10980,0.10980,0.11765,1.00000",
+          "display-p3:0.05490,0.05490,0.06275,1.00000"
+        ],
+        "orientation": {
+          "start": {
+            "x": 0.5,
+            "y": 0
+          },
+          "stop": {
+            "x": 0.5,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "appearance": "tinted",
+      "value": {
+        "linear-gradient": [
+          "display-p3:0.55686,0.55686,0.57647,1.00000",
+          "display-p3:0.42353,0.42353,0.43922,1.00000"
+        ],
+        "orientation": {
+          "start": {
+            "x": 0.5,
+            "y": 0
+          },
+          "stop": {
+            "x": 0.5,
+            "y": 1
+          }
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "layers": [
+        {
+          "name": "glyph-light",
+          "image-name": "glyph-light.png",
+          "fill": "none",
+          "position": {
+            "scale": 1.0,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          },
+          "hidden-specializations": [
+            {
+              "value": false
+            },
+            {
+              "appearance": "dark",
+              "value": true
+            }
+          ]
+        },
+        {
+          "name": "glyph-dark",
+          "image-name": "glyph-dark.png",
+          "fill": "none",
+          "position": {
+            "scale": 1.0,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          },
+          "hidden-specializations": [
+            {
+              "value": true
+            },
+            {
+              "appearance": "dark",
+              "value": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "supported-platforms": {
+    "circles": [],
+    "squares": [
+      "macOS"
+    ]
+  }
+}

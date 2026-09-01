@@ -11,6 +11,8 @@ bundle mtime and shells out to `lsregister -f -R`
 about CFPreferences cache coherency, and about Dock icon invalidation, so the fix can be chosen on
 evidence rather than on a hunch.
 
+> How this investigation started and every dead end it closed: [icon-investigation-trail.md](icon-investigation-trail.md)
+
 **Every claim below is tagged.** `[DOCUMENTED]` = Apple developer documentation, HIG, release notes
 or a shipped man page, linked. `[SOURCE]` = Darwin / CoreFoundation open source or a shipped
 header. `[OBSERVED]` = reproduced first-hand or widely reproduced by the community with no Apple

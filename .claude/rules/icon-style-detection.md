@@ -2,6 +2,9 @@
 
 How helpers learn the Tahoe icon style changed. Redesigned 2026-08-31; full evidence trail in
 [docs/macos-appearance-detection-research.md](../../docs/macos-appearance-detection-research.md).
+**Why this subsystem may not survive**, and every dead end already closed:
+[docs/icon-investigation-trail.md](../../docs/icon-investigation-trail.md) — read it before
+reopening any option.
 
 ## Ownership & signals
 
