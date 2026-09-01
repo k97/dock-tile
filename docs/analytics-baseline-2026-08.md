@@ -64,6 +64,40 @@ Naming trap: **`tile_removed` means the tile was DELETED**; `tile_hidden` is un-
 
 Growth is real and accelerating — new users 12 → 23 → 75.
 
+## What the data CANNOT see
+
+Checked 2026-09-01: querying `2026-01-01 → 2026-06-17` returns **no data at all** — instrumentation
+shipped in v1.3.0 and there is nothing earlier to recover. So the blind spots are:
+
+- **Anyone still on v1.0–v1.2.x who has never updated.** Dock Tile shipped for months before
+  analytics existed; those users are invisible unless/until they update.
+- **Anyone who opted out** (opt-out, default ON — a minority, unmeasurable by definition).
+
+**Retention is NOT one of them.** The 2-month `eventDataRetention` governs event/user-level data
+used in Explorations, funnels and path analysis — standard aggregate reports are unaffected, which
+is why every table here reaches back to June. Fixing retention buys analysis depth, not counts.
+
+## Version spread — the install base is stuck behind
+
+| Version | Users |
+|---|---:|
+| **1.8.5** | **86** |
+| 1.3.0 | 8 |
+| 1.8.1 | 8 |
+| 1.8.6 | 7 |
+| **1.8.8** (current) | **7** |
+| 1.8.4 | 6 |
+| 1.4.5 | 5 |
+| others (1.4.x–1.7.x) | 1–3 each |
+
+Two consequences:
+
+1. **86 of 119 users run 1.8.5** — the version with the `icon_style_changed` anomaly below. The
+   bug's blast radius is most of the install base, not a fringe.
+2. **Only 7 users are on the current release, and 8 are still on 1.3.0 from June.** Sparkle uptake
+   is slow enough that *shipping* a fix and *delivering* it are very different events. Worth
+   investigating on its own — it also means any post-fix measurement will lag by weeks.
+
 ## The two findings that matter
 
 ### 1. The drop-off is BEFORE tile creation
