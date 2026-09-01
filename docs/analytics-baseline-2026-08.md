@@ -138,7 +138,20 @@ Nobody toggles appearance 548 times a day. This is the signal that led to
 rework. **The root cause was never reproduced** — it did not recur on the maintainer's Mac — so this
 table is the only evidence it happened, and the metric to watch after the fix ships.
 
-## Configuration problems found (all still open as of 2026-09-01)
+## Configuration problems found — 1, 2 and 3 FIXED 2026-09-01
+
+> **Fixed 2026-09-01** via the Admin API once `ga4-fetch@dock-tile.iam.gserviceaccount.com` was
+> granted **Editor** on the property:
+> - `eventDataRetention` **TWO_MONTHS → FOURTEEN_MONTHS**
+> - **7 custom dimensions** registered — `app_role` (user-scoped), `style`, `source`, `setting`,
+>   `enabled`, `layout`, `reason` (event-scoped) — and **1 custom metric**, `app_count`
+> - **`tile_created` and `tile_added_to_dock` marked as key events** (once per session)
+>
+> **Registration is forward-only**: parameters sent before today are still lost, so breakdowns by
+> `style` etc. only work from 2026-09-01 onward. Problem 4 (site in a separate property) is
+> unchanged and still blocks any site→download→activation funnel.
+
+### The original findings, for the record
 
 1. **Zero custom dimensions, zero custom metrics.** `customDimensions` and `customMetrics` both
    returned `{}`. Every parameter the app sends — `source` (Smart Add vs blank), `app_count`,
