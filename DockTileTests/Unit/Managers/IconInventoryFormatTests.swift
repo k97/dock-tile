@@ -96,6 +96,28 @@ struct IconInventoryFormatTests {
         #expect(result == expected)
     }
 
+    @Test("Assets.car present but assetutil couldn't summarise it still says so, not silently blank")
+    func declarativeRowUnparseableCar() {
+        let item = HelperIconInventory(
+            tileName: "'Corrupt' (CCCCCCCC)",
+            sealValid: true,
+            liveIconMatchesVariant: nil,
+            carPresent: true,
+            carRenditionSummary: nil,
+            iconFileMTimes: [:],
+            inspectionError: nil
+        )
+        let result = DiagnosticsLog.formatIconInventory([item])
+        let expected = """
+        Icon inventory (pinned helpers only):
+          'Corrupt' (CCCCCCCC)
+            seal: valid
+            shape: declarative — Assets.car present (present, assetutil summary unavailable)
+            mtimes: (no icon files found)
+        """
+        #expect(result == expected)
+    }
+
     @Test("A helper whose inspection failed renders its error, not silently vanishes")
     func failedInspectionRow() {
         let item = HelperIconInventory(
