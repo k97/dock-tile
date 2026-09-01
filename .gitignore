@@ -100,3 +100,6 @@ promo-video/node_modules/**
 promo-video/**
 # Subagent-driven development scratch (ledger, briefs, review packages)
 .superpowers/
+
+# Vendored actool build artifacts (rebuilt via Scripts/build-compiler.sh)
+Vendor/actool/target/
