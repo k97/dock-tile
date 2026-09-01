@@ -5,6 +5,11 @@ Multi-instance macOS utility (macOS 15.0+) that creates customizable dock tiles 
 ## Commands
 
 ```bash
+# Prerequisite (once per clone / after `cargo clean`): build the vendored icon compiler.
+# The Xcode build phase copies Vendor/actool/target/release/docktile-actool into the app;
+# without it the build fails. Needs a Rust toolchain (https://rustup.rs).
+./Scripts/build-compiler.sh
+
 # Build Debug
 xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Debug build
 

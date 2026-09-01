@@ -140,6 +140,22 @@ if [[ "$SIGN" == true ]]; then
 
     echo "  Identity: $SIGNING_IDENTITY"
 
+    # Sign the bundled icon compiler FIRST, explicitly. `codesign --deep` does NOT reach a loose
+    # Mach-O sitting directly in Contents/Resources/ — verified: its cargo-built linker signature
+    # survives the outer --deep re-sign completely untouched, and `--verify --deep --strict`
+    # below cannot see it either. Apple's guidance is to sign nested code explicitly, inside-out,
+    # before the outer bundle. Without this the DMG signs and verifies clean locally, then
+    # notarytool rejects it over an unsigned nested executable. Mirrors the same step in
+    # .github/workflows/release.yml.
+    codesign --force --sign "$SIGNING_IDENTITY" \
+        --options runtime \
+        "$APP_PATH/Contents/Resources/docktile-actool"
+
+    codesign --verify --strict "$APP_PATH/Contents/Resources/docktile-actool" || {
+        echo -e "${RED}Nested docktile-actool signature verification failed!${NC}"
+        exit 1
+    }
+
     # Sign with hardened runtime and entitlements
     codesign --force --deep --sign "$SIGNING_IDENTITY" \
         --options runtime \

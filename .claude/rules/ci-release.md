@@ -45,7 +45,10 @@ Entitlements in `DockTile/DockTile.entitlements`:
 ## New development machine
 
 Everything the release needs lives in GitHub secrets, so a new Mac only needs `gh auth` + git
-identity to tag a release. The **one machine-local secret is the Sparkle EdDSA private key**:
+identity to tag a release. To **build locally** it also needs a Rust toolchain
+(https://rustup.rs) plus one `./Scripts/build-compiler.sh` run — the Xcode build phase fails
+until `Vendor/actool/target/release/docktile-actool` exists (CI builds it in the workflow). The
+**one machine-local secret is the Sparkle EdDSA private key**:
 `generate_keys` stores it as a non-synchronizable login-keychain item (iCloud Keychain never carries
 it), and the GitHub secret cannot be read back. Move it with `generate_keys -x file` (old Mac) →
 `generate_keys -i file` (new Mac); `generate_keys -p` must print the `SUPublicEDKey` in
