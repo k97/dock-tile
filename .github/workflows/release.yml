@@ -74,6 +74,7 @@ jobs:
             echo "⚠️ rustup not found — installing"
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
             echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+            source "$HOME/.cargo/env"
           fi
           cargo --version
 
@@ -194,6 +195,7 @@ jobs:
             echo "⚠️ rustup not found — installing"
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
             echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+            source "$HOME/.cargo/env"
           fi
           cargo --version
 
@@ -241,6 +243,11 @@ jobs:
           codesign --force --sign "$SIGNING_IDENTITY" \
             --options runtime \
             "$APP_PATH/Contents/Resources/docktile-actool"
+
+          # Verify immediately — the outer --verify --deep --strict below can't see this loose
+          # binary either (same reason --deep can't sign it), so a broken inner signature would
+          # otherwise survive undetected until notarytool rejects the finished DMG.
+          codesign --verify --strict "$APP_PATH/Contents/Resources/docktile-actool"
 
           # Sign with hardened runtime
           codesign --force --deep --sign "$SIGNING_IDENTITY" \

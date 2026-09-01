@@ -107,6 +107,7 @@ jobs:
             echo "⚠️ rustup not found — installing"
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
             echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+            source "$HOME/.cargo/env"
           fi
           cargo --version
 
