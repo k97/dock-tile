@@ -101,7 +101,7 @@ struct DockTileApp: App {
             CommandGroup(after: .newItem) {
                 Button(AppStrings.Menu.copyDiagnostics) {
                     DiagnosticsLog.shared.ui("Menu → Copy Diagnostics")
-                    DiagnosticsLog.shared.copyToPasteboard()
+                    DiagnosticsLog.shared.copyToPasteboard(configurations: configManager.configurations)
                 }
             }
         }

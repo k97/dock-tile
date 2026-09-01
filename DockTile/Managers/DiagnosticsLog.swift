@@ -38,6 +38,34 @@ import Foundation
 import OSLog
 import Security
 
+/// One pinned helper's icon-shape facts for Copy Diagnostics — plain values gathered once per
+/// report by `HelperBundleManager.collectIconInventory`. Built for the Dock icon-size-flap
+/// investigation: the legacy path's constant `.icns` rewriting + Launch Services re-registration is
+/// the suspected trigger, and the declarative pipeline (macOS 26, no runtime swaps) is the fix under
+/// test — so a report must make it unambiguous which shape a given pinned tile was actually in.
+struct HelperIconInventory {
+    /// `config.diagnosticName` — never a bare tile name (two tiles can legitimately share one).
+    let tileName: String
+    let sealValid: Bool
+    /// LEGACY path only: the filename of the style variant the live `AppIcon.icns` byte-matches,
+    /// or the literal `"none"` when it matches none of them. `nil` on the declarative path, or when
+    /// inspection failed before this could be determined.
+    let liveIconMatchesVariant: String?
+    /// DECLARATIVE path: whether `Assets.car` exists in the bundle's Resources.
+    let carPresent: Bool
+    /// DECLARATIVE path only: a short `assetutil --info` summary (rendition count + whether an
+    /// `IconImageStack` rendition is present). `nil` when there's no car, or inspection failed.
+    let carRenditionSummary: String?
+    /// Modification times of every icon-related file found in the bundle — the trace of exactly
+    /// the rewriting churn implicated in the Dock icon-size flap.
+    let iconFileMTimes: [String: Date]
+    /// Non-nil ⇒ inspecting this helper failed partway (missing bundle, unreadable signature,
+    /// unparseable `assetutil` output, …). The other fields are then best-effort/unset and must not
+    /// be trusted — a partially-inspected helper still gets its own row instead of vanishing from
+    /// the report, so one broken tile can never hide the rest.
+    let inspectionError: String?
+}
+
 final class DiagnosticsLog: @unchecked Sendable {
     static let shared = DiagnosticsLog()
 
@@ -249,7 +277,10 @@ final class DiagnosticsLog: @unchecked Sendable {
     }
 
     /// A human-readable report: environment header + the last hour of events across all processes.
-    func report() -> String {
+    /// `configurations` (the app's known tiles) is used only to name/scope the icon inventory
+    /// section below — pass `ConfigurationManager.configurations`; helpers pass none.
+    @MainActor
+    func report(configurations: [DockTileConfiguration]) -> String {
         let os = ProcessInfo.processInfo.operatingSystemVersion
         let events = recentLines()
         var out: [String] = [
@@ -285,7 +316,58 @@ final class DiagnosticsLog: @unchecked Sendable {
             out.append("Helper bundle signatures:")
             out.append(contentsOf: seals)
         }
+
+        // Always rendered (even when empty) — see `formatIconInventory`'s doc comment for why.
+        out.append("")
+        out.append(Self.formatIconInventory(HelperBundleManager.shared.collectIconInventory(configurations: configurations)))
+
         return out.joined(separator: "\n")
+    }
+
+    /// ISO8601 (whole seconds — mtime resolution finer than that isn't useful here) formatter for
+    /// `formatIconInventory`'s mtime lines. A dedicated static instance so the pure formatter below
+    /// doesn't need an instance of `DiagnosticsLog` to render a date.
+    nonisolated(unsafe) private static let mtimeStamp: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    /// Pure renderer for the Copy Diagnostics icon-inventory section (regression-guard convention —
+    /// mirrors `spinExcerpt`). Always renders a header, even for an empty list, so the section's
+    /// absence in a pasted report is never mistaken for "the feature never ran".
+    nonisolated static func formatIconInventory(_ items: [HelperIconInventory]) -> String {
+        var lines = ["Icon inventory (pinned helpers only):"]
+        guard !items.isEmpty else {
+            lines.append("  (no pinned helpers)")
+            return lines.joined(separator: "\n")
+        }
+        for item in items {
+            lines.append("  \(item.tileName)")
+            if let error = item.inspectionError {
+                lines.append("    INSPECTION FAILED: \(error)")
+                continue
+            }
+            lines.append("    seal: \(item.sealValid ? "valid" : "BROKEN")")
+            if item.carPresent {
+                let summary = item.carRenditionSummary ?? "present, assetutil summary unavailable"
+                lines.append("    shape: declarative — Assets.car present (\(summary))")
+            } else if let match = item.liveIconMatchesVariant {
+                let described = (match == "none") ? "no known variant" : match
+                lines.append("    shape: legacy — live AppIcon.icns matches \(described)")
+            } else {
+                lines.append("    shape: unknown — no Assets.car and no variant match found")
+            }
+            if item.iconFileMTimes.isEmpty {
+                lines.append("    mtimes: (no icon files found)")
+            } else {
+                let joined = item.iconFileMTimes.keys.sorted()
+                    .map { "\($0)=\(mtimeStamp.string(from: item.iconFileMTimes[$0]!))" }
+                    .joined(separator: ", ")
+                lines.append("    mtimes: \(joined)")
+            }
+        }
+        return lines.joined(separator: "\n")
     }
 
     /// Per-tile code-signature state, one line each.
@@ -322,8 +404,8 @@ final class DiagnosticsLog: @unchecked Sendable {
 
     /// Build the report and place it on the general pasteboard (NSPasteboard → main thread).
     @MainActor
-    func copyToPasteboard() {
-        let text = report()
+    func copyToPasteboard(configurations: [DockTileConfiguration]) {
+        let text = report(configurations: configurations)
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)

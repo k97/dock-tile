@@ -24,6 +24,7 @@
 import AppKit
 import CoreServices
 import Foundation
+import Security
 
 @MainActor
 final class HelperBundleManager {
@@ -435,6 +436,139 @@ final class HelperBundleManager {
             }
         }
         return ids
+    }
+
+    // MARK: - Copy Diagnostics icon inventory
+
+    /// Per-pinned-helper icon-shape inventory for Copy Diagnostics (Dock icon-size-flap
+    /// investigation). Report-time only — called from `DiagnosticsLog.report()` when the user
+    /// presses File → Copy Diagnostics, never on a timer or at launch. Main-app only: helpers never
+    /// call this (nothing helper-side invokes `report()`), but the guard mirrors every other
+    /// main-app-only path (e.g. `scanForMissingApps`) in case that ever changes.
+    ///
+    /// Read-only by construction: every probe below is `--verify`/`--info`/`stat`-shaped. Nothing
+    /// here writes a file, re-signs a bundle, or touches the Dock plist — a diagnostics reader that
+    /// mutates state would be worse than no diagnostics.
+    ///
+    /// Scoped to `configurations` (not every `pinnedBundleIds()` entry) so a third-party Dock icon
+    /// never shows up as a bogus "no helper bundle found" row — only OUR tiles that are ALSO
+    /// currently pinned are inspected, matching how `HelperMigrationManager.classifyHelperHealth`
+    /// scopes its self-heal sweep.
+    func collectIconInventory(configurations: [DockTileConfiguration]) -> [HelperIconInventory] {
+        guard !AppEnvironment.isHelper else { return [] }
+        let pinned = pinnedBundleIds()
+        return configurations
+            .filter { pinned.contains($0.bundleIdentifier) }
+            .map { config in
+                guard let bundlePath = findExistingHelper(bundleId: config.bundleIdentifier) else {
+                    return HelperIconInventory(
+                        tileName: config.diagnosticName, sealValid: false, liveIconMatchesVariant: nil,
+                        carPresent: false, carRenditionSummary: nil, iconFileMTimes: [:],
+                        inspectionError: "pinned in the Dock but no helper bundle found on disk"
+                    )
+                }
+                return Self.inspectIconShape(bundlePath: bundlePath, tileName: config.diagnosticName)
+            }
+    }
+
+    /// Inspects one helper bundle's Resources folder: seal validity, which icon shape it's
+    /// actually in (legacy variant match vs declarative `Assets.car`, determined from what's
+    /// really on disk — NOT from `IconPipeline.isDeclarative`, since a machine mid-migration can
+    /// hold both shapes at once), and every icon file's mtime.
+    private static func inspectIconShape(bundlePath: URL, tileName: String) -> HelperIconInventory {
+        let resources = bundlePath.appendingPathComponent("Contents/Resources")
+        let fm = FileManager.default
+
+        let sealValid = verifySeal(bundlePath: bundlePath)
+
+        let carURL = resources.appendingPathComponent("Assets.car")
+        let carPresent = fm.fileExists(atPath: carURL.path)
+        let carSummary = carPresent ? carRenditionSummary(carURL: carURL) : nil
+
+        var variantMatch: String?
+        if !carPresent {
+            let liveURL = resources.appendingPathComponent("AppIcon.icns")
+            if fm.fileExists(atPath: liveURL.path) {
+                let matched = IconStyle.allCases.first { style in
+                    let variantURL = resources.appendingPathComponent(iconFilename(for: style))
+                    return fm.fileExists(atPath: variantURL.path)
+                        && fm.contentsEqual(atPath: liveURL.path, andPath: variantURL.path)
+                }
+                variantMatch = matched.map { iconFilename(for: $0) } ?? "none"
+            }
+        }
+
+        var mtimes: [String: Date] = [:]
+        let candidateNames = ["Assets.car", "AppIcon.icns"] + IconStyle.allCases.map { iconFilename(for: $0) }
+        for name in candidateNames {
+            let path = resources.appendingPathComponent(name).path
+            if let attrs = try? fm.attributesOfItem(atPath: path), let date = attrs[.modificationDate] as? Date {
+                mtimes[name] = date
+            }
+        }
+
+        return HelperIconInventory(
+            tileName: tileName, sealValid: sealValid, liveIconMatchesVariant: variantMatch,
+            carPresent: carPresent, carRenditionSummary: carSummary, iconFileMTimes: mtimes,
+            inspectionError: nil
+        )
+    }
+
+    /// Code-signature validity via Security.framework — the same check `DiagnosticsLog`'s existing
+    /// per-bundle seal report uses, so no subprocess is needed for this half of the inspection.
+    /// `false` for both "unreadable" and "genuinely broken": either way the seal can't be trusted,
+    /// which is the only thing this line reports.
+    private static func verifySeal(bundlePath: URL) -> Bool {
+        var staticCode: SecStaticCode?
+        let created = SecStaticCodeCreateWithPath(bundlePath as CFURL, [], &staticCode)
+        guard created == errSecSuccess, let code = staticCode else { return false }
+        return SecStaticCodeCheckValidity(code, [], nil) == errSecSuccess
+    }
+
+    /// `assetutil --info <car>`, summarised to "<N> renditions, IconImageStack: yes/no". Read-only
+    /// (info only — never `--compile` or anything that writes). Drains BOTH stdout and stderr
+    /// concurrently, on background queues, BEFORE `waitUntilExit` — a child filling either pipe's
+    /// buffer while this thread blocks in `waitUntilExit` deadlocks it (mirrors
+    /// `IconCompiler.compile`'s drain, the proven pattern for this exact hazard). Returns `nil` on
+    /// any failure (missing binary, non-zero exit, unparseable JSON) rather than throwing — a
+    /// broken car degrades this one field, not the whole report.
+    private static func carRenditionSummary(carURL: URL) -> String? {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/assetutil")
+        process.arguments = ["--info", carURL.path]
+        let outPipe = Pipe()
+        let errPipe = Pipe()
+        process.standardOutput = outPipe
+        process.standardError = errPipe
+        do {
+            try process.run()
+        } catch {
+            return nil
+        }
+
+        nonisolated(unsafe) var outData = Data()
+        let drainGroup = DispatchGroup()
+        drainGroup.enter()
+        DispatchQueue.global(qos: .utility).async {
+            outData = outPipe.fileHandleForReading.readDataToEndOfFile()
+            drainGroup.leave()
+        }
+        drainGroup.enter()
+        DispatchQueue.global(qos: .utility).async {
+            _ = errPipe.fileHandleForReading.readDataToEndOfFile()
+            drainGroup.leave()
+        }
+        drainGroup.wait()
+        process.waitUntilExit()
+
+        guard process.terminationStatus == 0 else { return nil }
+        guard let jsonStart = outData.firstIndex(of: UInt8(ascii: "[")),
+              let array = try? JSONSerialization.jsonObject(with: outData[jsonStart...]) as? [[String: Any]]
+        else { return nil }
+
+        let renditionCount = array.filter { $0["AssetType"] != nil }.count
+        let hasIconImageStack = array.contains { ($0["AssetType"] as? String) == "IconImageStack" }
+        return "\(renditionCount) renditions, IconImageStack: \(hasIconImageStack ? "yes" : "no")"
     }
 
     /// Remove tile from Dock only (without deleting bundle)
