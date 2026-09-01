@@ -4,22 +4,30 @@ Cargo.toml declares `license = "MIT"`; upstream has no LICENSE file (issue to fi
 Local changes: see git log for this directory. Defect fixes carry fixture tests in tests/.
 Do NOT update from upstream without re-running the fixture tests AND the manual Dock matrix.
 
-## Deliberate exclusions from the vendored tree
+## Deliberate deviations from the vendored tree
 
-Upstream's `.claude/` directory was removed rather than vendored. It carried a `settings.json`
-declaring PreToolUse/PostToolUse command hooks plus three executable shell scripts under
-`hooks/`, and `commands/`/`skills/` instruction files for upstream's own decision-graph
-workflow (`deciduous`). None of it participates in the Rust build, and vendoring executable
-hooks that would run against this repo is not something we want. Upstream-provenance diffs must
-therefore exclude `.claude/` alongside `target/` and `DOCKTILE-README.md`:
+Two changes, both about **agent-instruction auto-loading**, neither touching the Rust build:
+
+1. **`.claude/` — REMOVED.** It carried a `settings.json` declaring PreToolUse/PostToolUse command
+   hooks plus three executable shell scripts under `hooks/`, and `commands/`/`skills/` instruction
+   files for upstream's own decision-graph workflow (`deciduous`). Vendoring executable hooks that
+   would run against this repo is not something we want.
+2. **`CLAUDE.md` — RENAMED to `UPSTREAM-NOTES.md`** (content verbatim, a pure `git mv`). A nested
+   `CLAUDE.md` **auto-loads into any agent session working in this directory**, which turned
+   upstream's "Decision Graph Workflow … THIS IS MANDATORY" section into instructions in our
+   context — the same hijack class as the `.claude/` directory above, and doubly wrong once (1)
+   deleted the slash commands it advertises. Renaming rather than deleting keeps 100% of its
+   genuinely valuable `.car` parity documentation while removing the auto-load behaviour. **Do not
+   trim or rewrite its content** — verbatim preserves its provenance value.
+
+An upstream-provenance diff must therefore exclude `target/`, `DOCKTILE-README.md` and `.claude/`,
+and account for the rename:
 
 ```
-diff -r -x target -x DOCKTILE-README.md -x .claude <upstream-checkout> Vendor/actool
+diff -r -x target -x DOCKTILE-README.md -x .claude -x UPSTREAM-NOTES.md \
+  <upstream-checkout> Vendor/actool
+diff <upstream-checkout>/CLAUDE.md Vendor/actool/UPSTREAM-NOTES.md   # must be identical
 ```
-
-Note `Vendor/actool/CLAUDE.md` IS still vendored (it documents real `.car` parity gotchas worth
-keeping), but it is upstream's agent instruction file — its "Decision Graph Workflow ... THIS IS
-MANDATORY" section describes upstream's tooling, not this repo's process, and does not apply here.
 
 Note: upstream's tag is `2.2.4` (no `v` prefix) — the brief said `v2.2.4`, but no such tag
 exists; `2.2.4` is upstream's latest release tag and is what was vendored.
