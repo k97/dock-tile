@@ -938,15 +938,27 @@ pub fn build_iconstack_csi(name: &str, dim: u32, layers: &[LayerRef]) -> Vec<u8>
 /// (typically a single image layer like `<stem>_Assets/element`).
 /// `child_dim` is the natural pixel dimension of the underlying image
 /// (Apple writes it twice into each entry — probably as render hints).
-pub fn build_icongroup_csi(name: &str, child_dim: u32, layers: &[LayerRef]) -> Vec<u8> {
+///
+/// Each layer carries a per-appearance `visible` flag. Icon Composer expresses
+/// per-appearance artwork as a **layer swap** (`hidden-specializations`), and
+/// Apple encodes that here rather than by varying the layer list: every
+/// appearance's IconGroup lists the same layers, and the hidden ones are
+/// switched off via the 0x03F4 alpha (1.0/0.0) and the 0x03FC leading flag
+/// (1/0). Verified against `/usr/bin/actool` 26.6 — see
+/// `tests/docktile_appearance.rs`.
+pub fn build_icongroup_csi(
+    name: &str,
+    child_dim: u32,
+    layers: &[(LayerRef, bool)],
+) -> Vec<u8> {
     let mut t3f4 = Vec::new();
     t3f4.write_u32::<LittleEndian>(layers.len() as u32).unwrap();
-    for layer in layers {
+    for (layer, visible) in layers {
         t3f4.extend(std::iter::repeat(0u8).take(16));
         t3f4.write_u32::<LittleEndian>(child_dim).unwrap();
         t3f4.write_u32::<LittleEndian>(child_dim).unwrap();
         t3f4.write_u32::<LittleEndian>(0).unwrap();
-        t3f4.write_f32::<LittleEndian>(1.0).unwrap();
+        t3f4.write_f32::<LittleEndian>(if *visible { 1.0 } else { 0.0 }).unwrap();
         t3f4.write_u32::<LittleEndian>(16).unwrap();
         write_layer_key_fragment(&mut t3f4, layer);
     }
@@ -955,8 +967,8 @@ pub fn build_icongroup_csi(name: &str, child_dim: u32, layers: &[LayerRef]) -> V
     let mut t3fc = Vec::new();
     t3fc.write_u32::<LittleEndian>(layers.len() as u32).unwrap();
     t3fc.write_u32::<LittleEndian>(0).unwrap();
-    for _ in layers {
-        t3fc.write_u32::<LittleEndian>(0).unwrap();
+    for (_, visible) in layers {
+        t3fc.write_u32::<LittleEndian>(u32::from(*visible)).unwrap();
         t3fc.write_u32::<LittleEndian>(0).unwrap();
         t3fc.write_u32::<LittleEndian>(1).unwrap();
         t3fc.write_u8(0).unwrap();

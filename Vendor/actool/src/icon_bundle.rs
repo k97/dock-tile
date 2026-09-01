@@ -619,7 +619,13 @@ fn collect_stack_layers(
             })
             .unwrap_or((1.0, 0.0, 0.0));
         for (i, layer) in group.layers.iter().enumerate() {
-            if layer.hidden == Some(true) {
+            // `hidden` resolves per appearance: Icon Composer expresses
+            // per-appearance artwork as a layer swap (`hidden-specializations`),
+            // so the light and dark stacks hold different layers. Reading only
+            // the plain `hidden` sibling composited every variant of a swapped
+            // layer into every stack.
+            let resolved_hidden = eff.layers.get(i).map(|l| l.hidden).unwrap_or(false);
+            if layer.hidden == Some(true) || resolved_hidden {
                 continue;
             }
             let Some(name) = layer.image_name.as_deref() else { continue };
@@ -1536,31 +1542,52 @@ fn build_icon_car(
         // FACETKEYS entry but no rendition — absent from BITMAPKEYS, it made
         // CUICatalog return "no images" (Rectangle's Overlay facet). Build the
         // per-group ident + layer refs so every group resolves.
-        let group_infos: Vec<(u16, Vec<car::LayerRef>)> = group_facet_names
-            .iter()
-            .zip(groups.iter())
-            .map(|(facet, g)| {
-                let ident = hash_name(facet);
-                let layer_refs: Vec<car::LayerRef> = g
-                    .layers
-                    .iter()
-                    .filter(|l| l.hidden != Some(true))
-                    .filter_map(|l| {
-                        let img = l.image_name.as_deref()?;
-                        let stem = std::path::Path::new(img)
-                            .file_stem()
-                            .and_then(|s| s.to_str())
-                            .unwrap_or(img);
-                        Some(car::LayerRef {
-                            part: car::PART_REGULAR,
-                            identifier: hash_name(&format!("{icon_name}_Assets/{stem}")),
+        //
+        // The layer list itself is appearance-independent: per-appearance
+        // artwork is a **layer swap** (`hidden-specializations`), which Apple
+        // encodes as a per-layer visibility flag inside each appearance's
+        // IconGroup, not by varying the list. So resolve the group's layers
+        // once per appearance and carry each layer's resolved `hidden`.
+        // Layers are stored back-to-front (icon.json lists them front-to-back,
+        // index 0 topmost) — the same painter's-order reversal the group list
+        // below uses. Both verified against `/usr/bin/actool` 26.6 on two- and
+        // three-layer bundles; see `tests/docktile_appearance.rs`.
+        let resolve_group_layers = |appearance: crate::icon_effects::Appearance| -> Vec<(
+            u16,
+            Vec<(car::LayerRef, bool)>,
+        )> {
+            group_facet_names
+                .iter()
+                .zip(groups.iter())
+                .map(|(facet, g)| {
+                    let eff = crate::icon_effects::resolve_icon_effects(g, appearance);
+                    let layer_refs: Vec<(car::LayerRef, bool)> = g
+                        .layers
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, l)| l.hidden != Some(true))
+                        .filter_map(|(i, l)| {
+                            let img = l.image_name.as_deref()?;
+                            let stem = std::path::Path::new(img)
+                                .file_stem()
+                                .and_then(|s| s.to_str())
+                                .unwrap_or(img);
+                            let visible = !eff.layers.get(i).map(|e| e.hidden).unwrap_or(false);
+                            Some((
+                                car::LayerRef {
+                                    part: car::PART_REGULAR,
+                                    identifier: hash_name(&format!("{icon_name}_Assets/{stem}")),
+                                },
+                                visible,
+                            ))
                         })
-                    })
-                    .collect();
-                (ident, layer_refs)
-            })
-            .filter(|(_, refs)| !refs.is_empty())
-            .collect();
+                        .rev()
+                        .collect();
+                    (hash_name(facet), layer_refs)
+                })
+                .filter(|(_, refs)| !refs.is_empty())
+                .collect()
+        };
         // Map appearance ID -> gradient facet name. 1=DarkAqua uses the
         // second (dark) gradient; 8=Aqua and 10=Tintable use the first.
         let grad1_ident = hash_name(&gradient_assets[0].facet_name);
@@ -1571,6 +1598,15 @@ fn build_icon_car(
                 .unwrap_or_else(|| gradient_assets[0].facet_name.clone()),
         );
         for appearance in [1u16, 8, 10] {
+            // 1=DarkAqua resolves dark specializations; 10=Tintable resolves
+            // tinted ones (falling back to the default entry when the document
+            // declares none); 8=Aqua is the default (light) resolution.
+            let resolved = match appearance {
+                1 => crate::icon_effects::Appearance::Dark,
+                10 => crate::icon_effects::Appearance::Tinted,
+                _ => crate::icon_effects::Appearance::Light,
+            };
+            let group_infos = resolve_group_layers(resolved);
             let grad_id = if appearance == 1 { grad2_ident } else { grad1_ident };
             // Stack the gradient at the bottom, then the groups back-to-front.
             // icon.json lists groups front-to-back (index 0 topmost), so the
@@ -2546,6 +2582,63 @@ fn build_bitmapkeys(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A layer swapped by `hidden-specializations` must reach only the stack
+    /// for the appearance it is visible in. Reading the plain `hidden` sibling
+    /// alone composited both halves of every swap into both stacks, so a
+    /// dark-appearance glyph was painted into the light icon.
+    #[test]
+    fn hidden_specializations_partition_the_stacks() {
+        let dir = tempfile::TempDir::new().expect("tempdir");
+        let assets = dir.path().join("Assets");
+        std::fs::create_dir_all(&assets).unwrap();
+        for name in ["glyph-light.png", "glyph-dark.png"] {
+            let img = image::RgbaImage::from_pixel(8, 8, image::Rgba([255, 255, 255, 255]));
+            img.save(assets.join(name)).expect("write png");
+        }
+        let parsed: crate::icon_json::IconJson = serde_json::from_value(serde_json::json!({
+            "fill": "automatic",
+            "groups": [{"layers": [
+                {"name": "glyph-light", "image-name": "glyph-light.png",
+                 "hidden-specializations": [
+                     {"value": false}, {"appearance": "dark", "value": true}]},
+                {"name": "glyph-dark", "image-name": "glyph-dark.png",
+                 "hidden-specializations": [
+                     {"value": true}, {"appearance": "dark", "value": false}]}
+            ]}]
+        }))
+        .expect("parse icon.json");
+
+        let stem = |layers: &[StackLayer]| -> Vec<String> {
+            layers
+                .iter()
+                .map(|l| {
+                    l.source
+                        .file_stem()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or_default()
+                        .to_string()
+                })
+                .collect()
+        };
+        use crate::icon_effects::Appearance;
+        assert_eq!(
+            stem(&collect_stack_layers(dir.path(), &parsed, Appearance::Light)),
+            vec!["glyph-light".to_string()],
+            "light stack must hold only the layer visible by default"
+        );
+        assert_eq!(
+            stem(&collect_stack_layers(dir.path(), &parsed, Appearance::Dark)),
+            vec!["glyph-dark".to_string()],
+            "dark stack must hold only the dark-visible layer"
+        );
+        // `tinted` declares no entry of its own, so it inherits the default.
+        assert_eq!(
+            stem(&collect_stack_layers(dir.path(), &parsed, Appearance::Tinted)),
+            vec!["glyph-light".to_string()],
+            "tinted inherits the default (no-appearance) entry"
+        );
+    }
 
     #[test]
     fn dark_appearance_detection() {
