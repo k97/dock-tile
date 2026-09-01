@@ -179,8 +179,17 @@ final class IconStyleManager: ObservableObject {
 
     static let shared = IconStyleManager()
 
-    /// Current icon style - views observing this will automatically update
-    @Published private(set) var currentStyle: IconStyle = .defaultStyle
+    /// Current icon style - views observing this will automatically update.
+    ///
+    /// Deliberately has NO declared default. Swift's two-phase init then REQUIRES this to be
+    /// assigned before `init()` may call any instance method (including `setupObservers()`) —
+    /// so a future edit that moved the seed below the detection guard, or deleted it outright,
+    /// fails the BUILD rather than silently leaving this at a stale/wrong value that a runtime
+    /// test might not catch (a prior test here compared against `IconStyle.current`, which
+    /// collapses to the same `.defaultStyle` as the removed-default's implicit value whenever
+    /// the system icon style is Default — the common case — so it couldn't discriminate the
+    /// regression it was meant to guard).
+    @Published private(set) var currentStyle: IconStyle
 
     /// KVO bridge for the two appearance keys.
     private var defaultsObserver: DefaultsKeyObserver?
