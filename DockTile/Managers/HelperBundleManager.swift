@@ -584,7 +584,7 @@ final class HelperBundleManager {
         // is replaced by the generated one). macOS icon priority is Assets.car > CFBundleIconFile,
         // so without removing the asset catalog the helper shows the main DockTile icon instead of
         // its custom generated one.
-        Self.stripMainAppIcons(inBundle: helperPath, declarative: IconPipeline.isDeclarative)
+        Self.stripMainAppIcons(inBundle: helperPath)
         print("   ✓ Removed main app icon assets (Assets.car)")
 
         // Note: We keep the full binary copy (no symlink) because codesign
@@ -593,29 +593,25 @@ final class HelperBundleManager {
 
     /// Which `Contents/Resources` entries a freshly-copied helper must not keep.
     ///
-    /// Always: the main app's asset catalog (`Assets.car`) and its template `AppIcon.icns` —
-    /// macOS resolves icons `Assets.car` > `CFBundleIconFile`, so the catalog MUST go or the
-    /// helper renders the main app icon. (On the declarative path the helper's OWN compiled
-    /// catalog is written back afterwards; the copy that comes out of the main app is still the
-    /// wrong one.)
-    ///
-    /// Declarative only: `docktile-actool`. The compiler is bundled for the Tahoe pipeline, and
-    /// only the MAIN app ever compiles — `IconCompiler.bundledCompilerURL` documents it as absent
-    /// from helpers, and this strip is what makes that true. Deleting it also spares every tile a
-    /// multi-megabyte copy of a binary it can never use.
-    nonisolated static func resourcesToStripFromHelper(declarative: Bool) -> [String] {
-        var names = ["Assets.car", "AppIcon.icns"]
-        if declarative { names.append("docktile-actool") }
-        return names
+    /// - `Assets.car` and the template `AppIcon.icns` — macOS resolves icons
+    ///   `Assets.car` > `CFBundleIconFile`, so the main app's catalog MUST go or the helper renders
+    ///   the main app icon. (On the declarative path the helper's OWN compiled catalog is written
+    ///   back afterwards; the copy that comes out of the main app is still the wrong one.)
+    /// - `docktile-actool` — **unconditionally, on every macOS version.** A helper never compiles
+    ///   anything: `IconCompiler.bundledCompilerURL` documents the binary as absent from helpers,
+    ///   and this strip is what makes that true. The pipeline the *generating* app happens to be
+    ///   running is irrelevant to that — gating this entry on it would leave a pre-Tahoe host
+    ///   shipping a dead multi-megabyte executable inside every tile, with the extra signing
+    ///   surface that implies.
+    nonisolated static func resourcesToStripFromHelper() -> [String] {
+        ["Assets.car", "AppIcon.icns", "docktile-actool"]
     }
 
     /// Remove the resources named by `resourcesToStripFromHelper` from a freshly-copied helper
     /// bundle. Returns whether the two icon entries were present (for logging/tests). Missing
     /// files are not an error — a no-op is fine.
     @discardableResult
-    nonisolated static func stripMainAppIcons(
-        inBundle helperPath: URL, declarative: Bool
-    ) -> (assetsCar: Bool, icns: Bool) {
+    nonisolated static func stripMainAppIcons(inBundle helperPath: URL) -> (assetsCar: Bool, icns: Bool) {
         let resources = helperPath.appendingPathComponent("Contents/Resources")
         let assetsCar = resources.appendingPathComponent("Assets.car")
         let icns = resources.appendingPathComponent("AppIcon.icns")
@@ -623,7 +619,7 @@ final class HelperBundleManager {
         let hadAssetsCar = FileManager.default.fileExists(atPath: assetsCar.path)
         let hadIcns = FileManager.default.fileExists(atPath: icns.path)
 
-        for name in resourcesToStripFromHelper(declarative: declarative) {
+        for name in resourcesToStripFromHelper() {
             try? FileManager.default.removeItem(at: resources.appendingPathComponent(name))
         }
 

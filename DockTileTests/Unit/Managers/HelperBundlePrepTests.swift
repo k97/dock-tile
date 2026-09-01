@@ -115,19 +115,13 @@ struct HelperInfoPlistTests {
 @Suite("Helper resource strip list")
 struct HelperStripListTests {
 
-    @Test("Declarative helpers also strip the bundled compiler")
-    func declarativeStripsCompiler() {
+    @Test("Every helper strips the catalog, the template icns, and the bundled compiler")
+    func stripsIconAssetsAndCompiler() {
         // A helper must never be able to compile an .icon document — it has no reason to and
         // `IconCompiler.bundledCompilerURL` documents it as impossible. The binary being absent
         // from the copy is what makes that true.
-        #expect(HelperBundleManager.resourcesToStripFromHelper(declarative: true)
+        #expect(HelperBundleManager.resourcesToStripFromHelper()
             == ["Assets.car", "AppIcon.icns", "docktile-actool"])
-    }
-
-    @Test("Legacy helpers strip the main app's catalog and template icns only")
-    func legacyStripsIconAssetsOnly() {
-        #expect(HelperBundleManager.resourcesToStripFromHelper(declarative: false)
-            == ["Assets.car", "AppIcon.icns"])
     }
 }
 
@@ -163,7 +157,7 @@ struct HelperIconStripTests {
         let bundle = try makeBundle(assetsCar: true, icns: true)
         defer { try? FileManager.default.removeItem(at: bundle.deletingLastPathComponent()) }
 
-        let result = HelperBundleManager.stripMainAppIcons(inBundle: bundle, declarative: false)
+        let result = HelperBundleManager.stripMainAppIcons(inBundle: bundle)
 
         #expect(result.assetsCar == true)
         #expect(result.icns == true)
@@ -171,15 +165,20 @@ struct HelperIconStripTests {
         #expect(exists(bundle, "Contents/Resources/AppIcon.icns") == false)
     }
 
-    @Test("Declarative strip removes the compiler from the generated helper")
-    func declarativeRemovesCompiler() throws {
+    @Test("Removes the compiler whichever icon pipeline generated the helper")
+    func alwaysRemovesCompiler() throws {
+        // THE regression guard for a strip gated on the pipeline: a pre-Tahoe host still bundles
+        // docktile-actool, and a helper generated there must not carry a dead executable it can
+        // never run. `stripMainAppIcons` takes no pipeline flag precisely so this cannot regress —
+        // reintroducing one would have to change this call, not just slip past it.
         let bundle = try makeBundle(assetsCar: true, icns: true, compiler: true)
         defer { try? FileManager.default.removeItem(at: bundle.deletingLastPathComponent()) }
 
-        HelperBundleManager.stripMainAppIcons(inBundle: bundle, declarative: true)
+        HelperBundleManager.stripMainAppIcons(inBundle: bundle)
 
         #expect(exists(bundle, "Contents/Resources/docktile-actool") == false)
         #expect(exists(bundle, "Contents/Resources/Assets.car") == false)
+        #expect(exists(bundle, "Contents/Resources/AppIcon.icns") == false)
     }
 
     @Test("No-op (no throw) when the icon assets are absent")
@@ -187,7 +186,7 @@ struct HelperIconStripTests {
         let bundle = try makeBundle(assetsCar: false, icns: false)
         defer { try? FileManager.default.removeItem(at: bundle.deletingLastPathComponent()) }
 
-        let result = HelperBundleManager.stripMainAppIcons(inBundle: bundle, declarative: false)
+        let result = HelperBundleManager.stripMainAppIcons(inBundle: bundle)
 
         #expect(result.assetsCar == false)
         #expect(result.icns == false)
