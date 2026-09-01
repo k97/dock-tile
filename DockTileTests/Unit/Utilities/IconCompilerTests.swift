@@ -78,6 +78,58 @@ struct IconCompilerTests {
         }
     }
 
+    @Test("assetutil --info itself failing is reported distinctly from the flattening diagnosis")
+    func assetutilFailureIsNotMisdiagnosedAsFlattening() throws {
+        let scratch = try makeScratchDir()
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        // A fake compiler that "succeeds" but leaves a garbage (unreadable-by-assetutil) car —
+        // outputDir.path lands at $3 in the invocation compile() builds.
+        let fakeCompiler = try writeFakeCompiler(in: scratch, script: "echo garbage > \"$3/Assets.car\"\nexit 0\n")
+        let document = scratch.appendingPathComponent("x.icon")
+
+        do {
+            _ = try IconCompiler.compile(
+                document: document, outputDir: scratch.appendingPathComponent("out"), compilerURL: fakeCompiler)
+            Issue.record("expected compile to throw")
+        } catch let IconCompilerError.invalidOutput(reason) {
+            #expect(reason.contains("assetutil --info failed"))
+            #expect(!reason.contains("silently flattened"))
+        } catch {
+            Issue.record("expected .invalidOutput, got \(error)")
+        }
+    }
+
+    @Test("A thrown compileFailed's localizedDescription carries the stderr text (the Diagnostics gate)")
+    func compileFailedLocalizedDescriptionCarriesDetail() throws {
+        let scratch = try makeScratchDir()
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        let fakeCompiler = try writeFakeCompiler(in: scratch, script: "echo 'boom' >&2\nexit 1\n")
+        let document = scratch.appendingPathComponent("x.icon")
+
+        do {
+            _ = try IconCompiler.compile(
+                document: document, outputDir: scratch.appendingPathComponent("out"), compilerURL: fakeCompiler)
+            Issue.record("expected compile to throw")
+        } catch {
+            // Exactly the code path DiagnosticsLog.measure's catch block exercises — proves the
+            // detail survives being boxed into `any Error`, not just that `errorDescription`
+            // exists on the concrete type.
+            #expect(error.localizedDescription.contains("boom"))
+        }
+    }
+
+    @Test("A compilerURL that is a directory throws .compilerMissing, not a raw NSError")
+    func directoryCompilerURLThrowsCompilerMissing() throws {
+        let scratch = try makeScratchDir()
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        let document = scratch.appendingPathComponent("x.icon")
+
+        #expect(throws: IconCompilerError.compilerMissing) {
+            _ = try IconCompiler.compile(
+                document: document, outputDir: scratch.appendingPathComponent("out"), compilerURL: scratch)
+        }
+    }
+
     // MARK: - Integration: the real vendored compiler against the proven fixture
 
     static var builtCompilerPath: String {

@@ -129,15 +129,31 @@ enum IconDocumentBuilder {
 }
 
 /// Errors from `IconCompiler.compile`. Every case carries enough to debug from — a broken or
-/// unvalidated `Assets.car` is never returned silently.
-enum IconCompilerError: Error, Equatable {
+/// unvalidated `Assets.car` is never returned silently. `LocalizedError` conformance matters here
+/// (not just documentation): `DiagnosticsLog.measure`'s catch logs `error.localizedDescription`,
+/// and a plain `Error` with no `LocalizedError` bridges to a generic NSError string that drops the
+/// associated detail entirely — the one surface Copy Diagnostics relies on to debug a field
+/// failure would otherwise never carry the compiler's actual stderr.
+enum IconCompilerError: Error, LocalizedError, Equatable {
     /// `compilerURL` does not point to an executable file.
     case compilerMissing
     /// The compiler subprocess exited non-zero; the associated value is its captured stderr.
     case compileFailed(String)
     /// The compiler exited zero but the result failed structural validation — no `Assets.car`,
-    /// or a car with no `IconImageStack` rendition (the Apple `actool` silent-flattening class).
+    /// `assetutil --info` itself failed, or the car has no `IconImageStack` rendition (the Apple
+    /// `actool` silent-flattening class).
     case invalidOutput(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .compilerMissing:
+            return "docktile-actool compiler is missing or not executable"
+        case .compileFailed(let stderr):
+            return "docktile-actool failed: \(stderr)"
+        case .invalidOutput(let reason):
+            return reason
+        }
+    }
 }
 
 /// Invokes the vendored `docktile-actool` to compile an Icon Composer `.icon` document into an
@@ -158,7 +174,9 @@ enum IconCompiler {
     /// non-zero compile, or a structurally-invalid result — and never returns an unvalidated car.
     static func compile(document: URL, outputDir: URL, compilerURL: URL) throws -> URL {
         try DiagnosticsLog.shared.measure("compile tile car") {
-            guard FileManager.default.isExecutableFile(atPath: compilerURL.path) else {
+            var isDirectory: ObjCBool = false
+            let exists = FileManager.default.fileExists(atPath: compilerURL.path, isDirectory: &isDirectory)
+            guard exists, !isDirectory.boolValue, FileManager.default.isExecutableFile(atPath: compilerURL.path) else {
                 throw IconCompilerError.compilerMissing
             }
             try FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
@@ -195,15 +213,45 @@ enum IconCompiler {
                 throw IconCompilerError.invalidOutput("compiler exited successfully but produced no Assets.car")
             }
 
+            // Unlike the compiler call above, we need BOTH streams here: stdout carries the JSON
+            // `validate` classifies, stderr carries the detail if assetutil itself fails (a
+            // truncated/corrupt car, an environment problem) — that failure must not be
+            // misdiagnosed as "the compiler flattened the icon" when it's really "assetutil
+            // couldn't even read the file". With two live pipes, draining them one after another
+            // reintroduces the deadlock this task exists to avoid, so both are drained
+            // concurrently, on background queues, before `waitUntilExit`.
             let info = Process()
             info.executableURL = URL(fileURLWithPath: "/usr/bin/assetutil")
             info.arguments = ["--info", carURL.path]
-            let infoPipe = Pipe()
-            info.standardOutput = infoPipe
-            info.standardError = FileHandle.nullDevice
+            let infoOutPipe = Pipe()
+            let infoErrPipe = Pipe()
+            info.standardOutput = infoOutPipe
+            info.standardError = infoErrPipe
             try info.run()
-            let infoData = infoPipe.fileHandleForReading.readDataToEndOfFile()
+
+            // Safe despite the mutable capture: `drainGroup.wait()` below is a happens-before
+            // barrier between each background write and this thread's read, so there is never
+            // concurrent access — the compiler just can't see that through DispatchGroup.
+            nonisolated(unsafe) var infoData = Data()
+            nonisolated(unsafe) var infoErrData = Data()
+            let drainGroup = DispatchGroup()
+            drainGroup.enter()
+            DispatchQueue.global(qos: .utility).async {
+                infoData = infoOutPipe.fileHandleForReading.readDataToEndOfFile()
+                drainGroup.leave()
+            }
+            drainGroup.enter()
+            DispatchQueue.global(qos: .utility).async {
+                infoErrData = infoErrPipe.fileHandleForReading.readDataToEndOfFile()
+                drainGroup.leave()
+            }
+            drainGroup.wait()
             info.waitUntilExit()
+
+            guard info.terminationStatus == 0 else {
+                let message = String(data: infoErrData, encoding: .utf8) ?? "unknown assetutil error"
+                throw IconCompilerError.invalidOutput("assetutil --info failed (exit \(info.terminationStatus)): \(message)")
+            }
 
             guard validate(assetutilJSON: infoData) else {
                 throw IconCompilerError.invalidOutput(
