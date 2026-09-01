@@ -1,0 +1,30 @@
+[
+  {
+    "url": "https://github.com/transmission/transmission.git",
+    "paths": [ "macosx/Images/Images.xcassets" ]
+  },
+  {
+    "url": "https://github.com/iina/iina.git",
+    "paths": [ "iina/Assets.xcassets" ]
+  },
+  {
+    "url": "https://github.com/rxhanson/Rectangle.git",
+    "paths": [ "Rectangle/Assets.xcassets" ]
+  },
+  {
+    "url": "https://github.com/StanfordBDHG/OwnYourData.git",
+    "paths": [ "OwnYourData/Resources/Assets.xcassets" ]
+  },
+  {
+    "url": "https://github.com/Shaarav4795/Cheetah.git",
+    "paths": [ "Cheetah/Assets.xcassets" ]
+  },
+  {
+    "url": "https://github.com/serglit72/Smack.git",
+    "paths": [ "Smack/Assets.xcassets" ]
+  },
+  {
+    "url": "https://github.com/eurora-labs/eurora.git",
+    "paths": [ "apps/macos/macos/Assets.xcassets" ]
+  }
+]

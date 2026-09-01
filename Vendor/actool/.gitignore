@@ -1,0 +1,25 @@
+# Build artifacts
+__pycache__
+*.egg-info
+.venv
+*.pyc
+
+# Rust
+target/
+tmp/
+
+# external files
+actool_server.py
+actool_client.py
+
+# Test output (generated at runtime)
+_test_output/
+
+# Deciduous database (local)
+.deciduous/
+
+tools/extract_pixels
+tools/validate_car
+
+# Third-party repos cloned by validate_repos.py
+third_party/
