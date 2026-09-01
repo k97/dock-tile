@@ -34,9 +34,10 @@ was reached.
    are pre-coloured).
 3. `IconCompiler` runs the bundled `docktile-actool` (vendored under `Vendor/actool/`, see its
    `DOCKTILE-README.md`) as a subprocess, then structurally validates the output (`assetutil
-   --info` must show layered `IconImageStack` renditions) before anything is installed — never
-   trust a compile without checking the renditions; Xcode's own `actool` has shipped
-   silent-flattening bugs.
+   --info` must show all three appearance `IconImageStack` renditions — Aqua, DarkAqua and
+   Tintable; "at least one stack" would pass the very appearance-collapse this guards) before
+   anything is installed — never trust a compile without checking the renditions; Xcode's own
+   `actool` has shipped silent-flattening bugs.
 4. `IconGenerator.generateFallbackIcns` bakes one additional `.icns` — the light-appearance
    composition at the same margined geometry — for Launch Services contexts that need a bitmap
    icon and for the customiser preview to match.

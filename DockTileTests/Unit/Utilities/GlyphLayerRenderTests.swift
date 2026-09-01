@@ -48,11 +48,16 @@ struct GlyphLayerRenderTests {
         }
     }
 
-    @Test("Light layer glyph is white-family; dark layer carries the lifted tint")
+    @Test("Light layer glyph is white-family; dark layer carries the LIFTED tint")
     func appearanceDrivesGlyphColour() throws {
+        // #5F00FF is the colour `liftedForDarkGlyph` exists for: maximum HSB brightness, perceived
+        // luminance (0.23) far under the 0.55 floor, so it vanishes on the dark background unless
+        // lifted. A saturated tint like .green would satisfy a "saturation > 0.3" check straight
+        // from the raw tint, proving nothing about the lift.
+        let violet = TintColor.custom("#5F00FF")
         func layer(_ appearance: IconAppearance) throws -> Data {
             try IconGenerator.generateGlyphLayerPNG(
-                appearance: appearance, tintColor: .green, iconType: .sfSymbol,
+                appearance: appearance, tintColor: violet, iconType: .sfSymbol,
                 iconValue: "square.fill", iconScale: 14, iconWeight: .medium)
         }
         func centreColour(_ data: Data) throws -> NSColor {
@@ -65,8 +70,24 @@ struct GlyphLayerRenderTests {
         #expect(light.brightnessComponent > 0.85)
         #expect(light.saturationComponent < 0.15)
 
-        let dark = try centreColour(try layer(.dark))
-        #expect(dark.saturationComponent > 0.3)   // tinted glyph, not white
+        // The shading gradient darkens the glyph toward its bottom, so the BRIGHTEST pixel down
+        // the glyph's centre column is the undarkened foreground the lift produced — comparable
+        // to the seam's own value, unlike the mid-gradient centre pixel.
+        let darkRep = try bitmap(try layer(.dark))
+        let glyphLuminances: [CGFloat] = (0..<Self.canvas)
+            .compactMap { darkRep.colorAt(x: 512, y: $0)?.usingColorSpace(.sRGB) }
+            .filter { $0.alphaComponent > 0.99 }
+            .map(Self.perceivedLuminance)
+        let rendered = try #require(glyphLuminances.max())
+        let expected = Self.perceivedLuminance(
+            violet.nsColors(for: .dark, iconType: .sfSymbol).foreground)
+        let unlifted = Self.perceivedLuminance(try #require(NSColor(hex: "#5F00FF")))
+        #expect(expected >= TintColor.darkGlyphLuminanceFloor - 0.001)  // the seam lifted at all
+        // …and the pixels carry it. The shading gradient costs the composited glyph ~15% of its
+        // luminance, so the rendered maximum sits just under the seam's value — and, crucially,
+        // far above the ~0.23 an unlifted #5F00FF would leave (which is the regression).
+        #expect(abs(rendered - expected) < 0.12)
+        #expect(rendered > unlifted + 0.2)
 
         // Mono for the system tint pass — and byte-identical to the light layer, which is what
         // lets the .icon document reuse the light layer for tinted (no third PNG).
@@ -74,6 +95,13 @@ struct GlyphLayerRenderTests {
         let tinted = try centreColour(tintedData)
         #expect(tinted.saturationComponent < 0.15)
         #expect(tintedData == lightData)
+    }
+
+    /// The same 0.299/0.587/0.114 weighting `liftedForDarkGlyph` lifts on — HSB brightness cannot
+    /// see the `#5F00FF` case at all (it is already 1.0 there).
+    private static func perceivedLuminance(_ color: NSColor) -> CGFloat {
+        guard let rgb = color.usingColorSpace(.sRGB) else { return 0 }
+        return 0.299 * rgb.redComponent + 0.587 * rgb.greenComponent + 0.114 * rgb.blueComponent
     }
 
     @Test("Glyph honours the seam ratio on the new canvas")
@@ -154,14 +182,17 @@ struct GlyphLayerRenderTests {
     @Test("Brand glyph routes like a symbol: tintable, appearance-swapped, seam-sized")
     func brandGlyphRoutesLikeASymbol() throws {
         let brand = SFSymbolCatalog.brandSymbolName
-        func rep(_ appearance: IconAppearance) throws -> NSBitmapImageRep {
-            try bitmap(try IconGenerator.generateGlyphLayerPNG(
+        func layer(_ appearance: IconAppearance) throws -> Data {
+            try IconGenerator.generateGlyphLayerPNG(
                 appearance: appearance, tintColor: .green, iconType: .sfSymbol,
-                iconValue: brand, iconScale: 14, iconWeight: .medium))
+                iconValue: brand, iconScale: 14, iconWeight: .medium)
         }
         // Unlike emoji, the brand raster IS recoloured per appearance — so its layers differ.
-        let light = try rep(.light)
-        let dark = try rep(.dark)
+        let lightData = try layer(.light)
+        let darkData = try layer(.dark)
+        #expect(lightData != darkData)
+        let light = try bitmap(lightData)
+        let dark = try bitmap(darkData)
         #expect(light.pixelsWide == Self.canvas)
 
         // The logo's own (higher) ratio curve, not the SF-Symbol cap.

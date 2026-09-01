@@ -454,7 +454,13 @@ final class HelperBundleManager {
     /// never shows up as a bogus "no helper bundle found" row — only OUR tiles that are ALSO
     /// currently pinned are inspected, matching how `HelperMigrationManager.classifyHelperHealth`
     /// scopes its self-heal sweep.
-    func collectIconInventory(configurations: [DockTileConfiguration]) -> [HelperIconInventory] {
+    ///
+    /// `sealStates` comes from `helperSealStates()` (keyed by bundle folder name) so the ~70 ms
+    /// `SecStaticCodeCheckValidity` pass this report already ran for the signatures section is
+    /// reused here rather than repeated per pinned tile.
+    func collectIconInventory(
+        configurations: [DockTileConfiguration], sealStates: [String: HelperSealState]
+    ) -> [HelperIconInventory] {
         guard !AppEnvironment.isHelper else { return [] }
         let pinned = pinnedBundleIds()
         return configurations
@@ -467,19 +473,38 @@ final class HelperBundleManager {
                         inspectionError: "pinned in the Dock but no helper bundle found on disk"
                     )
                 }
-                return Self.inspectIconShape(bundlePath: bundlePath, tileName: config.diagnosticName)
+                // Both sides enumerate the same support folder, so the lookup always hits; the
+                // fallback keeps a miss honest rather than silently reporting a valid seal BROKEN.
+                let seal = sealStates[bundlePath.lastPathComponent] ?? Self.sealState(bundlePath: bundlePath)
+                return Self.inspectIconShape(
+                    bundlePath: bundlePath, tileName: config.diagnosticName, sealValid: seal.isValid)
             }
+    }
+
+    /// Seal state for every helper bundle in the support folder, keyed by bundle folder name
+    /// (`<name>.app`) — unique within one directory. One `SecStaticCodeCheckValidity` per bundle,
+    /// which is the whole point: see `HelperSealState`.
+    func helperSealStates() -> [String: HelperSealState] {
+        guard let entries = try? FileManager.default.contentsOfDirectory(
+            at: helperDirectory, includingPropertiesForKeys: nil
+        ) else { return [:] }
+
+        var states: [String: HelperSealState] = [:]
+        for bundle in entries where bundle.pathExtension == "app" {
+            states[bundle.lastPathComponent] = Self.sealState(bundlePath: bundle)
+        }
+        return states
     }
 
     /// Inspects one helper bundle's Resources folder: seal validity, which icon shape it's
     /// actually in (legacy variant match vs declarative `Assets.car`, determined from what's
     /// really on disk — NOT from `IconPipeline.isDeclarative`, since a machine mid-migration can
     /// hold both shapes at once), and every icon file's mtime.
-    private static func inspectIconShape(bundlePath: URL, tileName: String) -> HelperIconInventory {
+    private static func inspectIconShape(
+        bundlePath: URL, tileName: String, sealValid: Bool
+    ) -> HelperIconInventory {
         let resources = bundlePath.appendingPathComponent("Contents/Resources")
         let fm = FileManager.default
-
-        let sealValid = verifySeal(bundlePath: bundlePath)
 
         let carURL = resources.appendingPathComponent("Assets.car")
         let carPresent = fm.fileExists(atPath: carURL.path)
@@ -514,15 +539,15 @@ final class HelperBundleManager {
         )
     }
 
-    /// Code-signature validity via Security.framework — the same check `DiagnosticsLog`'s existing
-    /// per-bundle seal report uses, so no subprocess is needed for this half of the inspection.
-    /// `false` for both "unreadable" and "genuinely broken": either way the seal can't be trusted,
-    /// which is the only thing this line reports.
-    private static func verifySeal(bundlePath: URL) -> Bool {
+    /// THE code-signature check for helper bundles — Security.framework, no subprocess. The only
+    /// implementation: both Copy Diagnostics sections read its result through `helperSealStates()`
+    /// rather than validating a bundle twice.
+    nonisolated static func sealState(bundlePath: URL) -> HelperSealState {
         var staticCode: SecStaticCode?
         let created = SecStaticCodeCreateWithPath(bundlePath as CFURL, [], &staticCode)
-        guard created == errSecSuccess, let code = staticCode else { return false }
-        return SecStaticCodeCheckValidity(code, [], nil) == errSecSuccess
+        guard created == errSecSuccess, let code = staticCode else { return .unreadable(created) }
+        let status = SecStaticCodeCheckValidity(code, [], nil)
+        return status == errSecSuccess ? .valid : .broken(status)
     }
 
     /// `assetutil --info <car>`, summarised to "<N> renditions, IconImageStack: yes/no". Read-only

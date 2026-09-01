@@ -31,13 +31,17 @@ enum IconDocumentBuilder {
 
     /// One glyph layer in the document's single group.
     struct LayerSpec {
+        /// The appearances a layer can be exclusive to. Deliberately NOT `IconAppearance`:
+        /// `.tinted` reuses the light layer, and the polarity formula in `layerDict` would emit
+        /// a layer hidden in EVERY appearance for it — an invalid document that still compiles.
+        enum Exclusive { case light, dark }
+
         let name: String
         let imageName: String
         /// `nil` = visible in every appearance (the emoji single-layer model); otherwise the
         /// ONE appearance this layer is exclusive to (a `.light` layer hides for dark; a
-        /// `.dark` layer starts hidden and shows for dark). Tinted reuses the light layer, so
-        /// it is never consulted here.
-        let exclusiveTo: IconAppearance?
+        /// `.dark` layer starts hidden and shows for dark).
+        let exclusiveTo: Exclusive?
     }
 
     /// Builds the `icon.json` dictionary. The default fill value is duplicated as the first,
@@ -103,6 +107,8 @@ enum IconDocumentBuilder {
             ]
         ]
         if let exclusiveTo = layer.exclusiveTo {
+            // Polarity: hidden by default unless this IS the light layer; hidden for dark unless
+            // this IS the dark layer. Two cases only — see `LayerSpec.Exclusive`.
             dict["hidden-specializations"] = [
                 ["value": exclusiveTo != .light],
                 ["appearance": IconAppearance.dark.rawValue, "value": exclusiveTo != .dark]
@@ -140,8 +146,8 @@ enum IconCompilerError: Error, LocalizedError, Equatable {
     /// The compiler subprocess exited non-zero; the associated value is its captured stderr.
     case compileFailed(String)
     /// The compiler exited zero but the result failed structural validation — no `Assets.car`,
-    /// `assetutil --info` itself failed, or the car has no `IconImageStack` rendition (the Apple
-    /// `actool` silent-flattening class).
+    /// `assetutil --info` itself failed, or the car does not carry exactly the three appearance
+    /// `IconImageStack` renditions (the Apple `actool` silent-flattening class).
     case invalidOutput(String)
 
     var errorDescription: String? {
@@ -253,24 +259,47 @@ enum IconCompiler {
                 throw IconCompilerError.invalidOutput("assetutil --info failed (exit \(info.terminationStatus)): \(message)")
             }
 
-            guard validate(assetutilJSON: infoData) else {
-                throw IconCompilerError.invalidOutput(
-                    "assetutil --info reports no IconImageStack rendition — the compiler silently flattened the icon")
+            if let reason = validationFailure(assetutilJSON: infoData) {
+                throw IconCompilerError.invalidOutput(reason)
             }
 
             return carURL
         }
     }
 
-    /// Pure classification of `assetutil --info <car>` JSON: valid only when it parses to a
-    /// non-empty array containing at least one `IconImageStack` rendition. This is the guard
-    /// against Apple's documented `actool` defect class where a build silently flattens a layered
-    /// icon into a single image with no error anywhere. `assetutil` can preface its output with a
-    /// stray non-JSON line, so parsing starts at the first `[`.
-    nonisolated static func validate(assetutilJSON data: Data) -> Bool {
+    /// The three appearance stacks a correctly-compiled layered icon must carry — one per
+    /// appearance macOS renders. `clear` is derived from tintable, so there is no fourth.
+    nonisolated static let requiredStackAppearances: Set<String> = [
+        "NSAppearanceNameAqua", "NSAppearanceNameDarkAqua", "ISAppearanceTintable"
+    ]
+
+    /// Pure classification of `assetutil --info <car>` JSON. Returns `nil` when the car is
+    /// structurally sound, or the reason it is not.
+    ///
+    /// **"At least one stack" is not enough (critical)**: the defect this whole vendoring effort
+    /// exists to fix was a car whose three appearances were byte-identical — a collapse that a
+    /// presence check happily passes. So the gate demands exactly the three appearance stacks
+    /// (`requiredStackAppearances`), which is the strongest structural claim `assetutil --info`
+    /// supports: a compiler that flattens the layers, or a crate update that emits a single
+    /// stack, fails here instead of installing. `assetutil` can preface its output with a stray
+    /// non-JSON line, so parsing starts at the first `[`.
+    nonisolated static func validationFailure(assetutilJSON data: Data) -> String? {
         guard let jsonStart = data.firstIndex(of: UInt8(ascii: "[")),
               let array = try? JSONSerialization.jsonObject(with: data[jsonStart...]) as? [[String: Any]]
-        else { return false }
-        return array.contains { ($0["AssetType"] as? String) == "IconImageStack" }
+        else { return "assetutil --info output could not be parsed as a rendition array" }
+
+        let stacks = array.filter { ($0["AssetType"] as? String) == "IconImageStack" }
+        let appearances = Set(stacks.compactMap { $0["Appearance"] as? String })
+        guard appearances == requiredStackAppearances, stacks.count == requiredStackAppearances.count else {
+            let found = appearances.sorted().joined(separator: ", ")
+            return """
+                assetutil --info reports \(stacks.count) IconImageStack rendition(s) \
+                (appearances: \(found.isEmpty ? "none" : found)) — a layered icon must carry \
+                exactly \(requiredStackAppearances.count), one per appearance \
+                (\(requiredStackAppearances.sorted().joined(separator: ", "))). The compiler \
+                flattened the icon or collapsed its appearances.
+                """
+        }
+        return nil
     }
 }

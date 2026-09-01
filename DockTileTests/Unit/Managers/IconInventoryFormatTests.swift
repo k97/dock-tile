@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import Security
 @testable import Dock_Tile
 
 // MARK: - Icon Inventory Format Tests
@@ -193,5 +194,41 @@ struct IconInventoryFormatTests {
             mtimes: (no icon files found)
         """
         #expect(result == expected)
+    }
+}
+
+// MARK: - Helper Seal Report Format Tests
+//
+// Guards `DiagnosticsLog.formatSealStates` — the other half of the seal dedupe. The seal is now
+// validated ONCE per bundle (`HelperBundleManager.helperSealStates`) and rendered from the stored
+// state, so this pins the rendered text the report has always carried, including the icon-swap
+// note that makes a broken seal readable without looking anything up.
+
+@Suite("DiagnosticsLog.formatSealStates")
+struct HelperSealFormatTests {
+
+    @Test("Bundles render sorted by name, one line each, with the valid/broken/unreadable wording")
+    func rendersEveryState() {
+        let lines = DiagnosticsLog.formatSealStates([
+            "Zed.app": .valid,
+            "Media.app": .broken(errSecCSBadResource),
+            "Alpha.app": .unreadable(-67062)
+        ])
+        #expect(lines == [
+            "  Alpha.app: unreadable (OSStatus -67062)",
+            "  Media.app: SEAL BROKEN, OSStatus -67054 (sealed resource modified — icon swap)",
+            "  Zed.app: seal valid"
+        ])
+    }
+
+    @Test("A broken seal that is NOT the icon-swap status omits the icon-swap note")
+    func otherBreakageHasNoIconSwapNote() {
+        #expect(DiagnosticsLog.formatSealStates(["Tile.app": .broken(-67030)])
+            == ["  Tile.app: SEAL BROKEN, OSStatus -67030"])
+    }
+
+    @Test("No bundles renders no lines — report() then omits the section entirely")
+    func emptyRendersNothing() {
+        #expect(DiagnosticsLog.formatSealStates([:]).isEmpty)
     }
 }

@@ -66,6 +66,22 @@ struct HelperIconInventory {
     let inspectionError: String?
 }
 
+/// One helper bundle's code-signature state, from a single `SecStaticCodeCheckValidity` pass.
+///
+/// Copy Diagnostics reports seals twice — once per bundle in the "Helper bundle signatures"
+/// section, once per pinned tile in the icon inventory — and that validation costs ~70 ms on a
+/// 16 MB bundle (≈2 s at 16 tiles, synchronously on the main actor). So it is computed ONCE, by
+/// `HelperBundleManager.helperSealStates()`, and threaded into both sections.
+enum HelperSealState: Equatable {
+    case valid
+    /// `SecStaticCodeCheckValidity` failed — the seal is genuinely broken.
+    case broken(OSStatus)
+    /// `SecStaticCodeCreateWithPath` failed — the bundle's signature could not even be read.
+    case unreadable(OSStatus)
+
+    var isValid: Bool { self == .valid }
+}
+
 final class DiagnosticsLog: @unchecked Sendable {
     static let shared = DiagnosticsLog()
 
@@ -310,16 +326,20 @@ final class DiagnosticsLog: @unchecked Sendable {
             }
         }
 
-        let seals = helperSealReport()
-        if !seals.isEmpty {
+        // ONE seal validation pass for the whole report: this section renders it in full, and the
+        // icon inventory below reads its per-tile answer out of the same map instead of
+        // re-running SecStaticCodeCheckValidity on every pinned bundle (~70 ms each).
+        let sealStates = HelperBundleManager.shared.helperSealStates()
+        if !sealStates.isEmpty {
             out.append("")
             out.append("Helper bundle signatures:")
-            out.append(contentsOf: seals)
+            out.append(contentsOf: Self.formatSealStates(sealStates))
         }
 
         // Always rendered (even when empty) — see `formatIconInventory`'s doc comment for why.
         out.append("")
-        out.append(Self.formatIconInventory(HelperBundleManager.shared.collectIconInventory(configurations: configurations)))
+        out.append(Self.formatIconInventory(HelperBundleManager.shared.collectIconInventory(
+            configurations: configurations, sealStates: sealStates)))
 
         return out.joined(separator: "\n")
     }
@@ -370,35 +390,27 @@ final class DiagnosticsLog: @unchecked Sendable {
         return lines.joined(separator: "\n")
     }
 
-    /// Per-tile code-signature state, one line each.
+    /// Pure renderer for the per-bundle code-signature section, one line each (mirrors
+    /// `formatIconInventory`). The states come from `HelperBundleManager.helperSealStates()` — the
+    /// single validation pass this report runs.
     ///
     /// WHY this is worth a line in every report: switching a tile's icon rewrites `AppIcon.icns`
     /// inside an already-signed bundle, which breaks the signature seal — verified, a tile that has
     /// switched styles fails with "a sealed resource is missing or invalid / file modified:
     /// …/AppIcon.icns" while one that never switched verifies clean. So this doubles as a free,
     /// on-disk indicator of WHICH tiles have been flipping appearance, with no telemetry at all.
-    private func helperSealReport() -> [String] {
-        let fm = FileManager.default
-        guard let entries = try? fm.contentsOfDirectory(
-            at: AppEnvironment.supportURL, includingPropertiesForKeys: nil
-        ) else { return [] }
-
-        let bundles = entries.filter { $0.pathExtension == "app" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
-        guard !bundles.isEmpty else { return [] }
-
-        return bundles.map { bundle in
-            var staticCode: SecStaticCode?
-            let created = SecStaticCodeCreateWithPath(bundle as CFURL, [], &staticCode)
-            guard created == errSecSuccess, let code = staticCode else {
-                return "  \(bundle.lastPathComponent): unreadable (OSStatus \(created))"
+    nonisolated static func formatSealStates(_ states: [String: HelperSealState]) -> [String] {
+        states.keys.sorted().map { name in
+            switch states[name]! {
+            case .valid:
+                return "  \(name): seal valid"
+            case .unreadable(let status):
+                return "  \(name): unreadable (OSStatus \(status))"
+            case .broken(let status):
+                // errSecCSBadResource (-67054) is the icon-swap signature: a sealed resource changed.
+                let note = (status == errSecCSBadResource) ? " (sealed resource modified — icon swap)" : ""
+                return "  \(name): SEAL BROKEN, OSStatus \(status)\(note)"
             }
-            let status = SecStaticCodeCheckValidity(code, [], nil)
-            if status == errSecSuccess {
-                return "  \(bundle.lastPathComponent): seal valid"
-            }
-            // errSecCSBadResource (-67635) is the icon-swap signature: a sealed resource changed.
-            let note = (status == errSecCSBadResource) ? " (sealed resource modified — icon swap)" : ""
-            return "  \(bundle.lastPathComponent): SEAL BROKEN, OSStatus \(status)\(note)"
         }
     }
 
