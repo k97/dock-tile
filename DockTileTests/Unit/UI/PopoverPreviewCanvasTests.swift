@@ -134,4 +134,18 @@ struct PopoverPreviewCanvasTests {
     func naturalScaleWithoutProposal() {
         #expect(PopoverPreviewCanvas.naturalScale(availableWidth: 0, panelWidth: 498) == 1)
     }
+
+    // MARK: - Worst-case canvas trim (Settings hero reclaims unused vertical space)
+
+    @Test("A panel smaller than the design box trims the canvas to scaled height + 44pt margin")
+    func worstCaseTrimsToCurrentPanel() {
+        // 200pt panel at 0.8 zoom = 160 + 44 margin = 204, well under the 300 design height.
+        #expect(PopoverPreviewCanvas.trimmedWorstCaseHeight(design: 300, panelHeight: 200, scale: 0.8) == 204)
+    }
+
+    @Test("A worst-case-sized panel keeps the full design height — the trim never exceeds it")
+    func worstCaseCapsAtDesignHeight() {
+        // 400pt panel at 0.9 zoom = 360 + 44 = 404, capped to the 300 design box.
+        #expect(PopoverPreviewCanvas.trimmedWorstCaseHeight(design: 300, panelHeight: 400, scale: 0.9) == 300)
+    }
 }
