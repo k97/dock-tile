@@ -117,21 +117,12 @@ struct AboutPaneView: View {
         .paneTitleBand(AppStrings.About.title)
     }
 
-    /// The product in context: the user's first three tiles (or the defaults) on a Dock strip.
+    /// The product in context: Finder beside Dock Tile's own icon on a Dock strip (the reference
+    /// pairing — the app that lives next to yours in the Dock, not a synthetic tile row).
     private var hero: some View {
-        let tiles = Array(configManager.configurations.prefix(3))
-        return HStack(spacing: 10) {
-            if tiles.isEmpty {
-                ForEach([TintColor.blue, .purple, .pink], id: \.self) { tint in
-                    DockTileIconPreview(tintColor: tint, iconType: .sfSymbol, iconValue: "folder.fill",
-                                        iconScale: ConfigurationDefaults.iconScale,
-                                        iconWeight: ConfigurationDefaults.iconWeight, size: 48)
-                }
-            } else {
-                ForEach(tiles) { DockTileIconPreview.fromConfig($0, size: 48) }
-            }
-            Divider().frame(height: 40)
-            Image(nsImage: VendorMark.folderIcon).resizable().frame(width: 48, height: 48)
+        HStack(spacing: 10) {
+            Image(nsImage: VendorMark.finderIcon).resizable().frame(width: 48, height: 48)
+            Image(nsImage: VendorMark.appIcon).resizable().frame(width: 48, height: 48)
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -193,8 +184,11 @@ enum VendorMark {
         Bundle.main.url(forResource: name, withExtension: "png").flatMap(NSImage.init(contentsOf:))
     }
 
-    /// The system folder icon in the About hero — resolved once for the same reason.
-    static let folderIcon: NSImage = NSWorkspace.shared.icon(for: .folder)
+    /// Finder and Dock Tile's own icon in the About hero — resolved once for the same reason.
+    /// Both via `NSWorkspace.icon(forFile:)`, so each is exactly what the Dock renders (including
+    /// Tahoe's icon-style treatment) rather than a bundled bitmap.
+    static let finderIcon: NSImage = NSWorkspace.shared.icon(forFile: "/System/Library/CoreServices/Finder.app")
+    static let appIcon: NSImage = NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath)
 }
 
 /// Happy Machines' mark, tinted to the foreground; the smiling-face symbol if the asset is absent.
