@@ -24,12 +24,29 @@ struct DockTileIconPreview: View {
     let iconWeight: IconWeight  // SF Symbol stroke weight (ignored for emojis)
     let size: CGFloat
 
+    /// Test-only override for the raw icon-style token. Production call sites never set this —
+    /// they always fall through to the live `IconStyleManager.shared.rawStyle`. It exists because
+    /// a render test needs to force the Automatic case (`.value("RegularAutomatic")`) regardless
+    /// of whatever this machine's `AppleIconAppearanceTheme` key actually holds: only Automatic
+    /// makes Light vs. Dark colorScheme produce different renders — an explicit style like
+    /// ClearDark would legitimately render identically in both, discriminating nothing.
+    var rawStyleOverride: RawStyleToken? = nil
+
     // Observe IconStyleManager for icon style changes (single source of truth)
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
 
-    /// Current icon style from manager
+    /// Light/Dark comes from the environment (live, system-driven); only the explicit
+    /// Default/Dark/Clear/Tinted choice comes from the published raw token.
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// Current icon style, resolved for display. `.defaultStyle` fallback: an unresolved raw
+    /// token is an edge case with no established prior render to fall back to here.
     private var iconStyle: IconStyle {
-        iconStyleManager.currentStyle
+        IconStyle.forDisplay(
+            raw: rawStyleOverride ?? iconStyleManager.rawStyle,
+            colorScheme: colorScheme,
+            fallback: .defaultStyle
+        )
     }
 
     /// Whether we're in dark icon style

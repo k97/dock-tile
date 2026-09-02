@@ -26,6 +26,9 @@ struct DockTileDetailView: View {
     @FocusState private var isNameFieldFocused: Bool  // Track focus for commit-on-blur
     /// The embedded popover panel renders per icon style — observe so it re-renders on a switch.
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+    /// Light/Dark for the embedded panel's icons comes from the environment; only the explicit
+    /// style choice comes from `iconStyleManager.rawStyle`.
+    @Environment(\.colorScheme) private var colorScheme
     /// Monotonic counter incremented on each config edit. Used as the `.task(id:)` identity
     /// instead of the full `editedConfig` struct, which avoids O(n * icon_data_size) deep equality
     /// checks on every keystroke. The task cancels/restarts on each increment, providing debounce.
@@ -444,7 +447,8 @@ struct DockTileDetailView: View {
     /// drops keyboard focus. `missingAppIDs` is excluded for the same reason, plus a `Set`'s
     /// iteration order is not stable — each cell resolves its own install status in its body.
     private var previewSignature: String {
-        [editedConfig.layoutMode.rawValue, iconStyleManager.currentStyle.rawValue].joined(separator: "-")
+        let style = IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle)
+        return [editedConfig.layoutMode.rawValue, style.rawValue].joined(separator: "-")
     }
 
     /// The tile's apps, shown as the REAL popover panel (WYSIWYG — `settings: nil` makes it load the
@@ -757,9 +761,10 @@ struct AppIconView: View {
 
     // Observe IconStyleManager for icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        let _ = iconStyleManager.currentStyle
+        let _ = IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle)
 
         if isMissing {
             Image(systemName: "questionmark.app.dashed")

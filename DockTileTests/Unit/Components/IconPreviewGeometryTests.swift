@@ -215,4 +215,38 @@ struct IconPreviewGeometryTests {
         let left = CGFloat(try firstOpaqueColumn(rep, row: mid))
         #expect(abs(left - expected) <= 1, "left edge at \(left), expected \(expected)")
     }
+
+    // MARK: - Appearance via the environment (2026-09-02 regression guard)
+
+    /// Renders the REAL preview with a given `colorScheme` injected through the environment and
+    /// the raw style token pinned to Automatic via the test-only `rawStyleOverride` seam — this is
+    /// the only way to force the discriminating case: under an EXPLICIT style (e.g. ClearDark) the
+    /// two renders would legitimately match and prove nothing.
+    private func renderPreview(scheme: ColorScheme) throws -> NSBitmapImageRep {
+        var view = DockTileIconPreview(
+            tintColor: .blue,
+            iconType: .sfSymbol,
+            iconValue: "star.fill",
+            iconScale: 14,
+            iconWeight: .medium,
+            size: Self.side
+        )
+        view.rawStyleOverride = .value("RegularAutomatic")
+        let hosted = view.environment(\.colorScheme, scheme)
+        let renderer = ImageRenderer(content: hosted)
+        renderer.scale = 1
+        let cgImage = try #require(renderer.cgImage)
+        return NSBitmapImageRep(cgImage: cgImage)
+    }
+
+    @Test("Preview renders DIFFERENT output for light vs dark colorScheme under an Automatic raw style")
+    func previewFollowsEnvironmentScheme() throws {
+        // Under the frozen `currentStyle` implementation both renders were identical (the
+        // environment was never consulted) — this is the regression Task 3 fixes.
+        let light = try renderPreview(scheme: .light)
+        let dark = try renderPreview(scheme: .dark)
+        let lightData = try #require(light.representation(using: .png, properties: [:]))
+        let darkData = try #require(dark.representation(using: .png, properties: [:]))
+        #expect(lightData != darkData)
+    }
 }
