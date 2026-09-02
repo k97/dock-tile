@@ -37,6 +37,7 @@ enum AboutLinks {
 struct AboutPaneView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
     @EnvironmentObject private var updateController: UpdateController
+    @Environment(\.colorScheme) private var colorScheme
 
     private var copyright: String {
         Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String ?? ""
@@ -120,12 +121,19 @@ struct AboutPaneView: View {
     /// The product in context: Finder beside Dock Tile's own icon on a Dock strip (the reference
     /// pairing — the app that lives next to yours in the Dock, not a synthetic tile row).
     private var hero: some View {
-        HStack(spacing: 10) {
-            Image(nsImage: VendorMark.finderIcon).resizable().frame(width: 48, height: 48)
-            Image(nsImage: VendorMark.appIcon).resizable().frame(width: 48, height: 48)
+        let dockShape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+        return HStack(spacing: 12) {
+            Image(nsImage: VendorMark.finderIcon).resizable().frame(width: 64, height: 64)
+            Image(nsImage: VendorMark.appIcon).resizable().frame(width: 64, height: 64)
         }
-        .padding(.horizontal, 12).padding(.vertical, 8)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .background {
+            // In dark mode the bare material sinks into the studio canvas behind it — lift the
+            // strip with a faint white wash and a hairline edge so it reads as the Dock's shelf.
+            dockShape.fill(.regularMaterial)
+                .overlay(dockShape.fill(Color.white.opacity(colorScheme == .dark ? 0.07 : 0)))
+        }
+        .overlay(dockShape.strokeBorder(Color.white.opacity(colorScheme == .dark ? 0.16 : 0.05), lineWidth: 0.5))
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
         .background(StudioCanvasBackgroundView())

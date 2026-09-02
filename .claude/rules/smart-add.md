@@ -49,15 +49,18 @@ The regression-prone decisions are `nonisolated static` functions taking plain v
 
 Guarded by `SmartAddEngineTests`.
 
-## The + flow (v2: the dialog always opens)
+## The + flow (v3: the dialog opens only while Smart Add is ON)
 
 Every add entry point — sidebar `+` and the zero-tiles button (General's *Add a Tile…* row was a
-third until 2026-09-02, removed as a duplicate of the sidebar `+`) — calls the SAME `handleAddTapped`, which ALWAYS presents `SmartAddSheet` via
-`.sheet(item:)`. `SmartAddEngine.suggestionsForAddFlow(enabled:computed:)` decides what the dialog
-shows: suggestions when Smart Add is on and the engine has some, otherwise only the blank-first row
-+ "No suggestions yet". The sheet's Return default is **Create New Tile** (blank); *Use This Tile*
-pre-fills Tile Detail. ⌘N *New Dock Tile* still creates a blank tile directly. Nothing in the
-dialog docks a tile.
+third until 2026-09-02, removed as a duplicate of the sidebar `+`) — calls the SAME `handleAddTapped`.
+**Smart Add ON** → it presents `SmartAddSheet` via `.sheet(item:)`, showing suggestions when the
+engine has some, else the blank-first row + "No suggestions yet". **Smart Add OFF** → no dialog at
+all: the + creates the blank tile directly (a sheet holding only the blank row was a pointless
+extra step — 2026-09-02 feedback, superseding v2's "dialog always opens").
+`SmartAddEngine.suggestionsForAddFlow(enabled:computed:)` still filters what an opened dialog
+shows; its disabled branch is a pure-seam back-stop, no longer a reachable UI state. The sheet's
+Return default is **Create New Tile** (blank); *Use This Tile* pre-fills Tile Detail. ⌘N *New Dock
+Tile* still creates a blank tile directly. Nothing in the dialog docks a tile.
 
 - **`.sheet(item:)`, NOT `.sheet(isPresented:)` (critical)**: the suggestions ride *inside* the
   presentation item. With a separate `Bool` + `@State` array, SwiftUI evaluated the sheet content
@@ -82,8 +85,8 @@ icon, `appItems`), selects it, marks it edited, logs `.tileCreated` with `source
 - **General settings toggle** — "Suggest tiles from my apps" is the sole row of
   `GeneralSettingsView`'s "Adding Tiles" section (no leading icon). Opt-out, default ON, key
   `UserDefaultsKeys.smartAddEnabled` (main-app domain — the flow is main-app only, so **not** the
-  shared suite). When off, the dialog still opens (see "The + flow") but shows only the blank-tile
-  row — `suggestionsForAddFlow` returns no suggestions.
+  shared suite). When off, the + skips the dialog and creates a blank tile directly (see "The +
+  flow").
 - **Provenance banner** — accent-tinted sparkle banner atop `DockTileDetailView` for a just-created
   Smart Add tile. Gated on `ConfigurationManager.smartAddProvenanceIDs` — **runtime-only, never
   persisted**, so it never reappears after relaunch; cleared when dismissed or when the tile is

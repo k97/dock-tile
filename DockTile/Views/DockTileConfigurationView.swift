@@ -177,10 +177,17 @@ struct DockTileConfigurationView: View {
     }
 
     private func handleAddTapped(source: AddSource) {
-        let computed = smartAddEnabled
-            ? smartAddEngine.computeSuggestions(existing: configManager.configurations) : []
-        let suggestions = SmartAddEngine.suggestionsForAddFlow(enabled: smartAddEnabled, computed: computed)
-        DiagnosticsLog.shared.ui("\(source.rawValue) → Add a Tile dialog (\(suggestions.count) suggestion(s), smartAdd=\(smartAddEnabled))")
+        // Smart Add OFF skips the dialog entirely: a sheet holding only the blank-tile row is a
+        // pointless extra step, so the + creates the blank tile directly (review feedback
+        // 2026-09-02 — supersedes the v2 "dialog always opens" rule for the disabled case).
+        guard smartAddEnabled else {
+            DiagnosticsLog.shared.ui("\(source.rawValue) → blank tile directly (smartAdd off)")
+            configManager.createConfiguration()
+            return
+        }
+        let computed = smartAddEngine.computeSuggestions(existing: configManager.configurations)
+        let suggestions = SmartAddEngine.suggestionsForAddFlow(enabled: true, computed: computed)
+        DiagnosticsLog.shared.ui("\(source.rawValue) → Add a Tile dialog (\(suggestions.count) suggestion(s))")
         smartAddPresentation = SmartAddPresentation(suggestions: suggestions)
     }
 

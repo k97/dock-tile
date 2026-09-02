@@ -277,8 +277,10 @@ final class SmartAddEngine: ObservableObject {
         }
     }
 
-    /// v2 add flow: the Add a Tile dialog opens from EVERY entry point. The toggle only decides
-    /// whether suggestions are shown inside it — never whether the dialog appears.
+    /// Add-flow filter: what the Add a Tile dialog shows when it opens. Since 2026-09-02 the
+    /// dialog only OPENS while Smart Add is on (the + creates a blank tile directly when it is
+    /// off — see `handleAddTapped`), so the `enabled: false` branch is a pure-seam back-stop
+    /// rather than a reachable UI state.
     nonisolated static func suggestionsForAddFlow(enabled: Bool, computed: [TileSuggestion]) -> [TileSuggestion] {
         enabled ? computed : []
     }
