@@ -126,9 +126,6 @@ struct DockTileConfigurationView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openSettingsPane)) { note in
             selection = .settings((note.object as? SettingsPane) ?? .general)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .addTileRequested)) { _ in
-            handleAddTapped(source: .generalSettings)
-        }
         // Non-destructive prompt raised by the launch scan when tiles reference uninstalled apps.
         // "Keep" just dismisses — the rows stay flagged inline so the user can act later.
         .alert(
@@ -177,7 +174,6 @@ struct DockTileConfigurationView: View {
     enum AddSource: String {
         case toolbarPlus = "+ button"
         case emptyState = "empty state"
-        case generalSettings = "General → Add a Tile"
     }
 
     private func handleAddTapped(source: AddSource) {

@@ -49,15 +49,11 @@ struct GeneralSettingsView: View {
                 analyticsRow
             }
 
-            // Adding Tiles — Smart Add toggle plus the Add a Tile… affordance itself.
+            // Adding Tiles — the Smart Add toggle only. An "Add a Tile…" link once sat below it
+            // but duplicated the sidebar + (removed on review feedback 2026-09-02); adding tiles
+            // stays with the sidebar + and the zero-tiles empty state.
             Section(AppStrings.Settings.addingTiles) {
                 smartAddRow
-
-                Button(AppStrings.Button.addATile) {
-                    DiagnosticsLog.shared.ui("General → Add a Tile… row")
-                    NotificationCenter.default.post(name: .addTileRequested, object: nil)
-                }
-                .buttonStyle(.link)
             }
         }
         .formStyle(.grouped)

@@ -51,8 +51,8 @@ Guarded by `SmartAddEngineTests`.
 
 ## The + flow (v2: the dialog always opens)
 
-Every add entry point — sidebar `+`, General's *Add a Tile…* row (posts `.addTileRequested`), the
-zero-tiles button — calls the SAME `handleAddTapped`, which ALWAYS presents `SmartAddSheet` via
+Every add entry point — sidebar `+` and the zero-tiles button (General's *Add a Tile…* row was a
+third until 2026-09-02, removed as a duplicate of the sidebar `+`) — calls the SAME `handleAddTapped`, which ALWAYS presents `SmartAddSheet` via
 `.sheet(item:)`. `SmartAddEngine.suggestionsForAddFlow(enabled:computed:)` decides what the dialog
 shows: suggestions when Smart Add is on and the engine has some, otherwise only the blank-first row
 + "No suggestions yet". The sheet's Return default is **Create New Tile** (blank); *Use This Tile*
@@ -79,8 +79,8 @@ icon, `appItems`), selects it, marks it edited, logs `.tileCreated` with `source
 
 ## Opt-out toggle & provenance banner
 
-- **General settings toggle** — "Suggest tiles from my apps" in `GeneralSettingsView`'s "Adding
-  Tiles" section, alongside the *Add a Tile…* row (no leading icon). Opt-out, default ON, key
+- **General settings toggle** — "Suggest tiles from my apps" is the sole row of
+  `GeneralSettingsView`'s "Adding Tiles" section (no leading icon). Opt-out, default ON, key
   `UserDefaultsKeys.smartAddEnabled` (main-app domain — the flow is main-app only, so **not** the
   shared suite). When off, the dialog still opens (see "The + flow") but shows only the blank-tile
   row — `suggestionsForAddFlow` returns no suggestions.
