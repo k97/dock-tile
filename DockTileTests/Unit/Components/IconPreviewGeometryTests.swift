@@ -260,5 +260,27 @@ struct IconPreviewGeometryTests {
         let lightData = try #require(light.representation(using: .png, properties: [:]))
         let darkData = try #require(dark.representation(using: .png, properties: [:]))
         #expect(lightData != darkData)
+
+        // Difference alone would also pass an INVERTED mapping (e.g. dark scheme rendering the
+        // colourful default style and light rendering the neutral Dark style) — it only proves
+        // the two renders differ, not that they differ in the right direction. Sample a
+        // background pixel — the bottom-mid-edge point `shapeFillsTheFrame` also checks
+        // (`bottomEdge`), which sits inside the shape (the shape now fills the frame) and well
+        // outside the centred glyph — and pin its direction: Dark style's background bottom is a
+        // near-black neutral (`TintColor.darkNeutralBottomHex`, `#1C1C1E`), while the
+        // `.defaultStyle` background bottom is the tile's own saturated colour (blue's
+        // `colorBottom`, `#007AFF`, here). A perceived brightness check, not an exact hex match,
+        // so the assertion survives incidental gradient tuning while still failing on a
+        // swapped/inverted mapping. The dark threshold sits at 0.35, not the near-black hex's own
+        // ~0.12 brightness, because the same pixel also carries the glass stroke + surface sheen
+        // (Liquid-Glass depth effects baked by `IconDepthMetrics`, measured ~0.25 at this exact
+        // point) — 0.35 stays comfortably below the colourful default's ~0.6+ observed here while
+        // clearing that overlay, so it still fails hard on a swapped/inverted mapping.
+        let mid = Int(Self.side) / 2
+        let last = Int(Self.side) - 1
+        let lightBrightness = try #require(light.colorAt(x: mid, y: last)?.brightnessComponent)
+        let darkBrightness = try #require(dark.colorAt(x: mid, y: last)?.brightnessComponent)
+        #expect(lightBrightness > 0.5, "light scheme background brightness \(lightBrightness), expected the colourful default style (bright)")
+        #expect(darkBrightness < 0.35, "dark scheme background brightness \(darkBrightness), expected the near-black Dark style")
     }
 }

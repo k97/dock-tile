@@ -151,18 +151,15 @@ enum IconDepthMetrics {
     // MARK: - Icon-grid content inset
 
     /// Apple's icon-grid proportion: the icon shape occupies 206 of a 256-unit canvas, leaving a
-    /// transparent margin all round. A compiled `.icon` gets this geometry from the system; the
-    /// fallback `.icns` bakes it, and the live preview draws it, so all three are the same
-    /// picture. Shared here rather than owned by a renderer for exactly that reason — an
-    /// inlined second copy of this number is how the preview and the bake drift apart.
+    /// transparent margin all round. This describes how the Dock composes a compiled icon among
+    /// its NEIGHBOURS — an artifact fact, not a UI-slot fact. Its two real consumers are the
+    /// compiled `.icon`'s own geometry (the system applies it) and
+    /// `IconGenerator.generateFallbackIcns` (bakes it explicitly). UI slots — the live preview,
+    /// sidebar rows, the tile editor canvas — deliberately do NOT apply it (decision 2026-09-02,
+    /// Task 6 of docs/superpowers/plans/2026-09-02-appearance-environment.md): a UI slot has no
+    /// neighbours to compose among, so the margin there just read as the icon shrinking. Shared
+    /// here rather than owned by a renderer so the two real consumers can't drift apart.
     static let contentInsetRatio: CGFloat = 25.0 / 256.0   // (256 - 206) / 2 / 256
-
-    /// Side of the drawn shape on a canvas of `nominalSize` — the canvas minus that margin on
-    /// both sides (206/256 of it). Used by the preview and by the customiser's guide-grid
-    /// overlay, which must cover the shape, not the whole canvas.
-    static func contentSide(nominalSize: CGFloat) -> CGFloat {
-        nominalSize * (1 - 2 * contentInsetRatio)
-    }
 
     // MARK: - Inner glass stroke
 

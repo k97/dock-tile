@@ -134,9 +134,10 @@ struct DockTileIconPreview: View {
         IconDepthMetrics.surfaceSheenAlpha(style: iconStyle, nominalSize: size)
     }
 
-    /// Stroke width for the drawn shape. Measured against `contentSide`, not the canvas: the
-    /// stroke is drawn ON the shape, and the baked renderer scales it by the size of what it
-    /// strokes. (Glyph magnitudes stay canvas-relative — that is what both renderers use.)
+    /// Stroke width for the drawn shape. Measured against the frame-filling canvas (`contentSide`
+    /// == `size` in this view — see its doc comment): the stroke is drawn ON the shape, and the
+    /// baked renderer scales it by the size of what it strokes. (Glyph magnitudes stay
+    /// canvas-relative — that is what both renderers use.)
     private var strokeLineWidth: CGFloat {
         IconDepthMetrics.strokeLineWidth(nominalSize: contentSide)
     }

@@ -195,13 +195,20 @@ enum RawStyleToken: Equatable, Sendable {
 /// ```swift
 /// struct MyView: View {
 ///     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+///     @Environment(\.colorScheme) private var colorScheme
 ///
 ///     var body: some View {
-///         // Use iconStyleManager.currentStyle
-///         // View automatically updates when style changes
+///         let style = IconStyle.forDisplay(
+///             raw: iconStyleManager.rawStyle,
+///             colorScheme: colorScheme,
+///             fallback: .defaultStyle
+///         )
+///         // Use `style` for rendering.
 ///     }
 /// }
 /// ```
+/// `currentStyle` (below) is legacy-detection-only (frozen, macOS 15 fallback) and does not
+/// update on macOS 26 — views must resolve display style via `forDisplay` + `rawStyle` instead.
 @MainActor
 final class IconStyleManager: ObservableObject {
 
@@ -257,8 +264,9 @@ final class IconStyleManager: ObservableObject {
         // declarative pipeline every re-check is quarantined too (`reconcile(reason:)`, including
         // the popover-show reconcile), so this value is never refreshed again for the life of the
         // process. That's sufficient: popover views key third-party app icon views on
-        // `currentStyle` only as a re-render TRIGGER (`.id("\(app.id)-\(style)")`) — the actual
-        // pixels come from `AppIconLoader`/`NSWorkspace.icon(forFile:)`, re-resolved on every
+        // `IconStyle.forDisplay(rawStyle, colorScheme)` only as a re-render TRIGGER
+        // (`.id("\(app.id)-\(style)")`) — the actual pixels come from
+        // `AppIconLoader`/`NSWorkspace.icon(forFile:)`, re-resolved on every
         // call, and the popover content is rebuilt on every `show()`, so what's drawn stays
         // current even though `currentStyle` itself doesn't change mid-process.
         currentStyle = IconStyle.current

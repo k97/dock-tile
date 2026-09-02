@@ -504,10 +504,11 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         let manager = IconStyleManager.shared
         // Seeded ONCE at launch — a passive read, not a live subscription. Under the declarative
         // pipeline the popover-show reconcile is quarantined too, so this value is never
-        // refreshed again for this process's lifetime. Sufficient because popover views use it
-        // only as a re-render trigger; the actual pixels are re-resolved via
-        // AppIconLoader/NSWorkspace on every rebuild (every popover show()), so they stay current
-        // even though this cached value doesn't.
+        // refreshed again for this process's lifetime. Sufficient because popover views key
+        // third-party app icon views on `IconStyle.forDisplay(rawStyle, colorScheme)` only as a
+        // re-render trigger; the actual pixels are re-resolved via AppIconLoader/NSWorkspace on
+        // every rebuild (every popover show()), so they stay current even though this cached
+        // value doesn't.
         currentIconStyle = manager.currentStyle
 
         // Under the declarative pipeline macOS renders every appearance itself: no swap, no
