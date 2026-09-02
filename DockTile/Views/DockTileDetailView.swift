@@ -404,17 +404,21 @@ struct DockTileDetailView: View {
 
                 // Row 3: Show in App Switcher (last row, no separator)
                 // Layout moved to the "In This Tile" section, beside the live preview it drives.
+                // Inert while the tile is hidden — App/Ghost mode only exists for a helper that
+                // is actually in the Dock. The toggle carries the functional `.disabled`; the
+                // WHOLE ROW fades as one unit via opacity (the Popover pane's disabled-Save
+                // trick, since `.disabled` alone barely dims a mini switch), and the tooltip
+                // rides the row through `.help` — deliberately NOT `.disabled` on the row, which
+                // would turn off hit-testing and the tooltip with it.
                 formRow(isLast: true) {
                     Text(AppStrings.Label.showInAppSwitcher)
                     Spacer()
-                    // Inert while the tile is hidden — App/Ghost mode only exists for a helper
-                    // that is actually in the Dock, so gate the switch and say why on hover
-                    // (NSView tooltips still show on disabled controls).
                     Toggle("", isOn: $editedConfig.showInAppSwitcher)
                         .tileSwitch()
                         .disabled(!editedConfig.isVisibleInDock)
-                        .help(editedConfig.isVisibleInDock ? "" : AppStrings.Label.appSwitcherNeedsShowTile)
                 }
+                .opacity(editedConfig.isVisibleInDock ? 1 : 0.45)
+                .help(editedConfig.isVisibleInDock ? "" : AppStrings.Label.appSwitcherNeedsShowTile)
             }
             .padding(.horizontal, 10)
             .background(NSColorBackgroundView.formGroup)
@@ -476,6 +480,7 @@ struct DockTileDetailView: View {
                 }
                 .pickerStyle(.segmented).labelsHidden().fixedSize()
                 Button(action: addItem) { Label(AppStrings.Button.add, systemImage: "plus") }
+                    .help(AppStrings.Label.addAppsAndFolders)
                     .help(AppStrings.Label.addAppsTooltip)
             }
             .padding(.horizontal, 4)

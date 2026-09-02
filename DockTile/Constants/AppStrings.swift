@@ -402,6 +402,12 @@ enum AppStrings {
             comment: "Settings row description for the missing-app scan"
         )
 
+        static let addAppsAndFolders = NSLocalizedString(
+            "label.addAppsAndFolders",
+            value: "Add Apps & Folders",
+            comment: "Tooltip on the Add button in Tile Detail's In This Tile section"
+        )
+
         static let appSwitcherNeedsShowTile = NSLocalizedString(
             "label.appSwitcherNeedsShowTile",
             value: "Turn on Show Tile first — this only applies while the tile is in the Dock.",

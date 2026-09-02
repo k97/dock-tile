@@ -1225,6 +1225,30 @@
         }
       }
     },
+    "label.addAppsAndFolders": {
+      "comment": "Tooltip on the Add button in Tile Detail's In This Tile section",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Apps & Folders"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Apps & Folders"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Apps & Folders"
+          }
+        }
+      }
+    },
     "label.appSwitcherNeedsShowTile": {
       "comment": "Tooltip on the disabled Show in App Switcher toggle when the tile is hidden",
       "extractionState": "manual",
