@@ -33,6 +33,17 @@ Entitlements in `DockTile/DockTile.entitlements`:
 - `cs.disable-library-validation` — loading helper bundles
 - `automation.apple-events` — Dock restart via osascript
 
+**`--deep` does NOT reach a loose executable in `Contents/Resources` (verified 2026-09-01).**
+It neither signs nor verifies `docktile-actool` there, so the outer sign passes local
+verification and **notarization rejects the DMG** — after a full sign → DMG → notarize cycle.
+Sign nested executables explicitly (`--options runtime`) and verify them **before** the
+enclosing bundle is sealed; an inner signature applied after the outer seal is worthless.
+`release.yml` and `Scripts/build-release.sh` both do this — keep them in step.
+
+**An Xcode script phase silently no-ops under `ENABLE_USER_SCRIPT_SANDBOXING`** unless it
+declares `inputPaths`/`outputPaths`: the sandbox denies the copy and the build still succeeds.
+A stale artifact from an earlier build masks this perfectly — delete it before trusting a phase.
+
 ## Sparkle Auto-Updates
 
 - Sparkle 2.9.0 via SPM, EdDSA (Ed25519) signing

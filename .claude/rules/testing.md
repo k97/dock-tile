@@ -54,6 +54,21 @@ not `!=nil` / `.isValid` / `a>b`; never write `UserDefaults.standard` in tests �
 `MockUserDefaults`. New files under `DockTileTests/` auto-join the target (synchronized group);
 new **app-target** files do not — append to an existing file or edit the pbxproj.
 
+## A guard must be able to fail
+
+Three icon-side guards passed for a *provably broken* implementation: a comparison whose two
+sides both collapsed to the same default under the exact regression it targeted; a "no baked
+background" check sampling only corners that lay outside the shape anyway; and
+`saturation > 0.3`, which the unfixed value already satisfied. Before writing a guard, name the
+regression and ask which value would make it fail — if none would, it is decorative, and worse
+than nothing because it invites trust.
+
+Prefer a **structural** guarantee wherever one is expressible: deleting a stored property's
+default (definite initialisation then forces the seed) or a function parameter's default turns
+the regression into a compile error, which no test can beat. State plainly where such a
+guarantee stops — definite initialisation catches a naive reorder, not a placeholder-then-real-
+assignment restructure.
+
 ## Coverage Targets
 
 | Component | Target |
