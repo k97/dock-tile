@@ -159,6 +159,34 @@ enum IconStyle: String, CaseIterable, Sendable {
         case .tinted: return "Tinted"
         }
     }
+
+    /// View-facing resolution: combines the published raw token (`IconStyleManager.rawStyle`)
+    /// with the VIEW's OWN `colorScheme` environment value, so Light/Dark tracking is live and
+    /// system-driven (SwiftUI delivers it), and only the explicit style choice comes from the
+    /// token. Delegates to `resolve(preferencesValue:isDarkMode:)` — no second mapping table.
+    /// `.unreadable` / an unrecognised value is the display-level no-op: keep showing `fallback`
+    /// (the caller's last-known style) rather than guessing.
+    static func forDisplay(raw: RawStyleToken, colorScheme: ColorScheme, fallback: IconStyle) -> IconStyle {
+        switch raw {
+        case .absent:
+            return .defaultStyle
+        case .unreadable:
+            return fallback
+        case .value(let string):
+            return resolve(preferencesValue: string, isDarkMode: colorScheme == .dark) ?? fallback
+        }
+    }
+}
+
+/// Plain-value snapshot of the `AppleIconAppearanceTheme` UserDefaults key, ahead of any
+/// style mapping. `.absent` (key genuinely not set), `.value` (a string, mapped by `resolve`),
+/// or `.unreadable` (present but not a string — the same "don't act" case `resolve` treats as
+/// unresolved). Equatable/Sendable and pure to construct so `forDisplay` above can be unit-tested
+/// without CFPreferences.
+enum RawStyleToken: Equatable, Sendable {
+    case absent
+    case value(String)
+    case unreadable
 }
 
 /// Manages icon style observation and provides style-aware rendering utilities
@@ -199,7 +227,19 @@ final class IconStyleManager: ObservableObject {
     /// (`HelperAppDelegate.currentIconStyle` carries the same shape of risk in weaker form: it
     /// has a declared default, `= .defaultStyle`, so it gets no compile-time protection at all —
     /// a stale seed there can only be caught by a runtime test.)
+    ///
+    /// `rawStyle` below carries the SAME structural guarantee, for the same reason: it too has
+    /// no declared default, so both properties must be assigned before `setupObservers()` runs.
     @Published private(set) var currentStyle: IconStyle
+
+    /// Published raw `AppleIconAppearanceTheme` token, ahead of any style mapping — the seam the
+    /// view-facing `IconStyle.forDisplay` combines with a view's own `colorScheme` so Light/Dark
+    /// tracking is live (SwiftUI-delivered) rather than a cached appearance read at some past
+    /// moment. Seeded ONCE at init (see the structural note on `currentStyle` above — the same
+    /// guarantee, extended to this property), then refreshed ONLY by Task 2's activation hook
+    /// (main app, on `didBecomeActiveNotification`). Helpers never refresh it: a helper's popover
+    /// content is rebuilt on every `show()`, so the launch seed is sufficient there.
+    @Published private(set) var rawStyle: RawStyleToken
 
     /// KVO bridge for the two appearance keys.
     private var defaultsObserver: DefaultsKeyObserver?
@@ -222,9 +262,19 @@ final class IconStyleManager: ObservableObject {
         // call, and the popover content is rebuilt on every `show()`, so what's drawn stays
         // current even though `currentStyle` itself doesn't change mid-process.
         currentStyle = IconStyle.current
+        rawStyle = Self.token(from: IconStyle.rawPreferencesObject)
         print("[IconStyleManager] Initialized with style: \(currentStyle.rawValue)")
 
         setupObservers()
+    }
+
+    /// Pure classification of the raw `AppleIconAppearanceTheme` preferences object into a
+    /// `RawStyleToken` — `nil` (absent), a `String` (the value to map), or anything else
+    /// (unreadable, same "don't act" case `IconStyle.resolve` treats as unresolved).
+    nonisolated static func token(from object: Any?) -> RawStyleToken {
+        guard let object else { return .absent }
+        guard let string = object as? String else { return .unreadable }
+        return .value(string)
     }
 
     /// Pure gate for the whole detection lifecycle (observer registration, reconciles). The

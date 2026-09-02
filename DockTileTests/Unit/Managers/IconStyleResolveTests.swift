@@ -17,6 +17,7 @@
 //
 
 import Testing
+import SwiftUI
 @testable import Dock_Tile
 
 @Suite("IconStyle.resolve strict mapping")
@@ -147,5 +148,40 @@ struct IconStyleResolveTests {
             let resolved = IconStyle.resolve(preferencesValue: value, isDarkMode: isDarkMode)
             #expect(IconStyle.from(preferencesValue: value, isDarkMode: isDarkMode) == resolved)
         }
+    }
+
+    // MARK: - forDisplay: view-facing resolution (raw token + environment colorScheme)
+
+    @Test("forDisplay: Automatic follows the VIEW's colorScheme, not a cached appearance")
+    func automaticFollowsEnvironment() {
+        let raw = RawStyleToken.value("RegularAutomatic")
+        #expect(IconStyle.forDisplay(raw: raw, colorScheme: .dark, fallback: .defaultStyle) == .dark)
+        #expect(IconStyle.forDisplay(raw: raw, colorScheme: .light, fallback: .dark) == .defaultStyle)
+    }
+
+    @Test("forDisplay: absent key is Default in both schemes")
+    func absentIsDefault() {
+        #expect(IconStyle.forDisplay(raw: .absent, colorScheme: .dark, fallback: .clear) == .defaultStyle)
+        #expect(IconStyle.forDisplay(raw: .absent, colorScheme: .light, fallback: .clear) == .defaultStyle)
+    }
+
+    @Test("forDisplay: explicit styles ignore the scheme", arguments: [
+        ("RegularDark", IconStyle.dark), ("ClearDark", IconStyle.clear), ("TintedAutomatic", IconStyle.tinted)])
+    func explicitStylesIgnoreScheme(_ pair: (String, IconStyle)) {
+        #expect(IconStyle.forDisplay(raw: .value(pair.0), colorScheme: .light, fallback: .defaultStyle) == pair.1)
+        #expect(IconStyle.forDisplay(raw: .value(pair.0), colorScheme: .dark, fallback: .defaultStyle) == pair.1)
+    }
+
+    @Test("forDisplay: unresolved keeps the FALLBACK — the no-op rule at display level")
+    func unresolvedKeepsFallback() {
+        #expect(IconStyle.forDisplay(raw: .unreadable, colorScheme: .dark, fallback: .clear) == .clear)
+        #expect(IconStyle.forDisplay(raw: .value("SomeFutureStyle"), colorScheme: .light, fallback: .tinted) == .tinted)
+    }
+
+    @Test("token(from:): absent / string / non-string classified exactly")
+    func tokenClassification() {
+        #expect(IconStyleManager.token(from: nil) == .absent)
+        #expect(IconStyleManager.token(from: "RegularDark") == .value("RegularDark"))
+        #expect(IconStyleManager.token(from: 7) == .unreadable)
     }
 }
