@@ -103,10 +103,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Controls live in the Settings window (⌘,).
         DockLockManager.shared.startIfEnabled()
 
-        // Refresh the published raw icon-style token on every foreground activation, so views
-        // combining it with their own live colorScheme (IconStyle.forDisplay) pick up a style
-        // change made while the app was in the background. Main app only — helpers rebuild their
-        // popover content on every show(), so their launch seed is sufficient.
+        // Live icon-style tracking for the window's previews: a read-only KVO subscription that
+        // republishes the raw token the instant the key changes, even while backgrounded —
+        // matching how System Settings reacts. Display only; the Tahoe detection quarantine is
+        // untouched. Main app only — helpers rebuild their popover content on every show().
+        IconStyleManager.shared.startDisplayObservation()
+
+        // Recovery for the one gap KVO can't cover (a change made while the machine slept, with
+        // no observer running to hear it): re-read the token on every foreground activation.
         NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification,
             object: nil,

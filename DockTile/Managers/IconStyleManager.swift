@@ -243,13 +243,20 @@ final class IconStyleManager: ObservableObject {
     /// view-facing `IconStyle.forDisplay` combines with a view's own `colorScheme` so Light/Dark
     /// tracking is live (SwiftUI-delivered) rather than a cached appearance read at some past
     /// moment. Seeded ONCE at init (see the structural note on `currentStyle` above — the same
-    /// guarantee, extended to this property), then refreshed ONLY by Task 2's activation hook
-    /// (main app, on `didBecomeActiveNotification`). Helpers never refresh it: a helper's popover
-    /// content is rebuilt on every `show()`, so the launch seed is sufficient there.
+    /// guarantee, extended to this property), then refreshed only through `refreshRawStyle()`:
+    /// live via the main app's display observer (`startDisplayObservation()`) and on
+    /// `didBecomeActiveNotification` as the missed-event recovery (both main-app only). Helpers
+    /// never refresh it: a helper's popover content is rebuilt on every `show()`, so the launch
+    /// seed is sufficient there.
     @Published private(set) var rawStyle: RawStyleToken
 
-    /// KVO bridge for the two appearance keys.
+    /// KVO bridge for the two appearance keys (legacy DETECTION path only — never on Tahoe).
     private var defaultsObserver: DefaultsKeyObserver?
+
+    /// Main-app-only DISPLAY observer (see `startDisplayObservation()`): keeps `rawStyle` live so
+    /// the window's previews restyle while backgrounded, the way System Settings does. Read-only —
+    /// it can never rewrite an icon or touch a bundle, so it is safe under the Tahoe quarantine.
+    private var displayObserver: DefaultsKeyObserver?
 
     /// True once ANY event-based signal (KVO or distributed notification) has been received.
     /// If a reconcile keeps finding changes the events never announced, the event path is broken
@@ -293,13 +300,33 @@ final class IconStyleManager: ObservableObject {
     }
 
     /// Re-reads `AppleIconAppearanceTheme` and publishes `rawStyle` when it changed. This is the
-    /// ONLY place `rawStyle` is refreshed after the launch seed above — wired to
-    /// `NSApplication.didBecomeActiveNotification` from `AppDelegate.configureAsMainApp` (main app
-    /// only; helpers never call this, matching the doc comment on `rawStyle`).
+    /// ONLY place `rawStyle` is refreshed after the launch seed above. Two main-app triggers, both
+    /// wired from `AppDelegate.configureAsMainApp`: the live display observer
+    /// (`startDisplayObservation()`) and `NSApplication.didBecomeActiveNotification` as recovery
+    /// for an event missed while asleep. Helpers never call this, matching the doc on `rawStyle`.
     func refreshRawStyle() {
         let newToken = Self.token(from: IconStyle.rawPreferencesObject)
         guard Self.shouldAdopt(newToken: newToken, current: rawStyle) else { return }
         rawStyle = newToken
+    }
+
+    /// MAIN-APP ONLY: subscribe `rawStyle` to live `AppleIconAppearanceTheme` changes so the
+    /// window's previews restyle immediately (System Settings reacts instantly; activation-only
+    /// refresh made Dock Tile lag until the next foreground — reported 2026-09-02).
+    ///
+    /// This is DISPLAY, not detection: the callback only re-reads the key and republishes
+    /// `rawStyle` — no icon rewrite, no bundle touch, no `.iconStyleDidChange` post — so the
+    /// Tahoe quarantine on the detection lifecycle is untouched. On the LEGACY pipeline the
+    /// detection observer is already registered on this same key and `defaultsKeyChanged()`
+    /// refreshes the display token too, so this registers nothing there (no double-fire).
+    /// Helpers must never call this (their popover rebuilds on every `show()`).
+    func startDisplayObservation() {
+        guard displayObserver == nil, defaultsObserver == nil else { return }
+        displayObserver = DefaultsKeyObserver(
+            keys: [IconStyle.userDefaultsKey],
+            manager: self,
+            mode: .display
+        )
     }
 
     /// Pure gate for the whole detection lifecycle (observer registration, reconciles). The
@@ -325,7 +352,8 @@ final class IconStyleManager: ObservableObject {
         // docs/macos-appearance-detection-research.md §E.
         defaultsObserver = DefaultsKeyObserver(
             keys: [IconStyle.userDefaultsKey, "AppleInterfaceStyle"],
-            manager: self
+            manager: self,
+            mode: .detection
         )
 
         // SECONDARY: the one distributed name that still exists on macOS 26. The other two we used
@@ -379,10 +407,13 @@ final class IconStyleManager: ObservableObject {
         checkAndUpdateStyle(source: "notification")
     }
 
-    /// KVO entry point, called on the main actor by `DefaultsKeyObserver`.
+    /// KVO entry point, called on the main actor by `DefaultsKeyObserver` (detection mode).
     fileprivate func defaultsKeyChanged() {
         signalReceived = true
         checkAndUpdateStyle(source: "kvo")
+        // Legacy pipeline: the detection observer doubles as the display trigger, so the
+        // main-app previews stay live there too (startDisplayObservation registers nothing).
+        refreshRawStyle()
     }
 
     /// Check for style change and update if needed.
@@ -428,6 +459,8 @@ final class IconStyleManager: ObservableObject {
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         defaultsObserver?.invalidate()
         defaultsObserver = nil
+        displayObserver?.invalidate()
+        displayObserver = nil
         DistributedNotificationCenter.default().removeObserver(self)
         print("[IconStyleManager] Cleaned up observers")
     }
@@ -443,12 +476,19 @@ final class IconStyleManager: ObservableObject {
 /// the `NSGlobalDomain` fall-through.
 private final class DefaultsKeyObserver: NSObject {
 
+    /// What a fired observation feeds: `.detection` runs the legacy style-change pipeline
+    /// (compare, log, post `.iconStyleDidChange`); `.display` only republishes the raw display
+    /// token via `refreshRawStyle()` — the Tahoe-safe read-only path.
+    enum Mode { case detection, display }
+
     private let keys: [String]
     private weak var manager: IconStyleManager?
+    private let mode: Mode
 
-    init(keys: [String], manager: IconStyleManager) {
+    init(keys: [String], manager: IconStyleManager, mode: Mode) {
         self.keys = keys
         self.manager = manager
+        self.mode = mode
         super.init()
         for key in keys {
             UserDefaults.standard.addObserver(self, forKeyPath: key, options: [.new], context: nil)
@@ -460,8 +500,12 @@ private final class DefaultsKeyObserver: NSObject {
                                context: UnsafeMutableRawPointer?) {
         // KVO for a cross-process defaults change is not documented to arrive on any particular
         // thread, so hop to the main actor rather than assuming.
+        let mode = self.mode
         Task { @MainActor [weak manager] in
-            manager?.defaultsKeyChanged()
+            switch mode {
+            case .detection: manager?.defaultsKeyChanged()
+            case .display: manager?.refreshRawStyle()
+            }
         }
     }
 
