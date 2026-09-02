@@ -67,6 +67,7 @@ struct AppStringsTests {
         #expect(!AppStrings.Label.tileIcon.isEmpty)
         #expect(!AppStrings.Label.tileIconSize.isEmpty)
         #expect(!AppStrings.Label.tileName.isEmpty)
+        #expect(!AppStrings.Label.appSwitcherNeedsShowTile.isEmpty)
         #expect(!AppStrings.Label.startAtLogin.isEmpty)
         #expect(!AppStrings.Label.startAtLoginDescription.isEmpty)
         #expect(!AppStrings.Label.shareAnalytics.isEmpty)

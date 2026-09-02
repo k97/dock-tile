@@ -407,8 +407,13 @@ struct DockTileDetailView: View {
                 formRow(isLast: true) {
                     Text(AppStrings.Label.showInAppSwitcher)
                     Spacer()
+                    // Inert while the tile is hidden — App/Ghost mode only exists for a helper
+                    // that is actually in the Dock, so gate the switch and say why on hover
+                    // (NSView tooltips still show on disabled controls).
                     Toggle("", isOn: $editedConfig.showInAppSwitcher)
                         .tileSwitch()
+                        .disabled(!editedConfig.isVisibleInDock)
+                        .help(editedConfig.isVisibleInDock ? "" : AppStrings.Label.appSwitcherNeedsShowTile)
                 }
             }
             .padding(.horizontal, 10)

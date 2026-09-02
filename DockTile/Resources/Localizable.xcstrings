@@ -1225,6 +1225,30 @@
         }
       }
     },
+    "label.appSwitcherNeedsShowTile": {
+      "comment": "Tooltip on the disabled Show in App Switcher toggle when the tile is hidden",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Show Tile first — this only applies while the tile is in the Dock."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Show Tile first — this only applies while the tile is in the Dock."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Show Tile first — this only applies while the tile is in the Dock."
+          }
+        }
+      }
+    },
     "label.showInAppSwitcher": {
       "comment": "Label for app switcher toggle",
       "extractionState": "manual",

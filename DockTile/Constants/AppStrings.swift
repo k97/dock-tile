@@ -402,6 +402,12 @@ enum AppStrings {
             comment: "Settings row description for the missing-app scan"
         )
 
+        static let appSwitcherNeedsShowTile = NSLocalizedString(
+            "label.appSwitcherNeedsShowTile",
+            value: "Turn on Show Tile first — this only applies while the tile is in the Dock.",
+            comment: "Tooltip on the disabled Show in App Switcher toggle when the tile is hidden"
+        )
+
         static let showInAppSwitcher = NSLocalizedString(
             "label.showInAppSwitcher",
             value: "Show in App Switcher",
