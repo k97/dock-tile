@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax. Load `.claude/skills/icon-rendering/SKILL.md` before any task.
 
-**Goal:** Previews and popover app-icons receive Light/Dark from SwiftUI's environment (the Apple-sanctioned mechanism) instead of a detection-era cached style, and the rare explicit icon-style change refreshes on app activation — fixing the frozen-preview regression the declarative quarantine exposed, with zero observers, zero notifications, zero timers.
+**Goal:** Previews and popover app-icons receive Light/Dark from SwiftUI's environment (the Apple-sanctioned mechanism) instead of a detection-era cached style; the rare explicit icon-style change refreshes on app activation; and in-app icon slots FILL their frames again (the icon-grid margin is a Dock/artifact fact, not a UI-slot fact) — fixing both regressions the 2026-09-02 review surfaced, with zero observers, zero notifications, zero timers.
 
 **Architecture:** Split the two signals by nature. Light/Dark: `@Environment(\.colorScheme)` in views, composed with a published **raw** style token via the existing pure `resolve(...isDarkMode:)` seam. Icon style (Default/Dark/Clear/Tinted, no public API): the raw token refreshes on `NSApplication.didBecomeActiveNotification` — a discrete reconcile moment, main-app only. `IconStyleManager.currentStyle` remains ONLY for the frozen macOS-15 detection internals; UI stops reading it.
 
@@ -148,7 +148,39 @@ Same substitution at the four sites (`.id` composites and `let _ =` triggers). E
 - [ ] **Step 2:** With the app frontmost and untouched, flip appearance to Light in System Settings. **Previews must follow within the transition — no relaunch, no click.** (This is the step that was broken.)
 - [ ] **Step 3:** Background the app, change icon style to ClearDark in System Settings, click back into the app. Previews must show Clear on activation (Task 2's path).
 - [ ] **Step 4:** Open a dev tile's popover, flip Light↔Dark while it is open — third-party app icons follow (Task 4's path).
-- [ ] **Step 5:** Confirm the diagnostics log contains no new `[icon-style]` observer lines from helpers, and `grep -rn "addObserver" DockTile/Managers/IconStyleManager.swift` shows nothing new beyond the quarantined legacy block. Record results; STOP before any release step.
+- [ ] **Step 5:** Sidebar check: tile rows and Settings badges are again the SAME visual size, and the Customise hero fills its canvas (the maintainer's two screenshots are the before-state).
+- [ ] **Step 6:** Confirm the diagnostics log contains no new `[icon-style]` observer lines from helpers, and `grep -rn "addObserver" DockTile/Managers/IconStyleManager.swift` shows nothing new beyond the quarantined legacy block. Record results; STOP before any release step.
+
+
+### Task 6: Icon slots fill their frames — the margin belongs to artifacts, not UI
+
+**Files:**
+- Modify: `DockTile/Components/DockTileIconPreview.swift`, `DockTile/Views/CustomiseTileView.swift` (guide-grid sizing, ~6 lines from the earlier margin change)
+- Test: `DockTileTests/Unit/Components/IconPreviewGeometryTests.swift` (re-pin, deliberately)
+
+**The decision this implements (recorded 2026-09-02, maintainer's screenshots):** `contentInsetRatio`
+describes the ARTIFACT — the compiled car and the fallback `.icns` — and how the Dock composes an
+icon among its neighbours. An in-app slot (sidebar row, hero preview, editor canvas) has no
+neighbours, so the margin conveys nothing there and reads as "shrunk"; worse, post-merge the
+sidebar shows margined tile icons directly beside full-bleed `SettingsBadgeIcon` rows — an
+inconsistency in one list. Resolution: the VIEW always renders the squircle filling its frame; the
+margin remains applied (and separately guarded) where it is true — `generateFallbackIcns` and the
+compiled car's own geometry. This deliberately reverses the visible half of the earlier
+preview-margin change while keeping its seam and its artifact-side guarantee.
+
+- [ ] **Step 1: Re-pin the geometry tests FIRST** — update `IconPreviewGeometryTests` so the shape
+  must now REACH the frame edges (mid-edge row/column opaque at the frame boundary, corners
+  transparent only outside the corner radius), each changed expectation carrying a comment naming
+  this decision. Run: the suite FAILS against the current margined view — that failing state is the
+  RED evidence.
+- [ ] **Step 2: Remove the margin from the view's composition** (and restore the guide grid to
+  frame-sized in `CustomiseTileView`). Do NOT touch `IconDepthMetrics.contentInsetRatio` or any
+  `IconGenerator` path — `grep -n contentInsetRatio DockTile/` afterwards must show only the seam
+  definition and artifact-side consumers.
+- [ ] **Step 3: Confirm the artifact margin is still guarded** — the fallback-icns margin render
+  test (added with the pipeline wiring) must still pass untouched; name it in the commit message as
+  the surviving guard.
+- [ ] **Step 4: Full suite green. Step 5: Commit.**
 
 ---
 
@@ -157,4 +189,5 @@ Same substitution at the four sites (`.id` composites and `let _ =` triggers). E
 - Coverage: frozen-preview fix (T1–T3), popover mid-open staleness (T4), activation refresh for explicit styles (T2), no-observer constraint (structural: the only registration is in `configureAsMainApp`), manual repro closure (T5).
 - The `fallback` parameter deliberately reuses the unresolved→no-op philosophy at display level; T1's tests pin it.
 - Type consistency: `RawStyleToken`, `forDisplay(raw:colorScheme:fallback:)`, `rawStyle`, `refreshRawStyle`, `shouldAdopt(newToken:current:)` — defined in T1/T2, consumed by name in T3/T4.
+- Task 6's frame-fill is view-only by construction (step 2's grep proves the artifact side untouched).
 - Deliberately NOT in scope: any change to helper detection, `currentStyle`'s role in the frozen legacy path, an Icon-Composer-style preview picker (HIG advises against app-specific appearance settings for consumer apps; revisit only if activation-refresh proves insufficient in practice).
