@@ -85,7 +85,7 @@ struct AboutPaneView: View {
                             // "Copy", not "Copy Diagnostics" — the row label already says which.
                             Button(AppStrings.Button.copy) {
                                 DiagnosticsLog.shared.ui("About → Copy Diagnostics")
-                                DiagnosticsLog.shared.copyToPasteboard()
+                                DiagnosticsLog.shared.copyToPasteboard(configurations: configManager.configurations)
                             }
                             .accessibilityLabel(AppStrings.Menu.copyDiagnostics)
                         } label: {
