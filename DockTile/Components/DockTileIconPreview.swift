@@ -91,19 +91,16 @@ struct DockTileIconPreview: View {
         self.size = size
     }
 
-    /// Apple's icon-grid margin, from the shared seam (never inlined — an inlined geometry
-    /// constant is exactly the preview-vs-baked drift `IconDepthMetrics` exists to prevent).
-    /// Applied on EVERY macOS version, deliberately: the pipeline's availability seam
-    /// (`IconPipeline.isDeclarative`) has exactly three activation points and the preview is not
-    /// one of them, and the pre-Tahoe legacy bake is frozen for deletion. The accepted trade-off
-    /// is that a macOS 15 user's preview reads slightly smaller than their full-bleed tile.
-    private var contentInset: CGFloat {
-        size * IconDepthMetrics.contentInsetRatio
-    }
-
-    /// Side of the drawn squircle — the canvas minus the icon-grid margin on both sides.
+    /// Side of the drawn squircle — the FULL canvas, not the icon-grid-margined shape the
+    /// compiled `.icon`/fallback `.icns` draw. Reversed 2026-09-02 (Task 6,
+    /// docs/superpowers/plans/2026-09-02-appearance-environment.md): the icon-grid margin
+    /// describes how the Dock composes an icon among its NEIGHBOURS — a UI slot (sidebar row,
+    /// this hero preview, the editor canvas) has none, so the margin read as "shrunk" and sat
+    /// inconsistently beside full-bleed `SettingsBadgeIcon` rows in the same sidebar list. The
+    /// margin stays true where it IS true — the compiled car's own geometry and
+    /// `IconGenerator.generateFallbackIcns` — this view just stops applying it.
     private var contentSide: CGFloat {
-        IconDepthMetrics.contentSide(nominalSize: size)
+        size
     }
 
     private var cornerRadius: CGFloat {
@@ -165,10 +162,9 @@ struct DockTileIconPreview: View {
 
     var body: some View {
         ZStack {
-            // The tile shape sits inside the icon-grid margin (`contentInset`), matching what
-            // macOS draws for the compiled icon and what the fallback `.icns` bakes. The GLYPH
-            // is deliberately NOT inset — its geometry is measured against the full canvas in
-            // both renderers, so it must be here too.
+            // The tile shape fills the frame (see `contentSide`'s doc comment) — no margin is
+            // applied here. The GLYPH was already measured against the full canvas in both
+            // renderers, so its geometry is unaffected by the shape now filling that same canvas.
 
             // Gradient background with squircle shape (icon style-aware)
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -179,7 +175,6 @@ struct DockTileIconPreview: View {
                         endPoint: .bottom
                     )
                 )
-                .padding(contentInset)
 
             // Beveled glass effect (inner stroke) — opacity + width from the shared seam.
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -187,7 +182,6 @@ struct DockTileIconPreview: View {
                     Color.white.opacity(IconDepthMetrics.strokeOpacity(style: iconStyle)),
                     lineWidth: strokeLineWidth
                 )
-                .padding(contentInset)
 
             // Liquid-Glass surface sheen: soft top specular gloss, clipped to the squircle.
             // Kept as a stand-in for the system's Liquid Glass pass, which nothing outside the
@@ -204,7 +198,6 @@ struct DockTileIconPreview: View {
                             endPoint: .bottom
                         )
                     )
-                    .padding(contentInset)
             }
 
             // Icon content (SF Symbol or Emoji)

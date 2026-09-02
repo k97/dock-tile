@@ -104,10 +104,11 @@ struct CustomiseTileView: View {
                 )
 
                 // Apple icon guide grid overlay (adaptive color based on background). Sized to
-                // the SHAPE, not the canvas: the preview draws the tile inside the icon-grid
-                // margin, so a full-canvas grid would spill onto the studio background.
+                // the full canvas: reversed 2026-09-02 (Task 6) — the preview now fills its
+                // frame (the icon-grid margin is an artifact fact, not a UI-slot fact), so the
+                // grid matches the canvas rather than a shape inset from it.
                 IconGridOverlay(
-                    size: IconDepthMetrics.contentSide(nominalSize: 100),
+                    size: 100,
                     backgroundColor: editedConfig.tintColor
                 )
             }

@@ -2,14 +2,17 @@
 //  IconPreviewGeometryTests.swift
 //  DockTileTests
 //
-//  The customiser's live preview must draw the SAME picture the Dock draws. Declarative tiles
-//  render at Apple's icon-grid geometry — the shape occupies 206 of a 256-unit canvas, leaving a
-//  transparent margin all round — so the preview carries that margin too, sourced from the shared
-//  `IconDepthMetrics.contentInsetRatio` seam (never an inlined copy: an inlined geometry constant
-//  is exactly the preview-vs-baked drift this seam exists to prevent).
+//  The customiser's live preview draws a UI SLOT, not the Dock artifact. Declarative tiles
+//  compile at Apple's icon-grid geometry — the shape occupies 206 of a 256-unit canvas, leaving a
+//  transparent margin that lets the Dock compose the icon among its neighbours — but a UI slot
+//  (this hero preview, a sidebar row, the editor canvas) has no neighbours, so as of 2026-09-02
+//  (Task 6, docs/superpowers/plans/2026-09-02-appearance-environment.md) the view fills its frame
+//  instead. The margin stays true, and separately guarded, only where it IS true: the compiled
+//  car's own geometry and `IconGenerator.generateFallbackIcns`
+//  (`GlyphLayerRenderTests.fallbackIcnsIsMargined`).
 //
 //  Renders the REAL `DockTileIconPreview` through `ImageRenderer` and scans the resulting pixels,
-//  so a preview that silently goes back to full-bleed fails here.
+//  so a preview that silently goes back to a margined shape fails here.
 //
 //  Swift 6 - Strict Concurrency
 //
@@ -71,9 +74,10 @@ struct IconPreviewGeometryTests {
 
     // MARK: - The tile shape (as pixels, so containment is measured, not assumed)
 
-    /// The squircle the preview actually draws: the canvas inset by the icon-grid margin, with
-    /// the corner radius taken off the SHAPE — filled white into a bitmap so any render can be
-    /// compared against it pixel by pixel.
+    /// The squircle the preview actually draws: the FULL canvas (no icon-grid margin — reversed
+    /// 2026-09-02, Task 6: the margin is an artifact fact, not a UI-slot fact), with the corner
+    /// radius taken off the SHAPE — filled white into a bitmap so any render can be compared
+    /// against it pixel by pixel.
     static func shapeMask(side: CGFloat) -> NSBitmapImageRep? {
         let px = Int(side)
         guard let rep = NSBitmapImageRep(
@@ -82,8 +86,7 @@ struct IconPreviewGeometryTests {
             colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
               let ctx = NSGraphicsContext(bitmapImageRep: rep) else { return nil }
         rep.size = CGSize(width: side, height: side)
-        let inset = side * IconDepthMetrics.contentInsetRatio
-        let shape = CGRect(x: 0, y: 0, width: side, height: side).insetBy(dx: inset, dy: inset)
+        let shape = CGRect(x: 0, y: 0, width: side, height: side)
         let path = RoundedRectangle(cornerRadius: shape.width * 0.225, style: .continuous)
             .path(in: shape).cgPath
         ctx.cgContext.clear(CGRect(x: 0, y: 0, width: side, height: side))
@@ -110,42 +113,50 @@ struct IconPreviewGeometryTests {
         return escaped
     }
 
-    @Test("Preview leaves the icon-grid margin transparent on every edge")
-    func marginIsTransparent() throws {
+    // REVERSED 2026-09-02 (Task 6, docs/superpowers/plans/2026-09-02-appearance-environment.md):
+    // `contentInsetRatio` describes how the Dock composes a compiled icon among its NEIGHBOURS —
+    // an artifact fact, not a UI-slot fact. A sidebar row, this hero preview, and the editor
+    // canvas have no neighbours (and post-merge sat margined directly beside full-bleed
+    // `SettingsBadgeIcon` rows in the same sidebar list), so the view now fills its frame. The
+    // margin stays true — and separately guarded — only where it IS true: the compiled car's own
+    // geometry and `IconGenerator.generateFallbackIcns` (see `GlyphLayerRenderTests
+    // .fallbackIcnsIsMargined`). These two tests are deliberately re-pinned, not deleted, to prove
+    // the reversal rather than silently drop the old guard.
+
+    @Test("Preview shape reaches every frame edge — no icon-grid margin in a UI slot")
+    func shapeFillsTheFrame() throws {
         let rep = try render()
-        let inset = Int(Self.side * IconDepthMetrics.contentInsetRatio)  // 25 at 256
         let mid = Int(Self.side) / 2
         let last = Int(Self.side) - 1
 
-        // Well inside the margin, on each edge midpoint: nothing may be painted.
-        let leftMargin = try alpha(rep, 2, mid)
-        let rightMargin = try alpha(rep, last - 2, mid)
-        let topMargin = try alpha(rep, mid, 2)
-        let bottomMargin = try alpha(rep, mid, last - 2)
-        #expect(leftMargin == 0)
-        #expect(rightMargin == 0)
-        #expect(topMargin == 0)
-        #expect(bottomMargin == 0)
+        // Mid-edge (not a corner) on every side: the shape's flat edge now sits AT the frame
+        // boundary, so these must be opaque — the exact opposite of the old margined expectation.
+        let leftEdge = try alpha(rep, 0, mid)
+        let rightEdge = try alpha(rep, last, mid)
+        let topEdge = try alpha(rep, mid, 0)
+        let bottomEdge = try alpha(rep, mid, last)
+        #expect(leftEdge > 0.99)
+        #expect(rightEdge > 0.99)
+        #expect(topEdge > 0.99)
+        #expect(bottomEdge > 0.99)
 
-        // Just inside the shape: fully painted.
-        let insideLeft = try alpha(rep, inset + 3, mid)
-        let insideTop = try alpha(rep, mid, inset + 3)
-        #expect(insideLeft > 0.99)
-        #expect(insideTop > 0.99)
+        // The frame's actual corners stay transparent — that's the squircle's OWN corner
+        // radius, not an icon-grid margin (there is none left in this view).
+        let corner = try alpha(rep, 1, 1)
+        #expect(corner == 0)
     }
 
-    @Test("Preview shape starts exactly at the seam's inset (206/256 content area)")
-    func shapeStartsAtSeamInset() throws {
+    @Test("Preview shape starts exactly at the frame boundary (no inset)")
+    func shapeStartsAtFrameBoundary() throws {
         let rep = try render()
-        let expected = Self.side * IconDepthMetrics.contentInsetRatio  // 25 at 256
         let mid = Int(Self.side) / 2
 
-        // Left edge and top edge of the squircle sit one inset in from the canvas (±1px for
-        // anti-aliasing of the shape's edge).
+        // Left edge and top edge of the squircle sit AT the canvas boundary (±1px for
+        // anti-aliasing) — pinned to 0 where the old test pinned to `contentInsetRatio`'s inset.
         let left = CGFloat(try firstOpaqueColumn(rep, row: mid))
         let top = CGFloat(try firstOpaqueRow(rep, column: mid))
-        #expect(abs(left - expected) <= 1, "left edge at \(left), expected \(expected)")
-        #expect(abs(top - expected) <= 1, "top edge at \(top), expected \(expected)")
+        #expect(left <= 1, "left edge at \(left), expected 0 (±1 for AA)")
+        #expect(top <= 1, "top edge at \(top), expected 0 (±1 for AA)")
     }
 
     // MARK: - Glyph containment at MAXIMUM Icon Scale
@@ -205,15 +216,16 @@ struct IconPreviewGeometryTests {
         // containment is proven by pixels in `glyphStaysInsideTheShapeAtMaxScale` instead.
     }
 
-    @Test("Emoji tiles get the same margined geometry as symbol tiles")
-    func emojiTileIsMarginedToo() throws {
+    // Reversed 2026-09-02 (Task 6): emoji tiles get the same FRAME-FILLING geometry as symbol
+    // tiles — no icon-grid margin for either, in a UI slot.
+    @Test("Emoji tiles get the same frame-filling geometry as symbol tiles")
+    func emojiTileFillsTheFrameToo() throws {
         let rep = try render(iconType: .emoji, iconValue: "🚀")
-        let expected = Self.side * IconDepthMetrics.contentInsetRatio
         let mid = Int(Self.side) / 2
-        let leftMargin = try alpha(rep, 2, mid)
-        #expect(leftMargin == 0)
+        let leftEdge = try alpha(rep, 0, mid)
+        #expect(leftEdge > 0.99)
         let left = CGFloat(try firstOpaqueColumn(rep, row: mid))
-        #expect(abs(left - expected) <= 1, "left edge at \(left), expected \(expected)")
+        #expect(left <= 1, "left edge at \(left), expected 0 (±1 for AA)")
     }
 
     // MARK: - Appearance via the environment (2026-09-02 regression guard)
