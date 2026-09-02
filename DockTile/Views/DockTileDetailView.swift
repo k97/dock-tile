@@ -338,9 +338,12 @@ struct DockTileDetailView: View {
 
     private var heroSection: some View {
         HStack(alignment: .center, spacing: 16) {
-            // Left column: Icon preview with Customise button
+            // Left column: Icon preview with Customise button.
+            // The column must fit INSIDE the form card beside it: 3 rows × 40pt + 2 separators
+            // = 122pt. Since the preview fills its frame (no icon-grid margin — an artifact
+            // fact, not a UI-slot fact), a 96pt slot made the column 96+12+24 = 132pt and the
+            // icon/button overhung the card. 84pt keeps it at 120pt, within the card bounds.
             VStack(alignment: .center, spacing: 12) {
-                // Icon container: 96×96pt
                 // Uses DockTileIconPreview which is appearance-aware (light/dark mode)
                 // Tappable to open customise view
                 DockTileIconPreview(
@@ -349,9 +352,9 @@ struct DockTileDetailView: View {
                     iconValue: editedConfig.iconValue,
                     iconScale: editedConfig.iconScale,
                     iconWeight: editedConfig.iconWeight,
-                    size: 96
+                    size: 84
                 )
-                .contentShape(RoundedRectangle(cornerRadius: 96 * 0.225, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 84 * 0.225, style: .continuous))
                 .onHover { hovering in
                     if hovering {
                         NSCursor.pointingHand.push()
@@ -364,7 +367,7 @@ struct DockTileDetailView: View {
                     onCustomise()
                 }
 
-                SubtleButton(title: AppStrings.Button.customise, width: 96, action: {
+                SubtleButton(title: AppStrings.Button.customise, width: 84, action: {
                     DiagnosticsLog.shared.ui("Tile Detail → Customise button '\(editedConfig.name)'")
                     onCustomise()
                 })
