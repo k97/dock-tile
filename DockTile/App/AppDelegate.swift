@@ -103,6 +103,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Controls live in the Settings window (⌘,).
         DockLockManager.shared.startIfEnabled()
 
+        // Refresh the published raw icon-style token on every foreground activation, so views
+        // combining it with their own live colorScheme (IconStyle.forDisplay) pick up a style
+        // change made while the app was in the background. Main app only — helpers rebuild their
+        // popover content on every show(), so their launch seed is sufficient.
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            // The closure is @Sendable-typed and does NOT inherit this @MainActor context, so a
+            // synchronous call here is a cross-actor call (mirrors DefaultsKeyObserver.observeValue
+            // in IconStyleManager.swift, which hops the same way for the same reason).
+            Task { @MainActor in
+                IconStyleManager.shared.refreshRawStyle()
+            }
+        }
+
         // Start-at-login is ON by default (opt-out). Enable it on launch for new users and
         // re-assert it after a Sparkle update demotes the SMAppService agent — unless the user
         // explicitly turned it off in Settings.

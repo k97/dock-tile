@@ -277,6 +277,23 @@ final class IconStyleManager: ObservableObject {
         return .value(string)
     }
 
+    /// Pure decision behind `refreshRawStyle()`: adopt the freshly read token only when it
+    /// differs from the current one, so a foreground activation that finds nothing changed
+    /// doesn't publish (and fire a spurious `objectWillChange` for) an identical value.
+    nonisolated static func shouldAdopt(newToken: RawStyleToken, current: RawStyleToken) -> Bool {
+        newToken != current
+    }
+
+    /// Re-reads `AppleIconAppearanceTheme` and publishes `rawStyle` when it changed. This is the
+    /// ONLY place `rawStyle` is refreshed after the launch seed above — wired to
+    /// `NSApplication.didBecomeActiveNotification` from `AppDelegate.configureAsMainApp` (main app
+    /// only; helpers never call this, matching the doc comment on `rawStyle`).
+    func refreshRawStyle() {
+        let newToken = Self.token(from: IconStyle.rawPreferencesObject)
+        guard Self.shouldAdopt(newToken: newToken, current: rawStyle) else { return }
+        rawStyle = newToken
+    }
+
     /// Pure gate for the whole detection lifecycle (observer registration, reconciles). The
     /// declarative pipeline (macOS 26) has macOS render every appearance itself — nothing to
     /// detect, nothing to swap — so this is `!isDeclarative`. Deliberately trivial: the seam
