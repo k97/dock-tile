@@ -309,6 +309,16 @@ struct StackPopoverView: View {
     // Observe IconStyleManager for icon style changes
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+    /// Light/Dark for third-party app icons now comes from the environment (live) rather than a
+    /// cached style, so icons in an OPEN popover track a Light↔Dark flip while it's open — helpers
+    /// never refresh `rawStyle` itself (seeded once at launch), which is fine because popover
+    /// content rebuilds on every `show()`; an explicit icon-style change while a popover is open
+    /// staying stale until the next open remains a non-goal.
+    @Environment(\.colorScheme) private var colorScheme
+    /// Style resolved for display — see the comment above.
+    private var displayIconStyle: IconStyle {
+        IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle)
+    }
 
     /// Editing implies preview: an editor click must never launch an app or open the configurator.
     private var actionsDisabled: Bool { isPreview || editing != nil }
@@ -466,7 +476,7 @@ struct StackPopoverView: View {
                 // Composite ID forces SwiftUI to destroy/recreate the view when icon style
                 // changes, which clears NSWorkspace's cached icon and re-fetches the
                 // correct variant (Default/Dark/Clear/Tinted) from the app bundle.
-                .id("\(app.id)-\(iconStyleManager.currentStyle.rawValue)")
+                .id("\(app.id)-\(displayIconStyle.rawValue)")
                 .onTapGesture {
                     launchAppAt(index: index)
                 }
@@ -598,6 +608,7 @@ struct StackAppItem: View {
     // Observe IconStyleManager for icon style changes
     // This triggers view refresh when system icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+    @Environment(\.colorScheme) private var colorScheme
 
     /// Mouse hover uses the subtle Liquid-Glass fill (`.quaternary`) like typical Mac apps; the
     /// stronger accent is reserved for keyboard-focus selection (accessibility). Hover honours the
@@ -625,8 +636,8 @@ struct StackAppItem: View {
     }
 
     var body: some View {
-        // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
-        let _ = iconStyleManager.currentStyle
+        // Reference the resolved display style to trigger re-render when icon style OR colorScheme changes
+        let _ = IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle)
 
         // Resolved ONCE per cell: the probe hits Launch Services + stat() and is uncached, and the
         // icon and the "Not installed" caption both need the answer. Computed exactly where the
@@ -758,6 +769,11 @@ struct ListPopoverView: View {
     // Observe IconStyleManager for icon style changes
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+    /// Light/Dark for third-party app icons comes from the environment — see StackPopoverView.
+    @Environment(\.colorScheme) private var colorScheme
+    private var displayIconStyle: IconStyle {
+        IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle)
+    }
 
     /// Editing implies preview: an editor click must never launch an app or open the configurator.
     private var actionsDisabled: Bool { isPreview || editing != nil }
@@ -820,7 +836,7 @@ struct ListPopoverView: View {
                         )
                         // Force view recreation when icon style changes
                         // This clears NSWorkspace icon cache for this view
-                        .id("\(app.id)-\(iconStyleManager.currentStyle.rawValue)")
+                        .id("\(app.id)-\(displayIconStyle.rawValue)")
                         .onTapGesture {
                             launchAppAt(index: index)
                         }
@@ -957,6 +973,7 @@ struct ListAppRow: View {
     // Observe IconStyleManager for icon style changes
     // This triggers view refresh when system icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+    @Environment(\.colorScheme) private var colorScheme
 
     /// Mouse hover uses the subtle Liquid-Glass fill (`.quaternary`); the stronger accent is kept for
     /// keyboard-focus selection. Hover honours the global "Highlight on Hover" toggle.
@@ -967,8 +984,8 @@ struct ListAppRow: View {
     }
 
     var body: some View {
-        // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
-        let _ = iconStyleManager.currentStyle
+        // Reference the resolved display style to trigger re-render when icon style OR colorScheme changes
+        let _ = IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle)
 
         // Resolved ONCE per row — see StackAppItem: the probe is uncached (Launch Services +
         // stat()) and both the icon and the "Not installed" caption need it.
