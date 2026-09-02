@@ -40,3 +40,16 @@ window 1 to true` (selects a sidebar row — `click at {x,y}` frequently does no
 Tests that construct a `ConfigurationManager` create and delete real tiles (cleanup rides on a
 `defer`). Expect dev tiles to appear and vanish during a test run; never point a test at the
 Release config. See [testing.md](testing.md) "Test-host guard".
+
+## Rebuild SIGNED after any test run (SMAppService)
+
+`xcodebuild test` (per CLAUDE.md) passes `CODE_SIGNING_ALLOWED=NO`, and tests share the Debug
+product with the app you launch — so after a test run the product is only **linker-signed**
+(`codesign --verify` fails: "code has no resources…"). `SMAppService` then refuses to register
+the login launcher agent with error **-67056**: "Start tiles at login" reads OFF, toggling it
+silently snaps back, and `reconcileOnLaunch` fails every launch (found 2026-09-02). Before
+launching or handing over a dev build: rebuild **without** that flag and gate on
+
+```bash
+codesign --verify "$APP" || echo "UNSIGNED — do not launch"
+```

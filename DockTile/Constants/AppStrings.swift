@@ -513,6 +513,12 @@ enum AppStrings {
             comment: "Shown when macOS is holding the login item for user approval"
         )
 
+        static let loginRegistrationFailed = NSLocalizedString(
+            "settings.login.registrationFailed",
+            value: "Couldn\u{2019}t turn this on \u{2014} macOS refused the registration. %@",
+            comment: "Shown under the Start tiles at login toggle when SMAppService registration failed; %@ is the system error"
+        )
+
         static let addingTiles = NSLocalizedString(
             "settings.addingTiles",
             value: "Adding Tiles",

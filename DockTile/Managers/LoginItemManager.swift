@@ -38,6 +38,12 @@ final class LoginItemManager {
 
     var status: SMAppService.Status { service.status }
 
+    /// The system error from the most recent registration attempt (launch reconcile or toggle),
+    /// or `nil` when the last attempt succeeded. The General pane shows this under the toggle so
+    /// a refused registration is visible instead of the switch silently snapping back — the
+    /// 2026-09-02 failure (-67056, unsigned dev build) was invisible outside the diagnostics log.
+    private(set) var lastRegistrationError: String?
+
     var isEnabled: Bool { service.status == .enabled }
 
     /// True when macOS is holding the item for user approval in System Settings.
@@ -74,7 +80,13 @@ final class LoginItemManager {
     /// Register the launcher agent so visible tiles warm at login. Clears the opt-out flag.
     func enable() throws {
         cleanupLegacyPerTileAgents()
-        try service.register()
+        do {
+            try service.register()
+        } catch {
+            lastRegistrationError = error.localizedDescription
+            throw error
+        }
+        lastRegistrationError = nil
         userOptedOut = false
         print("✅ LoginItem: launcher agent registered (status: \(statusDescription))")
         DiagnosticsLog.shared.log("login", "Start-at-login enabled — registered (status: \(statusDescription))")
@@ -83,6 +95,7 @@ final class LoginItemManager {
     /// Unregister the launcher agent and record the user's opt-out so we don't re-enable it.
     func disable() throws {
         try service.unregister()
+        lastRegistrationError = nil
         userOptedOut = true
         print("✅ LoginItem: launcher agent unregistered (status: \(statusDescription))")
         DiagnosticsLog.shared.log("login", "Start-at-login disabled — unregistered (status: \(statusDescription))")
@@ -97,9 +110,11 @@ final class LoginItemManager {
         guard Self.shouldReregisterOnLaunch(userOptedOut: userOptedOut, status: service.status) else { return }
         do {
             try service.register()
+            lastRegistrationError = nil
             print("🔁 LoginItem: reconciled on launch → \(statusDescription)")
             DiagnosticsLog.shared.log("login", "Reconciled on launch → \(statusDescription)")
         } catch {
+            lastRegistrationError = error.localizedDescription
             print("⚠️ LoginItem: reconcile register failed: \(error.localizedDescription)")
             DiagnosticsLog.shared.log("login", "Reconcile register FAILED: \(error.localizedDescription)")
         }

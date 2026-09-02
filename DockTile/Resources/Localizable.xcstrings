@@ -1609,6 +1609,30 @@
         }
       }
     },
+    "settings.login.registrationFailed": {
+      "comment": "Shown under the Start tiles at login toggle when SMAppService registration failed; %@ is the system error",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t turn this on — macOS refused the registration. %@"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t turn this on — macOS refused the registration. %@"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t turn this on — macOS refused the registration. %@"
+          }
+        }
+      }
+    },
     "settings.login.requiresApproval": {
       "comment": "Shown when macOS is holding the login item for user approval",
       "extractionState": "manual",

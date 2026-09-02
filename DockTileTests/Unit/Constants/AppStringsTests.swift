@@ -75,6 +75,8 @@ struct AppStringsTests {
         // Settings
         #expect(!AppStrings.Settings.general.isEmpty)
         #expect(!AppStrings.Settings.loginRequiresApproval.isEmpty)
+        // Must carry the %@ slot the failure caption formats the system error into.
+        #expect(AppStrings.Settings.loginRegistrationFailed.contains("%@"))
         #expect(AppStrings.Settings.addingTiles == "Adding Tiles")
 
         // Smart Add

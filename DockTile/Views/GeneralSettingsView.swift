@@ -19,6 +19,7 @@ struct GeneralSettingsView: View {
     /// System Settings → Login Items.
     @State private var startAtLoginOn = false
     @State private var loginRequiresApproval = false
+    @State private var loginRegistrationError: String?
 
     /// Drives the manual "Scan…" results dialog. `scanFoundMissing` picks the found vs all-clear
     /// variant; the scan itself runs with `raiseLaunchPrompt: false` so this dialog — not the
@@ -97,6 +98,14 @@ struct GeneralSettingsView: View {
                 let systemOn = manager.isEnabled || manager.requiresApproval
                 guard enabled != systemOn else { return }
                 applyLoginSetting(enabled)
+            }
+
+            // Shown when the last registration attempt (launch reconcile or a toggle flip) was
+            // refused by macOS — otherwise the switch just snaps back with no explanation.
+            if let loginRegistrationError {
+                Text(String(format: AppStrings.Settings.loginRegistrationFailed, loginRegistrationError))
+                    .font(.caption)
+                    .foregroundStyle(.red)
             }
 
             // Shown when macOS is holding the launcher item for user approval.
@@ -198,6 +207,7 @@ struct GeneralSettingsView: View {
         // would look like the setting silently reset itself.
         startAtLoginOn = manager.isEnabled || manager.requiresApproval
         loginRequiresApproval = manager.requiresApproval
+        loginRegistrationError = manager.lastRegistrationError
     }
 
     /// Register/unregister the launcher agent to match the toggle. On failure, revert the
