@@ -495,13 +495,6 @@ struct PopoverPreviewCanvas: View {
     /// is the only place the real available width is known) and read back for the outer frame.
     @State private var naturalHeight: CGFloat? = nil
 
-    /// Canvas height for the `.worstCase` fit: the current panel's scaled height plus the same
-    /// 22pt top/bottom margin `fitScale` reserves (its `- 44`), never more than the design height
-    /// (a worst-case panel fills the box exactly as before). Pure so the trim rule is testable.
-    nonisolated static func trimmedWorstCaseHeight(design: CGFloat, panelHeight: CGFloat, scale: CGFloat) -> CGFloat {
-        min(design, panelHeight * scale + 44)
-    }
-
     nonisolated static func fitScale(available: CGSize, worst: CGSize) -> CGFloat {
         let fit = min((available.width - 56) / worst.width, (available.height - 44) / worst.height)
         let rawFit = min((available.width - 8) / worst.width, (available.height - 8) / worst.height)
@@ -514,39 +507,15 @@ struct PopoverPreviewCanvas: View {
             case .natural:
                 naturalFit
             case .worstCase(let height):
-                // The zoom stays anchored to the DESIGN box (width x `height`) so control changes
-                // spread/tighten at a fixed scale — but the FRAME trims to what the current panel
-                // actually uses, so a small panel (a list at Medium) doesn't float in dead space
-                // above and below (review feedback 2026-09-02). Same publish-from-inside-the-
-                // GeometryReader pattern as `.natural`, because the trim needs the scale and the
-                // scale needs the proposed width.
-                let currentPanel = Self.naturalPanelSize(
-                    layout: layout,
-                    appCount: configuration.appItems.count,
-                    settings: settings ?? PopoverSettings.load(layout: layout),
-                    isEditing: false,
-                    hasHeader: !configuration.name.isEmpty
-                )
                 GeometryReader { proxy in
-                    // Scale from the design height, NEVER proxy.size.height — the trimmed frame
-                    // would otherwise feed back into the zoom it was derived from.
-                    let scale = Self.fitScale(available: CGSize(width: proxy.size.width, height: height),
-                                              worst: Self.worstCasePanelSize(for: layout, appCount: configuration.appItems.count))
+                    let scale = Self.fitScale(available: proxy.size, worst: Self.worstCasePanelSize(for: layout, appCount: configuration.appItems.count))
                     chrome
                         .fixedSize()
                         .scaleEffect(scale, anchor: .center)
                         .shadow(color: .black.opacity(0.28), radius: 22 * scale, y: 10 * scale)
                         .frame(width: proxy.size.width, height: proxy.size.height)
-                        .preference(key: NaturalCanvasHeightKey.self,
-                                    value: Self.trimmedWorstCaseHeight(design: height,
-                                                                       panelHeight: currentPanel.height,
-                                                                       scale: scale))
                 }
-                .frame(height: naturalHeight ?? height)
-                .onPreferenceChange(NaturalCanvasHeightKey.self) { naturalHeight = $0 }
-                // Same stale-height rule as `.natural`: a height measured for the other layout must
-                // not be worn for a frame after the panel switcher flips.
-                .onChange(of: layout) { naturalHeight = nil }
+                .frame(height: height)
             }
         }
         .background(StudioCanvasBackgroundView())
