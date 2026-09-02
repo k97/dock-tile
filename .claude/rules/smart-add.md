@@ -1,8 +1,8 @@
 # Smart Add
 
-Suggests ready-made tiles from the user's **recent app usage** when they press **+**. If the
-engine can group recent apps into tiles, a modal sheet offers them; otherwise + is today's
-blank-tile flow, unchanged. A **global app feature**, ON by default (opt-out).
+Suggests ready-made tiles from the user's **recent app usage** on every add entry point. A modal
+sheet always opens (see "The + flow" below); it offers suggestion cards when the engine has some,
+otherwise a blank-tile row. A **global app feature**, ON by default (opt-out).
 
 ## On-device signal (`SmartAddEngine`)
 
@@ -49,21 +49,20 @@ The regression-prone decisions are `nonisolated static` functions taking plain v
 
 Guarded by `SmartAddEngineTests`.
 
-## The + flow
+## The + flow (v2: the dialog always opens)
 
-`DockTileSidebarView`'s + calls an `onAdd` closure; `DockTileConfigurationView` owns the decision:
-
-```
-let s = smartAddEngine.computeSuggestions(existing: configManager.configurations)
-if s.isEmpty { configManager.createConfiguration() }   // today's blank flow, unchanged
-else { present SmartAddSheet(suggestions: s) }
-```
+Every add entry point — sidebar `+`, General's *Add a Tile…* row (posts `.addTileRequested`), the
+zero-tiles button — calls the SAME `handleAddTapped`, which ALWAYS presents `SmartAddSheet` via
+`.sheet(item:)`. `SmartAddEngine.suggestionsForAddFlow(enabled:computed:)` decides what the dialog
+shows: suggestions when Smart Add is on and the engine has some, otherwise only the blank-first row
++ "No suggestions yet". The sheet's Return default is **Create New Tile** (blank); *Use This Tile*
+pre-fills Tile Detail. ⌘N *New Dock Tile* still creates a blank tile directly. Nothing in the
+dialog docks a tile.
 
 - **`.sheet(item:)`, NOT `.sheet(isPresented:)` (critical)**: the suggestions ride *inside* the
   presentation item. With a separate `Bool` + `@State` array, SwiftUI evaluated the sheet content
   while the array was still its old empty value → the sheet opened with **zero cards**. `item:`
-  builds the content from the exact value that opened it, so it can never present empty. (Empty
-  results never reach the sheet anyway — they take the blank-tile branch above.)
+  builds the content from the exact value that opened it, so it can never present empty.
 - **Never auto-adds to Dock (critical)**: picking a suggestion only pre-fills Tile Detail. **Add to
   Dock** stays the explicit confirm there. The ⌘N menu item still creates a blank tile directly.
 - The `+` keeps its existing `selectedConfigHasBeenEdited` enable/disable gating.
@@ -80,10 +79,11 @@ icon, `appItems`), selects it, marks it edited, logs `.tileCreated` with `source
 
 ## Opt-out toggle & provenance banner
 
-- **General settings toggle** — "Suggest tiles when I add one" in `GeneralSettingsView`, before the
-  Popover Appearance row (no leading icon). Opt-out, default ON, key
+- **General settings toggle** — "Suggest tiles from my apps" in `GeneralSettingsView`'s "Adding
+  Tiles" section, alongside the *Add a Tile…* row (no leading icon). Opt-out, default ON, key
   `UserDefaultsKeys.smartAddEnabled` (main-app domain — the flow is main-app only, so **not** the
-  shared suite). When off, + always creates a blank tile.
+  shared suite). When off, the dialog still opens (see "The + flow") but shows only the blank-tile
+  row — `suggestionsForAddFlow` returns no suggestions.
 - **Provenance banner** — accent-tinted sparkle banner atop `DockTileDetailView` for a just-created
   Smart Add tile. Gated on `ConfigurationManager.smartAddProvenanceIDs` — **runtime-only, never
   persisted**, so it never reappears after relaunch; cleared when dismissed or when the tile is

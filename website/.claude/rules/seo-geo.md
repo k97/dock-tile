@@ -6,10 +6,20 @@
   docktile.rkarthik.co — the decision point is deliberate, don't "fix" either way).
 - `siteConfig.siteUrl` is the single source of truth: metadataBase, canonicals, og:url,
   sitemap, robots and all JSON-LD derive from it — a domain change is a one-line flip + rebuild.
-- **docktile.rkarthik.co must stay attached in Vercel** — shipped apps' Sparkle `SUFeedURL`
-  is baked to it (app-side follow-up: Info.plist + `Scripts/generate-appcast-entry.sh` still
-  reference it). **Host redirects belong to Vercel, never next.config/middleware** — an
-  app-level host redirect fights the platform's and loops.
+- **Both hosts must serve `/appcast.xml`, forever.** Sparkle's `SUFeedURL` is baked into each app
+  build at ship time, so the feed a copy polls is frozen on the day it was built:
+  - **≤ 1.8.8** polls `docktile.rkarthik.co/appcast.xml`.
+  - **From 2026-08-30 on**, the app-side flip is **done** — `DockTile/Resources/Info.plist` and
+    `Scripts/generate-appcast-entry.sh` now say `docktile.app` (both URLs verified 200 that day).
+  - So **docktile.rkarthik.co must stay attached in Vercel permanently**, not just for the trial:
+    detaching it silently strands every already-shipped copy on its last version, with no error the
+    user would ever see. Same in reverse — if the docktile.app trial lapses, the app-side
+    `SUFeedURL` has to be flipped back **in a release**, and docktile.app kept attached for the
+    builds that shipped with it.
+- Machine-read URLs (the appcast) **never carry UTM parameters**; the app's human-facing links
+  (About → Website, the studio links) carry `utm_source=docktile-mac`.
+- **Host redirects belong to Vercel, never next.config/middleware** — an app-level host redirect
+  fights the platform's and loops.
 
 ## Metadata pattern (every route)
 

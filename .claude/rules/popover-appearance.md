@@ -2,9 +2,18 @@
 
 App-wide controls for how every tile's Dock popover looks — Popover Size, Tile Size, Animation,
 Spacing, Highlight on Hover, plus Grid-only Show Labels. **Grid and List are configured
-independently** (see below). Reached via **Settings → General → Appearance** — a `NavigationStack`
-drill-down inside `GeneralSettingsView` (NOT a separate sidebar pane), titled "Appearance" with a
-"‹ General" back. Per-tile Grid/List (which layout a tile uses) still lives on Tile Detail.
+independently** (see below). Reached via **Settings → Popover** — a **top-level sidebar pane**
+(`PaneIcon.popover`), not a `GeneralSettingsView` drill-down; the old "Appearance" back-navigation
+is gone. Reset/Save are `.primaryAction` toolbar items riding in the pane's title band (see
+architecture.md "Sidebar Selection & Empty State" for the title-band chrome). Per-tile Grid/List
+(which layout a tile uses) still lives on Tile Detail.
+
+- **Hero = `PopoverPreviewCanvas` (critical)**: the live preview is `PopoverPreviewCanvas(fit:
+  .worstCase(height: 300))` — the SAME component Tile Detail's tile editor uses with `.natural` and
+  an `editing` handler (see architecture.md "Tile editor = the real popover"); here `editing` is
+  omitted (defaults `nil`) so it renders exactly as the real popover ships. `PopoverPreviewCanvas.fitScale` is
+  the pure zoom seam that scales the fixed-size real panel into the `.worstCase` frame, guarded by
+  `PopoverPreviewCanvasTests`.
 
 - **Per-layout, independent configs (critical)**: Grid and List are configured **separately** —
   `PopoverSettings.load(layout:)` / `.persist(layout:)` read/write a distinct key namespace per
@@ -50,6 +59,14 @@ drill-down inside `GeneralSettingsView` (NOT a separate sidebar pane), titled "A
   column count (Small 4 / Medium 5 / Large 6) **capped at the app count** so few-app tiles stay tight
   — meaning Popover Size is a visual no-op for a tile with ≤4 apps (the preview uses 6 sample apps so
   all three tiers differ). Animation is forced to 0 when system Reduce Motion is on.
+- **Pure panel-geometry seam** (`PopoverPanelLayout`, in the same file): the chrome constants and the
+  grid/list **size formulas**, one level above `PopoverMetrics`. `StackPopoverView.popoverWidth` /
+  `.calculateHeight`, `ListPopoverView`'s paddings AND `PopoverPreviewCanvas.naturalPanelSize` all
+  read it. **Why it must stay single (critical)**: the grid pins its own width and height, but
+  `ListPopoverView` pins only its **width** and takes an intrinsic height, so the canvas's estimate
+  is load-bearing — the canvas frames the panel and clips to that frame, and an underestimate cuts
+  the panel off. Two copies of the list formula did drift exactly there: the empty-tile case billed
+  one 36pt row against a ~110pt empty state, clipping the tile-name header and the hint.
 - **Applied to real helper popovers** (per-tile by layout): `LauncherView` routes each helper to
   `StackPopoverView` (grid tiles) or `ListPopoverView` (list tiles) by the tile's own
   `layoutMode`; each reads its own config via `PopoverSettings.load(layout:)` (grid tiles `.grid`,

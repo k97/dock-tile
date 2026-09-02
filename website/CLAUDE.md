@@ -2,7 +2,8 @@
 
 Marketing site for the Dock Tile macOS app — Next.js 16 (App Router), React 19, Tailwind v4
 (CSS-first, no config file), shadcn (new-york/lucide), next-themes. Deployed by Vercel from `main`
-at **docktile.app** (docktile.rkarthik.co is a redirecting alias that must stay — see SEO rule).
+at **docktile.app** (docktile.rkarthik.co must stay attached permanently — apps shipped up to
+1.8.8 poll it for Sparkle updates; see SEO rule).
 
 The website is a satellite of the app; the app is the primary product (docs at the repo root).
 **Never edit the macOS app from a website session** — `DockTile/`, `*.swift`, the xcodeproj are

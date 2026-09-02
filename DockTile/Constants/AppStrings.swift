@@ -23,6 +23,26 @@ enum AppStrings {
         comment: "App display name"
     )
 
+    // MARK: - About
+
+    enum About {
+        static let title = NSLocalizedString("about.title", value: "About", comment: "About pane title")
+        static func version(_ v: String) -> String { String(format: NSLocalizedString("about.version", value: "Version %@", comment: "About: version line"), v) }
+        static let website = NSLocalizedString("about.website", value: "Website", comment: "About: website row label")
+        static let feedbackTitle = NSLocalizedString("about.feedbackTitle", value: "Found a bug or have an idea?", comment: "About: feedback card title")
+        static let feedbackBody = NSLocalizedString("about.feedbackBody", value: "Feedback goes straight to the developer. Diagnostics attach a log of what the app and its tiles did — nothing personal.", comment: "About: feedback card body")
+        static let sendFeedback = NSLocalizedString("about.sendFeedback", value: "Send Feedback…", comment: "About: opens the feedback email")
+        static let feedbackRowBody = NSLocalizedString("about.feedbackRowBody", value: "Feedback goes straight to the developer.", comment: "About: Send Feedback row description.")
+        static let diagnosticsTitle = NSLocalizedString("about.diagnosticsTitle", value: "Diagnostics", comment: "About: Copy Diagnostics row label.")
+        static let diagnosticsBody = NSLocalizedString("about.diagnosticsBody", value: "A log of what the app and its tiles did. Attach it to an email when something looks wrong — it contains nothing personal.", comment: "About: Copy Diagnostics row description.")
+        static let alsoFrom = NSLocalizedString("about.alsoFrom", value: "Also from Happy Machines", comment: "About: studio section header")
+        static let studioTitle = NSLocalizedString("about.studioTitle", value: "Made by Happy Machines Company", comment: "About: studio row title")
+        static let studioSubtitle = NSLocalizedString("about.studioSubtitle", value: "A tiny product studio building nifty Mac apps that each fix one thing well.", comment: "About: studio row subtitle")
+        static let spadesTitle = NSLocalizedString("about.spadesTitle", value: "Spades Audio", comment: "About: sibling product row title")
+        static let spadesSubtitle = NSLocalizedString("about.spadesSubtitle", value: "Per-app volume, EQ and output control for your Mac, from the menu bar.", comment: "About: sibling product subtitle")
+        static let learnMore = NSLocalizedString("about.learnMore", value: "Learn More…", comment: "About: opens spadesaudio.com")
+    }
+
     // MARK: - Alert Messages
 
     enum Alert {
@@ -119,6 +139,10 @@ enum AppStrings {
             value: "Add",
             comment: "Add button label in file picker"
         )
+
+        static let addATile = NSLocalizedString("button.addATile", value: "Add a Tile…", comment: "Sidebar + / empty state: opens the Add a Tile dialog")
+
+        static let copy = NSLocalizedString("button.copy", value: "Copy", comment: "Generic Copy button label.")
 
         static let addToDock = NSLocalizedString(
             "button.addToDock",
@@ -354,6 +378,18 @@ enum AppStrings {
             comment: "Badge/kind text shown for an app whose bundle is no longer on disk"
         )
 
+        static let editorHint = NSLocalizedString(
+            "label.editorHint",
+            value: "Hover to remove · Drag to reorder",
+            comment: "Tile Detail: apps section caption"
+        )
+
+        static let addAppsTooltip = NSLocalizedString(
+            "label.addAppsTooltip",
+            value: "Add apps or folders to this tile",
+            comment: "Tooltip on the + Add button above the tile editor's popover preview."
+        )
+
         static let missingAppsScan = NSLocalizedString(
             "label.missingAppsScan",
             value: "Missing Apps",
@@ -364,12 +400,6 @@ enum AppStrings {
             "label.missingAppsScanDescription",
             value: "Check your tiles for apps that have been moved or uninstalled.",
             comment: "Settings row description for the missing-app scan"
-        )
-
-        static let layout = NSLocalizedString(
-            "label.layout",
-            value: "Layout",
-            comment: "Label for layout picker"
         )
 
         static let showInAppSwitcher = NSLocalizedString(
@@ -481,6 +511,12 @@ enum AppStrings {
             "settings.login.requiresApproval",
             value: "Approve Dock Tile in Login Items to finish enabling this.",
             comment: "Shown when macOS is holding the login item for user approval"
+        )
+
+        static let addingTiles = NSLocalizedString(
+            "settings.addingTiles",
+            value: "Adding Tiles",
+            comment: "General: section holding the Smart Add toggle and the Add a Tile row"
         )
 
         static let dockLock = NSLocalizedString(
@@ -632,18 +668,6 @@ enum AppStrings {
             comment: "Section header and pane title for popover appearance settings"
         )
 
-        static let popoverAppearance = NSLocalizedString(
-            "settings.popover.appearance",
-            value: "Appearance",
-            comment: "Title of the drill-down row in General that opens popover settings"
-        )
-
-        static let popoverAppearanceSubtitle = NSLocalizedString(
-            "settings.popover.appearance.subtitle",
-            value: "Layout, size, spacing and labels for every tile's popover",
-            comment: "Subtitle under the Popover Appearance drill-down row"
-        )
-
         static let popoverSectionTiles = NSLocalizedString(
             "settings.popover.section.tiles",
             value: "Tiles",
@@ -739,6 +763,24 @@ enum AppStrings {
             case .spacious: return spacious
             }
         }
+
+        static let editingRemove = NSLocalizedString(
+            "popover.editing.remove",
+            value: "Remove",
+            comment: "Context menu / remove badge in the tile editor"
+        )
+        /// Split into title + subtitle so the editor's empty panel reads as two short lines
+        /// instead of one sentence wrapping four times in a narrow column.
+        static let editingNoAppsTitle = NSLocalizedString(
+            "popover.editing.noAppsTitle",
+            value: "No apps yet",
+            comment: "Tile editor: empty popover preview, title line."
+        )
+        static let editingNoAppsSubtitle = NSLocalizedString(
+            "popover.editing.noAppsSubtitle",
+            value: "Use Add to choose what opens from this tile.",
+            comment: "Tile editor: empty popover preview, subtitle line."
+        )
     }
 
     // MARK: - Menu Items
@@ -785,6 +827,12 @@ enum AppStrings {
             value: "Configure Tile",
             comment: "Tooltip for gear icon in popover"
         )
+
+        static let aboutDockTile = NSLocalizedString(
+            "menu.aboutDockTile",
+            value: "About Dock Tile",
+            comment: "App menu"
+        )
     }
 
     // MARK: - Navigation
@@ -817,15 +865,21 @@ enum AppStrings {
             value: "Settings",
             comment: "Sidebar section header for the inline app settings panes"
         )
+
+        static let dockTileSection = NSLocalizedString(
+            "sidebar.dockTileSection",
+            value: "Dock Tile",
+            comment: "Sidebar section holding About"
+        )
     }
 
     // MARK: - Sections
 
     enum Section {
-        static let selectedItems = NSLocalizedString(
-            "section.selectedItems",
-            value: "Selected Items",
-            comment: "Section header for selected items"
+        static let inThisTile = NSLocalizedString(
+            "section.inThisTile",
+            value: "In This Tile",
+            comment: "Tile Detail: apps section header"
         )
     }
 
@@ -840,10 +894,28 @@ enum AppStrings {
             comment: "Header title of the Smart Add suggestion sheet"
         )
 
-        static let subtitle = NSLocalizedString(
-            "smartAdd.subtitle",
-            value: "Pick a tile to start from — you can rename it, restyle it and change the apps next.",
-            comment: "Header subtitle of the Smart Add suggestion sheet"
+        static let blankTitle = NSLocalizedString(
+            "smartAdd.blankTitle",
+            value: "Create a blank tile",
+            comment: "Add a Tile: blank row title"
+        )
+
+        static let blankSubtitle = NSLocalizedString(
+            "smartAdd.blankSubtitle",
+            value: "Name it, pick an icon and add apps yourself.",
+            comment: "Add a Tile: blank row subtitle"
+        )
+
+        static let orStartFrom = NSLocalizedString(
+            "smartAdd.orStartFrom",
+            value: "or start from what you use",
+            comment: "Add a Tile: rule between blank row and suggestions"
+        )
+
+        static let noSuggestions = NSLocalizedString(
+            "smartAdd.noSuggestions",
+            value: "No suggestions yet — Dock Tile learns from the apps you open. You can turn this off in General.",
+            comment: "Add a Tile: empty suggestions note"
         )
 
         static let privacyFootnote = NSLocalizedString(
@@ -860,13 +932,13 @@ enum AppStrings {
 
         static let settingsToggleTitle = NSLocalizedString(
             "smartAdd.settings.toggleTitle",
-            value: "Suggest tiles when I add one",
+            value: "Suggest tiles from my apps",
             comment: "Title of the Smart Add on/off toggle in General settings"
         )
 
         static let settingsToggleDescription = NSLocalizedString(
             "smartAdd.settings.toggleDescription",
-            value: "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Turn this off to always start with an empty tile.",
+            value: "Learned on your Mac. Never leaves your device.",
             comment: "Description under the Smart Add toggle in General settings"
         )
 
@@ -933,22 +1005,6 @@ enum AppStrings {
         )
     }
 
-    // MARK: - Table Headers
-
-    enum Table {
-        static let item = NSLocalizedString(
-            "table.item",
-            value: "Item",
-            comment: "Table column header for item"
-        )
-
-        static let kind = NSLocalizedString(
-            "table.kind",
-            value: "Kind",
-            comment: "Table column header for kind"
-        )
-    }
-
     // MARK: - Titles
 
     enum Title {
@@ -979,6 +1035,12 @@ enum AppStrings {
             value: "Settings",
             comment: "Tooltip for the settings toolbar button"
         )
+
+        static let deleteTile = NSLocalizedString(
+            "tooltip.deleteTile",
+            value: "Delete Tile",
+            comment: "Tile Detail: trash button tooltip"
+        )
     }
 
     // MARK: - Empty States
@@ -992,8 +1054,8 @@ enum AppStrings {
 
         static let createFirstTileDescription = NSLocalizedString(
             "empty.createFirstTileDescription",
-            value: "Group your favourite apps into a tile and pin it to the Dock.",
-            comment: "Supporting text under the empty-state header"
+            value: "Group apps and folders behind one Dock icon. Start blank, or from a tile suggested from the apps you use.",
+            comment: "Zero-tiles description"
         )
 
         static let detail = NSLocalizedString(
@@ -1006,12 +1068,6 @@ enum AppStrings {
             "empty.noApps",
             value: "No apps configured",
             comment: "Empty state text when no apps configured"
-        )
-
-        static let noItemsAdded = NSLocalizedString(
-            "empty.noItemsAdded",
-            value: "No items added yet",
-            comment: "Empty state text in apps table"
         )
 
         static let noTiles = NSLocalizedString(
@@ -1044,22 +1100,6 @@ enum AppStrings {
             "filePicker.message",
             value: "Select one or more applications or folders to add",
             comment: "Message in file picker dialog"
-        )
-    }
-
-    // MARK: - Kind Values
-
-    enum Kind {
-        static let application = NSLocalizedString(
-            "kind.application",
-            value: "Application",
-            comment: "Kind value for applications"
-        )
-
-        static let folder = NSLocalizedString(
-            "kind.folder",
-            value: "Folder",
-            comment: "Kind value for folders"
         )
     }
 

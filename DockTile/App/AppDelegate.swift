@@ -176,7 +176,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         identifiers.contains(configurationWindowID)
     }
 
-    private func showConfigurationWindow() {
+    /// Brings the single configuration window up (reusing it when it's open, recreating it when the
+    /// user has closed it). Internal, not private: the app menu's About / Settings commands call it
+    /// so their pane notification has a window to land in — with Dock Lock on, the app stays
+    /// resident with no window, and posting alone did nothing (nobody was observing).
+    func showConfigurationWindow() {
         // Activate app and show configuration window
         NSApp.activate(ignoringOtherApps: true)
 

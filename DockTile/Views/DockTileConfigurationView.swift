@@ -11,7 +11,9 @@ import SwiftUI
 /// One of the inline Settings panes, hosted in the detail column instead of a detached window.
 enum SettingsPane: Hashable, CaseIterable {
     case general
+    case popover     // v2: top-level pane (was a drill-down inside General)
     case dockLock
+    case about
 }
 
 /// What the sidebar currently has selected — either a tile or an inline Settings pane.
@@ -42,8 +44,9 @@ struct DockTileConfigurationView: View {
         let suggestions: [TileSuggestion]
     }
 
-    /// Smart Add on/off (opt-out, default ON). When OFF, + always creates a blank tile — see
-    /// the General settings toggle. Main-app domain.
+    /// Smart Add on/off (opt-out, default ON). Only decides whether the Add a Tile dialog is
+    /// populated with suggestions — the dialog itself always opens, from every add entry point
+    /// (sidebar +, General's row, the empty state). See `handleAddTapped` below. Main-app domain.
     @AppStorage(UserDefaultsKeys.smartAddEnabled) private var smartAddEnabled = true
 
     /// Single source of truth for what the sidebar has selected and what fills the detail
@@ -57,13 +60,20 @@ struct DockTileConfigurationView: View {
 
     var body: some View {
         NavigationSplitView {
-            // Sidebar with tiles + inline Settings, accordion-style sections
-            DockTileSidebarView(selection: $selection, onAdd: handleAddTapped)
+            // Sidebar: static Tiles / Settings / Dock Tile sections
+            DockTileSidebarView(selection: $selection,
+                                onAdd: { handleAddTapped(source: .toolbarPlus) })
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 280)
         } detail: {
             detailColumn
         }
         .navigationSplitViewStyle(.balanced)
+        // v2 chrome: the 52pt title band IS the page header. No window title, no sidebar toggle,
+        // no toolbar surface — each pane hosts its title + actions as toolbar items (PaneTitleBand).
+        // The toggle is removed once, on the sidebar's own `List` (DockTileSidebarView) — that is the
+        // placement proven to work; the copies here and on this column were redundant.
+        .toolbar(removing: .title)
+        .toolbarBackground(.hidden, for: .windowToolbar)
         // Strict frame enforcement: fixed width, flexible height
         .frame(
             minWidth: windowWidth,
@@ -116,6 +126,9 @@ struct DockTileConfigurationView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openSettingsPane)) { note in
             selection = .settings((note.object as? SettingsPane) ?? .general)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .addTileRequested)) { _ in
+            handleAddTapped(source: .generalSettings)
+        }
         // Non-destructive prompt raised by the launch scan when tiles reference uninstalled apps.
         // "Keep" just dismisses — the rows stay flagged inline so the user can act later.
         .alert(
@@ -131,8 +144,10 @@ struct DockTileConfigurationView: View {
         } message: {
             Text(AppStrings.Alert.missingAppsMessage)
         }
-        // Smart Add: shown when + finds on-device suggestions. Nothing here docks a tile — picking
-        // a suggestion only pre-fills Tile Detail; the explicit Add to Dock confirm stays there.
+        // Add a Tile dialog: presented unconditionally from every add entry point. When there is
+        // nothing to suggest it shows just the blank-tile row plus a "No suggestions yet" note.
+        // Nothing here docks a tile — picking a suggestion only pre-fills Tile Detail; the
+        // explicit Add to Dock confirm stays there.
         .sheet(item: $smartAddPresentation) { presentation in
             SmartAddSheet(
                 suggestions: presentation.suggestions,
@@ -154,24 +169,23 @@ struct DockTileConfigurationView: View {
         }
     }
 
-    /// The + toolbar action. Computes on-device suggestions: if any, present the Smart Add sheet;
-    /// otherwise fall through to today's blank-tile flow unchanged.
-    private func handleAddTapped() {
-        // Smart Add off → always the blank-tile flow.
-        guard smartAddEnabled else {
-            DiagnosticsLog.shared.ui("+ pressed (Smart Add off) → new blank tile")
-            configManager.createConfiguration()
-            return
-        }
+    /// The + toolbar action (and every other add entry point). The Add a Tile dialog always
+    /// opens — the blank row is the first thing you see. Smart Add only decides whether the
+    /// dialog's suggestions are populated, never whether the dialog appears.
+    /// Which affordance opened the dialog. Every entry point runs the SAME flow, so the trace has to
+    /// carry the source or a diagnostics log can't tell the sidebar row from the toolbar +.
+    enum AddSource: String {
+        case toolbarPlus = "+ button"
+        case emptyState = "empty state"
+        case generalSettings = "General → Add a Tile"
+    }
 
-        let suggestions = smartAddEngine.computeSuggestions(existing: configManager.configurations)
-        if suggestions.isEmpty {
-            DiagnosticsLog.shared.ui("+ pressed → no suggestions, new blank tile")
-            configManager.createConfiguration()
-        } else {
-            DiagnosticsLog.shared.ui("+ pressed → Smart Add sheet with \(suggestions.count) suggestion(s)")
-            smartAddPresentation = SmartAddPresentation(suggestions: suggestions)
-        }
+    private func handleAddTapped(source: AddSource) {
+        let computed = smartAddEnabled
+            ? smartAddEngine.computeSuggestions(existing: configManager.configurations) : []
+        let suggestions = SmartAddEngine.suggestionsForAddFlow(enabled: smartAddEnabled, computed: computed)
+        DiagnosticsLog.shared.ui("\(source.rawValue) → Add a Tile dialog (\(suggestions.count) suggestion(s), smartAdd=\(smartAddEnabled))")
+        smartAddPresentation = SmartAddPresentation(suggestions: suggestions)
     }
 
     @ViewBuilder
@@ -192,8 +206,14 @@ struct DockTileConfigurationView: View {
         case .general:
             GeneralSettingsView()
                 .environmentObject(configManager)
+        case .popover:
+            PopoverAppearanceView()
+                .environmentObject(configManager)
         case .dockLock:
             DockLockSettingsView()
+        case .about:
+            AboutPaneView()
+                .environmentObject(configManager)
         }
     }
 
@@ -233,7 +253,7 @@ struct DockTileConfigurationView: View {
             .animation(.easeInOut(duration: 0.3), value: isDrilledDown)
         } else {
             // Empty state — routes through the same Smart Add flow as the sidebar +.
-            EmptyConfigurationView(onAdd: handleAddTapped)
+            EmptyConfigurationView(onAdd: { handleAddTapped(source: .emptyState) })
         }
     }
 }
@@ -272,6 +292,10 @@ private struct WindowAccessor: NSViewRepresentable {
         if window.identifier?.rawValue != AppDelegate.configurationWindowID {
             window.identifier = NSUserInterfaceItemIdentifier(AppDelegate.configurationWindowID)
         }
+
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.toolbarStyle = .unified
 
         let minHeight = isCustomising ? customiseMinHeight : defaultMinHeight
 
@@ -321,10 +345,130 @@ struct EmptyConfigurationView: View {
             Text(AppStrings.Empty.createFirstTileDescription)
         } actions: {
             Button(action: onAdd) {
-                Label(AppStrings.Button.newTile, systemImage: "plus")
+                Label(AppStrings.Button.addATile, systemImage: "plus")
             }
             .buttonStyle(.borderedProminent)
         }
+    }
+}
+
+// MARK: - Pane title band
+
+/// Squircle badge for Settings/About sidebar rows. The title band itself is title-only — see
+/// `paneTitleBand` below — this identity lives on in the sidebar (`DockTileSidebarView`).
+struct PaneIcon: Equatable {
+    let systemName: String
+    let tint: Color
+    static let general  = PaneIcon(systemName: "gearshape.fill", tint: .gray)
+    static let popover  = PaneIcon(systemName: "macwindow.on.rectangle", tint: .indigo)
+    static let dockLock = PaneIcon(systemName: "lock.display", tint: .blue)
+    static let about    = PaneIcon(systemName: "info.circle.fill", tint: .gray)
+}
+
+/// The title item shared by both `PaneTitleBand` variants below — written exactly once so the plain
+/// band and the trailing-actions band can never drift apart.
+@ToolbarContentBuilder
+private func paneTitleItem(title: String) -> some ToolbarContent {
+    if #available(macOS 26.0, *) {
+        ToolbarItem(placement: .navigation) { PaneTitleLabel(title: title) }
+            .sharedBackgroundVisibility(.hidden)   // no Liquid Glass capsule around a title
+    } else {
+        ToolbarItem(placement: .navigation) { PaneTitleLabel(title: title) }
+    }
+}
+
+private struct PaneTitleLabel: View {
+    let title: String
+
+    /// Nudge that lands the title on the pane's CONTENT leading edge rather than the toolbar's own,
+    /// narrower inset — the title band IS the page header, so a title starting left of the first row
+    /// below it reads as misaligned on every pane. Every pane insets its content by 20pt from the
+    /// detail column; the toolbar item supplies part of that, and this covers the remainder.
+    /// Measured, not guessed: with this value the title's AX frame and the first card's AX frame
+    /// share a leading edge on both the Tile Detail (ScrollView) and Settings (Form) panes.
+    static let leadingAdjustment: CGFloat = 12
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .padding(.leading, Self.leadingAdjustment)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+private struct PaneTitleBand: ViewModifier {
+    let title: String
+
+    func body(content: Content) -> some View {
+        content.toolbar {
+            paneTitleItem(title: title)
+        }
+    }
+}
+
+/// Title band + trailing toolbar actions in ONE `.toolbar {}` call — title, the flexible spacer, and
+/// `trailing` all ride together, so a pane's action items can never land in a separately-ordered
+/// `.toolbar {}` block (`ToolbarContentBuilder` has no zero-argument `buildBlock()`, which is why this
+/// needs its own modifier rather than the plain `PaneTitleBand` fed empty content).
+private struct PaneTitleBandWithActions<Trailing: ToolbarContent>: ViewModifier {
+    let title: String
+    let trailing: Trailing
+
+    init(title: String, @ToolbarContentBuilder trailing: () -> Trailing) {
+        self.title = title
+        self.trailing = trailing()
+    }
+
+    func body(content: Content) -> some View {
+        content.toolbar {
+            paneTitleItem(title: title)
+            // `.toolbar(removing: .title)` (DockTileConfigurationView) drops the toolbar's automatic
+            // flexible space, so trailing-placed items would otherwise collapse leftward next to the
+            // title instead of trailing the band. Push them back to the trailing edge.
+            //
+            // `ToolbarSpacer` is macOS 26+. The pre-26 branch is the older idiom for the same job —
+            // a toolbar item that is nothing but a `Spacer`, which the AppKit toolbar renders as a
+            // flexible space. UNVERIFIED on real macOS 15 hardware (this machine is Tahoe): if it
+            // misbehaves there, the failure mode is cosmetic — the actions sit beside the title,
+            // which is exactly where they land with no spacer at all.
+            if #available(macOS 26.0, *) {
+                ToolbarSpacer(.flexible)
+            } else {
+                ToolbarItem(placement: .automatic) { Spacer() }
+            }
+            trailing
+        }
+    }
+}
+
+extension View {
+    /// Page header in the title band: the title text only. Replaces `.navigationTitle`.
+    func paneTitleBand(_ title: String) -> some View {
+        modifier(PaneTitleBand(title: title))
+    }
+
+    /// Page header with trailing toolbar actions (e.g. a primary-action button/group).
+    func paneTitleBand<Trailing: ToolbarContent>(
+        _ title: String,
+        @ToolbarContentBuilder trailing: () -> Trailing
+    ) -> some View {
+        modifier(PaneTitleBandWithActions(title: title, trailing: trailing))
+    }
+
+    /// The app's one switch size, for a **labels-hidden** toggle in a hand-built row (Tile Detail,
+    /// Popover). Renders 36×16 — the size SwiftUI's `Form` already gives its own toggles, so the
+    /// Settings panes match without setting anything.
+    ///
+    /// **Do NOT apply this to a `Form` toggle that carries a text label** (General, Dock Lock):
+    /// `controlSize` scales the label typography too, so forcing `.mini` there would shrink their
+    /// title and description text. Those panes match by inheriting the Form default — that is
+    /// deliberate, not an oversight. One decision, two mechanisms, for a reason.
+    func tileSwitch() -> some View {
+        labelsHidden()
+            .toggleStyle(.switch)
+            .controlSize(.mini)
     }
 }
 

@@ -1,0 +1,280 @@
+{
+  "pages": [
+    {
+      "id": "light",
+      "name": "Light"
+    },
+    {
+      "id": "dark",
+      "name": "Dark"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "title": "Tile Detail — Grid",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "file": "TileList.dc.html",
+      "title": "Tile Detail — List",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 896,
+      "y": 0
+    },
+    {
+      "file": "TileDraft.dc.html",
+      "title": "Tile Detail — New Tile draft",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 1792,
+      "y": 0
+    },
+    {
+      "file": "EmptyState.dc.html",
+      "title": "Zero tiles",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 2688,
+      "y": 0
+    },
+    {
+      "file": "AddTileSheet.dc.html",
+      "title": "Add a Tile",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 0,
+      "y": 1010
+    },
+    {
+      "file": "General.dc.html",
+      "title": "Settings — General",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 896,
+      "y": 1010
+    },
+    {
+      "file": "Popover.dc.html",
+      "title": "Settings — Popover",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 1792,
+      "y": 1010
+    },
+    {
+      "file": "DockLock.dc.html",
+      "title": "Settings — Dock Lock",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 2688,
+      "y": 1010
+    },
+    {
+      "file": "About.dc.html",
+      "title": "About",
+      "w": 816,
+      "h": 690,
+      "page": "light",
+      "x": 0,
+      "y": 2020
+    },
+    {
+      "file": "States.dc.html",
+      "title": "States sheet",
+      "w": 816,
+      "h": 1090,
+      "page": "light",
+      "x": 896,
+      "y": 2020
+    },
+    {
+      "file": "MainDark.dc.html",
+      "title": "Tile Detail — Grid — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "file": "TileListDark.dc.html",
+      "title": "Tile Detail — List — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 896,
+      "y": 0
+    },
+    {
+      "file": "TileDraftDark.dc.html",
+      "title": "Tile Detail — New Tile draft — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 1792,
+      "y": 0
+    },
+    {
+      "file": "EmptyStateDark.dc.html",
+      "title": "Zero tiles — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 2688,
+      "y": 0
+    },
+    {
+      "file": "AddTileSheetDark.dc.html",
+      "title": "Add a Tile — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 0,
+      "y": 1010
+    },
+    {
+      "file": "GeneralDark.dc.html",
+      "title": "Settings — General — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 896,
+      "y": 1010
+    },
+    {
+      "file": "PopoverDark.dc.html",
+      "title": "Settings — Popover — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 1792,
+      "y": 1010
+    },
+    {
+      "file": "DockLockDark.dc.html",
+      "title": "Settings — Dock Lock — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 2688,
+      "y": 1010
+    },
+    {
+      "file": "AboutDark.dc.html",
+      "title": "About — dark",
+      "w": 816,
+      "h": 690,
+      "page": "dark",
+      "x": 0,
+      "y": 2020
+    },
+    {
+      "file": "StatesDark.dc.html",
+      "title": "States sheet — dark",
+      "w": 816,
+      "h": 1090,
+      "page": "dark",
+      "x": 896,
+      "y": 2020
+    }
+  ],
+  "annotations": [
+    {
+      "id": "surface",
+      "x": 0,
+      "y": -290,
+      "w": 760,
+      "page": "light",
+      "text": "Surface: Klack's one-tone window + grouped white cards, native macOS sizing everywhere else — 13pt sidebar rows, 24pt icons, 40pt form rows, 12pt card radius, system blue, SF Pro. The page header lives in the 52pt title band. Tile pages carry no header icon; Settings and About keep their squircle, as Klack does. Customise Tile stays as it is in the app today and is not on this canvas."
+    },
+    {
+      "id": "gaps-main",
+      "x": 0,
+      "y": 718,
+      "w": 760,
+      "text": "Gap fixes visible here: the app list is the live popover preview and the editor (hover → remove badge, drag to reorder); a FOLDER item and a MISSING app render the way the real popover draws them; Layout moved to the section header as Grid/List; delete is the header trash (the old bottom card was mislabelled 'Remove from Dock').",
+      "page": "light"
+    },
+    {
+      "id": "draft",
+      "x": 1792,
+      "y": 718,
+      "w": 760,
+      "text": "New Tile draft: grey + placeholder icon until the user picks one; sidebar + is disabled while an unedited draft is selected (canCreateNewTile). Action reads 'Add to Dock' because a draft is visible-but-unpinned.",
+      "page": "light"
+    },
+    {
+      "id": "empty",
+      "x": 2688,
+      "y": 718,
+      "w": 760,
+      "text": "Zero tiles: one entry point, Add a Tile… — it opens the dialog, whose blank-first row is the New Tile path. The sidebar + stays enabled.",
+      "page": "light"
+    },
+    {
+      "id": "sheet",
+      "x": 0,
+      "y": 1728,
+      "w": 760,
+      "text": "LOCKED: Add a Tile, blank first. Header is title + close only. Rule: every Add/New entry point (sidebar +, the General row, the zero-tiles button) opens this dialog — even when there is nothing to suggest (see the no-suggestions state on the States sheet). ⌘N New Dock Tile stays the direct blank shortcut for keyboard users; confirm if you'd rather it open the dialog too.",
+      "page": "light"
+    },
+    {
+      "id": "popover",
+      "x": 1792,
+      "y": 1728,
+      "w": 760,
+      "text": "Option A chosen: explicit Save (⌘S) + icon-only Reset in the title band, draft/dirty behaviour as today, then the one-time 'Apply to your Dock tiles?' prompt after Save.",
+      "page": "light"
+    },
+    {
+      "id": "docklock",
+      "x": 2688,
+      "y": 1728,
+      "w": 760,
+      "text": "The reference's Dock Lock copy described a feature that doesn't exist. This is the real one — lock to a display, Accessibility permission, Keep Dock on picker, status. Conditional rows are on the States sheet.",
+      "page": "light"
+    },
+    {
+      "id": "about",
+      "x": 0,
+      "y": 2738,
+      "w": 760,
+      "text": "About moves into the sidebar (Klack-style 'Dock Tile' section) and is the only home of Software Update (removed from General). Rows: version + Check for Updates…, website; feedback with Send Feedback… and Copy Diagnostics; 'Also from Happy Machines' — the studio line + Spades Audio. Marks are placeholders for the real logos; copyright placeholder for NSHumanReadableCopyright.",
+      "page": "light"
+    },
+    {
+      "id": "states",
+      "x": 896,
+      "y": 3138,
+      "w": 760,
+      "text": "Everything the main frames have no state for: the four resolveDockAction button variants + busy; preview cell states incl. keyboard focus; Dock Lock permission / single-display / moving / failed rows; login held for approval; Smart Add banner; the Add a Tile dialog with nothing to suggest.",
+      "page": "light"
+    },
+    {
+      "id": "dark-tokens",
+      "x": 0,
+      "y": -290,
+      "w": 760,
+      "page": "dark",
+      "text": "Dark mode, Klack-style charcoal rather than pure-black: sidebar #2C2C2E, window #323234, cards #3C3C3F with a 9% white hairline, text 92% white, secondary 55%, sidebar selection 11% white, buttons #525255. Accent stays system blue; tile faces, app icons and the wallpaper canvas keep their colour (canvas darkened). In the app these are system colours, so it follows the appearance for free."
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "light"
+  }
+}

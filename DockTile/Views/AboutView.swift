@@ -2,103 +2,229 @@
 //  AboutView.swift
 //  DockTile
 //
-//  Custom About window with "Check for Updates" button
+//  The About pane (v2): lives in the sidebar under "Dock Tile" — the only home of Software Update.
+//  Swift 6 - Strict Concurrency
 //
 
 import SwiftUI
 
-struct AboutView: View {
-    let onCheckForUpdates: () -> Void
+/// Links the pane opens. `feedback` comes from Info.plist `DTFeedbackEmail` (mailto:) when set,
+/// otherwise the website — never a hard-coded address.
+enum AboutLinks {
+    /// Every human-facing link the app opens is tagged, so the sites can tell app traffic from
+    /// search or social. Machine-read URLs (the Sparkle appcast) are never tagged.
+    private static let campaign = "utm_source=docktile-mac"
 
-    private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
+    static let website = URL(string: "https://docktile.app/?\(campaign)")!
+    static let studio  = URL(string: "https://happymachines.company/?\(campaign)")!
+    static let spades  = URL(string: "https://spadesaudio.com/?\(campaign)")!
+    /// What the rows show — the bare hosts, without the tracking query.
+    static let websiteDisplay = "docktile.app"
+    static let studioDisplay  = "happymachines.company"
+    static var feedback: URL {
+        guard let email = Bundle.main.object(forInfoDictionaryKey: "DTFeedbackEmail") as? String,
+              !email.isEmpty else { return website }
+        // Build through URLComponents rather than interpolating: the address comes from Info.plist,
+        // and an unencoded subject or a stray character would silently yield a nil URL.
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = email
+        components.queryItems = [URLQueryItem(name: "subject", value: "Dock Tile feedback")]
+        return components.url ?? website
     }
+}
 
-    private var buildNumber: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
-    }
+struct AboutPaneView: View {
+    @EnvironmentObject private var configManager: ConfigurationManager
+    @EnvironmentObject private var updateController: UpdateController
 
     private var copyright: String {
         Bundle.main.object(forInfoDictionaryKey: "NSHumanReadableCopyright") as? String ?? ""
     }
 
+    // One grouped Form (a Form is List-backed and will not size itself inside a ScrollView): the hero
+    // rides as a full-bleed, clear-background first row.
     var body: some View {
-        VStack(spacing: 12) {
-            // App icon
-            if let appIcon = NSApp.applicationIconImage {
-                Image(nsImage: appIcon)
-                    .resizable()
-                    .frame(width: 96, height: 96)
-            }
-
-            // App name
-            Text("Dock Tile")
-                .font(.system(size: 18, weight: .semibold))
-
-            // Version
-            Text("Version \(appVersion) (\(buildNumber))")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-
-            // Copyright
-            Text(copyright)
-                .font(.system(size: 10))
-                .foregroundStyle(.tertiary)
-
-            Divider()
-                .padding(.horizontal, 20)
-
-            // Check for Updates button
-            Button("Check for Updates...") {
-                onCheckForUpdates()
-            }
-            .buttonStyle(.link)
-            .font(.system(size: 12))
-
-            // Website link
-            Link("docktile.rkarthik.co", destination: URL(string: "https://docktile.rkarthik.co")!)
-                .font(.system(size: 11))
+        Form {
+                    Section {
+                        hero
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
+                    Section {
+                        LabeledContent {
+                            Button(AppStrings.Button.checkForUpdates) {
+                                DiagnosticsLog.shared.ui("About → Check for Updates")
+                                updateController.checkForUpdates()
+                            }
+                            .disabled(!updateController.canCheckForUpdates)
+                        } label: {
+                            Text(AppStrings.appName)
+                            Text(AppStrings.About.version(AppEnvironment.appVersion))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        LabeledContent(AppStrings.About.website) {
+                            Link(AboutLinks.websiteDisplay, destination: AboutLinks.website)
+                        }
+                    }
+                    // Support actions as ordinary settings rows — label and description leading, a
+                    // single button trailing — so they read like the Check for Updates row above
+                    // rather than a card with two stretched buttons under it.
+                    Section {
+                        LabeledContent {
+                            Button(AppStrings.About.sendFeedback) {
+                                DiagnosticsLog.shared.ui("About → Send Feedback")
+                                NSWorkspace.shared.open(AboutLinks.feedback)
+                            }
+                        } label: {
+                            Text(AppStrings.About.feedbackTitle)
+                            Text(AppStrings.About.feedbackRowBody)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        LabeledContent {
+                            // "Copy", not "Copy Diagnostics" — the row label already says which.
+                            Button(AppStrings.Button.copy) {
+                                DiagnosticsLog.shared.ui("About → Copy Diagnostics")
+                                DiagnosticsLog.shared.copyToPasteboard()
+                            }
+                            .accessibilityLabel(AppStrings.Menu.copyDiagnostics)
+                        } label: {
+                            Text(AppStrings.About.diagnosticsTitle)
+                            Text(AppStrings.About.diagnosticsBody)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    Section {
+                        studioRow(icon: { HappyMachinesMark() },
+                                  title: AppStrings.About.studioTitle,
+                                  subtitle: AppStrings.About.studioSubtitle) {
+                            Link(AboutLinks.studioDisplay, destination: AboutLinks.studio)
+                        }
+                        studioRow(icon: { SpadesMark() },
+                                  title: AppStrings.About.spadesTitle,
+                                  subtitle: AppStrings.About.spadesSubtitle) {
+                            Button(AppStrings.About.learnMore) { NSWorkspace.shared.open(AboutLinks.spades) }
+                        }
+                    } header: {
+                        Text(AppStrings.About.alsoFrom)
+                    } footer: {
+                        Text(copyright)
+                            .font(.caption).foregroundStyle(.tertiary)
+                            .frame(maxWidth: .infinity)
+                    }
         }
-        .padding(.top, 20)
-        .padding(.bottom, 16)
-        .padding(.horizontal, 40)
-        .frame(width: 300)
+        .formStyle(.grouped)
+        .paneTitleBand(AppStrings.About.title)
+    }
+
+    /// The product in context: the user's first three tiles (or the defaults) on a Dock strip.
+    private var hero: some View {
+        let tiles = Array(configManager.configurations.prefix(3))
+        return HStack(spacing: 10) {
+            if tiles.isEmpty {
+                ForEach([TintColor.blue, .purple, .pink], id: \.self) { tint in
+                    DockTileIconPreview(tintColor: tint, iconType: .sfSymbol, iconValue: "folder.fill",
+                                        iconScale: ConfigurationDefaults.iconScale,
+                                        iconWeight: ConfigurationDefaults.iconWeight, size: 48)
+                }
+            } else {
+                ForEach(tiles) { DockTileIconPreview.fromConfig($0, size: 48) }
+            }
+            Divider().frame(height: 40)
+            Image(nsImage: VendorMark.folderIcon).resizable().frame(width: 48, height: 48)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
+        .background(StudioCanvasBackgroundView())
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(AppStrings.appName)
+    }
+
+    private func studioRow<Trailing: View, Icon: View>(@ViewBuilder icon: () -> Icon,
+                                                       title: String, subtitle: String,
+                                                       @ViewBuilder trailing: () -> Trailing) -> some View {
+        LabeledContent {
+            trailing()
+        } label: {
+            HStack(spacing: 12) {
+                icon().frame(width: 28, height: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
     }
 }
 
-// MARK: - About Window Controller
+// MARK: - Vendor marks
 
-@MainActor
-final class AboutWindowController {
-    private var window: NSWindow?
+/// The real Happy Machines and Spades marks, bundled as loose resources (this project has no asset
+/// catalog — see `DockTileGlyph.png` for the same pattern).
+///
+/// Each falls back to an SF Symbol if its file is missing or fails to decode: a bundled image that
+/// doesn't load renders as **nothing at all**, and an empty gap beside a product name reads as a
+/// layout bug rather than a missing asset.
+enum VendorMark {
 
-    func showAbout(onCheckForUpdates: @escaping () -> Void) {
-        // If window exists, just bring it to front
-        if let window = window, window.isVisible {
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
+    /// Decoded once each, not per body evaluation — a SwiftUI view's `body` runs on every render,
+    /// and these were re-reading and re-decoding their files each time.
+    ///
+    /// Happy Machines: a single monochrome stroke, so it ships as ONE vector and is drawn as a
+    /// template tinted to the current foreground — no light/dark pair to keep in sync.
+    static let happyMachines: NSImage? = {
+        guard let url = Bundle.main.url(forResource: "HappyMachinesLogo", withExtension: "svg"),
+              let image = NSImage(contentsOf: url) else { return nil }
+        image.isTemplate = true
+        return image
+    }()
+
+    /// Spades ships a full-colour app icon, so it can't be tinted — it takes the light or dark
+    /// rendition the way the Dock would. Both are held; the pane switches between them on theme.
+    private static let spadesLight = load("SpadesIconLight")
+    private static let spadesDark = load("SpadesIconDark")
+
+    static func spades(dark: Bool) -> NSImage? { dark ? spadesDark : spadesLight }
+
+    private static func load(_ name: String) -> NSImage? {
+        Bundle.main.url(forResource: name, withExtension: "png").flatMap(NSImage.init(contentsOf:))
+    }
+
+    /// The system folder icon in the About hero — resolved once for the same reason.
+    static let folderIcon: NSImage = NSWorkspace.shared.icon(for: .folder)
+}
+
+/// Happy Machines' mark, tinted to the foreground; the smiling-face symbol if the asset is absent.
+private struct HappyMachinesMark: View {
+    var body: some View {
+        if let mark = VendorMark.happyMachines {
+            Image(nsImage: mark)
+                .resizable()
+                .renderingMode(.template)
+                .aspectRatio(contentMode: .fit)
+                .foregroundStyle(.primary)
+                .padding(1)
+        } else {
+            SettingsBadgeIcon(systemName: "face.smiling", tint: .orange, size: 28)
         }
+    }
+}
 
-        let aboutView = AboutView(onCheckForUpdates: onCheckForUpdates)
-        let hostingView = NSHostingView(rootView: aboutView)
-        hostingView.setFrameSize(hostingView.fittingSize)
+/// Spades' app icon at its natural corner radius; the spade symbol if the asset is absent.
+private struct SpadesMark: View {
+    @Environment(\.colorScheme) private var colorScheme
 
-        let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: hostingView.fittingSize),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        window.contentView = hostingView
-        window.title = "About Dock Tile"
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.isReleasedWhenClosed = false
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-
-        self.window = window
+    var body: some View {
+        if let mark = VendorMark.spades(dark: colorScheme == .dark) {
+            Image(nsImage: mark)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        } else {
+            SettingsBadgeIcon(systemName: "suit.spade.fill", tint: .black, size: 28)
+        }
     }
 }

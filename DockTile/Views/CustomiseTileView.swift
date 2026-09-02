@@ -42,7 +42,7 @@ struct CustomiseTileView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(NSColorBackgroundView.windowBackground)
-        .navigationTitle(AppStrings.Navigation.customiseTile)
+        .paneTitleBand(AppStrings.Navigation.customiseTile)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button(action: {

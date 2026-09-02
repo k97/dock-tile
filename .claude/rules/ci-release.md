@@ -47,7 +47,11 @@ A stale artifact from an earlier build masks this perfectly — delete it before
 ## Sparkle Auto-Updates
 
 - Sparkle 2.9.0 via SPM, EdDSA (Ed25519) signing
-- Appcast at `https://docktile.rkarthik.co/appcast.xml`
+- Appcast at `https://docktile.app/appcast.xml`
+- **`docktile.rkarthik.co` must stay attached in Vercel, permanently.** `SUFeedURL` is baked into
+  each build at ship time: copies **≤ 1.8.8** poll the old host and always will, builds from
+  2026-08-30 poll `docktile.app`. Detaching either host silently strands those users on their last
+  version — no error they would ever see. (Full reasoning: website/.claude/rules/seo-geo.md.)
 - Helper bundles have Sparkle keys stripped to prevent update conflicts
 - `UpdateController.swift` wraps SPUUpdater with error-handling delegate; publishes `canCheckForUpdates`
   (KVO via Combine) so the Settings → General **Check for Updates…** button disables mid-session

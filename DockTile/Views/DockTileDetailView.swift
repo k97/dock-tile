@@ -9,7 +9,6 @@
 
 import SwiftUI
 import AppKit
-import Carbon.HIToolbox  // For kVK_Escape key code
 
 struct DockTileDetailView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
@@ -25,6 +24,8 @@ struct DockTileDetailView: View {
     @State private var hasAppearedOnce = false  // Track if view has fully loaded
     @State private var isCurrentlyInDock = false  // Track actual Dock state
     @FocusState private var isNameFieldFocused: Bool  // Track focus for commit-on-blur
+    /// The embedded popover panel renders per icon style — observe so it re-renders on a switch.
+    @ObservedObject private var iconStyleManager = IconStyleManager.shared
     /// Monotonic counter incremented on each config edit. Used as the `.task(id:)` identity
     /// instead of the full `editedConfig` struct, which avoids O(n * icon_data_size) deep equality
     /// checks on every keystroke. The task cancels/restarts on each increment, providing debounce.
@@ -127,40 +128,33 @@ struct DockTileDetailView: View {
                 // Hero section: Icon + Grouped Controls
                 heroSection
 
-                // Selected Apps table
-                appsTableSection
-
-                // Delete section
-                deleteSection
+                // The tile's apps, edited directly in the live popover preview
+                inThisTileSection
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(nsColor: .windowBackgroundColor))
-        // Toolbar with dynamic action button
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button(action: handleDockAction) {
-                    if isProcessing {
-                        // Busy state INSIDE the button (same pattern as the Popover Appearance
-                        // Save button): spinner + label, button disabled. Keeps the toolbar
-                        // stable — no external spinner popping in and shoving the button around.
-                        HStack(spacing: 6) {
-                            ProgressView()
-                                .controlSize(.small)
-                            Text(actionButtonText)
-                        }
-                    } else {
-                        Text(actionButtonText)
-                    }
+        // Delete + the dynamic action button trail the title band via PaneTitleBand's own flexible
+        // spacer (single `.toolbar {}` call — see PaneTitleBand in DockTileConfigurationView.swift).
+        // The band shows the COMMITTED name — typing re-titles the preview below, not the chrome.
+        .paneTitleBand(configManager.displayName(for: editedConfig.id)) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    DiagnosticsLog.shared.ui("Tile Detail → Delete tile pressed '\(editedConfig.name)' (shows delete confirmation)")
+                    showDeleteConfirmation = true
+                } label: {
+                    Image(systemName: "trash")
                 }
+                // `.bordered`, not `.borderless`: the destructive action needs the same rounded
+                // surface as the action button beside it, or it reads as a bare glyph floating in
+                // the band.
                 .buttonStyle(.bordered)
-                .disabled(!Self.dockActionIsEnabled(
-                    action: currentDockAction,
-                    isDirty: isDirty,
-                    isProcessing: isProcessing
-                ))
+                .help(AppStrings.Tooltip.deleteTile)
+                .accessibilityLabel(AppStrings.Title.deleteTile)
+
+                actionButton
             }
         }
         .alert(AppStrings.Title.deleteTile, isPresented: $showDeleteConfirmation) {
@@ -274,6 +268,29 @@ struct DockTileDetailView: View {
         }
     }
 
+    // MARK: - Band Action Button
+
+    /// Prominent for Dock-adding actions, plain otherwise; spinner INSIDE while processing (same
+    /// pattern as the Popover Appearance Save button) so the band stays stable — no external
+    /// spinner popping in and shoving the button around.
+    @ViewBuilder private var actionButton: some View {
+        let button = Button(action: handleDockAction) {
+            HStack(spacing: 6) {
+                if isProcessing { ProgressView().controlSize(.small) }
+                else if currentDockAction == .install {
+                    Image(systemName: isCurrentlyInDock ? "arrow.clockwise" : "plus")
+                }
+                Text(actionButtonText)
+            }
+        }
+        .disabled(!Self.dockActionIsEnabled(action: currentDockAction, isDirty: isDirty, isProcessing: isProcessing))
+        if currentDockAction == .install {
+            button.buttonStyle(.borderedProminent).foregroundStyle(.white)
+        } else {
+            button.buttonStyle(.bordered)
+        }
+    }
+
     // MARK: - Smart Add Provenance Banner
 
     /// Subtle accent-tinted banner shown atop Tile Detail for a tile just created by Smart Add.
@@ -320,7 +337,7 @@ struct DockTileDetailView: View {
         HStack(alignment: .center, spacing: 16) {
             // Left column: Icon preview with Customise button
             VStack(alignment: .center, spacing: 12) {
-                // Icon container: 118×118pt
+                // Icon container: 96×96pt
                 // Uses DockTileIconPreview which is appearance-aware (light/dark mode)
                 // Tappable to open customise view
                 DockTileIconPreview(
@@ -329,9 +346,9 @@ struct DockTileDetailView: View {
                     iconValue: editedConfig.iconValue,
                     iconScale: editedConfig.iconScale,
                     iconWeight: editedConfig.iconWeight,
-                    size: 118
+                    size: 96
                 )
-                .contentShape(RoundedRectangle(cornerRadius: 118 * 0.225, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 96 * 0.225, style: .continuous))
                 .onHover { hovering in
                     if hovering {
                         NSCursor.pointingHand.push()
@@ -344,7 +361,7 @@ struct DockTileDetailView: View {
                     onCustomise()
                 }
 
-                SubtleButton(title: AppStrings.Button.customise, width: 118, action: {
+                SubtleButton(title: AppStrings.Button.customise, width: 96, action: {
                     DiagnosticsLog.shared.ui("Tile Detail → Customise button '\(editedConfig.name)'")
                     onCustomise()
                 })
@@ -375,28 +392,16 @@ struct DockTileDetailView: View {
                     Text(AppStrings.Label.showTile)
                     Spacer()
                     Toggle("", isOn: $editedConfig.isVisibleInDock)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
+                        .tileSwitch()
                 }
 
-                // Row 3: Layout
-                formRow(isLast: false) {
-                    Text(AppStrings.Label.layout)
-                    Spacer()
-                    Picker("", selection: $editedConfig.layoutMode) {
-                        Text(AppStrings.Layout.grid).tag(LayoutMode.grid)
-                        Text(AppStrings.Layout.list).tag(LayoutMode.list)
-                    }
-                    .labelsHidden()
-                }
-
-                // Row 4: Show in App Switcher (last row, no separator)
+                // Row 3: Show in App Switcher (last row, no separator)
+                // Layout moved to the "In This Tile" section, beside the live preview it drives.
                 formRow(isLast: true) {
                     Text(AppStrings.Label.showInAppSwitcher)
                     Spacer()
                     Toggle("", isOn: $editedConfig.showInAppSwitcher)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
+                        .tileSwitch()
                 }
             }
             .padding(.horizontal, 10)
@@ -426,100 +431,65 @@ struct DockTileDetailView: View {
         }
     }
 
-    // MARK: - Items Table Section
+    // MARK: - In This Tile Section
 
-    @State private var selectedAppIDs: Set<AppItem.ID> = []
-
-    private var appsTableSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(AppStrings.Section.selectedItems)
-                .font(.headline)
-                .padding(.bottom, 12)
-
-            // Native-style table container
-            VStack(spacing: 0) {
-                // Table content (grows naturally with items)
-                NativeAppsTableView(
-                    items: $editedConfig.appItems,
-                    selection: $selectedAppIDs,
-                    missingAppIDs: configManager.missingAppIDs
-                )
-
-                // Separator between table and toolbar
-                Rectangle()
-                    .fill(Color(nsColor: .separatorColor))
-                    .frame(height: 1)
-
-                // Bottom toolbar with +/- buttons (same bg as header/even rows)
-                HStack(spacing: 0) {
-                    Button(action: addItem) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 12, weight: .regular))
-                            .frame(width: 24, height: 20)
-                    }
-                    .buttonStyle(.borderless)
-
-                    Divider()
-                        .frame(height: 16)
-
-                    Button(action: removeSelectedApp) {
-                        Image(systemName: "minus")
-                            .font(.system(size: 12, weight: .regular))
-                            .frame(width: 24, height: 20)
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(selectedAppIDs.isEmpty)
-
-                    Spacer()
-                }
-                .padding(.horizontal, 4)
-                .padding(.vertical, 4)
-                .background(Color(nsColor: NSColor.alternatingContentBackgroundColors[1]))
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-            if let error = errorMessage {
-                Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
-                    .padding(.top, 8)
-            }
-        }
+    /// Re-render key for the embedded panel: the panel reads settings/icons itself, so it must be
+    /// rebuilt when the layout or the icon style changes.
+    ///
+    /// The **app list is deliberately excluded**. `configuration` is a value type, so adding,
+    /// removing or reordering items already re-renders the panel without a new view identity — while
+    /// keying on it would destroy and rebuild the panel mid-edit, resetting its `@State`: an
+    /// in-flight drag loses `draggedItem` after the first hop (every later `dropEntered` early-returns,
+    /// so the item lands one cell over instead of where it was released), and a Delete-key removal
+    /// drops keyboard focus. `missingAppIDs` is excluded for the same reason, plus a `Set`'s
+    /// iteration order is not stable — each cell resolves its own install status in its body.
+    private var previewSignature: String {
+        [editedConfig.layoutMode.rawValue, iconStyleManager.currentStyle.rawValue].joined(separator: "-")
     }
 
-    // MARK: - Delete Section
-
-    private var deleteSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .center, spacing: 16) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(AppStrings.Button.removeFromDock)
-                        .font(.system(size: 13))
-                        .foregroundColor(.primary)
-
-                    Text("This removes the tile only, and your apps or folders stay intact")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+    /// The tile's apps, shown as the REAL popover panel (WYSIWYG — `settings: nil` makes it load the
+    /// saved shared-suite appearance) turned into an editor: hover × removes, drag reorders.
+    private var inThisTileSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(AppStrings.Section.inThisTile).font(.system(size: 13, weight: .semibold))
+                    Text(AppStrings.Label.editorHint).font(.system(size: 11)).foregroundStyle(.tertiary)
                 }
-
                 Spacer()
-
-                SubtleButton(
-                    title: AppStrings.Button.remove,
-                    textColor: .red,
-                    action: {
-                        DiagnosticsLog.shared.ui("Tile Detail → Remove tile pressed '\(editedConfig.name)' (shows delete confirmation)")
-                        showDeleteConfirmation = true
-                    }
-                )
+                Picker("", selection: $editedConfig.layoutMode) {
+                    Text(AppStrings.Layout.grid).tag(LayoutMode.grid)
+                    Text(AppStrings.Layout.list).tag(LayoutMode.list)
+                }
+                .pickerStyle(.segmented).labelsHidden().fixedSize()
+                Button(action: addItem) { Label(AppStrings.Button.add, systemImage: "plus") }
+                    .help(AppStrings.Label.addAppsTooltip)
             }
-            .frame(height: 42)
+            .padding(.horizontal, 4)
+
+            PopoverPreviewCanvas(
+                configuration: editedConfig,
+                layout: editedConfig.layoutMode,
+                fit: .natural,
+                signature: previewSignature,
+                editing: PopoverEditing(
+                    onRemove: { app in
+                        editedConfig.appItems = AppListEditor.removing(app.id, from: editedConfig.appItems)
+                        DiagnosticsLog.shared.log("tile", "Removed 1 item(s) from \(editedConfig.diagnosticName): \(app.name)")
+                    },
+                    onMove: { dragged, target in
+                        editedConfig.appItems = AppListEditor.moving(dragged.id, onto: target.id, in: editedConfig.appItems)
+                    },
+                    // The empty panel's glyph opens the same picker as the "+ Add" control above.
+                    onAdd: {
+                        DiagnosticsLog.shared.ui("Tile editor → empty-state glyph pressed (app picker)")
+                        addItem()
+                    }))
+
+            if let error = errorMessage {
+                Text(error).font(.caption).foregroundColor(.red).padding(.top, 4)
+            }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 0)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(NSColorBackgroundView.formGroup)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     // MARK: - Actions
@@ -632,6 +602,10 @@ struct DockTileDetailView: View {
                 editedConfig = configToSave
                 tileName = configToSave.name
 
+                // THIS is the moment the sidebar row and title band adopt a rename — see
+                // ConfigurationManager.committedNames.
+                configManager.commitDisplayName(for: configToSave.id)
+
                 // The action applied/saved everything — mark content clean so the saveOnly
                 // "Done" button disables until the user edits again. Signature-based (not the
                 // generation counter) so the bookkeeping writes above don't re-dirty it.
@@ -704,15 +678,6 @@ struct DockTileDetailView: View {
         configManager.deleteConfiguration(editedConfig.id)
     }
 
-    private func removeSelectedApp() {
-        // Remove all selected apps
-        guard !selectedAppIDs.isEmpty else { return }
-        let removedNames = editedConfig.appItems.filter { selectedAppIDs.contains($0.id) }.map(\.name)
-        editedConfig.appItems.removeAll { selectedAppIDs.contains($0.id) }
-        selectedAppIDs.removeAll()
-        DiagnosticsLog.shared.log("tile", "Removed \(removedNames.count) item(s) from \(editedConfig.diagnosticName): \(removedNames.joined(separator: ", "))")
-    }
-
     private func addItem() {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
@@ -779,231 +744,6 @@ struct DockTileDetailView: View {
 
         let names = newItems.map(\.name).joined(separator: ", ")
         DiagnosticsLog.shared.log("tile", "Added \(newItems.count) item(s) to \(editedConfig.diagnosticName), skipped \(skipped) duplicate(s) (\(editedConfig.appItems.count) total)\(names.isEmpty ? "" : ": \(names)")")
-    }
-}
-
-// MARK: - Native Apps Table View
-
-struct NativeAppsTableView: View {
-    @Binding var items: [AppItem]
-    @Binding var selection: Set<AppItem.ID>
-    /// IDs of apps the install scan flagged as uninstalled — rendered dimmed with a placeholder.
-    var missingAppIDs: Set<UUID> = []
-
-    private let rowHeight: CGFloat = 28
-
-    // Track last clicked index for Shift+Click range selection
-    @State private var lastClickedIndex: Int? = nil
-
-    // Track the item being dragged for reordering
-    @State private var draggedItem: AppItem? = nil
-
-    // Event monitor for Escape key (to clear multi-selection)
-    @State private var eventMonitor: Any? = nil
-
-    // Table row colors - using quaternarySystemFill for odd rows (matches form group)
-    private var oddRowColor: Color {
-        Color(nsColor: .quaternarySystemFill)
-    }
-
-    private var evenRowColor: Color {
-        Color(nsColor: NSColor.alternatingContentBackgroundColors[1])
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header row - uses same color as even rows (slightly darker)
-            HStack(spacing: 0) {
-                Text(AppStrings.Table.item)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text(AppStrings.Table.kind)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 100, alignment: .leading)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(evenRowColor)
-
-            Rectangle()
-                .fill(Color(nsColor: .separatorColor))
-                .frame(height: 1)
-
-            if items.isEmpty {
-                emptyState
-            } else {
-                // Item rows - grows naturally with content
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                    let isMissing = missingAppIDs.contains(item.id)
-                    VStack(spacing: 0) {
-                        HStack(spacing: 0) {
-                            // Drag handle (grip lines)
-                            Image(systemName: "line.3.horizontal")
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(.tertiary)
-                                .frame(width: 16)
-                                .onHover { hovering in
-                                    if hovering {
-                                        NSCursor.openHand.push()
-                                    } else {
-                                        NSCursor.pop()
-                                    }
-                                }
-
-                            // Item column
-                            HStack(spacing: 8) {
-                                AppIconView(item: item, isMissing: isMissing)
-                                    .frame(width: 16, height: 16)
-
-                                Text(item.name)
-                                    .lineLimit(1)
-                                    .foregroundStyle(isMissing ? .secondary : .primary)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                            // Kind column — surfaces the uninstalled state inline
-                            Text(isMissing ? AppStrings.Label.notInstalled : itemKind(for: item))
-                                .foregroundStyle(.secondary)
-                                .frame(width: 100, alignment: .leading)
-                        }
-                        .opacity(isMissing ? 0.7 : 1.0)
-                        .padding(.horizontal, 10)
-                        .frame(height: rowHeight)
-                        .background(
-                            selection.contains(item.id)
-                                ? Color.accentColor.opacity(0.2)
-                                : (index % 2 == 0 ? oddRowColor : evenRowColor)
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            handleRowTap(index: index, item: item)
-                        }
-                        // Drag and drop for reordering
-                        .onDrag {
-                            draggedItem = item
-                            return NSItemProvider(object: item.id.uuidString as NSString)
-                        }
-                        .onDrop(of: [.text], delegate: AppItemDropDelegate(
-                            item: item,
-                            items: $items,
-                            draggedItem: $draggedItem
-                        ))
-                    }
-                }
-            }
-        }
-        // Set up Escape key monitor to clear multi-selection
-        .onAppear {
-            setupEscapeKeyMonitor()
-        }
-        .onDisappear {
-            removeEscapeKeyMonitor()
-        }
-    }
-
-    // MARK: - Escape Key Monitor (NSEvent Local Monitor)
-
-    private func setupEscapeKeyMonitor() {
-        // Only set up if not already monitoring
-        guard eventMonitor == nil else { return }
-
-        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            if Int(event.keyCode) == kVK_Escape && selection.count > 1 {
-                // Clear selection when Escape pressed with multiple items selected
-                DispatchQueue.main.async {
-                    selection.removeAll()
-                }
-                return nil  // Consume the event (prevents system beep)
-            }
-            return event  // Pass through other key events
-        }
-    }
-
-    private func removeEscapeKeyMonitor() {
-        if let monitor = eventMonitor {
-            NSEvent.removeMonitor(monitor)
-            eventMonitor = nil
-        }
-    }
-
-    // MARK: - Row Tap Handler (Multi-select)
-
-    private func handleRowTap(index: Int, item: AppItem) {
-        let modifiers = NSEvent.modifierFlags
-
-        if modifiers.contains(.command) {
-            // Cmd+Click: Toggle individual selection
-            if selection.contains(item.id) {
-                selection.remove(item.id)
-            } else {
-                selection.insert(item.id)
-            }
-            lastClickedIndex = index
-        } else if modifiers.contains(.shift), let lastIndex = lastClickedIndex {
-            // Shift+Click: Range selection from last clicked to current
-            let range = min(lastIndex, index)...max(lastIndex, index)
-            for i in range {
-                if i < items.count {
-                    selection.insert(items[i].id)
-                }
-            }
-        } else {
-            // Regular click: Single selection (replaces previous selection)
-            selection = [item.id]
-            lastClickedIndex = index
-        }
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 8) {
-            Text(AppStrings.Empty.noItemsAdded)
-                .foregroundStyle(.secondary)
-            Text("Click + to add applications or folders")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 80)
-        .background(oddRowColor)
-    }
-
-    private func itemKind(for item: AppItem) -> String {
-        item.isFolder ? AppStrings.Kind.folder : AppStrings.Kind.application
-    }
-}
-
-// MARK: - Drop Delegate for Reordering
-
-struct AppItemDropDelegate: DropDelegate {
-    let item: AppItem
-    @Binding var items: [AppItem]
-    @Binding var draggedItem: AppItem?
-
-    func performDrop(info: DropInfo) -> Bool {
-        draggedItem = nil
-        return true
-    }
-
-    func dropEntered(info: DropInfo) {
-        guard let draggedItem = draggedItem,
-              draggedItem.id != item.id,
-              let fromIndex = items.firstIndex(where: { $0.id == draggedItem.id }),
-              let toIndex = items.firstIndex(where: { $0.id == item.id }) else {
-            return
-        }
-
-        withAnimation(.easeInOut(duration: 0.2)) {
-            items.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
-        }
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        return DropProposal(operation: .move)
     }
 }
 

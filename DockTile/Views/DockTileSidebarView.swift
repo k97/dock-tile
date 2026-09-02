@@ -20,17 +20,14 @@ struct DockTileSidebarView: View {
     /// `DockTileConfigurationView`. Kept as a closure so the sheet stays hosted in the parent.
     var onAdd: () -> Void
 
-    /// Accordion expand/collapse state, persisted so it survives relaunch (Apple Notes-style).
-    @AppStorage("sidebar.tilesExpanded") private var tilesExpanded = true
-    @AppStorage("sidebar.settingsExpanded") private var settingsExpanded = true
-
     var body: some View {
         List(selection: $selection) {
-            // Tiles — collapsible accordion section with an always-visible disclosure triangle.
-            Section(AppStrings.Sidebar.tilesSection, isExpanded: $tilesExpanded) {
+            Section(AppStrings.Sidebar.tilesSection) {
                 if configManager.configurations.isEmpty {
-                    // Tappable so the user can return to the empty-state detail after visiting a
-                    // Settings pane (with zero tiles there's no tile row to select otherwise).
+                    // Navigation, NOT an add affordance: the empty-state detail already carries the
+                    // single "Add a Tile…" button. This row exists so the user can get BACK to that
+                    // empty state after visiting a Settings pane — with zero tiles there is no other
+                    // selectable row in this section, and without it they are stranded in Settings.
                     Text(AppStrings.Empty.noTiles)
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -47,32 +44,46 @@ struct DockTileSidebarView: View {
             }
 
             // Settings — inline panes that replace the old detached ⌘, window.
-            Section(AppStrings.Sidebar.settingsSection, isExpanded: $settingsExpanded) {
+            Section(AppStrings.Sidebar.settingsSection) {
                 SettingsRow(
                     title: AppStrings.Settings.general,
-                    systemName: "gearshape.fill",
-                    tint: .gray
+                    systemName: PaneIcon.general.systemName,
+                    tint: PaneIcon.general.tint
                 )
                 .tag(SidebarSelection.settings(.general))
 
                 SettingsRow(
+                    title: AppStrings.Settings.popover,
+                    systemName: PaneIcon.popover.systemName,
+                    tint: PaneIcon.popover.tint
+                )
+                .tag(SidebarSelection.settings(.popover))
+
+                SettingsRow(
                     title: AppStrings.Settings.dockLock,
-                    systemName: "lock.display",
-                    tint: .blue
+                    systemName: PaneIcon.dockLock.systemName,
+                    tint: PaneIcon.dockLock.tint
                 )
                 .tag(SidebarSelection.settings(.dockLock))
             }
+
+            Section(AppStrings.Sidebar.dockTileSection) {
+                SettingsRow(title: AppStrings.About.title, systemName: PaneIcon.about.systemName, tint: PaneIcon.about.tint)
+                    .tag(SidebarSelection.settings(.about))
+            }
         }
-        // `.sidebar` style gives the collapsible "Show/Hide" section headers (the Apple
-        // Notes-style accordion) and the tile-row selection highlight.
+        // `.sidebar` style gives the section headers their native treatment and the tile-row
+        // selection highlight.
         .listStyle(.sidebar)
-        .navigationTitle(AppStrings.Sidebar.title)
+        // The sidebar keeps the standard macOS header pair — the collapse toggle and +, as in Notes
+        // and Reminders. (v2 briefly dropped the toggle; it is deliberately back.)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: onAdd) {
                     Image(systemName: "plus")
                 }
                 .accessibilityIdentifier("addTileButton")
+                .accessibilityLabel(AppStrings.Button.addATile)
                 .disabled(!configManager.canCreateNewTile)
                 .help(configManager.canCreateNewTile
                     ? AppStrings.Tooltip.createNewTile
@@ -176,6 +187,7 @@ struct SettingsBadgeIcon: View {
 // MARK: - Configuration Row
 
 struct ConfigurationRow: View {
+    @EnvironmentObject private var configManager: ConfigurationManager
     let config: DockTileConfiguration
 
     var body: some View {
@@ -183,7 +195,9 @@ struct ConfigurationRow: View {
             // Mini icon preview (24×24pt) - uses same component as other previews
             DockTileIconPreview.fromConfig(config, size: 24)
 
-            Text(config.name)
+            // The COMMITTED name, not the stored one: a rename in the editor re-titles the live
+            // preview immediately but only reaches this row on Add to Dock / Update / Done.
+            Text(configManager.displayName(for: config.id))
                 .font(.system(size: 13))
                 .lineLimit(1)
         }

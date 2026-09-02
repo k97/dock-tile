@@ -22,7 +22,9 @@ enum ConfigurationDefaults {
 
     // v3: Icon type and value
     static let iconType: IconType = .sfSymbol
-    static let iconValue = "star.fill"
+    // A draft reads as "not designed yet" — the grey plus placeholder from the v2 design. Existing
+    // configs are untouched (this is only the seed for createConfiguration()).
+    static let iconValue = "plus"
 
     // v4: Icon scale (10-20 range, affects symbol/emoji size relative to icon bounds)
     static let iconScale = 14

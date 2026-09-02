@@ -16,7 +16,7 @@ struct DockTileConfigurationTests {
         #expect(config.name == ConfigurationDefaults.name)
         #expect(config.tintColor == .gray)
         #expect(config.iconType == .sfSymbol)
-        #expect(config.iconValue == "star.fill")
+        #expect(config.iconValue == "plus")
         #expect(config.iconScale == 14)
         #expect(config.layoutMode == .grid)
         #expect(config.appItems.isEmpty)
@@ -84,6 +84,15 @@ struct DockTileConfigurationTests {
         #expect(config.showInAppSwitcher == true)
         #expect(config.bundleIdentifier == "com.custom.bundle")
         #expect(config.lastDockIndex == 5)
+    }
+
+    @Test("A fresh tile is a grey plus placeholder until the user picks an icon")
+    func freshTileDefaultsToPlusPlaceholder() {
+        let config = DockTileConfiguration()
+        #expect(config.iconType == .sfSymbol)
+        #expect(config.iconValue == "plus")
+        #expect(config.tintColor == .gray)
+        #expect(config.name == "New Tile")
     }
 
     // MARK: - JSON Encoding/Decoding

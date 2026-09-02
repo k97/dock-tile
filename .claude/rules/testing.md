@@ -47,7 +47,14 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `IconDepthMetrics` (glyph size-ratio cap + glass stroke + Liquid-Glass surface/glyph sheen + shadow + shading, per style, size-gated — shared by the baked `.icns` renderer and the live preview; `glyphSheen` covers symbols 0.55 and emoji 0.18),
 `NSColor/Color.liftedForDarkGlyph` (perceived-luminance floor for the Dark-style tinted glyph — `#5F00FF` visibility) + `TintColor.colors`/`.nsColors(for:iconType:)` (Dark splits SF Symbol vs emoji, guarded by `DarkGlyphTreatmentTests`),
 `AppRelocation.classify` / `.blocksBundleGeneration` / `.requiresRelocation` (translocation → move-to-/Applications decision),
-`FloatingPanel.resolveAnchor` / `DockPrefs.resolve` (popover pin point — magnification `largesize+25` envelope, autohide tilesize fallback, orientation from pref; guarded by `FloatingPanelAnchorTests`).
+`FloatingPanel.resolveAnchor` / `DockPrefs.resolve` (popover pin point — magnification `largesize+25` envelope, autohide tilesize fallback, orientation from pref; guarded by `FloatingPanelAnchorTests`),
+`AppListEditor.removing(_:from:)` / `.moving(_:onto:in:)` (tile editor's remove/reorder reducer, guarded by `AppListEditorTests`),
+`PopoverPreviewCanvas.fitScale` (hero zoom that scales the fixed-size real popover into a `.worstCase` frame, guarded by `PopoverPreviewCanvasTests`),
+`PopoverPanelLayout.gridPanelSize` / `.listPanelSize` (the panel size formulas shared by the real panels and the editor canvas — the list pins only its width, so an undershoot here CLIPS the panel; the grid's `includesMissingCaption` bills the editor-only "Not installed" line),
+`PopoverPreviewCanvas.naturalPanelSize` / `.naturalScale` (the `.natural` fit — the panel's intrinsic size and the scale that fits it into the fixed-width detail column),
+`ConfigurationManager.displayName(for:)` / `.commitDisplayName` (the sidebar/title-band name lags the stored one until an explicit commit — seeded on load, or the mechanism is silently inert),
+`SmartAddEngine.suggestionsForAddFlow` (the add dialog always opens; the Smart Add toggle only filters what it shows),
+`ConfigurationDefaults.iconValue` (new tiles default to the `"plus"` placeholder glyph, not a category icon).
 
 Assertion rules: prefer `#require` over `if`-guarded `#expect`; assert exact values/magnitudes,
 not `!=nil` / `.isValid` / `a>b`; never write `UserDefaults.standard` in tests — use

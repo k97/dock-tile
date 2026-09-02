@@ -2,15 +2,15 @@
 //  SmartAddSheet.swift
 //  DockTile
 //
-//  The "Smart Add" sheet (design frame 1a): shown when the user presses + and the on-device
-//  engine can suggest ready-made tiles from recent app usage. Native recreation of the handoff —
-//  system materials, SF Pro, continuous-corner squircles, translucent card over the dimmed window.
+//  The "Add a Tile" dialog: opens from EVERY add entry point (sidebar +, General's "Add a Tile…"
+//  row, ⌘N-free empty state), blank-first — a prominent blank-tile row on top, with any on-device
+//  suggestions (from recent app usage) offered below. Native recreation of the handoff — system
+//  materials, SF Pro, continuous-corner squircles, translucent card over the dimmed window.
 //
-//  Button hierarchy (Apple HIG — deliberate): exactly ONE prominent button (the top pick, the
-//  Return-key default); the other suggestions are accent-tinted; "Create New Tile" is a neutral
-//  bordered button (blue is reserved for the smart suggestions so the manual path stays distinct).
-//  Nothing here touches the Dock — picking a tile only pre-fills Tile Detail; the explicit
-//  "Add to Dock" confirm still lives there.
+//  Button hierarchy (Apple HIG — deliberate): exactly ONE prominent button — "Create New Tile" on
+//  the blank row, also the Return-key default; suggestion cards use a plain bordered "Use This
+//  Tile" so the manual path stays visually primary. Nothing here touches the Dock — picking a
+//  tile only pre-fills Tile Detail; the explicit "Add to Dock" confirm still lives there.
 //
 //  Swift 6 - Strict Concurrency
 //
@@ -29,11 +29,17 @@ struct SmartAddSheet: View {
         VStack(spacing: 0) {
             header
             Divider()
-            cardsRow
+            blankRow
+            if suggestions.isEmpty {
+                noSuggestionsNote
+            } else {
+                orRule
+                cardsRow
+            }
             Divider()
             footer
         }
-        .frame(width: 624)
+        .frame(width: 588)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .accessibilityIdentifier("smartAddSheet")
@@ -42,45 +48,50 @@ struct SmartAddSheet: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
-            sparkleBadge
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(AppStrings.SmartAdd.title)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.primary)
-
-                Text(AppStrings.SmartAdd.subtitle)
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 8)
-
+        HStack(spacing: 12) {
+            Text(AppStrings.SmartAdd.title).font(.system(size: 15, weight: .bold))
+            Spacer()
             closeButton
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 18).padding(.vertical, 14)
     }
 
-    /// 30×30 gradient sparkle badge with a white SF Symbol (matches the handoff blue gradient).
-    private var sparkleBadge: some View {
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [Color(hex: "#7AA7FF"), Color(hex: "#3B6BFF")],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .frame(width: 30, height: 30)
-            .overlay(
-                Image(systemName: "sparkles")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
-            )
-            .accessibilityHidden(true)
+    /// Blank-first: the plain path is the first thing you see and the Return default.
+    private var blankRow: some View {
+        HStack(spacing: 12) {
+            DockTileIconPreview(tintColor: ConfigurationDefaults.tintColor, iconType: ConfigurationDefaults.iconType,
+                                iconValue: ConfigurationDefaults.iconValue, iconScale: ConfigurationDefaults.iconScale,
+                                iconWeight: ConfigurationDefaults.iconWeight, size: 44)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(AppStrings.SmartAdd.blankTitle).font(.system(size: 13, weight: .semibold))
+                Text(AppStrings.SmartAdd.blankSubtitle).font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 12)
+            Button(action: onCreateNew) {
+                Label(AppStrings.Button.createNewTile, systemImage: "plus").font(.system(size: 12, weight: .medium))
+            }
+            .buttonStyle(.borderedProminent).tint(.accentColor).keyboardShortcut(.defaultAction)
+        }
+        .padding(.horizontal, 18).padding(.vertical, 14)
+    }
+
+    private var orRule: some View {
+        HStack(spacing: 10) {
+            Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 0.5)
+            Text(AppStrings.SmartAdd.orStartFrom).font(.system(size: 11)).foregroundStyle(.tertiary)
+            Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 0.5)
+        }
+        .padding(.horizontal, 18).padding(.bottom, 10)
+    }
+
+    private var noSuggestionsNote: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "sparkles").font(.system(size: 11)).foregroundStyle(.tertiary)
+            Text(AppStrings.SmartAdd.noSuggestions).font(.system(size: 11)).foregroundStyle(.tertiary)
+            Spacer()
+        }
+        .padding(.horizontal, 18).padding(.bottom, 14)
     }
 
     private var closeButton: some View {
@@ -110,7 +121,7 @@ struct SmartAddSheet: View {
             }
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 16)
+        .padding(.bottom, 16)
     }
 
     // MARK: - Footer
@@ -126,16 +137,7 @@ struct SmartAddSheet: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
 
-            Spacer(minLength: 12)
-
-            Button(action: onCreateNew) {
-                Label(AppStrings.Button.createNewTile, systemImage: "plus")
-                    .font(.system(size: 12, weight: .medium))
-            }
-            .buttonStyle(.borderedProminent)    // the single filled button — also the Return default
-            .tint(.accentColor)
-            .controlSize(.regular)
-            .keyboardShortcut(.defaultAction)
+            Spacer()
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 11)
@@ -231,8 +233,8 @@ private struct SuggestionCard: View {
         .frame(height: 22)
     }
 
-    /// Every suggestion uses the same accent-tinted button (blue label on a light-blue fill) — the
-    /// prominent filled button in this sheet is "Create New Tile" (see the footer).
+    /// Plain bordered button — the single prominent (Return-default) button in this dialog is
+    /// "Create New Tile" on the blank row above, not a suggestion.
     private var actionButton: some View {
         Button(action: action) {
             Text(AppStrings.Button.useThisTile)
@@ -240,7 +242,6 @@ private struct SuggestionCard: View {
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
-        .tint(.accentColor)
         .controlSize(.regular)
     }
 

@@ -113,7 +113,9 @@ without ever calling HelperBundleManager, skips the Dock-restart consent dialog,
 until new edits (`contentSignature` dirty tracking, which ignores `lastDockIndex` /
 `helperAppVersion` / `isVisibleInDock` bookkeeping). While processing, the button shows the spinner
 **inside** itself (same pattern as the Popover Appearance Save button), not a separate toolbar
-spinner. Guarded by `DockActionResolutionTests`.
+spinner. Guarded by `DockActionResolutionTests`. The button lives in the title band
+(`ToolbarItemGroup(.primaryAction)`, trailing the trash/Delete Tile icon); install actions render
+`.borderedProminent`, remove/saveOnly render `.bordered`.
 
 ## Dock Position Preservation
 
@@ -136,15 +138,61 @@ spinner. Guarded by `DockActionResolutionTests`.
 The main window's `SidebarSelection` (a tile, a Settings pane, or the `.tilesPlaceholder`
 "No Tiles" row) is the single source of truth driving the detail column; tile selection mirrors
 into `ConfigurationManager.selectedConfigId`. Both the empty state and Settings live in the same
-detail column, so navigation invariants matter:
+detail column, so navigation invariants matter.
+
+**v2 chrome**: the window has no title (`.toolbar(removing: .title)` on
+`DockTileConfigurationView`) — the 52pt title band IS the page header (`paneTitleBand`, see "Tile
+editor" below), and it carries the pane's **title text only, no pane icon**. The sidebar keeps the
+**standard macOS header pair — the collapse toggle and `+`** (as in Notes/Reminders); v2 briefly
+removed the toggle via `.toolbar(removing: .sidebarToggle)` and that was **deliberately reverted**,
+so do not re-add it. The sidebar is three **static** sections — **Tiles · Settings (General,
+Popover, Dock Lock) · Dock Tile (About)** — the old accordion `@AppStorage` expand state is gone.
+
+- **Window-level chrome (AppKit, `WindowAccessor.configureWindow`)**: `titlebarAppearsTransparent
+  = true`, `titleVisibility = .hidden`, `toolbarStyle = .unified` — these three are what actually
+  collapse the native title bar into the toolbar strip that the SwiftUI-level `.toolbar(removing:)`
+  call then repurposes as the title band. `.toolbar(removing: .title)` alone is not enough without
+  this AppKit trio; `WindowAccessor` is an `NSViewRepresentable` bridge run once on `makeNSView`
+  and again on every `updateNSView`.
+- **`ToolbarSpacer(.flexible)` must ride in the SAME `.toolbar {}` call as the title (critical)**:
+  `PaneTitleBandWithActions` builds `paneTitleItem` (the title), `ToolbarSpacer(.flexible)`
+  (`#available(macOS 26.0, *)`-gated — it's a macOS 26 API, absent on older toolbars), and the
+  pane's trailing actions inside one `.toolbar { }` closure — never split across two `.toolbar {}`
+  modifiers (`ToolbarContentBuilder` has no zero-argument `buildBlock()`, which is why this needs
+  its own `PaneTitleBandWithActions` modifier rather than the plain title-only `PaneTitleBand` fed
+  empty trailing content). `.toolbar(removing: .title)` drops SwiftUI's automatic flexible space
+  between leading and trailing toolbar content, so trailing-placed items in a *separate* `.toolbar`
+  block collapse leftward and land right next to the title instead of trailing the band; the
+  spacer is what pushes them back out to the trailing edge, and it only works with the items it
+  shares a toolbar block with.
+- **`.sharedBackgroundVisibility(.hidden)` is macOS-26-gated**: on macOS 26+ the title
+  `ToolbarItem` is wrapped `.sharedBackgroundVisibility(.hidden)` so Tahoe doesn't draw it inside a
+  Liquid Glass capsule (title text should read as plain text, not a pill button); older macOS gets
+  the same `ToolbarItem` without that modifier, since the capsule treatment doesn't exist there.
+  Both branches live in `paneTitleItem`, the single `@ToolbarContentBuilder` function shared by
+  every pane so the two title-band variants can't drift apart.
+- **`PaneIcon` survives only for sidebar rows**: the title band itself is text-only by design (see
+  above) — `PaneIcon` (the squircle badge icon + tint per pane) is no longer used in any title
+  band. It lives on only as the leading badge icon for the Settings/About rows in
+  `DockTileSidebarView` (`PaneIcon.general` / `.popover` / `.dockLock` / `.about`).
+
+- **One switch size app-wide — 36×16 (`.controlSize(.mini)`)**. Measured, not guessed: `.small`
+  renders 44×20 and stood out against every Settings pane. It is encoded two ways **on purpose**:
+  a labels-hidden toggle in a hand-built row (Tile Detail, Popover) uses the shared
+  `View.tileSwitch()` modifier; a `Form` toggle that carries a text label (General, Dock Lock)
+  sets **nothing** and inherits the Form default, which already renders 36×16. **Never apply
+  `.tileSwitch()` / `.controlSize(.mini)` to a labelled Form toggle** — `controlSize` scales the
+  label typography too, so it would shrink those panes' title and description text. Verify a
+  change by reading the AX frame (`size of every checkbox …`), not by eye.
 
 - **`.tilesPlaceholder` (critical)**: the "No Tiles" row is a **selectable** placeholder that routes
   to the empty-state detail. Without it, once the user opened a Settings pane at zero tiles there was
   no selectable tile row to click back to, stranding them in Settings. First launch and
   last-tile-deletion both default `selection` to it, so the empty state (not a Settings pane) is what
-  appears. `EmptyConfigurationView` takes an `onAdd` closure wired to the **same** `handleAddTapped`
-  as the sidebar + (Smart Add if suggestions exist, else a blank tile) — the two entry points must
-  not diverge.
+  appears. `EmptyConfigurationView`'s single **Add a Tile…** action wires to the **same**
+  `handleAddTapped` as the sidebar + — every add entry point now opens the Smart Add dialog
+  unconditionally (see smart-add.md "The + flow (v2: the dialog always opens)") — the entry points
+  must not diverge.
 - **+ gate must never deadlock (critical)**: the toolbar + is gated by the pure
   `ConfigurationManager.canCreateNewTile(hasSelection:selectedEdited:)` seam — disabled **only** while
   an unedited freshly-created tile is *selected*, always enabled when there's no selection. Gating on
@@ -152,6 +200,36 @@ detail column, so navigation invariants matter:
   (the flag stayed `false` with zero tiles, nothing to edit to flip it back). `deleteConfiguration`
   also resets the flag to `true` when the list empties so the stored value stays honest. Guarded by
   `ConfigurationManagerTests`.
+
+## Tile editor = the real popover (critical)
+
+"In This Tile" (Tile Detail) renders `PopoverPreviewCanvas` — the wallpaper canvas around the SAME
+`StackPopoverView` / `ListPopoverView` helpers ship — with `PopoverEditing(onRemove:onMove:)`
+handlers: hover ×, context-menu Remove, Delete key, VoiceOver Remove action, drag reorder via
+`PopoverItemDropDelegate`. `editing` is `nil` in helpers and the Popover settings preview — the
+panels' shipped rendering is untouched **by construction**: the shared modifiers
+(`editingOnly`/`removeAffordances`/`reorderable`) live inside `if let editing` branches whose
+`else` is bare `self`. `editing != nil` implies `isPreview` (no app launches, no configurator jump)
+so an editor click can never fire a real action. Reorder/remove go through the pure `AppListEditor`
+seam (`.removing(_:from:)` / `.moving(_:onto:in:)`, `AppListEditorTests`). Adding apps stays the
+native `NSOpenPanel` (multi-select, unchanged). There is no apps table any more; do not reintroduce
+one.
+
+`PopoverPreviewCanvas`'s `.id`-equivalent re-render key (`signature`) must **not** include the app
+list — `configuration` is a value type, so add/remove/reorder already re-renders the embedded panel
+without a new view identity, while keying on the list would destroy-and-rebuild it mid-edit and
+drop an in-flight drag or keyboard focus.
+
+## About pane
+
+The sidebar's "Dock Tile" section routes to `AboutPaneView` ([AboutView.swift](../../DockTile/Views/AboutView.swift)),
+which replaced the old detached `AboutWindowController` window — About is now a pane in the same
+detail column as tiles and Settings, not a separate window. It is the **only** home of Software
+Update (moved out of General). `AboutLinks.feedback` reads Info.plist `DTFeedbackEmail` (mailto:,
+built through `URLComponents` so the subject is encoded), falling back to the website when the key
+is absent or the URL can't be built. That fallback is **silent and looks like the Website row**
+while the copy still promises the message reaches the developer, so `AboutLinksTests` pins both the
+shipped address (`hello@happymachines.company`) and the exact mailto the button opens.
 
 ## Popover Configure Gear Icon
 

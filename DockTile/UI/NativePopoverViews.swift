@@ -158,6 +158,124 @@ extension VisualEffectView {
     }
 }
 
+// MARK: - Editing mode (Tile Detail's preview editor; nil in helpers)
+
+/// Handlers the main app supplies to turn the panel into the tile's app editor. `nil` (helpers,
+/// Settings preview) leaves the panel exactly as it ships. Editing implies preview: no launches.
+struct PopoverEditing {
+    let onRemove: (AppItem) -> Void
+    let onMove: (_ dragged: AppItem, _ target: AppItem) -> Void
+    /// Opens the app picker. Drives the empty panel's glyph, which is the obvious thing to click
+    /// when the tile has nothing in it yet. Optional so an editor that only reorders can omit it.
+    var onAdd: (() -> Void)? = nil
+}
+
+/// The empty panel's glyph. A button that opens the app picker when the panel is being edited, an
+/// inert image otherwise — so the shipped popover's empty state stays exactly as it was.
+struct EmptyStateGlyph: View {
+    let onAdd: (() -> Void)?
+    @State private var isHovering = false
+
+    private var glyph: some View {
+        Image(systemName: "plus.app")
+            .font(.system(size: 32))
+            .foregroundStyle(.secondary)
+    }
+
+    var body: some View {
+        if let onAdd {
+            Button(action: onAdd) {
+                glyph
+                    .opacity(isHovering ? 1 : 0.85)
+                    .scaleEffect(isHovering ? 1.06 : 1)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .onHover { isHovering = $0 }
+            .animation(.easeOut(duration: 0.12), value: isHovering)
+            .help(AppStrings.Label.addAppsTooltip)
+            .accessibilityLabel(AppStrings.Label.addAppsTooltip)
+        } else {
+            glyph
+        }
+    }
+}
+
+/// Drag-to-reorder inside the panel; copied from DockTileDetailView's table (the original is
+/// removed in Task 9).
+struct PopoverItemDropDelegate: DropDelegate {
+    let target: AppItem
+    let dragged: () -> AppItem?
+    let onMove: (AppItem, AppItem) -> Void
+    let onFinish: () -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let dragged = dragged(), dragged.id != target.id else { return }
+        withAnimation(.easeInOut(duration: 0.2)) { onMove(dragged, target) }
+    }
+    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
+    func performDrop(info: DropInfo) -> Bool { onFinish(); return true }
+}
+
+extension View {
+    /// Attaches editing-only modifiers ONLY when editing is on, so `editing == nil` leaves the
+    /// shipped view tree untouched.
+    @ViewBuilder func editingOnly<Content: View>(
+        _ editing: PopoverEditing?, _ transform: (Self) -> Content
+    ) -> some View {
+        if editing != nil { transform(self) } else { self }
+    }
+
+    /// The remove affordances shared by grid cells and list rows — context menu, Delete key and the
+    /// VoiceOver action. Absent from the shipped popover entirely. (The hover × badge is not here:
+    /// its placement is layout-specific, so each cell keeps its own.)
+    @ViewBuilder func removeAffordances(_ editing: PopoverEditing?, for app: AppItem) -> some View {
+        if let editing {
+            self
+                .contextMenu {
+                    Button(AppStrings.PopoverOption.editingRemove, role: .destructive) {
+                        editing.onRemove(app)
+                    }
+                }
+                .focusable()
+                .onDeleteCommand { editing.onRemove(app) }
+                .accessibilityElement(children: .combine)
+                .accessibilityAction(named: Text(AppStrings.PopoverOption.editingRemove)) {
+                    editing.onRemove(app)
+                }
+        } else {
+            self
+        }
+    }
+
+    /// Drag-to-reorder shared by grid cells and list rows — the shipped popover is neither a drag
+    /// source nor a drop target.
+    @ViewBuilder func reorderable(
+        _ editing: PopoverEditing?, app: AppItem, dragged: Binding<AppItem?>
+    ) -> some View {
+        if let editing {
+            self
+                .onDrag {
+                    dragged.wrappedValue = app
+                    return NSItemProvider(object: app.id.uuidString as NSString)
+                }
+                // Only `performDrop` clears `dragged`, so a drag abandoned outside any cell leaves
+                // it set. That is deliberate rather than leaked state: drop callbacks fire only
+                // during an active drag session, and `onDrag` above reassigns `dragged` before the
+                // next session can deliver one — so a stale value is never read. Clearing it would
+                // need a container-level drop target that could swallow drops meant for a cell.
+                .onDrop(of: [.text], delegate: PopoverItemDropDelegate(
+                    target: app,
+                    dragged: { dragged.wrappedValue },
+                    onMove: { d, t in editing.onMove(d, t) },
+                    onFinish: { dragged.wrappedValue = nil }
+                ))
+        } else {
+            self
+        }
+    }
+}
+
 // MARK: - Stack (Grid) Popover View
 
 /// Native macOS Dock folder "Stack" view with large icons in a grid
@@ -179,13 +297,21 @@ struct StackPopoverView: View {
     /// shared suite — so the live preview reflects unsaved edits without persisting them. nil in the
     /// real popover, which always loads the saved values.
     var settingsOverride: PopoverSettings? = nil
+    /// When set (Tile Detail), the panel IS the tile's app editor: cells gain a remove badge, a
+    /// context menu, Delete-key support and drag-to-reorder. nil in helpers and the Settings
+    /// preview, which then render exactly as they ship.
+    var editing: PopoverEditing? = nil
 
     @State private var selectedIndex: Int? = nil
     @State private var keyboardNavigationEnabled = false
+    @State private var draggedItem: AppItem? = nil
 
     // Observe IconStyleManager for icon style changes
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
+    /// Editing implies preview: an editor click must never launch an app or open the configurator.
+    private var actionsDisabled: Bool { isPreview || editing != nil }
 
     /// Saved **Grid** popover-appearance values, read once from the shared suite when this popover is
     /// built. Helpers render the popover, so this picks up the main app's Settings → Popover (Grid
@@ -218,7 +344,7 @@ struct StackPopoverView: View {
     /// Column count from the global Popover Size (Small 4 / Medium 5 / Large 6), capped at the app
     /// count so a tile with few apps stays tight rather than padding out empty trailing columns.
     private var columnCount: Int {
-        max(1, min(metrics.columns, max(1, apps.count)))
+        PopoverPanelLayout.columnCount(metricsColumns: metrics.columns, appCount: apps.count)
     }
 
     /// Grid columns sized by Tile Size; spacing by Spacing.
@@ -228,14 +354,16 @@ struct StackPopoverView: View {
 
     /// Popover width from cell width × columns.
     private var popoverWidth: CGFloat {
-        metrics.cellWidth * CGFloat(columnCount) + metrics.gap * CGFloat(columnCount - 1) + gridHorizontalPadding * 2
+        PopoverPanelLayout.gridPanelSize(metrics: metrics, appCount: apps.count,
+                                         showLabels: settings.showLabels).width
     }
 
-    // Layout constants
-    private let headerHeight: CGFloat = 36
-    private let gridTopPadding: CGFloat = 16
-    private let gridBottomPadding: CGFloat = 16
-    private let gridHorizontalPadding: CGFloat = 16
+    // Layout constants — the panel's chrome geometry lives in `PopoverPanelLayout` so the editor
+    // canvas, which frames and clips this panel, can never size it from a stale second copy.
+    private let headerHeight = PopoverPanelLayout.gridHeaderHeight
+    private let gridTopPadding = PopoverPanelLayout.gridPadding
+    private let gridBottomPadding = PopoverPanelLayout.gridPadding
+    private let gridHorizontalPadding = PopoverPanelLayout.gridPadding
 
     var body: some View {
         VStack(spacing: 0) {
@@ -247,29 +375,43 @@ struct StackPopoverView: View {
 
                 Spacer()
 
+                // ALWAYS one line. The header reserves a 28pt gutter on each side (the gear and its
+                // balancing spacer), so a narrow panel — a one-app tile is a single column — left so
+                // little room that "New Tile" wrapped to two lines and pushed the grid down.
+                // `PopoverPanelLayout.gridMinWidth` keeps normal names from truncating; this is the
+                // guarantee for the ones that still don't fit.
                 Text(tileName)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .help(tileName)
 
                 Spacer()
 
-                // Settings gear icon — opens main app to configure this tile
-                Button(action: openConfigurator) {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help(AppStrings.Menu.configureTile)
-                .onHover { hovering in
-                    if hovering {
-                        NSCursor.pointingHand.push()
-                    } else {
-                        NSCursor.pop()
+                // Settings gear icon — opens main app to configure this tile. In edit mode the host
+                // IS the configurator, so the gear gives way to a spacer that keeps the title centred.
+                if editing == nil {
+                    Button(action: openConfigurator) {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 28, height: 28)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .help(AppStrings.Menu.configureTile)
+                    .onHover { hovering in
+                        if hovering {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.pop()
+                        }
+                    }
+                } else {
+                    Color.clear
+                        .frame(width: 28, height: 28)
                 }
             }
             .padding(.horizontal, 8)
@@ -278,31 +420,13 @@ struct StackPopoverView: View {
             // MARK: Scrollable Grid Content
             if apps.isEmpty {
                 emptyStateView
+            } else if editing != nil {
+                // No nested scrolling in edit mode: the editor is hosted inside Tile Detail's own
+                // ScrollView, and an inner one would trap the wheel. The grid renders in full.
+                gridContent
             } else {
                 ScrollView(.vertical, showsIndicators: true) {
-                    LazyVGrid(columns: columns, spacing: metrics.gap) {
-                        ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in
-                            StackAppItem(
-                                app: app,
-                                isSelected: selectedIndex == index,
-                                iconSize: metrics.iconSize,
-                                cellWidth: metrics.cellWidth,
-                                showLabel: settings.showLabels,
-                                highlightOnHover: settings.highlightOnHover,
-                                onLaunch: onLaunch
-                            )
-                            // Composite ID forces SwiftUI to destroy/recreate the view when icon style
-                            // changes, which clears NSWorkspace's cached icon and re-fetches the
-                            // correct variant (Default/Dark/Clear/Tinted) from the app bundle.
-                            .id("\(app.id)-\(iconStyleManager.currentStyle.rawValue)")
-                            .onTapGesture {
-                                launchAppAt(index: index)
-                            }
-                        }
-                    }
-                    .padding(.top, gridTopPadding)
-                    .padding(.bottom, gridBottomPadding)
-                    .padding(.horizontal, gridHorizontalPadding)
+                    gridContent
                 }
             }
         }
@@ -324,35 +448,83 @@ struct StackPopoverView: View {
         ))
     }
 
+    /// The grid itself, without a scroll container — shared by the shipped scrolling panel and the
+    /// unscrolled edit-mode panel so the two can never drift.
+    private var gridContent: some View {
+        LazyVGrid(columns: columns, spacing: metrics.gap) {
+            ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in
+                StackAppItem(
+                    app: app,
+                    isSelected: selectedIndex == index,
+                    iconSize: metrics.iconSize,
+                    cellWidth: metrics.cellWidth,
+                    showLabel: settings.showLabels,
+                    highlightOnHover: settings.highlightOnHover,
+                    editing: editing,
+                    onLaunch: onLaunch
+                )
+                // Composite ID forces SwiftUI to destroy/recreate the view when icon style
+                // changes, which clears NSWorkspace's cached icon and re-fetches the
+                // correct variant (Default/Dark/Clear/Tinted) from the app bundle.
+                .id("\(app.id)-\(iconStyleManager.currentStyle.rawValue)")
+                .onTapGesture {
+                    launchAppAt(index: index)
+                }
+                .reorderable(editing, app: app, dragged: $draggedItem)
+            }
+        }
+        .padding(.top, gridTopPadding)
+        .padding(.bottom, gridBottomPadding)
+        .padding(.horizontal, gridHorizontalPadding)
+    }
+
     private var emptyStateView: some View {
         VStack(spacing: 8) {
-            Image(systemName: "app.badge.plus")
-                .font(.system(size: 32))
-                .foregroundStyle(.secondary)
-            Text(AppStrings.Empty.noApps)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.secondary)
-            Text(AppStrings.Subtitle.configureToAdd)
-                .font(.system(size: 11))
-                .foregroundStyle(.tertiary)
+            // `plus.app`, NOT `app.badge.plus` — the latter is not a real SF Symbol, so it rendered
+            // as nothing at all. Silent: an unknown symbol name draws empty with no warning.
+            //
+            // In the editor the glyph IS the add button — it is the obvious thing to click in an
+            // empty tile, and it runs the same `addItem` as the "+ Add" control above the canvas.
+            // In the shipped popover `editing` is nil, so it stays a plain, inert image.
+            EmptyStateGlyph(onAdd: editing?.onAdd)
+            if editing != nil {
+                // Same two-line shape as the shipped state below — one title, one supporting line.
+                Text(AppStrings.PopoverOption.editingNoAppsTitle)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Text(AppStrings.PopoverOption.editingNoAppsSubtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 230)
+            } else {
+                Text(AppStrings.Empty.noApps)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Text(AppStrings.Subtitle.configureToAdd)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// Does any cell draw the editor-only "Not installed" caption? That caption makes its row
+    /// taller, and this view pins its own height — an unbilled row is clipped. Resolved only in
+    /// edit mode, so the shipped popover never pays for the probe.
+    private var showsMissingCaption: Bool {
+        guard editing != nil else { return false }
+        return apps.contains { AppInstallChecker.resolve($0).status == .missing }
+    }
+
     private func calculateHeight() -> CGFloat {
-        guard !apps.isEmpty else { return 180 }
-
-        // Item height = icon + (label line, when shown) + cell padding. Rows spaced by Spacing.
-        let rows = ceil(Double(apps.count) / Double(columnCount))
-        let labelHeight: CGFloat = settings.showLabels ? 4 + 14 : 0
-        let itemHeight = metrics.iconSize + labelHeight + 4  // 2pt cell padding top+bottom
-        let gridContentHeight = CGFloat(rows) * itemHeight
-            + CGFloat(max(0, Int(rows) - 1)) * metrics.gap
-            + gridTopPadding + gridBottomPadding
-
-        // Total = header + grid content, capped at max
-        let totalHeight = headerHeight + gridContentHeight
-        return min(totalHeight, 600)
+        // Header + rows + padding, from the shared seam. Edit mode has no inner ScrollView, so it
+        // reports its full height and lets Tile Detail's own scroll view do the scrolling.
+        let totalHeight = PopoverPanelLayout.gridPanelSize(
+            metrics: metrics, appCount: apps.count, showLabels: settings.showLabels,
+            includesMissingCaption: showsMissingCaption
+        ).height
+        return editing != nil ? totalHeight : min(totalHeight, PopoverPanelLayout.gridScrollCap)
     }
 
     // MARK: - Keyboard Navigation
@@ -388,13 +560,13 @@ struct StackPopoverView: View {
     }
 
     private func launchAppAt(index: Int) {
-        guard !isPreview, index < apps.count else { return }
+        guard !actionsDisabled, index < apps.count else { return }
         AppLauncher.launch(apps[index])
         onLaunch()
     }
 
     private func openConfigurator() {
-        guard !isPreview else { return }
+        guard !actionsDisabled else { return }
         NotificationCenter.default.post(name: .openConfigurator, object: nil)
         onLaunch()
     }
@@ -409,9 +581,19 @@ struct StackAppItem: View {
     let cellWidth: CGFloat
     let showLabel: Bool
     let highlightOnHover: Bool
+    /// Editing handlers from Tile Detail; nil (helpers, Settings preview) means no edit affordances.
+    var editing: PopoverEditing? = nil
     let onLaunch: () -> Void
 
     @State private var isHovered = false
+    /// Hover over the remove badge itself. Tracked separately because the badge sits on top of the
+    /// cell: on macOS a child control with its own tracking region can end the parent's hover, and
+    /// with a single flag that ended the badge's own reason to exist mid-reach.
+    @State private var isHoveringRemove = false
+
+    /// Is the pointer anywhere on this cell, badge included? Drives BOTH the hover highlight and the
+    /// badge, so neither can flicker out while the user is reaching for the other.
+    private var isPointerInside: Bool { isHovered || isHoveringRemove }
 
     // Observe IconStyleManager for icon style changes
     // This triggers view refresh when system icon style changes
@@ -419,10 +601,26 @@ struct StackAppItem: View {
 
     /// Mouse hover uses the subtle Liquid-Glass fill (`.quaternary`) like typical Mac apps; the
     /// stronger accent is reserved for keyboard-focus selection (accessibility). Hover honours the
+    /// Breathing room each side of the app name, taken out of the cell's own width rather than
+    /// added to it — so the label ellipsises inside the tile and the panel's size is untouched.
+    private static let labelInset: CGFloat = 4
+
+    /// Diameter of the editor's hover remove badge.
+    private static let removeBadgeSize: CGFloat = 18
+    /// Nudge in from the cell's top-right corner: 0.5pt down, 0.5pt in — one physical pixel on a
+    /// Retina display.
+    ///
+    /// The badge must stay **entirely inside the cell** (critical). `isHovered` belongs to the cell,
+    /// and an `.overlay` that hangs past the cell's bounds is outside the cell's tracking area — so
+    /// reaching for a badge that overhangs the corner ends the hover and unmounts the badge under
+    /// the cursor, leaving it impossible to click. A positive inset keeps the whole badge within the
+    /// region that keeps it on screen.
+    private static let removeBadgeCornerInset: CGFloat = 0.5
+
     /// global "Highlight on Hover" toggle.
     private var highlightStyle: AnyShapeStyle {
         if isSelected { return AnyShapeStyle(Color(nsColor: .selectedContentBackgroundColor)) }
-        if highlightOnHover && isHovered { return AnyShapeStyle(.quaternary) }
+        if highlightOnHover && isPointerInside { return AnyShapeStyle(.quaternary) }
         return AnyShapeStyle(Color.clear)
     }
 
@@ -430,19 +628,38 @@ struct StackAppItem: View {
         // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
         let _ = iconStyleManager.currentStyle
 
+        // Resolved ONCE per cell: the probe hits Launch Services + stat() and is uncached, and the
+        // icon and the "Not installed" caption both need the answer. Computed exactly where the
+        // icon's own (unconditional, both-modes) probe already was, so helpers do no extra work.
+        let isMissing = AppInstallChecker.resolve(app).status == .missing
+
         VStack(spacing: 4) {
             // App icon, sized by the global Tile Size setting.
-            appIconView
+            appIconView(isMissing: isMissing)
                 .frame(width: iconSize, height: iconSize)
 
             if showLabel {
-                // App name - truncated with ellipsis. Use hierarchical style for vibrancy.
+                // App name — one line, ellipsised in the middle so both ends stay readable
+                // ("GitHub…esktop" beats "GitHub Des…").
+                //
+                // The padding sits INSIDE the fixed width on purpose: the cell still occupies its
+                // full `cellWidth` column, but the name truncates a little earlier, so a long one
+                // ends with a margin inside the selection instead of running to its very edge.
                 Text(app.name)
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
+                    .padding(.horizontal, Self.labelInset)
                     .frame(width: cellWidth)
+            }
+
+            // The editor names the "app is gone" state outright; the shipped popover keeps to the
+            // dimmed placeholder icon.
+            if editing != nil, isMissing {
+                Text(AppStrings.Label.notInstalled)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
             }
         }
         // Keep the interactive cell ≥44pt even when the glyph is smaller (HIG hit target).
@@ -454,13 +671,52 @@ struct StackAppItem: View {
         )
         .contentShape(Rectangle())
         .onHover { isHovered = $0 }
+        .editingOnly(editing) { cell in
+            // Remove badge in the cell's TOP-RIGHT corner — the same side the list layout removes
+            // from. Inset rather than overhanging, for the tracking-area reason on
+            // `removeBadgeCornerInset`.
+            //
+            // **Mounted for as long as the editor is open, never conditionally (critical).** Only
+            // its opacity and hit testing follow the pointer. Adding and removing a view UNDER the
+            // cursor makes AppKit rebuild the tracking areas beneath it, and the resulting spurious
+            // exit dropped `isHovered` — which unmounted the badge mid-reach, taking the hover
+            // highlight with it and swallowing the click. Cross-fading a mounted view has no such
+            // effect.
+            cell.overlay(alignment: .topTrailing) {
+                if let editing {
+                    Button { editing.onRemove(app) } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 8, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .frame(width: Self.removeBadgeSize, height: Self.removeBadgeSize)
+                            .background(Color(nsColor: .tertiaryLabelColor), in: Circle())
+                            .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
+                    }
+                    .buttonStyle(.plain)
+                    .help(AppStrings.PopoverOption.editingRemove)
+                    .accessibilityLabel(AppStrings.PopoverOption.editingRemove)
+                    .offset(x: -Self.removeBadgeCornerInset, y: Self.removeBadgeCornerInset)
+                    .onHover { isHoveringRemove = $0 }
+                    .opacity(isPointerInside ? 1 : 0)
+                    // Hit testing is NOT gated on the hover state (critical). Gating it deadlocks:
+                    // the pointer moving onto the badge ends the CELL's hover, which would switch
+                    // hit testing off, so the badge could never receive the `onHover` above that
+                    // brings it back — it vanished under the cursor and stayed gone. Reaching the
+                    // badge requires moving the pointer onto it, which reveals it, so an invisible
+                    // badge is not something a user can click by accident.
+                    .accessibilityHidden(!isPointerInside)
+                    .animation(.easeOut(duration: 0.12), value: isPointerInside)
+                }
+            }
+        }
+        .removeAffordances(editing, for: app)
     }
 
     @ViewBuilder
-    private var appIconView: some View {
+    private func appIconView(isMissing: Bool) -> some View {
         // Resolved synchronously (no @State/onAppear) so a deleted app never flashes its stale
         // cached icon before the placeholder appears.
-        if AppInstallChecker.resolve(app).status == .missing {
+        if isMissing {
             Image(systemName: "questionmark.app.dashed")
                 .font(.system(size: iconSize * 0.5))
                 .foregroundStyle(.secondary)
@@ -490,13 +746,21 @@ struct ListPopoverView: View {
     /// When set (Settings preview), renders these *draft* settings instead of the shared suite, so
     /// the live preview reflects unsaved edits without persisting them. nil in the real popover.
     var settingsOverride: PopoverSettings? = nil
+    /// When set (Tile Detail), the panel IS the tile's app editor: rows gain a remove button, a
+    /// context menu, Delete-key support and drag-to-reorder, and the utility rows step aside.
+    /// nil in helpers and the Settings preview, which then render exactly as they ship.
+    var editing: PopoverEditing? = nil
 
     @State private var selectedIndex: Int? = nil
     @State private var keyboardNavigationEnabled = false
+    @State private var draggedItem: AppItem? = nil
 
     // Observe IconStyleManager for icon style changes
     // Used to force view recreation via .id() modifier
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
+
+    /// Editing implies preview: an editor click must never launch an app or open the configurator.
+    private var actionsDisabled: Bool { isPreview || editing != nil }
 
     /// Saved **List** popover-appearance values, read once when the popover is built (see
     /// StackPopoverView). List has no Show Labels setting — it always labels its rows.
@@ -529,9 +793,15 @@ struct ListPopoverView: View {
                 Text(tileName)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
+                    // One line here too — `listHeaderHeight` bills for exactly one, so a wrap would
+                    // also push the panel past the height the canvas frames it to.
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
+                    // Changing this changes `PopoverPanelLayout.listHeaderHeight` — the canvas
+                    // clips this panel to a height it computes from that constant.
+                    .padding(.vertical, PopoverPanelLayout.listHeaderVerticalPadding)
             }
 
             // App list
@@ -545,6 +815,7 @@ struct ListPopoverView: View {
                             isSelected: selectedIndex == index,
                             metrics: metrics,
                             highlightOnHover: settings.highlightOnHover,
+                            editing: editing,
                             onLaunch: onLaunch
                         )
                         // Force view recreation when icon style changes
@@ -553,30 +824,35 @@ struct ListPopoverView: View {
                         .onTapGesture {
                             launchAppAt(index: index)
                         }
+                        .reorderable(editing, app: app, dragged: $draggedItem)
                     }
                 }
             }
 
-            // Separator - use hierarchical opacity for vibrancy
-            Divider()
-                .padding(.vertical, 4)
+            // Utility items — the editor drops them: Tile Detail already IS the configurator.
+            if editing == nil {
+                // Separator - use hierarchical opacity for vibrancy
+                Divider()
+                    .padding(.vertical, 4)
 
-            // Utility items
-            ListMenuRow(
-                icon: "gearshape",
-                title: AppStrings.Menu.configure,
-                hasSubmenu: false,
-                action: openConfigurator
-            )
+                ListMenuRow(
+                    icon: "gearshape",
+                    title: AppStrings.Menu.configure,
+                    hasSubmenu: false,
+                    action: openConfigurator
+                )
 
-            ListMenuRow(
-                icon: "folder",
-                title: AppStrings.Menu.openInFinder,
-                hasSubmenu: false,
-                action: openInFinder
-            )
+                ListMenuRow(
+                    icon: "folder",
+                    title: AppStrings.Menu.openInFinder,
+                    hasSubmenu: false,
+                    action: openInFinder
+                )
+            }
         }
-        .padding(.vertical, 8)
+        // This panel pins only its WIDTH and takes an intrinsic height, so every vertical term here
+        // is mirrored in `PopoverPanelLayout.listPanelSize` for the canvas that frames it.
+        .padding(.vertical, PopoverPanelLayout.listOuterVerticalPadding)
         .frame(width: metrics.width)
         // LIQUID GLASS: Transparent SwiftUI background to allow NSVisualEffectView through
         .background(Color.clear)
@@ -596,11 +872,21 @@ struct ListPopoverView: View {
     }
 
     private var emptyStateView: some View {
-        Text(AppStrings.Empty.noApps)
-            .font(.system(size: 12))
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+        VStack(spacing: 4) {
+            Text(editing != nil ? AppStrings.PopoverOption.editingNoAppsTitle : AppStrings.Empty.noApps)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
+            if editing != nil {
+                Text(AppStrings.PopoverOption.editingNoAppsSubtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.tertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        // Every vertical term here is mirrored in `PopoverPanelLayout.listPanelSize`.
+        .padding(.vertical, PopoverPanelLayout.listEmptyStatePadding)
     }
 
     // MARK: - Keyboard Navigation
@@ -635,19 +921,19 @@ struct ListPopoverView: View {
     }
 
     private func launchAppAt(index: Int) {
-        guard !isPreview, index < apps.count else { return }
+        guard !actionsDisabled, index < apps.count else { return }
         AppLauncher.launch(apps[index])
         onLaunch()
     }
 
     private func openConfigurator() {
-        guard !isPreview else { return }
+        guard !actionsDisabled else { return }
         NotificationCenter.default.post(name: .openConfigurator, object: nil)
         onLaunch()
     }
 
     private func openInFinder() {
-        guard !isPreview else { return }
+        guard !actionsDisabled else { return }
         DiagnosticsLog.shared.ui("Popover (list) → Open in Finder")
         // Open the Applications folder or configured folder
         NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
@@ -662,6 +948,8 @@ struct ListAppRow: View {
     let isSelected: Bool
     let metrics: PopoverListMetrics
     let highlightOnHover: Bool
+    /// Editing handlers from Tile Detail; nil (helpers, Settings preview) means no edit affordances.
+    var editing: PopoverEditing? = nil
     let onLaunch: () -> Void
 
     @State private var isHovered = false
@@ -682,9 +970,13 @@ struct ListAppRow: View {
         // Reference iconStyleManager.currentStyle to trigger re-render when icon style changes
         let _ = iconStyleManager.currentStyle
 
+        // Resolved ONCE per row — see StackAppItem: the probe is uncached (Launch Services +
+        // stat()) and both the icon and the "Not installed" caption need it.
+        let isMissing = AppInstallChecker.resolve(app).status == .missing
+
         HStack(spacing: metrics.rowSpacing) {
             // Icon, sized by the global Tile Size setting.
-            appIconView
+            appIconView(isMissing: isMissing)
                 .frame(width: metrics.iconSize, height: metrics.iconSize)
 
             // White text on the accent keyboard-selection; normal text on the subtle hover fill.
@@ -694,6 +986,24 @@ struct ListAppRow: View {
                 .lineLimit(1)
 
             Spacer()
+
+            // The editor names the "app is gone" state outright; the shipped popover keeps to the
+            // dimmed placeholder icon.
+            if editing != nil, isMissing {
+                Text(AppStrings.Label.notInstalled)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
+
+            if let editing, isHovered {
+                Button { editing.onRemove(app) } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(AppStrings.PopoverOption.editingRemove)
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, metrics.rowVerticalPadding)
@@ -707,12 +1017,13 @@ struct ListAppRow: View {
         .onHover { hovering in
             isHovered = hovering
         }
+        .removeAffordances(editing, for: app)
     }
 
     @ViewBuilder
-    private var appIconView: some View {
+    private func appIconView(isMissing: Bool) -> some View {
         // Resolved synchronously so a deleted app shows the placeholder, not its stale icon.
-        if AppInstallChecker.resolve(app).status == .missing {
+        if isMissing {
             Image(systemName: "questionmark.app.dashed")
                 .font(.system(size: metrics.iconSize * 0.75))
                 .foregroundStyle(.secondary)

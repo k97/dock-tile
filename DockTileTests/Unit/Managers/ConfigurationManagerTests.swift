@@ -143,6 +143,47 @@ struct ConfigurationManagerTests {
 
         #expect(manager.selectedConfigHasBeenEdited == true)
     }
+
+    // MARK: - Committed display names
+
+    // The sidebar and title band list a tile under its COMMITTED name, so a rename in the editor
+    // doesn't rewrite the window chrome on every keystroke. The map has to be seeded for every
+    // tile the manager knows about — when it isn't, `displayName(for:)` falls through to the live
+    // name that the editor's auto-save rewrites as you type, and the whole mechanism is silently
+    // inert. That is exactly how it shipped before this test existed.
+
+    @Test("A newly created tile is listed under its name straight away")
+    func displayNameSeededOnCreate() throws {
+        let manager = createTestManager()
+        let created = manager.createConfiguration()
+        defer { manager.deleteConfiguration(created.id) }
+
+        #expect(manager.displayName(for: created.id) == created.name)
+        #expect(manager.committedNames[created.id] == created.name)
+    }
+
+    @Test("Renaming does not move the listed name until it is committed")
+    func displayNameHoldsUntilCommit() throws {
+        let manager = createTestManager()
+        let created = manager.createConfiguration()
+        defer { manager.deleteConfiguration(created.id) }
+        let original = created.name
+
+        // Stand in for the editor's debounced auto-save: the STORED name changes as you type.
+        let index = try #require(manager.configurations.firstIndex(where: { $0.id == created.id }))
+        manager.configurations[index].name = "Renamed While Typing"
+
+        #expect(manager.displayName(for: created.id) == original)
+
+        // Add to Dock / Update / Done — the commit point.
+        manager.commitDisplayName(for: created.id)
+        #expect(manager.displayName(for: created.id) == "Renamed While Typing")
+    }
+
+    @Test("An unknown id has no listed name to report")
+    func displayNameUnknownId() {
+        #expect(createTestManager().displayName(for: UUID()) == "")
+    }
 }
 
 // MARK: - Configuration Operations Tests

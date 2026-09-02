@@ -277,6 +277,12 @@ final class SmartAddEngine: ObservableObject {
         }
     }
 
+    /// v2 add flow: the Add a Tile dialog opens from EVERY entry point. The toggle only decides
+    /// whether suggestions are shown inside it — never whether the dialog appears.
+    nonisolated static func suggestionsForAddFlow(enabled: Bool, computed: [TileSuggestion]) -> [TileSuggestion] {
+        enabled ? computed : []
+    }
+
     /// Merge Spotlight usage with launch-log frequency/recency into one candidate list.
     private func mergedUsageRecords() -> [AppUsageRecord] {
         // Launch-log tallies: count + most recent date per bundle id.

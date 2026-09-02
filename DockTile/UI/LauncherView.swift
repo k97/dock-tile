@@ -19,6 +19,10 @@ extension Notification.Name {
     /// Posted by the ⌘, menu command to select an inline Settings pane in the main window.
     /// `object` is an optional `SettingsPane` (defaults to `.general`).
     static let openSettingsPane = Notification.Name("openSettingsPane")
+    /// Posted by any "Add a Tile…" affordance that lives outside the sidebar (General's row). The
+    /// configuration window routes it through the SAME handleAddTapped as the sidebar + so the two
+    /// entry points can never diverge.
+    static let addTileRequested = Notification.Name("addTileRequested")
 }
 
 // MARK: - Launcher View (Layout Mode Router)

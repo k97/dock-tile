@@ -23,6 +23,20 @@ struct AppStringsTests {
         // App name
         #expect(!AppStrings.appName.isEmpty)
 
+        // About
+        #expect(!AppStrings.About.title.isEmpty)
+        #expect(!AppStrings.About.version("1.0").isEmpty)
+        #expect(!AppStrings.About.website.isEmpty)
+        #expect(!AppStrings.About.feedbackTitle.isEmpty)
+        #expect(!AppStrings.About.feedbackBody.isEmpty)
+        #expect(!AppStrings.About.sendFeedback.isEmpty)
+        #expect(!AppStrings.About.alsoFrom.isEmpty)
+        #expect(!AppStrings.About.studioTitle.isEmpty)
+        #expect(!AppStrings.About.studioSubtitle.isEmpty)
+        #expect(!AppStrings.About.spadesTitle.isEmpty)
+        #expect(!AppStrings.About.spadesSubtitle.isEmpty)
+        #expect(!AppStrings.About.learnMore.isEmpty)
+
         // Alert messages
         #expect(!AppStrings.Alert.restartDockTitle.isEmpty)
         #expect(!AppStrings.Alert.restartDockMessage.isEmpty)
@@ -30,10 +44,12 @@ struct AppStringsTests {
 
         // Buttons
         #expect(!AppStrings.Button.add.isEmpty)
+        #expect(!AppStrings.Button.addATile.isEmpty)
         #expect(!AppStrings.Button.addToDock.isEmpty)
         #expect(!AppStrings.Button.back.isEmpty)
         #expect(!AppStrings.Button.cancel.isEmpty)
         #expect(AppStrings.Button.checkNow == "Check Now")
+        #expect(!AppStrings.Button.checkForUpdates.isEmpty)
         #expect(!AppStrings.Button.confirm.isEmpty)
         #expect(!AppStrings.Button.customise.isEmpty)
         #expect(!AppStrings.Button.delete.isEmpty)
@@ -46,7 +62,6 @@ struct AppStringsTests {
 
         // Labels
         #expect(!AppStrings.Label.colour.isEmpty)
-        #expect(!AppStrings.Label.layout.isEmpty)
         #expect(!AppStrings.Label.showInAppSwitcher.isEmpty)
         #expect(!AppStrings.Label.showTile.isEmpty)
         #expect(!AppStrings.Label.tileIcon.isEmpty)
@@ -60,6 +75,14 @@ struct AppStringsTests {
         // Settings
         #expect(!AppStrings.Settings.general.isEmpty)
         #expect(!AppStrings.Settings.loginRequiresApproval.isEmpty)
+        #expect(AppStrings.Settings.addingTiles == "Adding Tiles")
+
+        // Smart Add
+        #expect(AppStrings.SmartAdd.settingsToggleTitle == "Suggest tiles from my apps")
+        #expect(!AppStrings.SmartAdd.blankTitle.isEmpty)
+        #expect(!AppStrings.SmartAdd.blankSubtitle.isEmpty)
+        #expect(!AppStrings.SmartAdd.orStartFrom.isEmpty)
+        #expect(!AppStrings.SmartAdd.noSuggestions.isEmpty)
 
         // Tooltips
         #expect(!AppStrings.Tooltip.openSettings.isEmpty)
@@ -76,15 +99,18 @@ struct AppStringsTests {
         #expect(!AppStrings.Menu.newTile.isEmpty)
         #expect(!AppStrings.Menu.openInFinder.isEmpty)
         #expect(!AppStrings.Menu.options.isEmpty)
+        #expect(!AppStrings.Menu.aboutDockTile.isEmpty)
 
         // Navigation
         #expect(!AppStrings.Navigation.customiseTile.isEmpty)
 
         // Sidebar
         #expect(!AppStrings.Sidebar.title.isEmpty)
+        #expect(AppStrings.Sidebar.dockTileSection == "Dock Tile")
 
         // Sections
-        #expect(!AppStrings.Section.selectedItems.isEmpty)
+        #expect(!AppStrings.Section.inThisTile.isEmpty)
+        #expect(!AppStrings.Label.editorHint.isEmpty)
 
         // Subtitles
         #expect(!AppStrings.Subtitle.chooseColour.isEmpty)
@@ -95,23 +121,19 @@ struct AppStringsTests {
         #expect(!AppStrings.Tab.emoji.isEmpty)
         #expect(!AppStrings.Tab.symbol.isEmpty)
 
-        // Table headers
-        #expect(!AppStrings.Table.item.isEmpty)
-        #expect(!AppStrings.Table.kind.isEmpty)
-
         // Titles
         #expect(!AppStrings.Title.deleteTile.isEmpty)
 
         // Tooltips
         #expect(!AppStrings.Tooltip.createNewTile.isEmpty)
         #expect(!AppStrings.Tooltip.editFirst.isEmpty)
+        #expect(!AppStrings.Tooltip.deleteTile.isEmpty)
 
         // Empty states
         #expect(!AppStrings.Empty.createFirstTile.isEmpty)
         #expect(!AppStrings.Empty.createFirstTileDescription.isEmpty)
         #expect(!AppStrings.Empty.detail.isEmpty)
         #expect(!AppStrings.Empty.noApps.isEmpty)
-        #expect(!AppStrings.Empty.noItemsAdded.isEmpty)
         #expect(!AppStrings.Empty.noTiles.isEmpty)
 
         // Search
@@ -121,9 +143,10 @@ struct AppStringsTests {
         // File picker
         #expect(!AppStrings.FilePicker.message.isEmpty)
 
-        // Kind values
-        #expect(!AppStrings.Kind.application.isEmpty)
-        #expect(!AppStrings.Kind.folder.isEmpty)
+        // Popover editing (Tile Detail's preview editor)
+        #expect(!AppStrings.PopoverOption.editingRemove.isEmpty)
+        #expect(!AppStrings.PopoverOption.editingNoAppsTitle.isEmpty)
+        #expect(!AppStrings.PopoverOption.editingNoAppsSubtitle.isEmpty)
 
         // Error messages
         #expect(!AppStrings.Error.mainAppNotFound.isEmpty)

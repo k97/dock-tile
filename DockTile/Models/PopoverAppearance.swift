@@ -284,3 +284,139 @@ enum PopoverMetrics {
         }
     }
 }
+
+// MARK: - Panel geometry
+
+/// The popover panels' chrome geometry and size formulas — the single place either the real panel
+/// or the editor/preview canvas can be resized from.
+///
+/// **Why this is one seam (critical)**: `StackPopoverView` pins its own width AND height from these
+/// formulas, so a grid panel and the canvas around it can only disagree if two copies drift.
+/// `ListPopoverView` pins only its **width** and takes an intrinsic height, which makes the canvas's
+/// estimate load-bearing — an underestimate CLIPS the real panel, because the canvas frames it and
+/// clips to that frame. Both formulas did live in two places and did drift: the empty-list case
+/// reached the canvas billing one 36pt row while the panel rendered its ~110pt empty state, cutting
+/// off the tile-name header and the last line of the hint. Guarded by `PopoverPreviewCanvasTests`.
+enum PopoverPanelLayout {
+
+    // MARK: Grid chrome (`StackPopoverView`)
+
+    static let gridHeaderHeight: CGFloat = 36
+    /// Applied on all four sides of the grid content.
+    static let gridPadding: CGFloat = 16
+    /// Height of the grid's own "no apps" state.
+    static let gridEmptyHeight: CGFloat = 180
+    /// Floor for the EMPTY grid panel's width. Column count is capped at the app count, so a tile
+    /// with no apps would otherwise be a single 82pt column — a sliver the empty state's two lines
+    /// wrap to shreds inside.
+    static let gridEmptyMinWidth: CGFloat = 260
+    /// Floor for a populated grid panel. The header reserves a 28pt gutter on each side (the gear
+    /// and its balancing spacer), so a one-app tile's single column left the title ~26pt and it
+    /// wrapped onto a second line. Two columns (210pt) already clear this, so only the one-app case
+    /// is widened.
+    static let gridMinWidth: CGFloat = 180
+    /// The real popover scrolls past this; the editor does not (Tile Detail scrolls instead).
+    static let gridScrollCap: CGFloat = 600
+    /// Label line under a grid cell when Show Labels is on: a 4pt gap + one 14pt line.
+    static let gridLabelHeight: CGFloat = 18
+    /// 2pt cell padding, top and bottom.
+    static let gridCellPadding: CGFloat = 4
+    /// The editor-only "Not installed" caption under a missing app's icon: the cell VStack's 4pt
+    /// spacing + one 10pt line. Billed for EVERY row when any app in the tile is missing — which
+    /// row holds it isn't known here, and over-reserving leaves slack while under-reserving clips.
+    static let gridMissingCaptionHeight: CGFloat = 17
+
+    // MARK: List chrome (`ListPopoverView`)
+
+    /// The tile-name header: one 13pt line inside `listHeaderVerticalPadding` top and bottom.
+    static let listHeaderHeight: CGFloat = 32
+    static let listHeaderVerticalPadding: CGFloat = 8
+    /// The panel's own padding above the first row and below the last.
+    static let listOuterVerticalPadding: CGFloat = 8
+    /// `emptyStateView`'s own vertical padding, top and bottom.
+    static let listEmptyStatePadding: CGFloat = 16
+    /// The EDIT-mode empty state: a 13pt title line, 4pt spacing, and an 11pt subtitle that wraps to
+    /// two lines at the default tier's text width. 16 + 4 + 28.
+    ///
+    /// The two-line figure is measured against the shipped English copy ("Use Add to choose what
+    /// opens from this tile.") — the three shipped locales are all English, so it holds today. A
+    /// longer translation would wrap to three lines and be clipped: if a non-English locale is ever
+    /// added, either raise this or cap the subtitle at two lines.
+    static let listEmptyStateTextHeight: CGFloat = 48
+    /// The SHIPPED empty state: the same 13pt title line, with no subtitle under it.
+    static let listEmptyStateShippedTextHeight: CGFloat = 16
+    /// The helper popover's trailing utility block (never shown in the editor): a 1pt `Divider`
+    /// inside 4pt top/bottom padding, then two `ListMenuRow`s of ~24pt each (a 13pt line inside
+    /// 4pt top/bottom padding). 1 + 8 + 48.
+    static let listUtilityRowsHeight: CGFloat = 57
+    static let listRowMinHeight: CGFloat = 28
+
+    /// Columns actually drawn: the Popover Size tier capped at the app count, so a tile with fewer
+    /// apps than columns stays tight instead of padding out empty trailing columns.
+    nonisolated static func columnCount(metricsColumns: Int, appCount: Int) -> Int {
+        max(1, min(metricsColumns, max(1, appCount)))
+    }
+
+    /// A grid panel's intrinsic size, uncapped. `StackPopoverView` applies `gridScrollCap` to the
+    /// height outside the editor; the editor and the canvas use the full value.
+    nonisolated static func gridPanelSize(
+        metrics: PopoverGridMetrics,
+        appCount: Int,
+        showLabels: Bool,
+        includesMissingCaption: Bool = false
+    ) -> CGSize {
+        let cols = columnCount(metricsColumns: metrics.columns, appCount: appCount)
+        let width = metrics.cellWidth * CGFloat(cols)
+            + metrics.gap * CGFloat(cols - 1)
+            + gridPadding * 2
+        guard appCount > 0 else {
+            return CGSize(width: max(width, gridEmptyMinWidth), height: gridEmptyHeight)
+        }
+        let rows = Int(ceil(Double(appCount) / Double(cols)))
+        let itemHeight = metrics.iconSize
+            + (showLabels ? gridLabelHeight : 0)
+            + (includesMissingCaption ? gridMissingCaptionHeight : 0)
+            + gridCellPadding
+        let height = gridHeaderHeight
+            + CGFloat(rows) * itemHeight
+            + CGFloat(rows - 1) * metrics.gap
+            + gridPadding * 2
+        return CGSize(width: max(width, gridMinWidth), height: height)
+    }
+
+    /// A list panel's intrinsic size. The width is what `ListPopoverView` pins; the height is the
+    /// estimate the canvas must not undershoot.
+    ///
+    /// `hasHeader` mirrors `ListPopoverView`'s `if !tileName.isEmpty` — a tile whose name has been
+    /// cleared draws no title row, and billing for one leaves a visible gap under the panel.
+    ///
+    /// **`isEditing` is the panel's whole mode**, not one detail of it: the editor drops the trailing
+    /// utility rows and shows a taller two-line empty state, while the shipped popover does the
+    /// reverse. Passing it as one flag keeps those two facts from disagreeing — they were previously
+    /// a `includesUtilityRows` parameter plus an *unstated* assumption that the empty branch was
+    /// always the editor's.
+    nonisolated static func listPanelSize(
+        metrics: PopoverListMetrics,
+        appCount: Int,
+        isEditing: Bool,
+        hasHeader: Bool
+    ) -> CGSize {
+        let header = hasHeader ? listHeaderHeight : 0
+        guard appCount > 0 else {
+            let height = header
+                + listEmptyStatePadding * 2
+                + (isEditing ? listEmptyStateTextHeight : listEmptyStateShippedTextHeight)
+                + listOuterVerticalPadding * 2
+            return CGSize(width: metrics.width, height: height)
+        }
+        let rowHeight = max(
+            listRowMinHeight,
+            max(metrics.iconSize, metrics.fontSize + 3) + metrics.rowVerticalPadding * 2
+        )
+        let height = header
+            + CGFloat(appCount) * rowHeight
+            + (isEditing ? 0 : listUtilityRowsHeight)
+            + listOuterVerticalPadding * 2
+        return CGSize(width: metrics.width, height: height)
+    }
+}

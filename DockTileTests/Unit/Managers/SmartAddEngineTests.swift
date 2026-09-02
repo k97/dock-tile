@@ -501,3 +501,21 @@ struct SmartAddIdentityTests {
         #expect(Set(result.map(\.identity.symbol)).count == result.count)
     }
 }
+
+// MARK: - v2 Add a Tile dialog
+
+/// Regression guard for the v2 flow change: the Add a Tile dialog now opens from EVERY add entry
+/// point, even when there is nothing to suggest. The Smart Add toggle only decides whether the
+/// dialog's suggestions are populated — it must never decide whether the dialog appears at all.
+@Suite("Smart Add Engine — add flow")
+struct SmartAddAddFlowTests {
+
+    @Test("The Add dialog always opens; Smart Add off just empties the suggestions")
+    func addFlowAlwaysOpens() {
+        let one = TileSuggestion(name: "Work", strategy: .category, reason: "By category", tint: .blue,
+                                 symbol: "folder.fill", appItems: [AppItem(bundleIdentifier: "a", name: "A")])
+        #expect(SmartAddEngine.suggestionsForAddFlow(enabled: false, computed: [one]).isEmpty)
+        #expect(SmartAddEngine.suggestionsForAddFlow(enabled: true, computed: [one]).count == 1)
+        #expect(SmartAddEngine.suggestionsForAddFlow(enabled: true, computed: []).isEmpty)
+    }
+}

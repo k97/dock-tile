@@ -50,6 +50,13 @@ The app product name is **"Dock Tile"** (with space), not "DockTile". File syste
 - **View identity**: Add `.id(selectedConfig.id)` when switching configs to force view recreation and avoid stale `@State`
 - **State updates**: Wrap `configManager.markSelectedConfigAsEdited()` in `DispatchQueue.main.async` inside `.onChange` to avoid "Publishing changes from within view updates" warnings
 - **Platform APIs**: Use `@available(macOS 26.0, *)` with separate computed properties and `@ViewBuilder` runtime checks; always provide fallback
+- **Assets fail SILENTLY — never assume one rendered.** An unknown SF Symbol name
+  (`Image(systemName:)`) and a bundled image that fails to decode both draw **nothing**: no warning,
+  no placeholder, no crash — the affordance is simply absent. `app.badge.plus` shipped that way in
+  the popover's empty state and was invisible until the panel was widened enough to show the hole.
+  So: symbol literals are swept by `SystemSymbolNameTests` (read its header — it can't see the
+  macOS 15 floor), and a bundled image gets an explicit fallback (`VendorMark` in `AboutView`).
+  When adding either, confirm on screen that it actually drew.
 
 ## CI/CD Feature Checklist
 

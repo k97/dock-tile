@@ -23,7 +23,17 @@ struct DockTileApp: App {
     private let windowWidth: CGFloat = 768
     private let minWindowHeight: CGFloat = 500
 
-    private let aboutWindowController = AboutWindowController()
+    /// Routes an app-menu command to an inline Settings pane. The pane notification is only
+    /// observed by `DockTileConfigurationView`, so the window has to exist first — with Dock Lock
+    /// enabled the app stays resident after the last window closes, and About / ⌘, were dead there.
+    /// Bring the window up (reuse-or-reopen lives in `AppDelegate`), then post on the next runloop
+    /// turn so a just-recreated view is already subscribed when the notification fires.
+    private func openSettingsPane(_ pane: SettingsPane) {
+        appDelegate.showConfigurationWindow()
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .openSettingsPane, object: pane)
+        }
+    }
 
     var body: some Scene {
         // `Window` (not `WindowGroup`) — the configuration UI is a single, unique window.
@@ -73,19 +83,17 @@ struct DockTileApp: App {
             CommandGroup(replacing: .appSettings) {
                 Button(AppStrings.Menu.settings) {
                     DiagnosticsLog.shared.ui("Menu → Settings (⌘,)")
-                    NotificationCenter.default.post(name: .openSettingsPane, object: SettingsPane.general)
+                    openSettingsPane(.general)
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }
             CommandGroup(replacing: .appInfo) {
-                Button("About Dock Tile") {
+                Button(AppStrings.Menu.aboutDockTile) {
                     DiagnosticsLog.shared.ui("Menu → About Dock Tile")
-                    aboutWindowController.showAbout {
-                        updateController.checkForUpdates()
-                    }
+                    openSettingsPane(.about)
                 }
                 Divider()
-                Button("Check for Updates...") {
+                Button(AppStrings.Button.checkForUpdates) {
                     DiagnosticsLog.shared.ui("Menu → Check for Updates")
                     updateController.checkForUpdates()
                 }

@@ -40,6 +40,7 @@ Controlled via Info.plist variables (`DTEnvironment`, `DTHelperPrefix`, `DTPrefs
 - [App Relocation](/.claude/rules/app-relocation.md) — Move-to-/Applications nudge, translocation guard on helper generation, Release-only
 - [Development](/.claude/rules/development.md) — Code patterns, schema evolution, shared utilities
 - [Testing](/.claude/rules/testing.md) — Swift Testing framework, commands, coverage targets
+- [Driving the Dev Build](/.claude/rules/driving-the-dev-build.md) — capture by window ID not screen rect (privacy), AX single-`to` form, test host = dev app
 - [CI & Release](/.claude/rules/ci-release.md) — GitHub Actions, Sparkle updates, code signing
 - [Localization](/.claude/rules/localization-macos.md) — String Catalogs, US/UK/AU English
 - [Icon System](/.claude/rules/icon-system.md) — Declarative per-tile `Assets.car` on macOS 26+, legacy `.icns` bake as pre-26 fallback, icon styles, Icon Composer format

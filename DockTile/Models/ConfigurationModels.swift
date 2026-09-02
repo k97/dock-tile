@@ -565,3 +565,22 @@ struct AppItem: Identifiable, Codable, Hashable {
         return bundleResolvedURL()
     }
 }
+
+// MARK: - App list editing (pure seam behind the Tile Detail preview editor)
+
+/// Plain-value reducer for the editable popover preview. Mirrors the semantics of the old table's
+/// `PopoverItemDropDelegate.dropEntered` (drag forward → after target, backward → before target).
+enum AppListEditor {
+    nonisolated static func removing(_ id: UUID, from items: [AppItem]) -> [AppItem] {
+        items.filter { $0.id != id }
+    }
+
+    nonisolated static func moving(_ draggedID: UUID, onto targetID: UUID, in items: [AppItem]) -> [AppItem] {
+        guard draggedID != targetID,
+              let from = items.firstIndex(where: { $0.id == draggedID }),
+              let to = items.firstIndex(where: { $0.id == targetID }) else { return items }
+        var out = items
+        out.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+        return out
+    }
+}

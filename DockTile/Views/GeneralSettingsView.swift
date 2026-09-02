@@ -13,7 +13,6 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     @EnvironmentObject private var configManager: ConfigurationManager
-    @EnvironmentObject private var updateController: UpdateController
 
     /// Mirrors SMAppService status — the system is the source of truth, not local
     /// storage. Synced in `.onAppear` so it reflects changes the user makes in
@@ -37,56 +36,31 @@ struct GeneralSettingsView: View {
     @AppStorage(UserDefaultsKeys.smartAddEnabled)
     private var smartAddEnabled = true
 
-    /// Mirror both layouts' persisted Popover Size for the drill-down row's trailing summary
-    /// ("Grid · M · List · M"). Grid and List are stored independently.
-    @AppStorage(UserDefaultsKeys.popoverGridSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var gridPopoverSize: PopoverSizeTier = .medium
-    @AppStorage(UserDefaultsKeys.popoverListSize, store: UserDefaults(suiteName: UserDefaultsKeys.sharedSuiteName))
-    private var listPopoverSize: PopoverSizeTier = .medium
-
     var body: some View {
-        NavigationStack {
-            Form {
-                // All general preferences live in a single grouped container (System Settings style):
-                // Start at login → Software update → Share analytics.
-                Section {
-                    startAtLoginRow
+        Form {
+            // All general preferences live in a single grouped container (System Settings style):
+            // Start at login → Missing apps → Share analytics.
+            Section {
+                startAtLoginRow
 
-                    softwareUpdateRow
+                missingAppsRow
 
-                    missingAppsRow
-
-                    analyticsRow
-                }
-
-                // Smart Add — suggest ready-made tiles on +. Sits directly before Popover.
-                Section {
-                    smartAddRow
-
-                    // Privacy footnote inside the same card (matches the design), below a divider.
-                    Label {
-                        Text(AppStrings.SmartAdd.privacyFootnote)
-                    } icon: {
-                        Image(systemName: "lock.fill")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                } header: {
-                    Text(AppStrings.SmartAdd.settingsSectionHeader)
-                }
-
-                // Popover appearance lives one level down — a grouped Form with a live preview.
-                Section(AppStrings.Settings.popover) {
-                    NavigationLink {
-                        PopoverAppearanceView()
-                    } label: {
-                        popoverAppearanceRow
-                    }
-                }
+                analyticsRow
             }
-            .formStyle(.grouped)
-            .navigationTitle(AppStrings.Settings.general)
+
+            // Adding Tiles — Smart Add toggle plus the Add a Tile… affordance itself.
+            Section(AppStrings.Settings.addingTiles) {
+                smartAddRow
+
+                Button(AppStrings.Button.addATile) {
+                    DiagnosticsLog.shared.ui("General → Add a Tile… row")
+                    NotificationCenter.default.post(name: .addTileRequested, object: nil)
+                }
+                .buttonStyle(.link)
+            }
         }
+        .formStyle(.grouped)
+        .paneTitleBand(AppStrings.Settings.general)
         .onAppear(perform: refreshLoginState)
         .alert(
             scanFoundMissing ? AppStrings.Alert.missingAppsTitle : AppStrings.Alert.missingAppsNoneTitle,
@@ -141,27 +115,6 @@ struct GeneralSettingsView: View {
         }
     }
 
-    /// Manual update check (Sparkle). Sits between login and analytics. The trailing button
-    /// disables itself while a check/install session is already running.
-    private var softwareUpdateRow: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(AppStrings.Label.softwareUpdate)
-                Text(AppStrings.Label.softwareUpdateDescription(AppEnvironment.appVersion))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Button(AppStrings.Button.checkNow) {
-                DiagnosticsLog.shared.ui("Settings → Check for Updates pressed")
-                updateController.checkForUpdates()
-            }
-            .disabled(!updateController.canCheckForUpdates)
-        }
-    }
-
     /// On-demand re-check for apps that have been moved or uninstalled. Complements the automatic
     /// once-per-launch scan — useful when an app is removed while the window is already open.
     private var missingAppsRow: some View {
@@ -209,38 +162,6 @@ struct GeneralSettingsView: View {
             AnalyticsService.shared.log(.settingChanged, ["setting": "analytics", "enabled": enabled])
             DiagnosticsLog.shared.log("settings", "Share analytics toggled \(enabled ? "ON" : "OFF")")
         }
-    }
-
-    /// Drill-down row into the Popover Appearance sub-pane. Title/subtitle with the current
-    /// per-layout Popover Size as a trailing summary.
-    private var popoverAppearanceRow: some View {
-        HStack(spacing: 11) {
-            VStack(alignment: .leading, spacing: 1) {
-                Text(AppStrings.Settings.popoverAppearance)
-                Text(AppStrings.Settings.popoverAppearanceSubtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Text(popoverSummary)
-                .font(.system(size: 13))
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-        }
-    }
-
-    /// "Grid · M · List · M" — both independent popover configs at a glance.
-    private var popoverSummary: String {
-        func abbr(_ size: PopoverSizeTier) -> String {
-            switch size {
-            case .small: return "S"
-            case .medium: return "M"
-            case .large: return "L"
-            }
-        }
-        return "Grid · \(abbr(gridPopoverSize))  ·  List · \(abbr(listPopoverSize))"
     }
 
     // MARK: - Missing App Scan

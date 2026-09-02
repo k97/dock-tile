@@ -769,30 +769,6 @@
         }
       }
     },
-    "empty.createFirstTileDescription": {
-      "comment": "Supporting text under the empty-state header",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Group your favourite apps into a tile and pin it to the Dock."
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Group your favourite apps into a tile and pin it to the Dock."
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Group your favorite apps into a tile and pin it to the Dock."
-          }
-        }
-      }
-    },
     "empty.detail": {
       "comment": "Placeholder text in detail view",
       "extractionState": "manual",
@@ -837,30 +813,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No apps configured"
-          }
-        }
-      }
-    },
-    "empty.noItemsAdded": {
-      "comment": "Empty state text in apps table",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No items added yet"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No items added yet"
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No items added yet"
           }
         }
       }
@@ -1033,54 +985,6 @@
         }
       }
     },
-    "kind.application": {
-      "comment": "Kind value for applications",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Application"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Application"
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Application"
-          }
-        }
-      }
-    },
-    "kind.folder": {
-      "comment": "Kind value for folders",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Folder"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Folder"
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Folder"
-          }
-        }
-      }
-    },
     "label.colour": {
       "comment": "Label for colour picker section",
       "extractionState": "manual",
@@ -1197,30 +1101,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "About Icon Weight"
-          }
-        }
-      }
-    },
-    "label.layout": {
-      "comment": "Label for layout picker",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Layout"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Layout"
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Layout"
           }
         }
       }
@@ -1729,30 +1609,6 @@
         }
       }
     },
-    "section.selectedItems": {
-      "comment": "Section header for selected items",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Selected Items"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Selected Items"
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Selected Items"
-          }
-        }
-      }
-    },
     "settings.login.requiresApproval": {
       "comment": "Shown when macOS is holding the login item for user approval",
       "extractionState": "manual",
@@ -1946,73 +1802,49 @@
       }
     },
     "smartAdd.settings.toggleDescription": {
-      "comment": "Description under the Smart Add toggle in General settings",
+      "comment": "General: Smart Add toggle description",
       "extractionState": "manual",
       "localizations": {
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Turn this off to always start with an empty tile."
+            "value": "Learned on your Mac. Never leaves your device."
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Turn this off to always start with an empty tile."
+            "value": "Learned on your Mac. Never leaves your device."
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "When you click +, Dock Tile groups your recent apps into ready-made tiles to pick from. Turn this off to always start with an empty tile."
+            "value": "Learned on your Mac. Never leaves your device."
           }
         }
       }
     },
     "smartAdd.settings.toggleTitle": {
-      "comment": "Title of the Smart Add on/off toggle in General settings",
+      "comment": "General: Smart Add toggle title",
       "extractionState": "manual",
       "localizations": {
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Suggest tiles when I add one"
+            "value": "Suggest tiles from my apps"
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Suggest tiles when I add one"
+            "value": "Suggest tiles from my apps"
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Suggest tiles when I add one"
-          }
-        }
-      }
-    },
-    "smartAdd.subtitle": {
-      "comment": "Header subtitle of the Smart Add suggestion sheet",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pick a tile to start from — you can rename it, restyle it and change the apps next."
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pick a tile to start from — you can rename it, restyle it and change the apps next."
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pick a tile to start from — you can rename it, restyle it and change the apps next."
+            "value": "Suggest tiles from my apps"
           }
         }
       }
@@ -2161,54 +1993,6 @@
         }
       }
     },
-    "table.item": {
-      "comment": "Table column header for item",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Item"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Item"
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Item"
-          }
-        }
-      }
-    },
-    "table.kind": {
-      "comment": "Table column header for kind",
-      "extractionState": "manual",
-      "localizations": {
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kind"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kind"
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kind"
-          }
-        }
-      }
-    },
     "title.deleteTile": {
       "comment": "Alert title for delete confirmation",
       "extractionState": "manual",
@@ -2277,6 +2061,774 @@
           "stringUnit": {
             "state": "translated",
             "value": "Edit current tile before creating another"
+          }
+        }
+      }
+    },
+    "button.addATile": {
+      "comment": "Sidebar + / empty state: opens the Add a Tile dialog",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a Tile…"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a Tile…"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a Tile…"
+          }
+        }
+      }
+    },
+    "sidebar.dockTileSection": {
+      "comment": "Sidebar section holding About",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock Tile"
+          }
+        }
+      }
+    },
+    "settings.addingTiles": {
+      "comment": "General: section holding the Smart Add toggle and the Add a Tile row",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adding Tiles"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adding Tiles"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adding Tiles"
+          }
+        }
+      }
+    },
+    "about.title": {
+      "comment": "About pane title",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        }
+      }
+    },
+    "about.version": {
+      "comment": "About: version line",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
+          }
+        }
+      }
+    },
+    "about.website": {
+      "comment": "About: website row label",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website"
+          }
+        }
+      }
+    },
+    "about.feedbackTitle": {
+      "comment": "About: feedback card title",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found a bug or have an idea?"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found a bug or have an idea?"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found a bug or have an idea?"
+          }
+        }
+      }
+    },
+    "about.feedbackBody": {
+      "comment": "About: feedback card body",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback goes straight to the developer. Diagnostics attach a log of what the app and its tiles did — nothing personal."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback goes straight to the developer. Diagnostics attach a log of what the app and its tiles did — nothing personal."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback goes straight to the developer. Diagnostics attach a log of what the app and its tiles did — nothing personal."
+          }
+        }
+      }
+    },
+    "about.sendFeedback": {
+      "comment": "About: opens the feedback email",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send Feedback…"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send Feedback…"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send Feedback…"
+          }
+        }
+      }
+    },
+    "about.alsoFrom": {
+      "comment": "About: studio section header",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also from Happy Machines"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also from Happy Machines"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also from Happy Machines"
+          }
+        }
+      }
+    },
+    "about.studioTitle": {
+      "comment": "About: studio row title",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made by Happy Machines Company"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made by Happy Machines Company"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made by Happy Machines Company"
+          }
+        }
+      }
+    },
+    "about.studioSubtitle": {
+      "comment": "About: studio row subtitle",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tiny product studio building nifty Mac apps that each fix one thing well."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tiny product studio building nifty Mac apps that each fix one thing well."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tiny product studio building nifty Mac apps that each fix one thing well."
+          }
+        }
+      }
+    },
+    "about.spadesTitle": {
+      "comment": "About: sibling product row title",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spades Audio"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spades Audio"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spades Audio"
+          }
+        }
+      }
+    },
+    "about.spadesSubtitle": {
+      "comment": "About: sibling product subtitle",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per-app volume, EQ and output control for your Mac, from the menu bar."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per-app volume, EQ and output control for your Mac, from the menu bar."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per-app volume, EQ and output control for your Mac, from the menu bar."
+          }
+        }
+      }
+    },
+    "about.learnMore": {
+      "comment": "About: opens spadesaudio.com",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn More…"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn More…"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn More…"
+          }
+        }
+      }
+    },
+    "menu.aboutDockTile": {
+      "comment": "App menu",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Dock Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Dock Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About Dock Tile"
+          }
+        }
+      }
+    },
+    "popover.editing.remove": {
+      "comment": "Context menu / remove badge in the tile editor",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        }
+      }
+    },
+    "section.inThisTile": {
+      "comment": "Tile Detail: apps section header",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In This Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In This Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In This Tile"
+          }
+        }
+      }
+    },
+    "label.editorHint": {
+      "comment": "Tile Detail: apps section caption",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hover to remove · Drag to reorder"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hover to remove · Drag to reorder"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hover to remove · Drag to reorder"
+          }
+        }
+      }
+    },
+    "tooltip.deleteTile": {
+      "comment": "Tile Detail: trash button tooltip",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Tile"
+          }
+        }
+      }
+    },
+    "smartAdd.blankTitle": {
+      "comment": "Add a Tile: blank row title",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a blank tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a blank tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a blank tile"
+          }
+        }
+      }
+    },
+    "smartAdd.blankSubtitle": {
+      "comment": "Add a Tile: blank row subtitle",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name it, pick an icon and add apps yourself."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name it, pick an icon and add apps yourself."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name it, pick an icon and add apps yourself."
+          }
+        }
+      }
+    },
+    "smartAdd.orStartFrom": {
+      "comment": "Add a Tile: rule between blank row and suggestions",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or start from what you use"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or start from what you use"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or start from what you use"
+          }
+        }
+      }
+    },
+    "smartAdd.noSuggestions": {
+      "comment": "Add a Tile: empty suggestions note",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestions yet — Dock Tile learns from the apps you open. You can turn this off in General."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestions yet — Dock Tile learns from the apps you open. You can turn this off in General."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No suggestions yet — Dock Tile learns from the apps you open. You can turn this off in General."
+          }
+        }
+      }
+    },
+    "label.addAppsTooltip": {
+      "comment": "Tooltip on the + Add button above the tile editor's popover preview.",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add apps or folders to this tile"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add apps or folders to this tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add apps or folders to this tile"
+          }
+        }
+      }
+    },
+    "empty.createFirstTileDescription": {
+      "comment": "Zero-tiles description",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group apps and folders behind one Dock icon. Start blank, or from a tile suggested from the apps you use."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group apps and folders behind one Dock icon. Start blank, or from a tile suggested from the apps you use."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group apps and folders behind one Dock icon. Start blank, or from a tile suggested from the apps you use."
+          }
+        }
+      }
+    },
+    "popover.editing.noAppsTitle": {
+      "comment": "Tile editor: empty popover preview, title line.",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No apps yet"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No apps yet"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No apps yet"
+          }
+        }
+      }
+    },
+    "popover.editing.noAppsSubtitle": {
+      "comment": "Tile editor: empty popover preview, subtitle line.",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Add to choose what opens from this tile."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Add to choose what opens from this tile."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Add to choose what opens from this tile."
+          }
+        }
+      }
+    },
+    "about.diagnosticsBody": {
+      "comment": "About: Copy Diagnostics row description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A log of what the app and its tiles did. Attach it to an email when something looks wrong — it contains nothing personal."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A log of what the app and its tiles did. Attach it to an email when something looks wrong — it contains nothing personal."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A log of what the app and its tiles did. Attach it to an email when something looks wrong — it contains nothing personal."
+          }
+        }
+      }
+    },
+    "about.feedbackRowBody": {
+      "comment": "About: Send Feedback row description.",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback goes straight to the developer."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback goes straight to the developer."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback goes straight to the developer."
+          }
+        }
+      }
+    },
+    "about.diagnosticsTitle": {
+      "comment": "About: Copy Diagnostics row label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
+          }
+        }
+      }
+    },
+    "button.copy": {
+      "comment": "Generic Copy button label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
           }
         }
       }

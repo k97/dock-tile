@@ -116,10 +116,11 @@ struct PopoverAppearanceView: View {
             .frame(maxWidth: .infinity)
         }
         .background(NSColorBackgroundView.windowBackground)
-        .navigationTitle(AppStrings.Settings.popoverAppearance)
-        .toolbar {
-            // HIG: window-level actions live in the toolbar. Reset is the secondary (plain bordered)
-            // button; Save is the primary (accent-tinted, prominent) action on the trailing edge.
+        // HIG: window-level actions live in the toolbar. Reset is the secondary (plain bordered)
+        // button; Save is the primary (accent-tinted, prominent) action on the trailing edge. Trails
+        // the title band via PaneTitleBand's own flexible spacer (single `.toolbar {}` call — see
+        // PaneTitleBand in DockTileConfigurationView.swift).
+        .paneTitleBand(AppStrings.Settings.popover) {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button(action: resetToDefaults) {
                     Label(AppStrings.Button.resetToDefaults, systemImage: "arrow.counterclockwise")
@@ -169,103 +170,18 @@ struct PopoverAppearanceView: View {
 
     // MARK: - Live preview hero
 
-    /// Fixed hero height; the real popover sits on the studio-canvas treatment (same backdrop as the
-    /// Customise-Tile icon studio).
-    private let heroHeight: CGFloat = 300
-
-    /// Zoomed out so the panel reads as a floating popover with breathing room. The scale is FIXED
-    /// per layout (derived from the worst-case config), NOT the current selection — so changing
-    /// Spacing / Tile Size visibly spreads or tightens the tiles instead of the panel re-filling the
-    /// width and cancelling the change. `.scaleEffect` preserves `.onHover` hit-testing at the
-    /// visual position, so real mouse hover still lands on the tiles. Capped so it never zooms in.
+    /// The real popover panels embedded in the shared `PopoverPreviewCanvas`, zoomed to a fixed
+    /// worst-case fit so control changes visibly spread/tighten the tiles instead of the panel
+    /// re-filling the width and cancelling the change.
     private var heroPreview: some View {
-        GeometryReader { proxy in
-            let worst = worstCasePanelSize(for: previewLayout)
-            // Fit the worst-case panel with a comfortable margin, then zoom in ~10% so the panel
-            // reads larger on the canvas. `rawFit` (a near-flush fit) clamps the boosted scale so the
-            // extra zoom can never clip the panel against the hero edges.
-            let fit = min((proxy.size.width - 56) / worst.width, (heroHeight - 44) / worst.height)
-            let rawFit = min((proxy.size.width - 8) / worst.width, (heroHeight - 8) / worst.height)
-            let scale = min(rawFit, fit * 1.10, 1.04)
-            ZStack {
-                popoverChrome
-                    .fixedSize()
-                    .scaleEffect(scale, anchor: .center)
-                    // NSPopover-style drop shadow so the panel reads as floating on the canvas.
-                    .shadow(color: .black.opacity(0.28), radius: 22 * scale, y: 10 * scale)
-            }
-            .frame(width: proxy.size.width, height: proxy.size.height)
-        }
-        .frame(height: heroHeight)
-        .frame(maxWidth: .infinity)
-        .background(StudioCanvasBackgroundView().ignoresSafeArea(edges: .top))
-        .animation(.easeInOut(duration: max(0.18, motionDuration)), value: previewSignature)
-    }
-
-    /// Largest panel footprint achievable for `layout` across all size/spacing tiers, computed from
-    /// the same `PopoverMetrics` the real panel uses (grid widest at Large columns, tallest at Small
-    /// columns → most rows). Drives the FIXED preview zoom so it never clips on any selection.
-    private func worstCasePanelSize(for layout: LayoutMode) -> CGSize {
-        let count = PreviewAppCatalog.sampleConfiguration.appItems.count
-        switch layout {
-        case .grid:
-            var maxW: CGFloat = 1, maxH: CGFloat = 1
-            for size in PopoverSizeTier.allCases {
-                let m = PopoverMetrics.grid(popoverSize: size, tileSize: .large, spacing: .spacious, showLabels: true)
-                let cols = max(1, min(m.columns, count))
-                let rows = max(1, Int(ceil(Double(count) / Double(cols))))
-                let w = m.cellWidth * CGFloat(cols) + m.gap * CGFloat(cols - 1) + 32   // gridHorizontalPadding * 2
-                let itemH = m.iconSize + 18 + 4                                         // icon + label line + cell padding
-                let h = 36 + CGFloat(rows) * itemH + CGFloat(rows - 1) * m.gap + 32     // header + grid + top/bottom pad
-                maxW = max(maxW, w); maxH = max(maxH, h)
-            }
-            return CGSize(width: maxW, height: maxH)
-        case .list:
-            let m = PopoverMetrics.list(popoverSize: .large, tileSize: .large, spacing: .spacious)
-            let rowH = max(m.iconSize, m.fontSize) + m.rowVerticalPadding * 2 + 4
-            let h = 33 + CGFloat(count) * rowH + 9 + 42 + 16                            // header + rows + divider + 2 utility + outer pad
-            return CGSize(width: m.width, height: h)
-        }
-    }
-
-    /// macOS-popover corner radius for the preview chrome. NSPopover's exact radius is private and
-    /// larger on Tahoe's Liquid Glass; 14pt (continuous) matches the design spec's popover card and
-    /// the Tahoe rounding. The whole panel is scaled by the hero, so the visible radius scales too.
-    private let popoverCornerRadius: CGFloat = 14
-
-    /// The ACTUAL panel the helper tiles render — `StackPopoverView` / `ListPopoverView` from
-    /// `NativePopoverViews` — so the preview is a true 1:1 of what ships. `.id(previewSignature)`
-    /// re-inits it on any control change (it reads `PopoverSettings.load()` at init). `isPreview`
-    /// keeps it interactive for *hover* while neutralising every action — so the user feels the real
-    /// "Highlight on Hover" with their mouse, and a click never launches an app or opens anything.
-    @ViewBuilder
-    private var realPopoverPanel: some View {
-        Group {
-            if previewLayout == .grid {
-                StackPopoverView(configuration: PreviewAppCatalog.sampleConfiguration,
-                                 onLaunch: {}, showsBackground: false, isPreview: true,
-                                 settingsOverride: activeDraft.wrappedValue)
-            } else {
-                ListPopoverView(configuration: PreviewAppCatalog.sampleConfiguration,
-                                onLaunch: {}, showsBackground: false, isPreview: true,
-                                settingsOverride: activeDraft.wrappedValue)
-            }
-        }
-        .id(previewSignature)
-    }
-
-    /// Reproduces the real popover's *container chrome* around the embedded content: the same
-    /// `.popover` Liquid Glass material (blended within-window so it stays vibrant in-app) clipped to
-    /// the popover's continuous corner radius, with a hairline Liquid-Glass edge. The shadow is added
-    /// by the hero so it can scale with the panel.
-    private var popoverChrome: some View {
-        realPopoverPanel
-            .background(VisualEffectView.popoverSurfaceInWindow)
-            .clipShape(RoundedRectangle(cornerRadius: popoverCornerRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: popoverCornerRadius, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 0.5)
-            )
+        PopoverPreviewCanvas(configuration: PreviewAppCatalog.sampleConfiguration,
+                             layout: previewLayout,
+                             settings: activeDraft.wrappedValue,
+                             fit: .worstCase(height: 300),
+                             signature: previewSignature)
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .animation(.easeInOut(duration: max(0.18, motionDuration)), value: previewSignature)
     }
 
     // MARK: - Controls
@@ -312,9 +228,8 @@ struct PopoverAppearanceView: View {
     private var configureStrip: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(AppStrings.Settings.popoverConfigure.uppercased())
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                Text(AppStrings.Settings.popoverConfigure)
+                    .font(.system(size: 13, weight: .semibold))
                 Text(AppStrings.Settings.popoverConfigureSubtitle)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
@@ -383,9 +298,7 @@ struct PopoverAppearanceView: View {
                     .foregroundStyle(.secondary)
             } else {
                 Toggle("", isOn: showLabels)
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
+                    .tileSwitch()
             }
         }
         .padding(.horizontal, 14)
@@ -425,26 +338,20 @@ struct PopoverAppearanceView: View {
                 .foregroundStyle(.primary)
             Spacer()
             Toggle("", isOn: isOn)
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .controlSize(.small)
+                .tileSwitch()
         }
         .padding(.horizontal, 14)
         .frame(minHeight: 40)
     }
 
     private func sectionHeader(_ text: String) -> some View {
-        Text(text.uppercased())
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 4)
-            .padding(.bottom, 6)
+        Text(text).font(.system(size: 13, weight: .semibold)).padding(.horizontal, 4).padding(.bottom, 6)
     }
 
     private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         VStack(spacing: 0) { content() }
             .background(NSColorBackgroundView.formGroup)
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private var divider: some View {
@@ -559,4 +466,215 @@ enum PreviewAppCatalog {
 
 extension LayoutMode: CaseIterable {
     static var allCases: [LayoutMode] { [.grid, .list] }
+}
+
+// MARK: - Popover preview canvas (shared by Popover settings, Tile Detail, About)
+
+/// The wallpaper-style surface (`underWindowBackground`) with the REAL popover panel floating on it in
+/// NSPopover-like chrome. `.natural` renders 1:1 (Tile Detail's editor); `.worstCase(height:)` zooms to
+/// a fixed fit derived from the largest possible panel (Settings preview), so control changes visibly
+/// spread/tighten instead of re-filling the width.
+struct PopoverPreviewCanvas: View {
+    enum Fit: Equatable { case natural; case worstCase(height: CGFloat) }
+
+    let configuration: DockTileConfiguration
+    let layout: LayoutMode
+    var settings: PopoverSettings? = nil
+    var fit: Fit = .natural
+    var signature: String = ""
+    /// When set, the embedded panel becomes the tile's app editor (Tile Detail). nil in Settings,
+    /// which shows the panel exactly as it ships.
+    var editing: PopoverEditing? = nil
+
+    private let cornerRadius: CGFloat = 14
+
+    /// The `.natural` fit's outer inset. One constant so the fit maths and the padding can't drift.
+    private static let naturalInset: CGFloat = 22
+
+    /// Height the `.natural` container reserves, published from inside its `GeometryReader` (which
+    /// is the only place the real available width is known) and read back for the outer frame.
+    @State private var naturalHeight: CGFloat? = nil
+
+    nonisolated static func fitScale(available: CGSize, worst: CGSize) -> CGFloat {
+        let fit = min((available.width - 56) / worst.width, (available.height - 44) / worst.height)
+        let rawFit = min((available.width - 8) / worst.width, (available.height - 8) / worst.height)
+        return min(rawFit, fit * 1.10, 1.04)
+    }
+
+    var body: some View {
+        Group {
+            switch fit {
+            case .natural:
+                naturalFit
+            case .worstCase(let height):
+                GeometryReader { proxy in
+                    let scale = Self.fitScale(available: proxy.size, worst: Self.worstCasePanelSize(for: layout, appCount: configuration.appItems.count))
+                    chrome
+                        .fixedSize()
+                        .scaleEffect(scale, anchor: .center)
+                        .shadow(color: .black.opacity(0.28), radius: 22 * scale, y: 10 * scale)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                }
+                .frame(height: height)
+            }
+        }
+        .background(StudioCanvasBackgroundView())
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .strokeBorder(Color(nsColor: .separatorColor).opacity(0.6), lineWidth: 0.5))
+    }
+
+    /// The `.natural` fit: the real panel at 1:1 when it fits, scaled DOWN to fit when it doesn't.
+    ///
+    /// `StackPopoverView` pins itself to a fixed `popoverWidth` (columns x cell width), so a tile
+    /// with several apps is WIDER than the fixed-width window's detail column. `.scaleEffect` alone
+    /// does **not** change a view's layout size — scaling without also pinning the frame to the
+    /// scaled size left the column still claiming the panel's full intrinsic width, which stretched
+    /// the enclosing VStack and pushed the section header's controls (layout picker, + Add) off the
+    /// window where they were clipped. So the LAYOUT width/height must be the SCALED size, and the
+    /// width must come from a `GeometryReader` (which always reports the width it was *proposed*,
+    /// and so can never be inflated by its own oversized content). Never scales above 1: a small
+    /// tile still renders exactly 1:1.
+    private var naturalFit: some View {
+        let panelSize = Self.naturalPanelSize(
+            layout: layout,
+            appCount: configuration.appItems.count,
+            settings: settings ?? PopoverSettings.load(layout: layout),
+            isEditing: editing != nil,
+            // Mirrors `ListPopoverView.tileName` — a cleared name draws no title row.
+            hasHeader: !configuration.name.isEmpty,
+            // Mirrors `StackPopoverView.showsMissingCaption` — the editor's "Not installed"
+            // caption makes a grid row taller, and this canvas CLIPS what it frames.
+            includesMissingCaption: editing != nil && layout == .grid
+                && configuration.appItems.contains { AppInstallChecker.resolve($0).status == .missing }
+        )
+        return GeometryReader { proxy in
+            let scale = Self.naturalScale(availableWidth: proxy.size.width, panelWidth: panelSize.width)
+            let height = panelSize.height * scale + Self.naturalInset * 2
+            chrome
+                .fixedSize()
+                .scaleEffect(scale, anchor: .center)
+                .frame(width: proxy.size.width, height: height)
+                .preference(key: NaturalCanvasHeightKey.self, value: height)
+        }
+        .frame(height: naturalHeight ?? (panelSize.height + Self.naturalInset * 2))
+        .onPreferenceChange(NaturalCanvasHeightKey.self) { naturalHeight = $0 }
+        // Drop the cached height when the layout flips: it was measured for the OTHER panel, and the
+        // container would wear that stale height for a frame before the preference re-published.
+        // The `??` fallback above is already computed from the current layout, so nil is correct.
+        .onChange(of: layout) { naturalHeight = nil }
+    }
+
+    /// Scale that fits `panelWidth` (plus the canvas inset on both sides) into `availableWidth`,
+    /// clamped so the panel is never blown UP. A non-positive width (the first layout pass, before
+    /// the GeometryReader has a proposal) falls back to 1:1.
+    nonisolated static func naturalScale(availableWidth: CGFloat, panelWidth: CGFloat) -> CGFloat {
+        let usable = availableWidth - naturalInset * 2
+        guard usable > 0, panelWidth > 0 else { return 1 }
+        return min(1, usable / panelWidth)
+    }
+
+    /// The panel's intrinsic layout size for the ACTUAL settings and app count — the SAME formulas
+    /// the real panels size themselves from (`PopoverPanelLayout`, which is also where
+    /// `StackPopoverView.calculateHeight` and `ListPopoverView`'s paddings read their constants), so
+    /// the canvas cannot undershoot the panel it frames. Guarded by `PopoverPreviewCanvasTests`.
+    nonisolated static func naturalPanelSize(
+        layout: LayoutMode,
+        appCount: Int,
+        settings: PopoverSettings,
+        isEditing: Bool,
+        hasHeader: Bool = true,
+        includesMissingCaption: Bool = false
+    ) -> CGSize {
+        switch layout {
+        case .grid:
+            return PopoverPanelLayout.gridPanelSize(
+                metrics: PopoverMetrics.grid(popoverSize: settings.popoverSize,
+                                             tileSize: settings.tileSize,
+                                             spacing: settings.spacing,
+                                             showLabels: settings.showLabels),
+                appCount: appCount,
+                showLabels: settings.showLabels,
+                includesMissingCaption: includesMissingCaption
+            )
+        case .list:
+            // `.natural` only ever renders with `editing != nil` (see `naturalFit`), so an empty tile
+            // shows `ListPopoverView`'s EDIT-mode empty state — the taller of the two — which is what
+            // `listPanelSize` bills for.
+            return PopoverPanelLayout.listPanelSize(
+                metrics: PopoverMetrics.list(popoverSize: settings.popoverSize,
+                                             tileSize: settings.tileSize,
+                                             spacing: settings.spacing),
+                appCount: appCount,
+                isEditing: isEditing,
+                hasHeader: hasHeader
+            )
+        }
+    }
+
+    @ViewBuilder private var panel: some View {
+        Group {
+            if layout == .grid {
+                StackPopoverView(configuration: configuration, onLaunch: {}, showsBackground: false,
+                                 isPreview: true, settingsOverride: settings, editing: editing)
+            } else {
+                ListPopoverView(configuration: configuration, onLaunch: {}, showsBackground: false,
+                                isPreview: true, settingsOverride: settings, editing: editing)
+            }
+        }
+        .id(signature)
+    }
+
+    private var chrome: some View {
+        panel
+            .background(VisualEffectView.popoverSurfaceInWindow)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.14), lineWidth: 0.5))
+            .shadow(color: .black.opacity(fit == .natural ? 0.22 : 0), radius: 18, y: 8)
+    }
+
+    /// Largest footprint over every tier, at the roomiest Tile Size / Spacing / Labels combination.
+    /// Only used to derive the Settings preview's fixed zoom, so control changes visibly spread and
+    /// tighten instead of re-filling the width.
+    ///
+    /// Goes through `PopoverPanelLayout` like every other size in this file. It used to re-implement
+    /// the geometry with its own literals and a different list-row formula — the exact drift the
+    /// seam exists to prevent, and the reason an empty list panel was once clipped.
+    private static func worstCasePanelSize(for layout: LayoutMode, appCount count: Int) -> CGSize {
+        let apps = max(1, count)
+        switch layout {
+        case .grid:
+            // Column count varies per tier, so the widest/tallest tier isn't the same one — take
+            // the max of both axes across all of them.
+            return PopoverSizeTier.allCases.reduce(CGSize(width: 1, height: 1)) { worst, tier in
+                let size = PopoverPanelLayout.gridPanelSize(
+                    metrics: PopoverMetrics.grid(popoverSize: tier, tileSize: .large,
+                                                 spacing: .spacious, showLabels: true),
+                    appCount: apps,
+                    showLabels: true
+                )
+                return CGSize(width: max(worst.width, size.width),
+                              height: max(worst.height, size.height))
+            }
+        case .list:
+            // The list's width is fixed per tier and its height grows with the rows, so the
+            // roomiest tier IS the worst case. Utility rows included: this preview shows the panel
+            // exactly as it ships (`editing == nil`).
+            return PopoverPanelLayout.listPanelSize(
+                metrics: PopoverMetrics.list(popoverSize: .large, tileSize: .large, spacing: .spacious),
+                appCount: apps,
+                isEditing: false,
+                hasHeader: true
+            )
+        }
+    }
+}
+
+/// Publishes the `.natural` canvas height out of its `GeometryReader` (see `naturalFit`).
+private struct NaturalCanvasHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat? = nil
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
+        value = nextValue() ?? value
+    }
 }
