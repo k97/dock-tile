@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- .",
   "git": {
     "deploymentEnabled": {
       "main": true
