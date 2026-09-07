@@ -33,10 +33,13 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// Track if popover was shown due to app activation (Cmd+Tab)
     private var showedPopoverOnActivation = false
 
-    /// True when we auto-presented the popover on a user-initiated cold launch.
-    /// Used to swallow the reopen event macOS may deliver right after launch, so the
-    /// auto-shown popover isn't immediately toggled back off.
-    private var didAutoShowOnLaunch = false
+    /// When we auto-presented the popover on a user-initiated cold launch: the moment it
+    /// happened. Used to swallow the reopen event macOS may deliver right after launch, so
+    /// the auto-shown popover isn't immediately toggled back off. Must stay a timestamp,
+    /// never a bare flag: macOS does not always deliver that trailing reopen, and an
+    /// unbounded flag then silently ate the user's NEXT Dock click, however much later
+    /// (issue #12 "First Click doesn't trigger").
+    private var autoShowOnLaunchAt: CFAbsoluteTime?
 
     /// Timestamp of the last handled Dock reopen, used to coalesce click bursts.
     private var lastReopenTime: CFAbsoluteTime = 0
@@ -152,7 +155,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         let isBackgroundLaunch = CommandLine.arguments.contains("--background-launch")
         if !isBackgroundLaunch {
             print("🟢 User cold-launch detected — showing popover immediately")
-            didAutoShowOnLaunch = true
+            autoShowOnLaunchAt = CFAbsoluteTimeGetCurrent()
             DiagnosticsLog.shared.log("helper", "Cold-launch (Dock click) — auto-showing popover")
             showPopover(withKeyboardFocus: false)
         }
@@ -197,23 +200,42 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Dock Icon Click Handler
 
+    /// Pure seam (regression-guarded by HelperReopenSwallowTests): a reopen counts as the
+    /// tail of the cold-launch click only when it arrives within `window` of the launch
+    /// auto-show. Anything later is a genuine user click and must act — the unbounded
+    /// boolean this replaces ate the next Dock click whenever macOS skipped the trailing
+    /// reopen (issue #12).
+    nonisolated static func shouldSwallowReopen(
+        now: CFAbsoluteTime,
+        autoShownAt: CFAbsoluteTime,
+        window: CFAbsoluteTime = 1.0
+    ) -> Bool {
+        now - autoShownAt < window
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         print("🖱️ Helper dock icon clicked (hasVisibleWindows: \(flag))")
         DiagnosticsLog.shared.ui("Dock icon clicked (popover \(floatingPanel.isVisible ? "open" : "closed"))")
         showedPopoverOnActivation = false  // This was a dock click, not Cmd+Tab
 
+        let now = CFAbsoluteTimeGetCurrent()
+
         // Swallow the reopen macOS delivers right after a user cold-launch — we already
-        // auto-showed the popover in applicationDidFinishLaunching.
-        if didAutoShowOnLaunch {
-            didAutoShowOnLaunch = false
-            lastReopenTime = CFAbsoluteTimeGetCurrent()
-            print("   Ignoring post-launch reopen (popover already shown)")
-            return true
+        // auto-showed the popover in applicationDidFinishLaunching. Time-bounded: the
+        // trailing reopen arrives within milliseconds of launch, so anything later is a
+        // genuine user click and must act (issue #12).
+        if let autoShownAt = autoShowOnLaunchAt {
+            autoShowOnLaunchAt = nil
+            if Self.shouldSwallowReopen(now: now, autoShownAt: autoShownAt) {
+                lastReopenTime = now
+                print("   Ignoring post-launch reopen (popover already shown)")
+                DiagnosticsLog.shared.log("helper", "Ignoring post-launch reopen (popover already shown)", verbose: true)
+                return true
+            }
         }
 
         // Coalesce rapid bursts (e.g. queued clicks flushed after a cold start) so they
         // collapse into a single toggle instead of flickering the popover.
-        let now = CFAbsoluteTimeGetCurrent()
         if now - lastReopenTime < reopenCoalesceWindow {
             print("   Ignoring reopen within coalesce window")
             return true
