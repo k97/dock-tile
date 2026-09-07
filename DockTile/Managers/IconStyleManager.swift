@@ -599,6 +599,27 @@ extension TintColor {
         }
     }
 
+    /// Style mapping for NON-TILE squircles that carry a raw `Color` tint (the sidebar Settings/
+    /// About badges — `SettingsBadgeIcon`). Mirrors `colors(for:iconType:)` above case-for-case
+    /// (SF-symbol branch only; badges are always symbols) and MUST stay in lock-step with it —
+    /// guarded by `DarkGlyphTreatmentTests.badgeColorsMirrorTileMapping`. Before 2026-09-06 the
+    /// badges pinned `.defaultStyle`, so a Dark icon style restyled every tile icon in the
+    /// sidebar while the Settings badges stayed colourful beside them.
+    static func badgeColors(for style: IconStyle, tint: Color) -> (top: Color, bottom: Color, foreground: Color) {
+        switch style {
+        case .defaultStyle:
+            return (tint.opacity(0.95), tint.opacity(0.7), .white)
+        case .dark:
+            return (Color(hex: TintColor.darkNeutralTopHex),
+                    Color(hex: TintColor.darkNeutralBottomHex),
+                    tint.liftedForDarkGlyph(minLuminance: TintColor.darkGlyphLuminanceFloor))
+        case .clear:
+            return (Color(hex: "#F0F0F2"), Color(hex: "#E0E0E4"), Color(hex: "#6E6E73"))
+        case .tinted:
+            return (Color(hex: "#8E8E93"), Color(hex: "#636366"), .white)
+        }
+    }
+
     /// Returns NSColors appropriate for the given icon style (for IconGenerator)
     ///
     /// Kept in lock-step with `colors(for:iconType:)` — the SwiftUI preview must match the

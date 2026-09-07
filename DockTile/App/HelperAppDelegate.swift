@@ -409,16 +409,27 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // Dev build is "Dock Tile Dev.app", Release is "Dock Tile.app"
         let appNames = ["Dock Tile Dev.app", "Dock Tile.app"]
 
+        // Multiple DockTile-* products can coexist (each git worktree gets its own DerivedData
+        // hash). Enumeration order once handed the gear deep-link a WEEKS-OLD build, whose
+        // launch self-heal "repaired" current-format helpers into its own older format — a
+        // regeneration ping-pong that restarted the Dock on every launch with nothing visibly
+        // changing (found 2026-09-06). Always resolve the NEWEST product by binary mtime.
+        var newest: (url: URL, modified: Date)? = nil
         for dir in contents where dir.lastPathComponent.hasPrefix("DockTile-") {
             let productsDir = dir.appendingPathComponent("Build/Products/Debug")
             for name in appNames {
                 let appPath = productsDir.appendingPathComponent(name)
-                if FileManager.default.fileExists(atPath: appPath.path) {
-                    return appPath
+                guard FileManager.default.fileExists(atPath: appPath.path) else { continue }
+                let binary = appPath.appendingPathComponent("Contents/MacOS")
+                    .appendingPathComponent((name as NSString).deletingPathExtension)
+                let stamp = (try? FileManager.default.attributesOfItem(atPath: binary.path)[.modificationDate] as? Date)
+                    ?? .distantPast
+                if newest.map({ stamp ?? .distantPast > $0.modified }) ?? true {
+                    newest = (appPath, stamp ?? .distantPast)
                 }
             }
         }
-        return nil
+        return newest?.url
     }
 
     @objc private func launchApp(_ sender: NSMenuItem) {

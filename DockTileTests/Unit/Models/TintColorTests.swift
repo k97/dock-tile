@@ -400,3 +400,45 @@ struct DarkGlyphTreatmentTests {
         #expect(abs(s.blueComponent - e.blueComponent) < 0.001)
     }
 }
+
+@Suite("Settings badge style mapping mirrors the tile mapping")
+struct BadgeColorMappingTests {
+
+    /// The seam exists so the sidebar badges restyle in lock-step with the tile icons beside
+    /// them. Grayscale styles carry no tint at all, so badgeColors must return EXACTLY the same
+    /// constants `colors(for:)` gives every tile — compared component-wise through NSColor.
+    @Test("Clear and Tinted are the tile mapping's exact grayscale constants",
+          arguments: [IconStyle.clear, IconStyle.tinted])
+    func grayscaleStylesMatchTileMapping(_ style: IconStyle) throws {
+        let badge = TintColor.badgeColors(for: style, tint: .purple)
+        let tile = TintColor.blue.colors(for: style, iconType: .sfSymbol)
+        for (a, b) in [(badge.top, tile.backgroundTop),
+                       (badge.bottom, tile.backgroundBottom),
+                       (badge.foreground, tile.foreground)] {
+            let na = try #require(NSColor(a).usingColorSpace(.deviceRGB))
+            let nb = try #require(NSColor(b).usingColorSpace(.deviceRGB))
+            #expect(abs(na.redComponent - nb.redComponent) < 0.001)
+            #expect(abs(na.greenComponent - nb.greenComponent) < 0.001)
+            #expect(abs(na.blueComponent - nb.blueComponent) < 0.001)
+        }
+    }
+
+    @Test("Dark style: neutral near-black background, tint lifted to the luminance floor")
+    func darkStyleLiftsTint() throws {
+        let nearBlackTint = Color(hex: "#1A0533") // deep violet — must be lifted, not used raw
+        let badge = TintColor.badgeColors(for: .dark, tint: nearBlackTint)
+        let bgTop = try #require(NSColor(badge.top).usingColorSpace(.deviceRGB))
+        let expectedTop = try #require(NSColor(Color(hex: TintColor.darkNeutralTopHex)).usingColorSpace(.deviceRGB))
+        #expect(abs(bgTop.redComponent - expectedTop.redComponent) < 0.001)
+        let glyph = try #require(NSColor(badge.foreground).usingColorSpace(.deviceRGB))
+        let luminance = 0.299 * glyph.redComponent + 0.587 * glyph.greenComponent + 0.114 * glyph.blueComponent
+        #expect(luminance >= Double(TintColor.darkGlyphLuminanceFloor) - 0.02)
+    }
+
+    @Test("Default style keeps the tint gradient with a white glyph")
+    func defaultStyleKeepsTint() throws {
+        let badge = TintColor.badgeColors(for: .defaultStyle, tint: .blue)
+        let fg = try #require(NSColor(badge.foreground).usingColorSpace(.deviceRGB))
+        #expect(fg.redComponent > 0.99 && fg.greenComponent > 0.99 && fg.blueComponent > 0.99)
+    }
+}

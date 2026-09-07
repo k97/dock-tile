@@ -115,37 +115,48 @@ struct SettingsRow: View {
 }
 
 /// A squircle badge matching the tile icon look (`DockTileIconPreview`): continuous rounded
-/// rect, top-to-bottom gradient, white SF Symbol, subtle inner glass stroke, and the same
-/// Liquid-Glass depth (top sheen + glyph contact shadow) as the tiles. Settings badges always
-/// render in the colourful Default style, so the depth seam is read with `.defaultStyle`.
+/// rect, top-to-bottom gradient, SF Symbol glyph, subtle inner glass stroke, and the same
+/// Liquid-Glass depth (top sheen + glyph contact shadow) as the tiles. Follows the LIVE icon
+/// style the way the tile icons beside it do (`IconStyle.forDisplay` + `TintColor.badgeColors`)
+/// — the badges used to pin `.defaultStyle` and stayed colourful while every tile icon in the
+/// same sidebar restyled dark (2026-09-06 feedback).
 struct SettingsBadgeIcon: View {
     let systemName: String
     let tint: Color
     var size: CGFloat = 24
 
+    @ObservedObject private var iconStyleManager = IconStyleManager.shared
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var style: IconStyle {
+        IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle)
+    }
+
     private var cornerRadius: CGFloat { size * 0.225 }
 
     private var glyphShadow: IconDepthMetrics.GlyphShadow? {
-        IconDepthMetrics.glyphShadow(style: .defaultStyle, iconType: .sfSymbol, nominalSize: size)
+        IconDepthMetrics.glyphShadow(style: style, iconType: .sfSymbol, nominalSize: size)
     }
 
     private var glyphForeground: AnyShapeStyle {
-        if let darken = IconDepthMetrics.glyphBottomDarken(style: .defaultStyle, iconType: .sfSymbol, nominalSize: size) {
+        let base = TintColor.badgeColors(for: style, tint: tint).foreground
+        if let darken = IconDepthMetrics.glyphBottomDarken(style: style, iconType: .sfSymbol, nominalSize: size) {
             return AnyShapeStyle(
-                LinearGradient(colors: [.white, Color.white.darkened(by: darken)], startPoint: .top, endPoint: .bottom)
+                LinearGradient(colors: [base, base.darkened(by: darken)], startPoint: .top, endPoint: .bottom)
             )
         }
-        return AnyShapeStyle(Color.white)
+        return AnyShapeStyle(base)
     }
 
     var body: some View {
-        let sheenAlpha = IconDepthMetrics.surfaceSheenAlpha(style: .defaultStyle, nominalSize: size)
+        let sheenAlpha = IconDepthMetrics.surfaceSheenAlpha(style: style, nominalSize: size)
+        let colors = TintColor.badgeColors(for: style, tint: tint)
 
         return ZStack {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [tint.opacity(0.95), tint.opacity(0.7)],
+                        colors: [colors.top, colors.bottom],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -153,7 +164,7 @@ struct SettingsBadgeIcon: View {
 
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                 .strokeBorder(
-                    Color.white.opacity(IconDepthMetrics.strokeOpacity(style: .defaultStyle)),
+                    Color.white.opacity(IconDepthMetrics.strokeOpacity(style: style)),
                     lineWidth: IconDepthMetrics.strokeLineWidth(nominalSize: size)
                 )
 
