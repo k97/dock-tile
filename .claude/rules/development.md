@@ -50,6 +50,12 @@ The app product name is **"Dock Tile"** (with space), not "DockTile". File syste
 - **View identity**: Add `.id(selectedConfig.id)` when switching configs to force view recreation and avoid stale `@State`
 - **State updates**: Wrap `configManager.markSelectedConfigAsEdited()` in `DispatchQueue.main.async` inside `.onChange` to avoid "Publishing changes from within view updates" warnings
 - **Platform APIs**: Use `@available(macOS 26.0, *)` with separate computed properties and `@ViewBuilder` runtime checks; always provide fallback
+- **`.help` (tooltips) never fires on a `.disabled` control** — `.disabled` turns off
+  hit-testing for the subtree, so a tooltip attached to (or inside) it is silently dead. Gate a
+  control by putting `.disabled` on the control alone, fading the enclosing row with `.opacity`
+  for the visible dimming (`.disabled` barely dims a mini switch), and attaching `.help` to the
+  still-enabled row. Shipped wrong once (Show in App Switcher, 2026-09-02) — the tooltip only
+  appeared after this restructure.
 - **Assets fail SILENTLY — never assume one rendered.** An unknown SF Symbol name
   (`Image(systemName:)`) and a bundled image that fails to decode both draw **nothing**: no warning,
   no placeholder, no crash — the affordance is simply absent. `app.badge.plus` shipped that way in

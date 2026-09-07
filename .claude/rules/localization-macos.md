@@ -31,6 +31,13 @@ Button("Customise") { ... }                   // wrong — never hardcode
 
 Categories: `Button.*`, `Label.*`, `Menu.*`, `Navigation.*`, `Section.*`, `Empty.*`, `Error.*`, `Log.*` (logs are NOT localised).
 
+## Editing .xcstrings outside Xcode
+
+Insert new keys **textually**, anchored on a neighbouring key and matching the file's exact JSON
+style — never load-and-redump the whole file (a `json.dump`, even key-sorted, reordered all ~2,800
+lines into a 1,206-line diff on 2026-09-02; the file's own ordering is not plain-ASCII sort).
+Validate with `json.load` after the insert, and check `git diff --stat` shows only the new lines.
+
 ## Adding New Strings
 
 1. Add key + translations to `Localizable.xcstrings` in Xcode

@@ -224,14 +224,17 @@ not the system symbol set.
 itself; `IconStyleManager.shouldRunDetection(isDeclarative:)` returns `false` there, so no KVO
 observer, no distributed-notification listener, no wake/popover reconcile, and no launch
 self-heal byte-compare are ever registered, and `HelperBundleManager.switchIcon` has no reachable
-caller. `currentStyle` still gets seeded once from `IconStyle.current` at `init` (a Swift
-definite-initialization guarantee, not a test — see [Icon Style
-Detection](icon-style-detection.md)) so it stays a valid **passive** read for the few main-app
-views and helper popovers that key a `.id` off it, but it is never refreshed afterwards on Tahoe:
-if the user changes icon style mid-session, those main-app previews read stale until the next
-relaunch or unrelated state change (helper popovers rebuild fresh on every `show()`, so they are
-unaffected). This is the frozen fallback everything below describes, and it is what still runs,
-unchanged, on macOS 15.
+caller. Views no longer read `currentStyle` for display: they combine the published raw token
+with their own environment via `IconStyle.forDisplay(raw: iconStyleManager.rawStyle,
+colorScheme:)` (the 2026-09-02 appearance-environment rewrite). `rawStyle` is kept live in the
+MAIN APP by a display-only KVO observer (`startDisplayObservation()` — read-only, republishes the
+token, never rewrites an icon, so the detection quarantine is untouched) plus a
+`didBecomeActiveNotification` refresh as sleep recovery; helpers seed it once at launch (their
+popover content rebuilds on every `show()`). `currentStyle` itself is still seeded once at `init`
+(a Swift definite-initialization guarantee — see [Icon Style
+Detection](icon-style-detection.md)) and on Tahoe never changes afterwards — it is
+legacy-detection state, not a display source. This is the frozen fallback everything below
+describes, and it is what still runs, unchanged, on macOS 15.
 
 macOS Tahoe has an independent "Icon and widget style" setting (separate from Light/Dark appearance), read from `AppleIconAppearanceTheme` in UserDefaults.
 
@@ -248,7 +251,7 @@ macOS Tahoe has an independent "Icon and widget style" setting (separate from Li
 - Single `IconStyleManager.shared` is the sole detector per process (KVO-primary, no polling) — pre-macOS-26 only, per above.
 - All 4 variants generated upfront during `installHelper()` (~200-400ms) — legacy branch only; the declarative branch compiles one car instead (see Declarative Pipeline above).
 - Style switching is a file copy + immediate ad-hoc re-seal (the swap breaks the bundle signature otherwise) — legacy only; nothing ever swaps a file in a declarative helper.
-- Reference `iconStyleManager.currentStyle` in view body with `let _ =` to trigger re-renders — this actually tracks live changes only pre-macOS-26; on Tahoe the value is seeded once and won't change mid-session, so this pattern is harmless but inert there.
+- For view re-renders, key off `IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme:)` — live on every macOS version (observer-fed on Tahoe, detection-fed pre-26). Do NOT reference `currentStyle` in view bodies: it is legacy-detection state, frozen after init on Tahoe.
 - **Dark variant rationale + HIG sources**: [docs/dark-mode-icon-rendering.md](../../docs/dark-mode-icon-rendering.md) (darkened-own-tint background + white symbol, and why) — the same colour choices are reused by the declarative path's `dark` background/glyph layers.
 
 ## App Icon Loading

@@ -55,7 +55,7 @@ instead of the 4 variants).
 | Seam | Owns | Guarded by |
 |---|---|---|
 | `IconDepthMetrics` | glyph size ratio + safe-area caps (symbol 0.60 / emoji 0.67 / brand 0.78), stroke, sheens, shadows, `emojiInkFit`, `minDetailSize` gate (22px) | `IconDepthMetricsTests` |
-| `IconDepthMetrics.contentInsetRatio` | Apple's icon-grid margin (25/256 per side, content = 206/256 of canvas) — one number shared by the fallback `.icns` (`fallbackIcon`) and the live preview (`DockTileIconPreview`), applied on **every** macOS version even though only Tahoe helpers actually ship it live (the legacy 4-variant bake stays full-bleed; the preview is deliberately margined everywhere so it doesn't diverge across two geometries) | `IconPreviewGeometryTests` |
+| `IconDepthMetrics.contentInsetRatio` | Apple's icon-grid margin (25/256 per side, content = 206/256 of canvas) — an ARTIFACT fact: consumed by the compiled `.icon`/car geometry and `IconGenerator.generateFallbackIcns` only. UI slots deliberately do NOT apply it — `DockTileIconPreview` fills its frame (2026-09-02 Task 6 reversal; a margined preview made every in-app icon read ~80% of its slot) | `IconPreviewGeometryTests` |
 | `IconWeight` dual mappings | `fontWeight` (SwiftUI) and `nsFontWeight` (AppKit) MUST agree; emoji/brand ignore weight | `IconWeightTests` |
 | `IconStyle.resolve` | style string → style; absent → Default; unrecognised string OR non-string type → nil = don't act, NEVER Default | `IconStyleResolveTests` |
 | `IconGenerator.emojiInkMetrics` + `emojiInkFit` | emoji sized by measured artwork, never font em | `EmojiInkFitRenderTests` |

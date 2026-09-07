@@ -6,7 +6,9 @@ appearance, so on Tahoe there is nothing for this subsystem to detect: `IconStyl
 .shouldRunDetection(isDeclarative:)` returns `false` there, which gates every entry point
 described below (KVO observer, distributed-notification listener, wake/popover reconcile,
 launch self-heal byte-compare, and `switchIcon` itself) to a no-op — none of it registers, none
-of it runs. Everything in this file is now a **frozen quarantined fallback**: it receives no
+of it runs. (The main app's `startDisplayObservation()` KVO observer is NOT part of this
+subsystem: it is display-only — republishes the raw token for `IconStyle.forDisplay`, never
+touches an icon or bundle — and runs on every macOS version, Tahoe included.) Everything in this file is now a **frozen quarantined fallback**: it receives no
 further investment and is scheduled for deletion (not untangling) once the macOS floor rises
 past 26. It is preserved verbatim below because it is exactly what still runs, unchanged, on
 macOS 15. The evidence it rests on, why it was superseded on Tahoe, and every dead end already

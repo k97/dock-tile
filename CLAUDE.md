@@ -57,3 +57,7 @@ After making changes, run tests before committing:
 xcodebuild test -project DockTile.xcodeproj -scheme DockTile -configuration Debug \
   -destination 'platform=macOS' -only-testing:DockTileTests CODE_SIGNING_ALLOWED=NO
 ```
+
+Tests leave the shared Debug product effectively unsigned (SMAppService then fails with -67056).
+Before launching the dev app afterwards: rebuild WITHOUT that flag and check `codesign --verify`
+passes — see [Driving the Dev Build](/.claude/rules/driving-the-dev-build.md).

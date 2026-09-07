@@ -8,6 +8,11 @@ is gone. Reset/Save are `.primaryAction` toolbar items riding in the pane's titl
 architecture.md "Sidebar Selection & Empty State" for the title-band chrome). Per-tile Grid/List
 (which layout a tile uses) still lives on Tile Detail.
 
+- **The hero's frame is FIXED on purpose — do not shrink-to-fit**: trimming the canvas to the
+  current panel's height was shipped and same-day reverted (2026-09-02, revert `3c8c56e`) because
+  the frame resizing on every control change made the preview "jump around" — the fixed
+  `.worstCase(height: 300)` box exists precisely for that stability, and it beats reclaiming the
+  dead space around a small panel.
 - **Hero = `PopoverPreviewCanvas` (critical)**: the live preview is `PopoverPreviewCanvas(fit:
   .worstCase(height: 300))` — the SAME component Tile Detail's tile editor uses with `.natural` and
   an `editing` handler (see architecture.md "Tile editor = the real popover"); here `editing` is
