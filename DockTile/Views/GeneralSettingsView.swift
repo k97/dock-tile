@@ -57,6 +57,7 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .paneScrollEdgeEffect()
         .paneTitleBand(AppStrings.Settings.general)
         .onAppear(perform: refreshLoginState)
         .alert(

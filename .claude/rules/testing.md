@@ -49,6 +49,7 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `AppRelocation.classify` / `.blocksBundleGeneration` / `.requiresRelocation` (translocation → move-to-/Applications decision),
 `FloatingPanel.resolveAnchor` / `DockPrefs.resolve` (popover pin point — magnification `largesize+25` envelope, autohide tilesize fallback, orientation from pref; guarded by `FloatingPanelAnchorTests`),
 `HelperAppDelegate.shouldSwallowReopen` (post-cold-launch reopen swallow is time-bounded ~1s — an unbounded flag silently ate the next Dock click when macOS skipped the trailing reopen, issue #12; guarded by `HelperReopenSwallowTests`),
+`PaneScrollEdgeEffect.opacity(forOffset:)` (title-band scroll scrim ramp — 0 at rest AND during rubber-band overscroll so the chromeless v2 band stays chromeless, 1 past the ramp, linear between; guarded by `PaneScrollEdgeEffectTests`),
 `AppListEditor.removing(_:from:)` / `.moving(_:onto:in:)` (tile editor's remove/reorder reducer, guarded by `AppListEditorTests`),
 `PopoverPreviewCanvas.fitScale` (hero zoom that scales the fixed-size real popover into a `.worstCase` frame, guarded by `PopoverPreviewCanvasTests`),
 `PopoverPanelLayout.gridPanelSize` / `.listPanelSize` (the panel size formulas shared by the real panels and the editor canvas — the list pins only its width, so an undershoot here CLIPS the panel; the grid's `includesMissingCaption` bills the editor-only "Not installed" line),

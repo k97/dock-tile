@@ -115,6 +115,7 @@ struct AboutPaneView: View {
                     }
         }
         .formStyle(.grouped)
+        .paneScrollEdgeEffect()
         .paneTitleBand(AppStrings.About.title)
     }
 

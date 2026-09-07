@@ -446,10 +446,85 @@ private struct PaneTitleBandWithActions<Trailing: ToolbarContent>: ViewModifier 
     }
 }
 
+/// Scroll-edge scrim for the title band (the Apple Notes treatment). The v2 chrome hides the
+/// toolbar surface entirely (`.toolbarBackground(.hidden)` + transparent titlebar), so a pane's
+/// content scrolls straight under the 52pt band and collides with the title/actions. This
+/// modifier pins a material scrim behind the band that fades in as content scrolls beneath —
+/// invisible at rest (the chromeless v2 look is untouched), opaque enough to read against a
+/// dense app grid once scrolled. Applied to the pane's scroll container (ScrollView or Form —
+/// both feed `onScrollGeometryChange`), never to the toolbar: the toolbar background must stay
+/// hidden or every pane gains a permanent surface.
+struct PaneScrollEdgeEffect: ViewModifier {
+    /// The title band the scrim must cover (v2 chrome constant).
+    static let bandHeight: CGFloat = 52
+    /// Gradient tail below the band — the "progressive blur" read; a hard edge looks like a bar.
+    static let fadeTail: CGFloat = 28
+    /// Fraction of the pane width over which the scrim's leading edge dissolves toward the
+    /// sidebar, so the column split doesn't show a hard vertical seam.
+    static let leadingFade: CGFloat = 0.12
+
+    /// Pure seam: scrim opacity for a scroll offset. 0 at rest and during rubber-band
+    /// overscroll (offset ≤ 0), 1 once content has scrolled `ramp` points under the band,
+    /// linear between — continuous, driven by the scroll itself, so no animation is needed
+    /// (and Reduce Motion has nothing to object to). Guarded by PaneScrollEdgeEffectTests.
+    nonisolated static func opacity(forOffset offset: CGFloat, ramp: CGFloat = 24) -> Double {
+        Double(min(max(offset / ramp, 0), 1))
+    }
+
+    @State private var scrollOffset: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.contentOffset.y + geometry.contentInsets.top
+            } action: { _, offset in
+                scrollOffset = offset
+            }
+            .overlay(alignment: .top) {
+                // `.ultraThinMaterial`, deliberately: `.regularMaterial` read as a light grey slab
+                // in dark mode (2026-09-07 feedback "harsh"). The second mask dissolves the scrim's
+                // leading edge so it bleeds toward the sidebar instead of hard-cutting at the
+                // column split — the sidebar itself is a separate vibrant region the scrim must
+                // never paint over.
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .mask {
+                        LinearGradient(
+                            stops: [
+                                .init(color: .black, location: 0),
+                                .init(color: .black, location: Self.bandHeight / (Self.bandHeight + Self.fadeTail)),
+                                .init(color: .clear, location: 1),
+                            ],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    }
+                    .mask {
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: .black, location: Self.leadingFade),
+                            ],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    }
+                    .frame(height: Self.bandHeight + Self.fadeTail)
+                    .ignoresSafeArea(edges: .top)
+                    .opacity(Self.opacity(forOffset: scrollOffset))
+                    .allowsHitTesting(false)
+            }
+    }
+}
+
 extension View {
     /// Page header in the title band: the title text only. Replaces `.navigationTitle`.
     func paneTitleBand(_ title: String) -> some View {
         modifier(PaneTitleBand(title: title))
+    }
+
+    /// Fades a material scrim in behind the title band while content scrolls beneath it.
+    /// Attach to the pane's scroll container (ScrollView / Form), alongside `paneTitleBand`.
+    func paneScrollEdgeEffect() -> some View {
+        modifier(PaneScrollEdgeEffect())
     }
 
     /// Page header with trailing toolbar actions (e.g. a primary-action button/group).

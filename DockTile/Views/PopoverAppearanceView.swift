@@ -120,6 +120,7 @@ struct PopoverAppearanceView: View {
         // button; Save is the primary (accent-tinted, prominent) action on the trailing edge. Trails
         // the title band via PaneTitleBand's own flexible spacer (single `.toolbar {}` call — see
         // PaneTitleBand in DockTileConfigurationView.swift).
+        .paneScrollEdgeEffect()
         .paneTitleBand(AppStrings.Settings.popover) {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button(action: resetToDefaults) {

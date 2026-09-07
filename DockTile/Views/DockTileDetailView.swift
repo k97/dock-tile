@@ -137,6 +137,7 @@ struct DockTileDetailView: View {
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .paneScrollEdgeEffect()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Color(nsColor: .windowBackgroundColor))
         // Delete + the dynamic action button trail the title band via PaneTitleBand's own flexible

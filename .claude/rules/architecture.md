@@ -154,6 +154,15 @@ Popover, Dock Lock) · Dock Tile (About)** — the old accordion `@AppStorage` e
   call then repurposes as the title band. `.toolbar(removing: .title)` alone is not enough without
   this AppKit trio; `WindowAccessor` is an `NSViewRepresentable` bridge run once on `makeNSView`
   and again on every `updateNSView`.
+- **Scroll-edge scrim, not a toolbar background**: the band has no surface at rest (the
+  `.toolbarBackground(.hidden, for: .windowToolbar)` on `DockTileConfigurationView` must stay), so
+  a scrolling pane's content slides straight under the 52pt band and collided with the title —
+  the fix is `paneScrollEdgeEffect()` (beside `PaneTitleBand`), a material scrim + gradient tail
+  overlaid on each pane's scroll container that fades in with scroll offset (the Apple Notes
+  treatment; pure ramp seam `PaneScrollEdgeEffect.opacity(forOffset:)`). Attach it to every
+  title-banded pane's ScrollView/Form alongside `paneTitleBand` — a pane without it regresses to
+  the title-over-content collision. Do NOT fix this by un-hiding the toolbar background: that
+  gives every pane a permanent surface and kills the chromeless-at-rest v2 look.
 - **`ToolbarSpacer(.flexible)` must ride in the SAME `.toolbar {}` call as the title (critical)**:
   `PaneTitleBandWithActions` builds `paneTitleItem` (the title), `ToolbarSpacer(.flexible)`
   (`#available(macOS 26.0, *)`-gated — it's a macOS 26 API, absent on older toolbars), and the

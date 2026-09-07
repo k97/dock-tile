@@ -77,6 +77,7 @@ struct DockLockSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .paneScrollEdgeEffect()
         .paneTitleBand(AppStrings.Settings.dockLock)
         // Re-check trust when the pane appears (covers the case where the user
         // granted access while this window was already open).
