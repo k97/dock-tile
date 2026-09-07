@@ -50,6 +50,10 @@ Controlled via Info.plist variables (`DTEnvironment`, `DTHelperPrefix`, `DTPrefs
 - [Diagnostics](/.claude/rules/diagnostics.md) — Cross-process Copy Diagnostics, dev-verbose/prod-quiet, `ui()` click tracing, `measure()` workflow timing
 - [Website Assets](/.claude/rules/website-assets.md) — Favicon/webp generation, screenshot blur placeholders
 
+## Gates
+
+Run the `stage-gate` skill at each boundary, even when the work looks finished — dispatch a fresh reviewer, do not gate your own work: plan written → `--plan`, code written before push → `--dev`, merged → `--release`.
+
 ## Verification
 
 After making changes, run tests before committing:

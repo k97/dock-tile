@@ -143,8 +143,12 @@ renderer (`IconGenerator`) and the live preview (`DockTileIconPreview`) so they 
   it) and the glass **stroke width** (`strokeLineWidth`, scaled — the preview used a fixed 0.5).
   `IconGenerator.maxSafeRatio` / `.warningThreshold` / `.isAtSafeAreaLimit` now forward to the seam.
   Guarded by `IconDepthMetricsTests`.
-- **Same treatment on non-tile squircles**: `SettingsBadgeIcon` (sidebar Settings rows) reads the
-  seam with `.defaultStyle`; the symbol/emoji picker cells get the subtle glyph contact shadow.
+- **Same treatment on non-tile squircles**: `SettingsBadgeIcon` (sidebar Settings rows) follows
+  the LIVE icon style like the tile icons beside it — `IconStyle.forDisplay` +
+  `TintColor.badgeColors(for:tint:)`, a raw-`Color` mirror of `colors(for:iconType:)` kept in
+  lock-step by `BadgeColorMappingTests` (it pinned `.defaultStyle` until 2026-09-07, leaving
+  colourful badges beside dark-styled tiles); the symbol/emoji picker cells get the subtle glyph
+  contact shadow.
 - **Existing tiles adopt it** on the next helper re-bake (Update-after-edit, or the version-bump
   migration pipeline) — no schema change, fully backward compatible.
 

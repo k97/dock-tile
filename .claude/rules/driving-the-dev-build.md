@@ -53,3 +53,13 @@ launching or handing over a dev build: rebuild **without** that flag and gate on
 ```bash
 codesign --verify "$APP" || echo "UNSIGNED — do not launch"
 ```
+
+## Delete a worktree's DerivedData when you delete the worktree
+
+Every git worktree gets its own `DockTile-<hash>` DerivedData, and a leftover product is live
+ammunition: the popover gear's deep link scans `DockTile-*` for a dev build, and on 2026-09-06 it
+launched a weeks-old worktree product whose self-heal "repaired" current-format helpers into its
+own older format — a regeneration ping-pong that restarted the Dock on every launch. The picker
+now resolves the newest product by binary mtime (`findDockTileInDerivedData`), but stale products
+still waste gigabytes and can be resolved by Launch Services elsewhere. When removing a worktree:
+`rm -rf ~/Library/Developer/Xcode/DerivedData/DockTile-<its hash>`.
