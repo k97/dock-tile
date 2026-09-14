@@ -98,6 +98,43 @@ enum AppRelocation {
         location != .applications
     }
 
+    /// What "Move to Applications" should actually do, decided from plain facts about the source
+    /// bundle and the destination path. Pure, so the regression is unit-testable.
+    ///
+    /// WHY THIS EXISTS: the move used to call `FileManager.moveItem`, which across volumes copies
+    /// the bundle and then deletes the source. From a read-only DMG that delete fails (Cocoa 642)
+    /// with the complete copy already sitting in /Applications, so the `copyItem` fallback then hit
+    /// 516 "already exists" — every DMG user was told the move failed, and every retry trashed the
+    /// good copy first. GA4 for 2.0.1: 11 of 11 attempts failed. The field (LetsMove, Electron)
+    /// never moves: it copies, removes the source best-effort, and ejects a disk image afterwards.
+    enum InstallPlan: Equatable {
+        /// An installed copy already exists and must be kept: activate/launch it and quit. Used
+        /// when it is running (never trash a running app) or when the source is gone (the
+        /// ejected-DMG retry — that copy is the only good one).
+        case handOff
+        /// Copy source → destination. `trashDestinationFirst` replaces a stale, not-running copy;
+        /// `removeSourceAfter` is skipped on a read-only volume (it could only fail);
+        /// `detachSourceImage` ejects the DMG once the old process has exited.
+        case copy(trashDestinationFirst: Bool, removeSourceAfter: Bool, detachSourceImage: Bool)
+    }
+
+    static func installPlan(
+        sourceExists: Bool,
+        sourceOnReadOnlyVolume: Bool,
+        sourceIsDiskImage: Bool,
+        destinationExists: Bool,
+        destinationIsRunning: Bool
+    ) -> InstallPlan {
+        if destinationExists && (destinationIsRunning || !sourceExists) {
+            return .handOff
+        }
+        return .copy(
+            trashDestinationFirst: destinationExists,
+            removeSourceAfter: !sourceOnReadOnlyVolume,
+            detachSourceImage: sourceIsDiskImage
+        )
+    }
+
     private static func normalize(_ path: String) -> String {
         var p = path
         while p.count > 1 && p.hasSuffix("/") { p.removeLast() }
@@ -195,45 +232,91 @@ final class AppRelocationManager: ObservableObject {
 
     // MARK: - Move
 
-    /// Move the (un-translocated) app bundle into /Applications, clear its quarantine so macOS
+    /// Install the (un-translocated) app bundle into /Applications, clear its quarantine so macOS
     /// won't translocate the copy, and relaunch from there. Falls back to revealing the original in
-    /// Finder if the move can't be completed (e.g. /Applications isn't writable without admin).
+    /// Finder if the copy can't be completed (e.g. /Applications isn't writable without admin).
+    ///
+    /// COPY, NEVER `FileManager.moveItem` — see `AppRelocation.installPlan` for why. What happens
+    /// around the copy is that pure seam's decision; this method only executes it.
     private func moveToApplicationsAndRelaunch() {
         AnalyticsService.shared.log(.relocationMoveStarted, [:])
         DiagnosticsLog.shared.log("relocation", "Attempting move to /Applications")
 
-        guard let source = resolveOriginalURL() else {
-            reportMoveFailure("could not resolve original bundle path")
-            revealInFinder(nil)
-            return
-        }
-
         let fm = FileManager.default
+        // Every probe runs on the resolved ORIGINAL bundle, never `Bundle.main.bundleURL`: under
+        // translocation the running URL is itself a read-only shadow mount no disk image owns.
+        let source = resolveOriginalURL()
+        let bundleName = (source ?? Bundle.main.bundleURL).lastPathComponent
         let destination = URL(fileURLWithPath: "/Applications", isDirectory: true)
-            .appendingPathComponent(source.lastPathComponent)
+            .appendingPathComponent(bundleName)
+        let imageMountPoint = source.flatMap { Self.diskImageMountPoint(containing: $0) }
 
-        do {
-            // Replace any stale copy already sitting at the destination.
-            if fm.fileExists(atPath: destination.path) {
-                try fm.trashItem(at: destination, resultingItemURL: nil)
+        let plan = AppRelocation.installPlan(
+            sourceExists: source.map { fm.fileExists(atPath: $0.path) } ?? false,
+            sourceOnReadOnlyVolume: source.map { Self.isOnReadOnlyVolume($0) } ?? false,
+            sourceIsDiskImage: imageMountPoint != nil,
+            destinationExists: fm.fileExists(atPath: destination.path),
+            destinationIsRunning: Self.runningApplication(bundleAt: destination) != nil
+        )
+
+        switch plan {
+        case .handOff:
+            DiagnosticsLog.shared.log("relocation", "Installed copy already at \(destination.path) — handing off")
+            AnalyticsService.shared.log(.relocationMoveSucceeded, ["reason": "handoff"])
+            handOff(to: destination)
+
+        case let .copy(trashDestinationFirst, removeSourceAfter, detachSourceImage):
+            guard let source else {
+                reportMoveFailure("could not resolve original bundle path")
+                revealInFinder(nil)
+                return
             }
             do {
-                try fm.moveItem(at: source, to: destination)
-            } catch {
-                // Cross-volume or permission hiccup on move — retry as copy + best-effort cleanup.
+                // Both can throw when /Applications isn't user-writable; one catch reports either.
+                if trashDestinationFirst {
+                    try fm.trashItem(at: destination, resultingItemURL: nil)
+                }
                 try fm.copyItem(at: source, to: destination)
-                try? fm.removeItem(at: source)
+            } catch {
+                reportMoveFailure(error.localizedDescription)
+                revealInFinder(source)
+                return
             }
-        } catch {
-            reportMoveFailure(error.localizedDescription)
-            revealInFinder(source)
-            return
-        }
 
-        clearQuarantine(at: destination)
-        AnalyticsService.shared.log(.relocationMoveSucceeded, [:])
-        DiagnosticsLog.shared.log("relocation", "Moved to \(destination.path) — relaunching")
-        relaunch(at: destination)
+            clearQuarantine(at: destination)
+            // Best-effort: a complete copy is success whatever happens to the source.
+            if removeSourceAfter { try? fm.removeItem(at: source) }
+            AnalyticsService.shared.log(.relocationMoveSucceeded, ["reason": "copied"])
+            DiagnosticsLog.shared.log("relocation", "Copied to \(destination.path) — relaunching")
+            if detachSourceImage, let imageMountPoint { detachLater(mountPoint: imageMountPoint) }
+            relaunch(at: destination)
+        }
+    }
+
+    /// Switch to the copy already installed at `url`. A running instance is activated — never a
+    /// second `Dock Tile` process (both would watch and write the Dock plist); a not-running one is
+    /// launched with `relaunch(at:)`, whose new-instance flag is what stops Launch Services from
+    /// merely re-activating *this* process (same bundle identifier, different path).
+    private func handOff(to url: URL) {
+        if let running = Self.runningApplication(bundleAt: url) {
+            running.activate()
+            NSApp.terminate(nil)
+        } else {
+            relaunch(at: url)
+        }
+    }
+
+    /// Eject the source disk image once this process is gone. The mount point travels as a
+    /// positional shell argument, never interpolated — DMG mount points contain spaces
+    /// ("/Volumes/Dock Tile …"). Best-effort: if the old process is still alive at 5 s, `detach`
+    /// fails and the image simply stays mounted.
+    private func detachLater(mountPoint: String) {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        task.arguments = ["-c", "sleep 5; /usr/bin/hdiutil detach \"$0\"", mountPoint]
+        task.standardOutput = FileHandle.nullDevice
+        task.standardError = FileHandle.nullDevice
+        try? task.run()
     }
 
     /// The real, on-disk bundle path — un-translocated. Under translocation `Bundle.main.bundleURL`
@@ -295,5 +378,61 @@ final class AppRelocationManager: ObservableObject {
         var translocated: DarwinBoolean = false
         let ok = isTranslocated(url as CFURL, &translocated, nil)
         return ok && translocated.boolValue
+    }
+
+    /// The other running instance of THIS app whose bundle sits at `url`, if any — never the
+    /// current process, even when it runs from that very path.
+    private static func runningApplication(bundleAt url: URL) -> NSRunningApplication? {
+        guard let bundleId = Bundle.main.bundleIdentifier else { return nil }
+        let me = ProcessInfo.processInfo.processIdentifier
+        let target = url.standardizedFileURL.path
+        return NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
+            .first { $0.processIdentifier != me && $0.bundleURL?.standardizedFileURL.path == target }
+    }
+
+    /// Sparkle's check (`SUHost isRunningOnReadOnlyVolume`): the volume's `MNT_RDONLY` flag.
+    private static func isOnReadOnlyVolume(_ url: URL) -> Bool {
+        var stat = statfs()
+        guard statfs(url.path, &stat) == 0 else { return false }
+        return (stat.f_flags & UInt32(MNT_RDONLY)) != 0
+    }
+
+    /// LetsMove's check (`ContainingDiskImageDevice`): the volume's device must be one that
+    /// `hdiutil info` lists as backing a mounted image — so a read-only USB stick is never ejected.
+    /// Returns the mount point to hand to `hdiutil detach`.
+    private static func diskImageMountPoint(containing url: URL) -> String? {
+        var stat = statfs()
+        guard statfs(url.path, &stat) == 0, (stat.f_flags & UInt32(MNT_ROOTFS)) == 0 else { return nil }
+        let device = withUnsafePointer(to: &stat.f_mntfromname) {
+            String(cString: UnsafeRawPointer($0).assumingMemoryBound(to: CChar.self))
+        }
+        let mountPoint = withUnsafePointer(to: &stat.f_mntonname) {
+            String(cString: UnsafeRawPointer($0).assumingMemoryBound(to: CChar.self))
+        }
+        guard diskImageDevices().contains(device) else { return nil }
+        return mountPoint
+    }
+
+    /// Every `dev-entry` under `images[].system-entities[]` in `hdiutil info -plist`.
+    private static func diskImageDevices() -> Set<String> {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
+        task.arguments = ["info", "-plist"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = FileHandle.nullDevice
+        do { try task.run() } catch { return [] }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        task.waitUntilExit()
+
+        guard let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+              let images = plist["images"] as? [[String: Any]] else { return [] }
+        var devices = Set<String>()
+        for image in images {
+            for entity in image["system-entities"] as? [[String: Any]] ?? [] {
+                if let dev = entity["dev-entry"] as? String { devices.insert(dev) }
+            }
+        }
+        return devices
     }
 }

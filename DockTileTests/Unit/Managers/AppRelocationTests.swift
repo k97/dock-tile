@@ -101,3 +101,94 @@ struct AppRelocationDecisionTests {
         #expect(AppRelocation.Location.elsewhere.analyticsValue == "elsewhere")
     }
 }
+
+// MARK: - Install plan (copy, never move)
+//
+// Guards `AppRelocation.installPlan` — the seam's doc comment carries the regression story (every
+// "Move to Applications" from the read-only DMG failed after the copy had already landed). Each
+// case below names the behaviour that would regress if its rule were dropped.
+
+@Suite("AppRelocation.installPlan")
+struct AppRelocationInstallPlanTests {
+
+    @Test("A read-only disk-image source is copied, never removed, and the image is detached after")
+    func readOnlyDiskImageSource() {
+        let plan = AppRelocation.installPlan(
+            sourceExists: true,
+            sourceOnReadOnlyVolume: true,
+            sourceIsDiskImage: true,
+            destinationExists: false,
+            destinationIsRunning: false
+        )
+        #expect(plan == .copy(trashDestinationFirst: false, removeSourceAfter: false, detachSourceImage: true))
+    }
+
+    @Test("A writable Downloads source is copied then removed, with nothing to detach")
+    func writableDownloadsSource() {
+        let plan = AppRelocation.installPlan(
+            sourceExists: true,
+            sourceOnReadOnlyVolume: false,
+            sourceIsDiskImage: false,
+            destinationExists: false,
+            destinationIsRunning: false
+        )
+        #expect(plan == .copy(trashDestinationFirst: false, removeSourceAfter: true, detachSourceImage: false))
+    }
+
+    @Test("A running installed copy is handed off to, never trashed — whatever the source state")
+    func runningDestinationHandsOff() {
+        let fromImage = AppRelocation.installPlan(
+            sourceExists: true,
+            sourceOnReadOnlyVolume: true,
+            sourceIsDiskImage: true,
+            destinationExists: true,
+            destinationIsRunning: true
+        )
+        let fromDownloads = AppRelocation.installPlan(
+            sourceExists: true,
+            sourceOnReadOnlyVolume: false,
+            sourceIsDiskImage: false,
+            destinationExists: true,
+            destinationIsRunning: true
+        )
+        #expect(fromImage == .handOff)
+        #expect(fromDownloads == .handOff)
+    }
+
+    @Test("A missing source with an installed copy present hands off instead of trashing the only good copy")
+    func missingSourceWithDestinationHandsOff() {
+        // The ejected-DMG retry: the original path is gone, /Applications has last attempt's copy.
+        let plan = AppRelocation.installPlan(
+            sourceExists: false,
+            sourceOnReadOnlyVolume: false,
+            sourceIsDiskImage: false,
+            destinationExists: true,
+            destinationIsRunning: false
+        )
+        #expect(plan == .handOff)
+    }
+
+    @Test("A stale, not-running installed copy is trashed before the copy")
+    func staleDestinationTrashedFirst() {
+        let plan = AppRelocation.installPlan(
+            sourceExists: true,
+            sourceOnReadOnlyVolume: false,
+            sourceIsDiskImage: false,
+            destinationExists: true,
+            destinationIsRunning: false
+        )
+        #expect(plan == .copy(trashDestinationFirst: true, removeSourceAfter: true, detachSourceImage: false))
+    }
+
+    @Test("A missing source with nothing installed still plans a copy, so the failure is reported loudly")
+    func missingSourceNoDestinationCopies() {
+        let plan = AppRelocation.installPlan(
+            sourceExists: false,
+            sourceOnReadOnlyVolume: false,
+            sourceIsDiskImage: false,
+            destinationExists: false,
+            destinationIsRunning: false
+        )
+        #expect(plan == .copy(trashDestinationFirst: false, removeSourceAfter: true, detachSourceImage: false))
+    }
+}

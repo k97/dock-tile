@@ -49,10 +49,28 @@ absent symbols degrade to "not translocated".
   DerivedData by design** — nudging them to `/Applications` would break the dev/release data
   separation. Also main-app only (`AppEnvironment.isHelper` guard) and suppressible via
   `UserDefaultsKeys.relocationPromptSuppressed` ("Don't ask again").
-- **The move**: resolves the un-translocated original (`SecTranslocateCreateOriginalPathForURL`),
-  moves it into `/Applications`, clears the quarantine xattr (so the copy isn't re-translocated), and
-  relaunches. Falls back to revealing the bundle in Finder if the move can't complete (e.g.
-  `/Applications` not writable without admin).
+- **The move is a COPY, never `FileManager.moveItem` (critical)**: resolves the un-translocated
+  original (`SecTranslocateCreateOriginalPathForURL`), **copies** it into `/Applications`, clears
+  the quarantine xattr (so the copy isn't re-translocated), removes the source best-effort, ejects
+  a source DMG after the relaunch, and relaunches. `moveItem` across volumes is copy-then-delete-
+  source: from the read-only release DMG the delete failed (Cocoa 642) *after* the copy had landed,
+  the `copyItem` fallback then hit 516 "already exists", the user was told the move failed with a
+  working copy in `/Applications`, and every retry trashed it — GA4 for 2.0.1: **11 of 11 attempts
+  failed**, since the file's first commit. Do not bring `moveItem` back for the same-volume
+  (`~/Downloads`) rename either: one code path, no cross-volume ambiguity; the cost is a transient
+  duplicate, which "a complete copy is success" accepts. What happens around the copy is the pure
+  seam `AppRelocation.installPlan(sourceExists:sourceOnReadOnlyVolume:sourceIsDiskImage:
+  destinationExists:destinationIsRunning:)` (guarded by `AppRelocationTests`): a **running**
+  installed copy is handed off to (activated, then this process quits — never a second instance,
+  both would write the Dock plist); an installed copy with a **missing source** (the ejected-DMG
+  retry) is launched instead of trashed; a stale not-running copy is trashed first, with no version
+  compare (same as LetsMove/Electron); source removal is skipped on a read-only volume; a disk
+  image (`statfs` device matched against `hdiutil info -plist`, so a read-only USB stick is never
+  ejected) is detached by a spawned `sh` after 5 s, the mount point passed as a positional argument
+  because DMG mount points contain spaces. Every probe runs on the resolved original, never
+  `Bundle.main.bundleURL` (under translocation that is itself a read-only mount). Falls back to
+  revealing the bundle in Finder if trash or copy throws (e.g. `/Applications` not writable without
+  admin). Prior art with citations: [docs/app-relocation-prior-art.md](../../docs/app-relocation-prior-art.md).
 
 ## Related: scoped non-fatal keys
 
