@@ -85,11 +85,44 @@ struct TileIconRasterCacheTests {
         #expect(TileIconRasterCache.pixelSize(pointSize: 56, scale: 0) == 56)
     }
 
-    @Test("The appearance token separates every style and both colour schemes")
-    func appearanceTokens() {
-        #expect(TileIconRasterCache.appearanceToken(style: .defaultStyle, isDark: false) == "\(IconStyle.defaultStyle.rawValue)-light")
-        #expect(TileIconRasterCache.appearanceToken(style: .defaultStyle, isDark: true) == "\(IconStyle.defaultStyle.rawValue)-dark")
-        #expect(TileIconRasterCache.appearanceToken(style: .tinted, isDark: true) == "\(IconStyle.tinted.rawValue)-dark")
+    /// THE regression this guard exists for: a HELPER on macOS 26 seeds `IconStyleManager.rawStyle`
+    /// once in `init()` and never refreshes it — Tahoe quarantines legacy detection
+    /// (`shouldRunDetection`) and `refreshRawStyle()` is main-app only. An icon-style change moves
+    /// neither the app bundle's mtime nor the pixel size, so nothing else in the cache key moves.
+    /// A token built from that frozen snapshot therefore froze every bitmap the helper served for
+    /// its whole process life. The token must come from the preference as read AT THIS MOMENT.
+    ///
+    /// Failing value: two equal tokens across a style change (a token computed from a launch-time
+    /// constant), and hence `rasteriseCount == 1` where 2 is required.
+    @Test("The appearance token tracks the live style read, so a style change flushes the cache")
+    func tokenTracksTheLiveStyleRead() {
+        // Exact tokens for the values macOS actually stores in AppleIconAppearanceTheme.
+        #expect(TileIconRasterCache.appearanceToken(rawStyleObject: nil, isDark: false) == "defaultStyle-light")
+        #expect(TileIconRasterCache.appearanceToken(rawStyleObject: "TintedAutomatic", isDark: false) == "tinted-light")
+        #expect(TileIconRasterCache.appearanceToken(rawStyleObject: "ClearDark", isDark: true) == "clear-dark")
+        #expect(TileIconRasterCache.appearanceToken(rawStyleObject: "RegularDark", isDark: false) == "dark-light")
+        // Automatic follows the colour scheme, so the same stored value yields two tokens.
+        #expect(TileIconRasterCache.appearanceToken(rawStyleObject: "RegularAutomatic", isDark: false) == "defaultStyle-light")
+        #expect(TileIconRasterCache.appearanceToken(rawStyleObject: "RegularAutomatic", isDark: true) == "dark-dark")
+        // A present-but-unreadable value is the documented "don't act" case: keep the fallback.
+        #expect(TileIconRasterCache.appearanceToken(rawStyleObject: 42, isDark: false) == "defaultStyle-light")
+
+        // End-to-end through the real cache: ONE process, two popover opens, the preference changed
+        // in between. The second open must rasterise again rather than serve the old appearance.
+        var storedPreference: Any? = nil
+        let cache = TileIconRasterCache { _, _ in self.onePixel() }
+        func openPopover() {
+            _ = cache.image(for: app, pointSize: 56, scale: 2,
+                            appearanceToken: TileIconRasterCache.appearanceToken(
+                                rawStyleObject: storedPreference, isDark: false),
+                            contentStamp: 100)
+        }
+        openPopover()
+        openPopover()
+        #expect(cache.rasteriseCount == 1)   // nothing changed — the cache is doing its job
+        storedPreference = "TintedAutomatic" // System Settings → Icon and widget style → Tinted
+        openPopover()
+        #expect(cache.rasteriseCount == 2)   // the new appearance was rasterised, not served stale
     }
 
     @Test("A missing path stamps as zero")

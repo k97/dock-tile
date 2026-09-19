@@ -145,8 +145,37 @@ final class TileIconRasterCache {
     }
 
     /// A rasterised bitmap bakes in Light/Dark and the Tahoe icon style, so both are in the token.
-    nonisolated static func appearanceToken(style: IconStyle, isDark: Bool) -> String {
+    ///
+    /// `private` ON PURPOSE (critical): a token is only ever correct if its style half came from a
+    /// LIVE read of `AppleIconAppearanceTheme`. A HELPER on macOS 26 seeds `IconStyleManager
+    /// .rawStyle` once in `init()` and never refreshes it — detection is quarantined on Tahoe
+    /// (`shouldRunDetection`) and `refreshRawStyle()` is main-app only — and an icon-style change
+    /// moves neither the app bundle's mtime nor the requested pixel size, so nothing else in the
+    /// cache key moves either. Feeding that frozen value in here made the helper serve bitmaps in
+    /// the launch-time appearance for its entire process lifetime. Keeping this overload private
+    /// means a call site cannot reach it with a stale snapshot: the only ways in are
+    /// `appearanceToken(rawStyleObject:isDark:)` and `liveAppearanceToken(isDark:)`.
+    private nonisolated static func appearanceToken(style: IconStyle, isDark: Bool) -> String {
         "\(style.rawValue)-\(isDark ? "dark" : "light")"
+    }
+
+    /// Resolve the token from the UNTYPED `AppleIconAppearanceTheme` object as just read. Pure —
+    /// this is the seam `TileIconRasterCacheTests.tokenTracksTheLiveStyleRead` drives with values
+    /// it supplies, so a token that ignores the read (the frozen-at-launch regression) fails.
+    nonisolated static func appearanceToken(rawStyleObject: Any?, isDark: Bool) -> String {
+        appearanceToken(
+            style: IconStyle.forDisplay(raw: IconStyleManager.token(from: rawStyleObject),
+                                        colorScheme: isDark ? .dark : .light,
+                                        fallback: .defaultStyle),
+            isDark: isDark)
+    }
+
+    /// The token for a popover being built RIGHT NOW: reads the preference on every call. The
+    /// popover content is rebuilt on every `show()`, so this re-reads per open — a
+    /// `CFPreferencesCopyAppValue` against an in-process cache, orders of magnitude cheaper than the
+    /// per-icon synchronous IconServices XPC the cells paid before this cache existed.
+    nonisolated static func liveAppearanceToken(isDark: Bool) -> String {
+        appearanceToken(rawStyleObject: IconStyle.rawPreferencesObject, isDark: isDark)
     }
 
     nonisolated static func itemKey(for item: AppItem) -> String {

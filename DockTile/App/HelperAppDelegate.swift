@@ -137,9 +137,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
                 ? PopoverMetrics.listIconSize(settings.tileSize)
                 : PopoverMetrics.tileIconSize(settings.tileSize)
             let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-            let style = IconStyle.forDisplay(raw: IconStyleManager.shared.rawStyle,
-                                             colorScheme: isDark ? .dark : .light, fallback: .defaultStyle)
-            let token = TileIconRasterCache.appearanceToken(style: style, isDark: isDark)
+            let token = TileIconRasterCache.liveAppearanceToken(isDark: isDark)
             let scales = Array(Set(NSScreen.screens.map(\.backingScaleFactor))).sorted()
             Task { @MainActor in
                 await TileIconRasterCache.shared.prewarm(items: config.appItems, pointSize: pointSize,

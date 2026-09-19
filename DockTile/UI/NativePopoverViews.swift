@@ -735,9 +735,7 @@ struct StackAppItem: View {
                 .foregroundStyle(.secondary)
         } else if let cgImage = TileIconRasterCache.shared.image(
             for: app, pointSize: iconSize, scale: displayScale,
-            appearanceToken: TileIconRasterCache.appearanceToken(
-                style: IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle),
-                isDark: colorScheme == .dark),
+            appearanceToken: TileIconRasterCache.liveAppearanceToken(isDark: colorScheme == .dark),
             contentStamp: TileIconRasterCache.contentStamp(for: app, resolvedPath: resolvedPath)
         ) {
             // A plain bitmap, NOT the IconServices-backed NSImage — see TileIconRasterCache.
@@ -1057,9 +1055,7 @@ struct ListAppRow: View {
                 .foregroundStyle(.secondary)
         } else if let cgImage = TileIconRasterCache.shared.image(
             for: app, pointSize: metrics.iconSize, scale: displayScale,
-            appearanceToken: TileIconRasterCache.appearanceToken(
-                style: IconStyle.forDisplay(raw: iconStyleManager.rawStyle, colorScheme: colorScheme, fallback: .defaultStyle),
-                isDark: colorScheme == .dark),
+            appearanceToken: TileIconRasterCache.liveAppearanceToken(isDark: colorScheme == .dark),
             contentStamp: TileIconRasterCache.contentStamp(for: app, resolvedPath: resolvedPath)
         ) {
             // A plain bitmap, NOT the IconServices-backed NSImage — see TileIconRasterCache.

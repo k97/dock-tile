@@ -272,10 +272,14 @@ final class IconStyleManager: ObservableObject {
         // the popover-show reconcile), so this value is never refreshed again for the life of the
         // process. That's sufficient: popover views key third-party app icon views on
         // `IconStyle.forDisplay(rawStyle, colorScheme)` only as a re-render TRIGGER
-        // (`.id("\(app.id)-\(style)")`) — the actual pixels come from
-        // `AppIconLoader`/`NSWorkspace.icon(forFile:)`, re-resolved on every
-        // call, and the popover content is rebuilt on every `show()`, so what's drawn stays
-        // current even though `currentStyle` itself doesn't change mid-process.
+        // (`.id("\(app.id)-\(style)")`), and the popover content is rebuilt on every `show()`, so
+        // what's drawn stays current even though `currentStyle` itself doesn't change mid-process.
+        //
+        // The PIXELS must not be keyed off this value (critical): they now come from
+        // `TileIconRasterCache`, which caches for the process lifetime, so a token built from this
+        // frozen snapshot froze every bitmap a helper served. That is why the cache takes its
+        // appearance token from `TileIconRasterCache.liveAppearanceToken(isDark:)` — a fresh
+        // preference read per popover build — and never from `rawStyle`.
         currentStyle = IconStyle.current
         rawStyle = Self.token(from: IconStyle.rawPreferencesObject)
         print("[IconStyleManager] Initialized with style: \(currentStyle.rawValue)")
