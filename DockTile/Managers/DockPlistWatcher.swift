@@ -139,3 +139,22 @@ final class Debouncer {
         workItem = nil
     }
 }
+
+// MARK: - SaveDebounce
+
+/// The wait half of a `.task(id:)` debounce. `try? await Task.sleep` cannot be used for this: it
+/// swallows `CancellationError`, so a debounce superseded by a newer edit falls straight through to
+/// its save — every keystroke, stepper tick and colour-drag tick then writes the whole config.
+enum SaveDebounce {
+    /// Sleeps for `nanoseconds`. Returns `false` when the task was cancelled while waiting — the
+    /// caller must NOT save from the debounce in that case: either a newer edit owns the save, or
+    /// the view is going away and its `onDisappear` flush owns it.
+    static func waitedFullInterval(nanoseconds: UInt64) async -> Bool {
+        do {
+            try await Task.sleep(nanoseconds: nanoseconds)
+            return true
+        } catch {
+            return false
+        }
+    }
+}

@@ -20,6 +20,10 @@ struct CustomiseTileView: View {
     @State private var customColor: Color = .blue
     @State private var searchText: String = ""
     @State private var showWeightInfo: Bool = false
+    /// Monotonic edit counter — the `.task(id:)` identity for the debounced save (same pattern as
+    /// DockTileDetailView), so each edit CANCELS the previous pending save.
+    @State private var saveGeneration: Int = 0
+    @State private var hasPendingSave = false
 
     init(config: DockTileConfiguration, onBack: @escaping () -> Void) {
         self.config = config
@@ -62,11 +66,21 @@ struct CustomiseTileView: View {
 
             // Only save if the config actually changed (prevent infinite loop)
             if oldValue.id == newValue.id {
-                Task {
-                    // Wait 300ms before saving (debounce)
-                    try? await Task.sleep(nanoseconds: 300_000_000)
-                    configManager.updateConfiguration(newValue)
-                }
+                hasPendingSave = true
+                saveGeneration += 1
+            }
+        }
+        .task(id: saveGeneration) {
+            guard saveGeneration > 0 else { return }
+            guard await SaveDebounce.waitedFullInterval(nanoseconds: 300_000_000) else { return }
+            configManager.updateConfiguration(editedConfig)
+            hasPendingSave = false
+        }
+        .onDisappear {
+            // Back within the debounce window cancels the task above; flush so the edit survives.
+            if hasPendingSave {
+                configManager.updateConfiguration(editedConfig)
+                hasPendingSave = false
             }
         }
         // Per-control diagnostics. Colour and size change continuously (colour-panel drag /
