@@ -718,7 +718,6 @@ struct AppItemTests {
         #expect(!item.id.uuidString.isEmpty)
         #expect(item.bundleIdentifier == "com.test.app")
         #expect(item.name == "Test App")
-        #expect(item.iconData == nil)
         #expect(item.isFolder == false)
         #expect(item.folderPath == nil)
     }
@@ -741,7 +740,6 @@ struct AppItemTests {
         let original = AppItem(
             bundleIdentifier: "com.test.app",
             name: "Test App",
-            iconData: "test".data(using: .utf8),
             isFolder: true,
             folderPath: "/test/path"
         )
@@ -755,7 +753,6 @@ struct AppItemTests {
         #expect(decoded.id == original.id)
         #expect(decoded.bundleIdentifier == original.bundleIdentifier)
         #expect(decoded.name == original.name)
-        #expect(decoded.iconData == original.iconData)
         #expect(decoded.isFolder == original.isFolder)
         #expect(decoded.folderPath == original.folderPath)
     }

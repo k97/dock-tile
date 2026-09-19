@@ -289,12 +289,11 @@ opacity**, hiding the "app is gone" state. Detection now flags those apps instea
   so the tile and its Dock popover kept drawing the survivor's icon and Settings → Scan reported
   all-clear. It also self-perpetuated: `scanForMissingApps` writes `resolvedPath` back into
   `lastKnownPath`, so an unverified match poisons the item into confirming itself forever. Guarded by
-  `AppInstallEvidenceTests` + `AppInstallCheckerResolveTests`. A
-  cached `iconData` is **not** an install signal — it's DockTile's own snapshot. (An earlier
-  `.unknown` case exempted pre-v8 entries that had a cached icon but no path; since *every* legacy
-  entry fits that shape, any app uninstalled before upgrading was permanently un-flagged and kept
-  its stale icon. Removed — detection is non-destructive, so flag it; a rare transient miss
-  self-heals next scan.)
+  `AppInstallEvidenceTests` + `AppInstallCheckerResolveTests`.
+  Tiles no longer store an icon snapshot at all (`AppItem.iconData` was removed 2026-09: it put
+  every app's whole `.icns` into the config — 10 MB release configs, ~100 ms saves — for a fallback
+  the missing-app placeholder already superseded). Old configs carrying the key still load; the
+  blob is dropped on their next save.
 - **Sweep**: `ConfigurationManager.scanForMissingApps()` runs **once per session** on window launch
   (after migration), throttled like `lastMigratedAppVersion`. Cheap — LS lookups + `stat()`, no
   icon rasterisation. **Main-app only** (`AppEnvironment.isHelper` guard), heals paths, publishes

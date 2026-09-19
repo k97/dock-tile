@@ -15,7 +15,8 @@ enum AppIconLoader {
     /// Load the appropriate icon for an AppItem.
     /// - Resolves through `NSWorkspace` so the icon matches what the Dock / Finder / Mission
     ///   Control show — including macOS Tahoe's system-applied dark / clear / tinted treatment.
-    /// - Falls back to common paths, then stored icon data.
+    /// - Falls back to the last-known path, then common paths. There is no stored-icon fallback:
+    ///   an app that resolves nowhere is "missing" and the UI draws a placeholder instead.
     static func icon(for item: AppItem) -> NSImage? {
         // For folders, get icon from folder path
         if item.isFolder, let folderPath = item.folderPath {
@@ -29,7 +30,7 @@ enum AppIconLoader {
 
         // The app still exists at its last-known path even though Launch Services no longer
         // resolves the bundle ID (app moved, or LS not yet re-registered after an update). Load
-        // the live icon from disk rather than falling through to the stale cached `iconData`.
+        // the live icon from disk rather than falling through to a placeholder.
         if let lastKnownPath = item.lastKnownPath,
            FileManager.default.fileExists(atPath: lastKnownPath) {
             return iconFromAppURL(URL(fileURLWithPath: lastKnownPath))
@@ -40,12 +41,6 @@ enum AppIconLoader {
             if FileManager.default.fileExists(atPath: path) {
                 return iconFromAppURL(URL(fileURLWithPath: path))
             }
-        }
-
-        // Fallback to stored icon data
-        if let iconData = item.iconData,
-           let nsImage = NSImage(data: iconData) {
-            return nsImage
         }
 
         return nil
@@ -209,7 +204,8 @@ enum AppInstallChecker {
     /// An item is `installed` when Launch Services resolves its bundle ID OR an app bundle exists
     /// on disk (last-known path or a common install dir); otherwise it is `missing`.
     ///
-    /// A cached `iconData` does NOT count as an installation signal — it's DockTile's own snapshot,
+    /// DockTile's own cached snapshot of an icon would NOT count as an installation signal (and no
+    /// such snapshot is stored any more — see AppItem) — only the live system does,
     /// not evidence the app is on disk. An earlier version treated "no live bundle + no path + has
     /// cached icon" as an `unknown` legacy-safety case and left it unflagged. But every pre-v8
     /// entry (added before `lastKnownPath` existed) carries a cached icon and no path, so any app

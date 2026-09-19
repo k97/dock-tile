@@ -559,4 +559,4 @@ because its deletion was declined — remove it so Launch Services cannot resolv
 
 | Idea | Baseline → Result | Verdict | Why |
 |---|---|---|---|
-| _(none yet)_ | | | |
+| Remove `AppItem.iconData` (icon blobs out of the config) | dev config 130,754,674 → 29,570 bytes; save-block worst 464.8 ms (1 block > 250 ms, 4 > 100 ms) → 63.7 ms (0 blocks > 100 ms) for one Accessibility name edit; main-app footprint at launch 161 MB / peak 579 MB → 62 MB / peak 268 MB; helper footprint right after relaunch 343 MB / peak 558 MB → 55 MB / peak 265 MB | kept | the blob had no reachable display path — the missing-app placeholder already superseded the fallback it fed |
