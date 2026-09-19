@@ -191,6 +191,13 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         }
     }
 
+    /// Whether AppKit's popover appearance animation runs. Reduce Motion means NO motion, not a
+    /// shorter one; the app's Animation tier "None" means the same. Guarded by
+    /// FloatingPanelAnimationTests.
+    nonisolated static func shouldAnimate(tier: PopoverAnimationTier, reduceMotion: Bool) -> Bool {
+        !reduceMotion && tier != .none
+    }
+
     // MARK: - Popover Management
 
     private func createPopover() -> NSPopover {
@@ -198,7 +205,10 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
 
         // Appearance configuration
         popover.behavior = .transient  // Closes when clicking outside
-        popover.animates = true
+        popover.animates = Self.shouldAnimate(
+            tier: PopoverSettings.load(layout: configuration?.layoutMode ?? .grid).animation,
+            reduceMotion: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        )
         popover.delegate = self
 
         // Set content view with configuration
@@ -366,17 +376,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         state = .hiding
         lastHiddenAt = CFAbsoluteTimeGetCurrent()
 
-        // Remove notification observer first
-        if let observer = dismissObserver {
-            NotificationCenter.default.removeObserver(observer)
-            dismissObserver = nil
-        }
-
-        // Remove click outside monitor
-        if let monitor = clickOutsideMonitor {
-            NSEvent.removeMonitor(monitor)
-            clickOutsideMonitor = nil
-        }
+        removeEventMonitors()
 
         // Close popover (delegate will handle final cleanup and reset state to .hidden)
         popover?.close()
@@ -384,18 +384,23 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
 
     // MARK: - Cleanup
 
-    private func cleanupPopover() {
-        // Remove notification observer
+    /// Idempotent. Called from EVERY path that ends a presentation — `hide()`, `cleanupPopover()`
+    /// and `popoverDidClose` — because NSPopover's own transient close never goes through `hide()`,
+    /// and a global monitor left installed wakes this process on every click anywhere on the Mac.
+    private func removeEventMonitors() {
         if let observer = dismissObserver {
             NotificationCenter.default.removeObserver(observer)
             dismissObserver = nil
         }
-
-        // Remove click outside monitor
         if let monitor = clickOutsideMonitor {
             NSEvent.removeMonitor(monitor)
             clickOutsideMonitor = nil
+            DiagnosticsLog.shared.log("helper", "Click-outside monitor removed", verbose: true)
         }
+    }
+
+    private func cleanupPopover() {
+        removeEventMonitors()
 
         // Release popover resources
         popover?.close()
@@ -423,6 +428,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             MainActor.assumeIsolated {
+                self.removeEventMonitors()
                 // Reset state here so it also covers transient self-dismissals
                 // (click-outside) that never go through hide().
                 self.state = .hidden
