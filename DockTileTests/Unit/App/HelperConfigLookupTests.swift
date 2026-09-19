@@ -36,6 +36,23 @@ struct HelperConfigLookupTests {
         #expect(HelperAppDelegate.showInAppSwitcher(inConfigAt: missing, bundleId: "com.docktile.dev.PROBE") == false)
     }
 
+    /// The seam above is always handed a URL, so no test of it can fail for the regression the task
+    /// actually exists to prevent: a literal `com.docktile.configs.json` at the CALL SITE
+    /// (`HelperAppDelegate.applicationWillFinishLaunching`), which made every dev helper read the
+    /// release config and come up Ghost. This guards the value that call site passes.
+    ///
+    /// Failing value: `preferencesURL` resolving to the release filename in a Debug build — exactly
+    /// the shipped bug — or to anything outside `~/Library/Preferences`.
+    @Test("The config path comes from the environment, so a dev build never reads the release file")
+    func preferencesURLCarriesTheEnvironmentFilename() {
+        let url = AppEnvironment.preferencesURL
+        let expected = AppEnvironment.isRelease ? "com.docktile.configs.json" : "com.docktile.dev.configs.json"
+        #expect(url.lastPathComponent == expected)
+        #expect(url.path.hasSuffix("Library/Preferences/\(expected)"))
+        // Tests run under the dev app, so the dev/release split must be live here, not theoretical.
+        #expect(AppEnvironment.isRelease == false)
+    }
+
     @Test("An unreadable or wrongly-shaped config file defaults to Ghost mode")
     func undecodableFileDefaultsToGhost() throws {
         let dir = FileManager.default.temporaryDirectory

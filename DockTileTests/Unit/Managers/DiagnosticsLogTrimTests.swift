@@ -20,10 +20,15 @@ struct DiagnosticsLogTrimTests {
         #expect(DiagnosticsLog.singleLine("plain") == "plain")
     }
 
-    @Test("Lines older than the cutoff are dropped, newer ones kept, order preserved")
+    /// The boundary line is the point of this fixture. With only 500/1500/2000 against a cutoff of
+    /// 1000, flipping the implementation's `date >= cutoff` to `date > cutoff` still passed — the
+    /// test could not fail against the off-by-one it exists to catch. A line dated exactly at the
+    /// cutoff is kept, so `>` drops it and this test fails.
+    @Test("Lines older than the cutoff are dropped, the cutoff itself is kept, order preserved")
     func trimsByDate() {
-        let content = "500 [main] old\n1500 [main] new-a\n2000 [main] new-b\n"
-        #expect(DiagnosticsLog.trimmed(content, cutoff: cutoff, parse: parse) == "1500 [main] new-a\n2000 [main] new-b\n")
+        let content = "500 [main] old\n1000 [main] boundary\n1500 [main] new-a\n2000 [main] new-b\n"
+        #expect(DiagnosticsLog.trimmed(content, cutoff: cutoff, parse: parse)
+                == "1000 [main] boundary\n1500 [main] new-a\n2000 [main] new-b\n")
     }
 
     @Test("An undated line shares the fate of the dated line before it; leading orphans are dropped")
