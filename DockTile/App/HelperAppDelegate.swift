@@ -487,35 +487,19 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// Read showInAppSwitcher directly from disk (for early initialization)
     /// This is used before ConfigurationManager is created
     private func readShowInAppSwitcherFromDisk() -> Bool {
-        let preferencesDir = FileManager.default.urls(
-            for: .libraryDirectory,
-            in: .userDomainMask
-        )[0].appendingPathComponent("Preferences")
+        // `AppEnvironment.preferencesURL`, never a literal filename: a hardcoded release name made
+        // every DEV helper read the wrong file and fall back to Ghost mode.
+        Self.showInAppSwitcher(inConfigAt: AppEnvironment.preferencesURL, bundleId: currentBundleId)
+    }
 
-        let storageURL = preferencesDir.appendingPathComponent("com.docktile.configs.json")
-
-        guard FileManager.default.fileExists(atPath: storageURL.path),
-              let data = try? Data(contentsOf: storageURL) else {
-            print("   No config file found, defaulting to hidden")
-            return false
-        }
-
-        // Decode configurations and find ours by bundle ID
+    /// Pure lookup seam (guarded by HelperConfigLookupTests). Missing file, undecodable file or an
+    /// unknown bundle id all mean Ghost mode.
+    nonisolated static func showInAppSwitcher(inConfigAt url: URL, bundleId: String) -> Bool {
+        guard let data = try? Data(contentsOf: url) else { return false }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-
-        guard let configs = try? decoder.decode([DockTileConfiguration].self, from: data) else {
-            print("   Failed to decode configs, defaulting to hidden")
-            return false
-        }
-
-        if let config = configs.first(where: { $0.bundleIdentifier == currentBundleId }) {
-            print("   Found config '\(config.name)': showInAppSwitcher = \(config.showInAppSwitcher)")
-            return config.showInAppSwitcher
-        }
-
-        print("   Config not found for \(currentBundleId), defaulting to hidden")
-        return false
+        guard let configs = try? decoder.decode([DockTileConfiguration].self, from: data) else { return false }
+        return configs.first { $0.bundleIdentifier == bundleId }?.showInAppSwitcher ?? false
     }
 
     // MARK: - Icon Style Observation (Dynamic Icon Switching)
