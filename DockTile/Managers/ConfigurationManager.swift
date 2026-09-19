@@ -241,6 +241,30 @@ final class ConfigurationManager: ObservableObject {
         !hasSelection || selectedEdited
     }
 
+    /// Strip visibility bookkeeping out of an editor's snapshot before it is saved.
+    ///
+    /// **Visibility ownership (critical invariant, architecture.md)**: `isVisibleInDock` and
+    /// `lastDockIndex` are written ONLY by `DockTileDetailView.performDockAction()`, after the Dock
+    /// add/remove actually completed. An editor that saves its whole snapshot re-asserts whatever
+    /// was stored when the editor opened, so a change made meanwhile — the live `DockPlistWatcher`
+    /// firing `syncDockVisibility()` because the user dragged the tile out of the Dock — is
+    /// overwritten, leaving the config claiming "visible" with nothing pinned. That desync has
+    /// shipped once before and does not self-heal until the next launch reconcile.
+    ///
+    /// Both editors (Tile Detail and Customise) route their saves through here so the rule has ONE
+    /// implementation. `stored == nil` (unknown id) returns the snapshot untouched — `updateConfiguration`
+    /// no-ops on an unknown id anyway. Guarded by `VisibilityOwnershipTests`.
+    nonisolated static func preservingStoredVisibility(
+        _ edited: DockTileConfiguration,
+        stored: DockTileConfiguration?
+    ) -> DockTileConfiguration {
+        guard let stored else { return edited }
+        var result = edited
+        result.isVisibleInDock = stored.isVisibleInDock
+        result.lastDockIndex = stored.lastDockIndex
+        return result
+    }
+
     /// Live value of the + gate for the sidebar, derived from the current selection + edit flag.
     var canCreateNewTile: Bool {
         Self.canCreateNewTile(hasSelection: selectedConfigId != nil,

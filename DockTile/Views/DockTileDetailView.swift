@@ -521,12 +521,8 @@ struct DockTileDetailView: View {
     /// NOT commit the Show Tile toggle's transient isVisibleInDock, or a hide whose un-pin never
     /// runs leaves a permanent "hidden in config but still pinned" desync. Preserve the stored value.
     private func persistEdits() {
-        var toSave = editedConfig
-        if let stored = configManager.configuration(for: editedConfig.id) {
-            toSave.isVisibleInDock = stored.isVisibleInDock
-            toSave.lastDockIndex = stored.lastDockIndex
-        }
-        configManager.updateConfiguration(toSave)
+        configManager.updateConfiguration(ConfigurationManager.preservingStoredVisibility(
+            editedConfig, stored: configManager.configuration(for: editedConfig.id)))
         hasPendingSave = false
     }
 
@@ -581,8 +577,16 @@ struct DockTileDetailView: View {
                     // User wants tile in Dock - install/update (full helper re-render)
                     // Clear lastDockIndex after successful install (position is now live in Dock)
                     let wasInDock = isCurrentlyInDock
-                    try await DiagnosticsLog.shared.measure("\(wasInDock ? "Update" : "Install") helper '\(configToSave.name)'") {
+                    let installed = try await DiagnosticsLog.shared.measure("\(wasInDock ? "Update" : "Install") helper '\(configToSave.name)'") {
                         try await HelperBundleManager.shared.installHelper(for: configToSave)
+                    }
+                    // Refused because a migration / Apply batch already owns this bundle id. Stamping
+                    // anyway would claim a rebuild that never happened, and migration keys on that
+                    // stamp — so leave the tile unstamped and let the next launch rebuild it.
+                    guard installed else {
+                        errorMessage = AppStrings.Error.bundleBuildInProgress
+                        isProcessing = false
+                        return
                     }
                     configToSave.lastDockIndex = nil  // Clear saved position
                     configToSave.helperAppVersion = HelperBundleManager.currentAppVersion

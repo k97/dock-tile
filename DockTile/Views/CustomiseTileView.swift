@@ -73,14 +73,12 @@ struct CustomiseTileView: View {
         .task(id: saveGeneration) {
             guard saveGeneration > 0 else { return }
             guard await SaveDebounce.waitedFullInterval(nanoseconds: 300_000_000) else { return }
-            configManager.updateConfiguration(editedConfig)
-            hasPendingSave = false
+            persistEdits()
         }
         .onDisappear {
             // Back within the debounce window cancels the task above; flush so the edit survives.
             if hasPendingSave {
-                configManager.updateConfiguration(editedConfig)
-                hasPendingSave = false
+                persistEdits()
             }
         }
         // Per-control diagnostics. Colour and size change continuously (colour-panel drag /
@@ -100,6 +98,20 @@ struct CustomiseTileView: View {
         .onChange(of: selectedIconTab) { _, newTab in
             DiagnosticsLog.shared.ui("Customise → Icon picker tab '\(newTab == .symbol ? "Symbol" : "Emoji")'")
         }
+    }
+
+    // MARK: - Actions
+
+    /// Persist the customiser's content edits (tint, icon, scale, weight). Visibility is owned
+    /// EXCLUSIVELY by `DockTileDetailView.performDockAction()`, so this saves through
+    /// `preservingStoredVisibility` — the same seam Tile Detail uses. Writing the raw snapshot
+    /// re-asserted whatever `isVisibleInDock` / `lastDockIndex` were when Customise opened, which
+    /// silently reverts a `syncDockVisibility()` that landed meanwhile (the user dragging the tile
+    /// out of the Dock mid-session) and leaves the config claiming visible with nothing pinned.
+    private func persistEdits() {
+        configManager.updateConfiguration(ConfigurationManager.preservingStoredVisibility(
+            editedConfig, stored: configManager.configuration(for: editedConfig.id)))
+        hasPendingSave = false
     }
 
     // MARK: - Studio Canvas (Hero Section)

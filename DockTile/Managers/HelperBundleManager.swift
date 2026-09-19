@@ -37,8 +37,11 @@ final class HelperBundleManager {
     /// Release: ~/Library/Application Support/DockTile/
     private let helperDirectory: URL
 
-    /// Track bundle IDs currently being installed to prevent double-installation
-    private var installingBundleIds: Set<String> = []
+    /// Track bundle IDs currently inside the bundle-BUILD critical section
+    /// (`generateHelperBundle` → `installTileIcons` → `codesignHelper`). Both entry points —
+    /// `installHelper` and `regenerateHelperBundle` — register here, because that sequence now
+    /// suspends (see `canBeginBundleBuild`) and the main actor no longer serialises it for free.
+    private var buildingBundleIds: Set<String> = []
 
     /// Track bundle IDs currently being removed to prevent double-removal
     private var removingBundleIds: Set<String> = []
@@ -61,20 +64,46 @@ final class HelperBundleManager {
 
     // MARK: - Public API
 
+    /// Mutual exclusion for the bundle-BUILD critical section (`generateHelperBundle` →
+    /// `installTileIcons` → `codesignHelper`).
+    ///
+    /// **Why a lock is needed at all (critical)**: that sequence used to contain no `await`, so the
+    /// main actor serialised it implicitly. Moving the icon compile and the codesign off the main
+    /// actor (to kill a ~1.4 s hang per tile) inserted suspension points into it, so two callers can
+    /// now be parked inside it for the same `preferredHelperPath`: a migration / Popover-Appearance
+    /// batch calls `regenerateHelperBundle` while the UI stays live, and a user pressing **Update**
+    /// calls `installHelper`, whose `generateHelperBundle` deletes and re-copies the very directory
+    /// the suspended regenerate is about to write into and sign. That is the "killed
+    /// mid-generation" shape (`helperIconsComplete` false, or a broken seal) that only
+    /// `selfHealIfNeeded` repairs, with a Dock restart, in the user's real support folder.
+    ///
+    /// Both entry points register in `buildingBundleIds` with `defer`-ed removal, so a second
+    /// operation on the same bundle id is REFUSED rather than interleaved. Guarded by
+    /// `HelperBuildExclusionTests`.
+    nonisolated static func canBeginBundleBuild(bundleId: String, inFlight: Set<String>) -> Bool {
+        !inFlight.contains(bundleId)
+    }
+
     /// Install a helper bundle for the given configuration
     /// If helper already exists (by bundle ID), updates it in place
-    func installHelper(for config: DockTileConfiguration) async throws {
-        // Prevent double-installation if this bundle is already being installed
-        guard !installingBundleIds.contains(config.bundleIdentifier) else {
+    ///
+    /// Returns `false` when a build for this bundle id is already in flight and this install was
+    /// refused — the caller must NOT then stamp `helperAppVersion`, or the config would claim a
+    /// rebuild that never happened (a stamp-only lie migration can never re-detect).
+    @discardableResult
+    func installHelper(for config: DockTileConfiguration) async throws -> Bool {
+        // Refuse if another build (install OR regenerate) owns this bundle — see canBeginBundleBuild.
+        guard Self.canBeginBundleBuild(bundleId: config.bundleIdentifier, inFlight: buildingBundleIds) else {
             print("⚠️ Skipping install - already in progress for: \(config.name)")
-            return
+            DiagnosticsLog.shared.log("tile", "installHelper SKIPPED (bundle build already in progress) — \(config.diagnosticName)")
+            return false
         }
 
         // Refuse early (with an actionable error) if we can't safely copy ourselves as a template.
         try verifyCanGenerateBundles()
 
-        installingBundleIds.insert(config.bundleIdentifier)
-        defer { installingBundleIds.remove(config.bundleIdentifier) }
+        buildingBundleIds.insert(config.bundleIdentifier)
+        defer { buildingBundleIds.remove(config.bundleIdentifier) }
 
         print("🔧 Installing helper for: \(config.name)")
         print("   Bundle ID: \(config.bundleIdentifier)")
@@ -220,6 +249,7 @@ final class HelperBundleManager {
 
         AnalyticsService.shared.setBreadcrumb("done", for: "install_step")
         print("✅ Helper installed at: \(helperPath.path)")
+        return true
     }
 
     /// Find existing helper bundle by bundle identifier
@@ -608,8 +638,8 @@ final class HelperBundleManager {
             return nil
         }
 
-        // Also prevent removal while installation is in progress
-        guard !installingBundleIds.contains(config.bundleIdentifier) else {
+        // Also prevent removal while a bundle build (install or regenerate) is in progress
+        guard Self.canBeginBundleBuild(bundleId: config.bundleIdentifier, inFlight: buildingBundleIds) else {
             print("⚠️ Skipping remove - installation in progress for: \(config.name)")
             DiagnosticsLog.shared.log("dock", "removeFromDock SKIPPED (install in progress) — \(config.diagnosticName)")
             return nil
@@ -1764,7 +1794,18 @@ final class HelperBundleManager {
     /// Regenerate a helper bundle in-place WITHOUT Dock operations.
     /// Used by HelperMigrationManager for batch updates (single Dock restart at end).
     func regenerateHelperBundle(for config: DockTileConfiguration) async throws {
+        // Same critical section as installHelper, so the same lock — see canBeginBundleBuild.
+        // THROWING (not returning) is deliberate: `runRegenerationBatch` stamps only on success, so
+        // a refused regenerate is left unstamped and retried on a later launch, which is exactly
+        // the convergent-migration behaviour a transient failure already gets.
+        guard Self.canBeginBundleBuild(bundleId: config.bundleIdentifier, inFlight: buildingBundleIds) else {
+            DiagnosticsLog.shared.log("migration", "regenerateHelperBundle REFUSED (bundle build already in progress) — \(config.diagnosticName)")
+            throw HelperBundleError.bundleBuildInProgress
+        }
         try verifyCanGenerateBundles()
+        buildingBundleIds.insert(config.bundleIdentifier)
+        defer { buildingBundleIds.remove(config.bundleIdentifier) }
+
         let appName = sanitizeAppName(config.name)
         let helperPath = preferredHelperPath(for: config)
 
@@ -1841,6 +1882,9 @@ enum HelperBundleError: Error, LocalizedError {
     /// The app is running from an App Translocation mount (quarantined + launched from e.g.
     /// ~/Downloads), so it cannot copy itself as a helper template. Actionable: move to /Applications.
     case appTranslocated
+    /// Another bundle build (install or regenerate) already owns this bundle id, so this one was
+    /// refused rather than allowed to interleave — see `HelperBundleManager.canBeginBundleBuild`.
+    case bundleBuildInProgress
 
     var errorDescription: String? {
         switch self {
@@ -1856,6 +1900,8 @@ enum HelperBundleError: Error, LocalizedError {
             return AppStrings.Error.mainAppNotFound
         case .appTranslocated:
             return AppStrings.Error.appTranslocated
+        case .bundleBuildInProgress:
+            return AppStrings.Error.bundleBuildInProgress
         }
     }
 }
