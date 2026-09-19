@@ -19,7 +19,7 @@ text = open(src).read()
 pattern = re.compile(r'"com\.docktile\.([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12})"')
 rewritten, count = pattern.subn(r'"com.docktile.dev.\1"', text)
 configs = json.loads(rewritten)
-ok = count == len(configs) and all(c["bundleIdentifier"].startswith("com.docktile.dev.") for c in configs)
+ok = count == len(configs) and all(c.get("bundleIdentifier", "").startswith("com.docktile.dev.") for c in configs)
 if not ok:
     sys.exit("bundle id rewrite incomplete — do NOT load this file in the dev app")
 open(dst, "w").write(rewritten)

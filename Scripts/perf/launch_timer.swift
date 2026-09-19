@@ -32,4 +32,8 @@ while DispatchTime.now() < deadline {
     if hit { windowMs = ms(t0, DispatchTime.now()); break }
     usleep(4000)
 }
+guard windowMs >= 0 else {
+    print(String(format: "pid=%d  TIMEOUT: no window on screen within 30s", launchedPID))
+    exit(1)
+}
 print(String(format: "pid=%d  first-window-on-screen=%.0f ms", launchedPID, windowMs))

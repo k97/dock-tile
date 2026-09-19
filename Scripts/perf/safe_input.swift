@@ -72,15 +72,24 @@ case "drag":
     post(.leftMouseDown, a)
     let end = Date().addingTimeInterval(seconds)
     var t = 0.0, moves = 0
+    var lastGood = a
+    var aborted = false
     while Date() < end {
         let f = CGFloat((sin(t) + 1) / 2)
         let p = CGPoint(x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f)
-        guard pointBelongs(p, to: pid) else { print("ABORT mid-drag"); break }
+        guard pointBelongs(p, to: pid) else { aborted = true; break }
         post(.leftMouseDragged, p); moves += 1
+        lastGood = p
         t += 0.12; usleep(16_000)
     }
-    post(.leftMouseUp, CGEvent(source: nil)?.location ?? a)
+    // The button MUST be released or the session is left with a stuck mouse button — but release at
+    // the last VERIFIED-good point, never at an unchecked location.
+    post(.leftMouseUp, lastGood)
     CGWarpMouseCursorPosition(original)
+    if aborted {
+        print("ABORTED mid-drag after \(moves) events — button released at the last verified point")
+        exit(1)
+    }
     print("drag done: \(moves) drag events")
 
 default:

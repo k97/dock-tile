@@ -120,7 +120,7 @@ def resolve(el):
 events = []  # (t_ns, START|END) for the main run loop's waiting_for_events
 for row in root.iter("row"):
     t = kind = phase = None
-    is_main = False
+    is_main = None
     for child in row:
         el = resolve(child)
         for sub in el.iter():
@@ -133,7 +133,7 @@ for row in root.iter("row"):
             kind = el.text
         elif tag == "kdebug-func" and phase is None:
             phase = el.get("fmt")
-        elif tag == "boolean":
+        elif tag == "boolean" and is_main is None:
             is_main = el.text == "1"
     if t is not None and kind == "waiting_for_events" and is_main:
         events.append((t, phase))
@@ -212,6 +212,10 @@ while DispatchTime.now() < deadline {
     }
     if hit { windowMs = ms(t0, DispatchTime.now()); break }
     usleep(4000)
+}
+guard windowMs >= 0 else {
+    print(String(format: "pid=%d  TIMEOUT: no window on screen within 30s", launchedPID))
+    exit(1)
 }
 print(String(format: "pid=%d  first-window-on-screen=%.0f ms", launchedPID, windowMs))
 ```
@@ -293,15 +297,24 @@ case "drag":
     post(.leftMouseDown, a)
     let end = Date().addingTimeInterval(seconds)
     var t = 0.0, moves = 0
+    var lastGood = a
+    var aborted = false
     while Date() < end {
         let f = CGFloat((sin(t) + 1) / 2)
         let p = CGPoint(x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f)
-        guard pointBelongs(p, to: pid) else { print("ABORT mid-drag"); break }
+        guard pointBelongs(p, to: pid) else { aborted = true; break }
         post(.leftMouseDragged, p); moves += 1
+        lastGood = p
         t += 0.12; usleep(16_000)
     }
-    post(.leftMouseUp, CGEvent(source: nil)?.location ?? a)
+    // The button MUST be released or the session is left with a stuck mouse button — but release at
+    // the last VERIFIED-good point, never at an unchecked location.
+    post(.leftMouseUp, lastGood)
     CGWarpMouseCursorPosition(original)
+    if aborted {
+        print("ABORTED mid-drag after \(moves) events — button released at the last verified point")
+        exit(1)
+    }
     print("drag done: \(moves) drag events")
 
 default:
@@ -333,7 +346,7 @@ text = open(src).read()
 pattern = re.compile(r'"com\.docktile\.([0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12})"')
 rewritten, count = pattern.subn(r'"com.docktile.dev.\1"', text)
 configs = json.loads(rewritten)
-ok = count == len(configs) and all(c["bundleIdentifier"].startswith("com.docktile.dev.") for c in configs)
+ok = count == len(configs) and all(c.get("bundleIdentifier", "").startswith("com.docktile.dev.") for c in configs)
 if not ok:
     sys.exit("bundle id rewrite incomplete — do NOT load this file in the dev app")
 open(dst, "w").write(rewritten)
@@ -355,9 +368,26 @@ for app in "$PROD_SUPPORT"/*.app; do
   # mtime + signature state: a regenerate or a re-seal changes one of them.
   echo "bundle     $(basename "$app")  $(stat -f%m "$app")  $(codesign --verify "$app" >/dev/null 2>&1 && echo signed || echo UNSIGNED)"
 done
-# Dock entries for production tiles: id, on-disk path and tooltip label — all three are
-# documented invariants (architecture.md: same-name disambiguation, `dockFileLabel`).
-defaults read com.apple.dock persistent-apps 2>/dev/null | grep -A8 '"com.docktile\.[0-9A-F]' | grep -E '"bundle-identifier"|"file-label"|_CFURLString' | sed 's/^ *//' | sed 's/^/dock       /'
+# Dock entries for production tiles: id, GUID, tooltip label and on-disk path. All are documented
+# invariants (architecture.md: same-name disambiguation, `dockFileLabel`, `refreshDockEntry`), and
+# GUID is what changes when an entry is re-seated without the bundle changing.
+# Read the plist FILE, not `defaults read`: reading another app's cfprefsd domain can serve a stale
+# cache (architecture.md, "Reliable reads"), and a consistently stale read would report "unchanged"
+# after a real mutation — a false negative in the one check whose whole purpose is catching that.
+plutil -convert json -o - "$HOME/Library/Preferences/com.apple.dock.plist" 2>/dev/null | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    print("dock       UNREADABLE")
+    raise SystemExit(0)
+for e in d.get("persistent-apps", []):
+    td = e.get("tile-data", {})
+    bid = td.get("bundle-identifier", "")
+    if bid.startswith("com.docktile.") and not bid.startswith("com.docktile.dev."):
+        url = td.get("file-data", {}).get("_CFURLString", "")
+        print("dock       " + bid + "  GUID=" + str(e.get("GUID")) + "  label=" + str(td.get("file-label")) + "  url=" + url)
+'
 echo "helpers    $(pgrep -f 'Application Support/DockTile/' | tr '\n' ' ')"
 ```
 

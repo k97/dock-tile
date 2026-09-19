@@ -29,7 +29,7 @@ def resolve(el):
 events = []  # (t_ns, START|END) for the main run loop's waiting_for_events
 for row in root.iter("row"):
     t = kind = phase = None
-    is_main = False
+    is_main = None
     for child in row:
         el = resolve(child)
         for sub in el.iter():
@@ -42,7 +42,7 @@ for row in root.iter("row"):
             kind = el.text
         elif tag == "kdebug-func" and phase is None:
             phase = el.get("fmt")
-        elif tag == "boolean":
+        elif tag == "boolean" and is_main is None:
             is_main = el.text == "1"
     if t is not None and kind == "waiting_for_events" and is_main:
         events.append((t, phase))
