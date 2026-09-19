@@ -35,4 +35,22 @@ struct HelperConfigLookupTests {
         let missing = URL(fileURLWithPath: "/nonexistent/\(UUID().uuidString).json")
         #expect(HelperAppDelegate.showInAppSwitcher(inConfigAt: missing, bundleId: "com.docktile.dev.PROBE") == false)
     }
+
+    @Test("An unreadable or wrongly-shaped config file defaults to Ghost mode")
+    func undecodableFileDefaultsToGhost() throws {
+        let dir = FileManager.default.temporaryDirectory
+
+        // Not JSON at all.
+        let garbage = dir.appendingPathComponent("helper-lookup-garbage-\(UUID().uuidString).json")
+        try Data("{ this is not valid JSON".utf8).write(to: garbage)
+        defer { try? FileManager.default.removeItem(at: garbage) }
+        #expect(HelperAppDelegate.showInAppSwitcher(inConfigAt: garbage, bundleId: "com.docktile.dev.PROBE") == false)
+
+        // Valid JSON, wrong shape — the likelier real regression, since a schema change can
+        // produce this while the file still parses.
+        let wrongShape = dir.appendingPathComponent("helper-lookup-shape-\(UUID().uuidString).json")
+        try Data("{\"configurations\": []}".utf8).write(to: wrongShape)
+        defer { try? FileManager.default.removeItem(at: wrongShape) }
+        #expect(HelperAppDelegate.showInAppSwitcher(inConfigAt: wrongShape, bundleId: "com.docktile.dev.PROBE") == false)
+    }
 }
