@@ -158,10 +158,33 @@ final class DiagnosticsLog: @unchecked Sendable {
         !(verbose && isRelease)
     }
 
+    /// One event = one line. The launch trim dates a line by its first token; a message with
+    /// embedded newlines leaves undatable continuation lines behind.
+    nonisolated static func singleLine(_ message: String) -> String {
+        message.replacingOccurrences(of: "\r\n", with: " ⏎ ")
+            .replacingOccurrences(of: "\n", with: " ⏎ ")
+            .replacingOccurrences(of: "\r", with: " ⏎ ")
+    }
+
+    /// Pure trim seam. A line is dated by its first space-delimited token; a line that cannot be
+    /// dated belongs to the dated line before it and shares its fate (so legacy continuation lines
+    /// age out with their parent, and orphans before any dated line are dropped).
+    nonisolated static func trimmed(_ content: String, cutoff: Date, parse: (String) -> Date?) -> String {
+        var kept: [Substring] = []
+        var keepingCurrent = false
+        for line in content.split(separator: "\n", omittingEmptySubsequences: true) {
+            let token = line.firstIndex(of: " ").map { String(line[line.startIndex..<$0]) } ?? String(line)
+            if let date = parse(token) { keepingCurrent = date >= cutoff }
+            if keepingCurrent { kept.append(line) }
+        }
+        return kept.isEmpty ? "" : kept.joined(separator: "\n") + "\n"
+    }
+
     /// Record a diagnostic event. `category` is a short tag, e.g. "update", "dock", "helper".
     /// Pass `verbose: true` for high-frequency/low-signal events — those are dropped in Release.
     func log(_ category: String, _ message: String, verbose: Bool = false) {
         guard Self.shouldRecord(verbose: verbose, isRelease: AppEnvironment.isRelease) else { return }
+        let message = Self.singleLine(message)
 
         let now = Date()
         lock.lock()
@@ -262,12 +285,7 @@ final class DiagnosticsLog: @unchecked Sendable {
         guard !AppEnvironment.isHelper else { return }
         guard let content = try? String(contentsOf: fileURL, encoding: .utf8) else { return }
         let cutoff = Date().addingTimeInterval(-retention)
-        let kept = content.split(separator: "\n", omittingEmptySubsequences: true).filter { line in
-            guard let sp = line.firstIndex(of: " ") else { return true }
-            guard let d = stamp.date(from: String(line[line.startIndex..<sp])) else { return true }
-            return d >= cutoff
-        }
-        let rebuilt = kept.isEmpty ? "" : kept.joined(separator: "\n") + "\n"
+        let rebuilt = Self.trimmed(content, cutoff: cutoff) { stamp.date(from: $0) }
         try? rebuilt.write(to: fileURL, atomically: true, encoding: .utf8)
 
         // Keep only the 5 newest spin captures. Main app only — helpers never prune shared files.
