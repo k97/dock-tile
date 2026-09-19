@@ -275,6 +275,13 @@ single light `.icns` with no `Assets.car` (e.g. VS Code, most Electron apps).
   on macOS 15, so there's no double-treatment either way.
 - Popover/list views re-render on icon-style changes via their `.id("\(app.id)-\(style)")`
   composites, so the variant tracks Light↔Dark and theme switches live.
+- **Popover cells draw a cached bitmap, never the IconServices `NSImage` (critical)**:
+  `TileIconRasterCache` holds rasterised `CGImage`s for the process lifetime, keyed by item, pixel
+  size, appearance token (icon style + Light/Dark) and the app bundle's modification time, and is
+  prewarmed at helper launch. Drawing the `NSImage` directly makes SwiftUI trigger a synchronous
+  XPC render per icon; `iconservicesagent` evicts within minutes, so every first open after idle
+  paid ~3.5 ms per app on the main thread (201 ms on a 10-app Release tile). Guarded by
+  `TileIconRasterCacheTests`.
 
 ## Helper Bundle Icon Priority
 

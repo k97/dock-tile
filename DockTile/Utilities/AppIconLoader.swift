@@ -93,6 +93,112 @@ enum AppIconLoader {
             .appendingPathComponent("Contents/Resources/\(iconName)")
         return NSImage(contentsOf: iconURL)
     }
+
+    /// Modification time of the bundle at `path` (0 when absent) — part of the raster-cache key, so
+    /// an updated app gets a fresh icon without restarting the tile.
+    nonisolated static func modificationStamp(atPath path: String?) -> TimeInterval {
+        guard let path,
+              let date = try? FileManager.default.attributesOfItem(atPath: path)[.modificationDate] as? Date
+        else { return 0 }
+        return date.timeIntervalSince1970
+    }
+}
+
+// MARK: - Tile Icon Raster Cache
+
+/// Process-lifetime cache of RASTERISED app icons for the popover.
+///
+/// WHY: an `NSImage` from `NSWorkspace.icon(forFile:)` is an IconServices proxy. When SwiftUI draws
+/// it, the proxy renders the bitmap over a SYNCHRONOUS XPC call to `iconservicesagent` (~3.5 ms per
+/// icon, main thread). The agent caches renders for only a few minutes, and the popover used to
+/// rebuild every `NSImage` per open, so the first open after idle paid the whole bill: 201 ms on a
+/// 10-app Release tile, ~470 ms on a 102-app tile. A plain `CGImage` has no proxy behind it, so
+/// holding the bitmaps here removes the XPC from the click path.
+///
+/// Main-actor only on purpose — no assumption is made about NSWorkspace/NSImage thread-safety. The
+/// cost is moved ahead of the click by `prewarm`, one icon per run-loop turn.
+@MainActor
+final class TileIconRasterCache {
+    // A closure literal, NOT `rasterise: TileIconRasterCache.systemRasterise`: the method inherits
+    // @MainActor from this class, and Swift 6 refuses to convert that to the plain function type
+    // ("loses global actor 'MainActor'").
+    static let shared = TileIconRasterCache { item, size in TileIconRasterCache.systemRasterise(item, size) }
+
+    struct Key: Hashable {
+        let itemKey: String
+        let pixelSize: Int
+        let contentStamp: TimeInterval
+    }
+
+    private let rasterise: (AppItem, Int) -> CGImage?
+    private var images: [Key: CGImage] = [:]
+    private var token = ""
+    /// How many times the rasteriser actually ran — the tests' observability hook.
+    private(set) var rasteriseCount = 0
+
+    init(rasterise: @escaping (AppItem, Int) -> CGImage?) {
+        self.rasterise = rasterise
+    }
+
+    nonisolated static func pixelSize(pointSize: CGFloat, scale: CGFloat) -> Int {
+        Int((pointSize * max(scale, 1)).rounded(.up))
+    }
+
+    /// A rasterised bitmap bakes in Light/Dark and the Tahoe icon style, so both are in the token.
+    nonisolated static func appearanceToken(style: IconStyle, isDark: Bool) -> String {
+        "\(style.rawValue)-\(isDark ? "dark" : "light")"
+    }
+
+    nonisolated static func itemKey(for item: AppItem) -> String {
+        item.isFolder ? "folder:\(item.folderPath ?? item.name)" : "app:\(item.bundleIdentifier)"
+    }
+
+    func image(for item: AppItem, pointSize: CGFloat, scale: CGFloat,
+               appearanceToken: String, contentStamp: TimeInterval) -> CGImage? {
+        if appearanceToken != token {
+            images.removeAll()
+            token = appearanceToken
+        }
+        let key = Key(itemKey: Self.itemKey(for: item),
+                      pixelSize: Self.pixelSize(pointSize: pointSize, scale: scale),
+                      contentStamp: contentStamp)
+        if let hit = images[key] { return hit }
+        rasteriseCount += 1
+        guard let image = rasterise(item, key.pixelSize) else { return nil }
+        images[key] = image
+        return image
+    }
+
+    /// The ONE derivation of the key's content stamp — cells and prewarm both call it, so a
+    /// prewarmed entry can never miss because the two sides looked at different paths.
+    nonisolated static func contentStamp(for item: AppItem, resolvedPath: String?) -> TimeInterval {
+        AppIconLoader.modificationStamp(atPath: item.isFolder ? item.folderPath : resolvedPath)
+    }
+
+    /// Fill the cache ahead of the first click, yielding between icons so no single run-loop turn
+    /// carries more than one IconServices round trip. `scales`: every connected display's backing
+    /// scale, so the popover hits whichever screen the Dock is on.
+    func prewarm(items: [AppItem], pointSize: CGFloat, scales: [CGFloat], appearanceToken: String) async {
+        for item in items {
+            let stamp = Self.contentStamp(for: item, resolvedPath: AppInstallChecker.resolve(item).resolvedPath)
+            for scale in scales {
+                _ = image(for: item, pointSize: pointSize, scale: scale, appearanceToken: appearanceToken, contentStamp: stamp)
+            }
+            await Task.yield()
+        }
+    }
+
+    private static func systemRasterise(_ item: AppItem, _ pixelSize: Int) -> CGImage? {
+        guard let nsImage = AppIconLoader.icon(for: item) else { return nil }
+        var rect = CGRect(x: 0, y: 0, width: pixelSize, height: pixelSize)
+        var result: CGImage?
+        // Rasterise under the app's effective appearance so the bitmap matches what SwiftUI would
+        // have drawn for the same colour scheme.
+        NSApp.effectiveAppearance.performAsCurrentDrawingAppearance {
+            result = nsImage.cgImage(forProposedRect: &rect, context: nil, hints: nil)
+        }
+        return result
+    }
 }
 
 // MARK: - App Install Checker

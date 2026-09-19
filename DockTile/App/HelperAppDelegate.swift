@@ -21,6 +21,7 @@
 //
 
 import AppKit
+import SwiftUI
 
 @MainActor
 final class HelperAppDelegate: NSObject, NSApplicationDelegate {
@@ -127,6 +128,25 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // (no hang reporting for helpers, 1 h log retention). If this process pegs a core, it now
         // samples itself into <support>/spins/ and Copy Diagnostics carries the hottest frames.
         SpinWatchdog.shared.start()
+
+        // Rasterise this tile's icons BEFORE the first click, one per run-loop turn, so the first
+        // popover open doesn't wait on ~3.5 ms of synchronous IconServices XPC per icon.
+        if let config = getCurrentConfiguration() {
+            let settings = PopoverSettings.load(layout: config.layoutMode)
+            let pointSize = config.layoutMode == .list
+                ? PopoverMetrics.listIconSize(settings.tileSize)
+                : PopoverMetrics.tileIconSize(settings.tileSize)
+            let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let style = IconStyle.forDisplay(raw: IconStyleManager.shared.rawStyle,
+                                             colorScheme: isDark ? .dark : .light, fallback: .defaultStyle)
+            let token = TileIconRasterCache.appearanceToken(style: style, isDark: isDark)
+            let scales = Array(Set(NSScreen.screens.map(\.backingScaleFactor))).sorted()
+            Task { @MainActor in
+                await TileIconRasterCache.shared.prewarm(items: config.appItems, pointSize: pointSize,
+                                                         scales: scales.isEmpty ? [2] : scales, appearanceToken: token)
+                DiagnosticsLog.shared.log("helper", "Icon cache prewarmed — \(config.appItems.count) item(s)", verbose: true)
+            }
+        }
 
         // Set up icon style observation for dynamic icon switching.
         // NOTE: This observes "Icon and widget style" setting, NOT "Appearance" (Light/Dark).
