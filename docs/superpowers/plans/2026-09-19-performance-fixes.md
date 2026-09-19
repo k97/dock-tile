@@ -2027,31 +2027,45 @@ import Testing
 @testable import Dock_Tile
 
 /// cfprefsd rewrites the Dock plist by ATOMIC REPLACE. A watcher holding one descriptor sees the
-/// first replacement and then watches a dead inode. Failing value: 1 callback for 2 replacements.
+/// first replacement and then watches a dead inode. Failing value: the callback count never rises
+/// after the second replacement.
 @MainActor
 @Suite("DockPlistWatcher across atomic replaces", .serialized)
 struct DockPlistWatcherReplaceTests {
 
-    @Test("Two atomic replacements produce two change callbacks")
+    @Test("A change after an atomic replace is still reported")
     func survivesAtomicReplace() async throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("watcher-\(UUID().uuidString).plist")
         try Data("one".utf8).write(to: url, options: .atomic)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        // 0.2 s, not 0.05: one atomic replace can emit .write/.attrib/.delete, and a debounce
-        // shorter than the gap between them would report a third callback and fail for no real reason.
         let watcher = DockPlistWatcher(path: url.path, debounceInterval: 0.2)
         var callbacks = 0
         watcher.onDockChanged = { callbacks += 1 }
         watcher.startWatching()
         defer { watcher.stopWatching() }
 
-        try Data("two".utf8).write(to: url, options: .atomic)
-        try await Task.sleep(nanoseconds: 400_000_000)
-        try Data("three".utf8).write(to: url, options: .atomic)
-        try await Task.sleep(nanoseconds: 400_000_000)
+        // Poll rather than sleep a fixed span: a loaded machine can delay a filesystem event well
+        // past any margin worth hard-coding, and polling also returns as soon as the event lands.
+        func waitForCallbackCount(above baseline: Int, timeout: TimeInterval = 5) async -> Bool {
+            let deadline = Date().addingTimeInterval(timeout)
+            while Date() < deadline {
+                if callbacks > baseline { return true }
+                try? await Task.sleep(nanoseconds: 20_000_000)
+            }
+            return callbacks > baseline
+        }
 
-        #expect(callbacks == 2)
+        try Data("two".utf8).write(to: url, options: .atomic)
+        #expect(await waitForCallbackCount(above: 0), "no change reported for the first atomic replace")
+
+        // Count AFTER the first replace has settled, so the second assertion cannot be satisfied by
+        // leftover events from the first — that loophole would let this pass against the old code.
+        let afterFirstReplace = callbacks
+
+        try Data("three".utf8).write(to: url, options: .atomic)
+        #expect(await waitForCallbackCount(above: afterFirstReplace),
+                "watcher went deaf after the first atomic replace — the descriptor was left on the unlinked inode")
     }
 }
 ```
