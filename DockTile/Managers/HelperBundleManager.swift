@@ -638,11 +638,20 @@ final class HelperBundleManager {
             return nil
         }
 
-        // Also prevent removal while a bundle build (install or regenerate) is in progress
+        // Also prevent removal while a bundle build (install or regenerate) is in progress.
+        //
+        // THROWS rather than returning nil (critical): `nil` already means "there was nothing to
+        // remove", and the caller writes `isVisibleInDock = false` on that. Reporting a REFUSAL the
+        // same way produces the documented "hidden in config but still pinned" desync — the tile is
+        // marked hidden while its Dock entry is untouched, and nothing heals it until the next
+        // launch reconcile. Widening this guard from installs to all bundle builds (so a migration
+        // or Apply batch is covered too) widened that window, which is why the signal had to become
+        // unambiguous. Both call sites already catch: Tile Detail surfaces the message and leaves
+        // visibility alone, and the stuck-tile sweep logs and retries on the next launch.
         guard Self.canBeginBundleBuild(bundleId: config.bundleIdentifier, inFlight: buildingBundleIds) else {
-            print("⚠️ Skipping remove - installation in progress for: \(config.name)")
-            DiagnosticsLog.shared.log("dock", "removeFromDock SKIPPED (install in progress) — \(config.diagnosticName)")
-            return nil
+            print("⚠️ Skipping remove - bundle build in progress for: \(config.name)")
+            DiagnosticsLog.shared.log("dock", "removeFromDock REFUSED (bundle build in progress) — \(config.diagnosticName)")
+            throw HelperBundleError.bundleBuildInProgress
         }
 
         removingBundleIds.insert(config.bundleIdentifier)
