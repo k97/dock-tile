@@ -25,12 +25,13 @@ final class DockPlistWatcher {
     private let dockPlistPath: String
 
     /// Debounce interval (Dock can write multiple times quickly)
-    private let debounceInterval: TimeInterval = 0.5
+    private let debounceInterval: TimeInterval
 
     // MARK: - Initialization
 
-    init() {
-        dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
+    init(path: String? = nil, debounceInterval: TimeInterval = 0.5) {
+        self.debounceInterval = debounceInterval
+        dockPlistPath = path ?? FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
             .path
 
@@ -64,22 +65,33 @@ final class DockPlistWatcher {
             return
         }
 
-        // Create dispatch source to monitor file changes
+        // Create dispatch source to monitor file changes. `fd` is captured so THIS source closes
+        // THIS descriptor, whatever `self.fileDescriptor` has become by the time it is cancelled.
+        let fd = fileDescriptor
         let source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fileDescriptor,
+            fileDescriptor: fd,
             eventMask: [.write, .delete, .rename, .attrib],
             queue: .main
         )
 
-        source.setEventHandler { [weak self] in
-            self?.handleFileChange()
+        source.setEventHandler { [weak self, weak source] in
+            guard let self else { return }
+            let flags = source?.data ?? []
+            self.handleFileChange()
+            // cfprefsd rewrites the plist by ATOMIC REPLACE: this descriptor now refers to an
+            // unlinked inode and every later write goes to a file we are not watching. Re-arm on
+            // the path. Clearing `fileDescriptor` first lets `startWatching()` open a fresh one.
+            if !flags.isDisjoint(with: [.rename, .delete]) {
+                source?.cancel()
+                self.dispatchSource = nil
+                self.fileDescriptor = -1
+                self.startWatching()
+            }
         }
 
         source.setCancelHandler { [weak self] in
-            if let fd = self?.fileDescriptor, fd != -1 {
-                close(fd)
-                self?.fileDescriptor = -1
-            }
+            close(fd)
+            if self?.fileDescriptor == fd { self?.fileDescriptor = -1 }
         }
 
         dispatchSource = source
