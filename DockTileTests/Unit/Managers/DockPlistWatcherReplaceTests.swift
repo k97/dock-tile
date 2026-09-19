@@ -23,7 +23,15 @@ struct DockPlistWatcherReplaceTests {
 
         // Poll rather than sleep a fixed span: a loaded machine can delay a filesystem event well
         // past any margin worth hard-coding, and polling also returns as soon as the event lands.
-        func waitForCallbackCount(above baseline: Int, timeout: TimeInterval = 5) async -> Bool {
+        //
+        // The deadline is deliberately generous. At 5 s this test passed in 0.43 s when run alone
+        // but failed inside the full parallel suite, where it took over 7 s — the re-arm and its
+        // event delivery both land on `.main`, which every other main-actor test is contending for.
+        // A longer deadline does NOT weaken the guard: when the re-arm fix is reverted the watcher
+        // never fires again, so the wait cannot succeed at any deadline and the test still fails,
+        // just later. Trading a slower failure for a flake-free pass is the right way round, since
+        // a test that fails under load teaches people to re-run rather than to read it.
+        func waitForCallbackCount(above baseline: Int, timeout: TimeInterval = 20) async -> Bool {
             let deadline = Date().addingTimeInterval(timeout)
             while Date() < deadline {
                 if callbacks > baseline { return true }

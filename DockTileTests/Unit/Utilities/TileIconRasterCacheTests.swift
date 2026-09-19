@@ -55,16 +55,33 @@ struct TileIconRasterCacheTests {
         #expect(cache.rasteriseCount == 2)
     }
 
-    @Test("Prewarm fills the cache so the later lookup is a hit")
-    func prewarmFills() async {
+    /// The item must resolve to something REAL on disk, or this test cannot fail. With only fixture
+    /// apps (`com.example.one` resolves nowhere) every stamp was `0` on the prewarm side and `0` on
+    /// the lookup side, so a prewarm that keyed its entries differently from the cells still
+    /// produced a hit and this test still passed — while the real cache wasted every prewarmed
+    /// entry. That exact prewarm/cell key disagreement was a live defect earlier in this branch.
+    ///
+    /// A folder stamps from `folderPath`, so a temporary directory gives a non-zero stamp without
+    /// depending on any installed app. Failing value: a prewarm that stamps `0` where the cell
+    /// stamps the directory's mtime — the lookups miss and `rasteriseCount` reaches 6, not 4.
+    @Test("Prewarm fills the cache so the later lookup is a hit, on a key that is not zero")
+    func prewarmFills() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("prewarm-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let folder = try #require(AppItem.from(folderURL: dir))
+        #expect(TileIconRasterCache.contentStamp(for: folder, resolvedPath: nil) != 0)
+
         let cache = TileIconRasterCache { _, _ in self.onePixel() }
-        let items = [app, AppItem(bundleIdentifier: "com.example.two", name: "Two")]
+        let items = [folder, AppItem(bundleIdentifier: "com.example.two", name: "Two")]
         await cache.prewarm(items: items, pointSize: 56, scales: [1, 2], appearanceToken: "t")
         #expect(cache.rasteriseCount == 4)   // two items × two display scales
+
         // The cell derives its stamp through the SAME function prewarm used.
-        let stamp = TileIconRasterCache.contentStamp(for: app, resolvedPath: AppInstallChecker.resolve(app).resolvedPath)
-        _ = cache.image(for: app, pointSize: 56, scale: 2, appearanceToken: "t", contentStamp: stamp)
-        _ = cache.image(for: app, pointSize: 56, scale: 1, appearanceToken: "t", contentStamp: stamp)
+        let stamp = TileIconRasterCache.contentStamp(
+            for: folder, resolvedPath: AppInstallChecker.resolve(folder).resolvedPath)
+        _ = cache.image(for: folder, pointSize: 56, scale: 2, appearanceToken: "t", contentStamp: stamp)
+        _ = cache.image(for: folder, pointSize: 56, scale: 1, appearanceToken: "t", contentStamp: stamp)
         #expect(cache.rasteriseCount == 4)
     }
 
