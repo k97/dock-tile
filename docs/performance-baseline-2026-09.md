@@ -506,7 +506,9 @@ process being measured; arrow keys were posted to a process ID, never to the foc
    selection and saves pass Apple's hang threshold on release-scale data. They sit right at the
    100 ms "instant" bar, and the save scales with config bytes, so taking icon blobs out of the
    config is still worth doing — for memory (300 MB helper peaks, ~950 MB main-app peak on large
-   configs) and headroom — but it is no longer the first fix.
+   configs) and headroom — but it is no longer the first fix. **Superseded 2026-09-19 (Task 8):**
+   re-measured on the same optimised build and config after items 4–6 landed, tile selection no
+   longer passes the hang threshold — see "Task 8 re-measurement" below.
 2. **The Customise colour drag is the worst main-app flow for real users**, now measured: every
    drag tick queues its own full save because the debounce task is never cancelled
    (`CustomiseTileView.swift:56-71`). Holding the task and cancelling it before starting the next is
@@ -528,7 +530,10 @@ process being measured; arrow keys were posted to a process ID, never to the foc
 4. Helper generation: take the compile/sign subprocess waits off the main actor.
 5. Icon blobs out of the config hot path — memory peaks, save headroom, launch.
 6. Helper reads only its own tile; fix the hardcoded release config path.
-7. Re-measure tile selection after 5; profile only if it is still over 100 ms.
+7. Re-measure tile selection after 5; profile only if it is still over 100 ms. **Done
+   2026-09-19 (Task 8): still over 100 ms, and worse — median 806 ms, regressed from the
+   114–142 ms figure above. See "Task 8 re-measurement" below; a CPU Profiler trace was captured
+   as input to a follow-up plan, per instructions nothing was fixed here.
 8. Diagnostics-log stray lines; remaining source-review items.
 
 ### Still not measured, and what each needs
@@ -555,8 +560,84 @@ Dock Lock switch was turned on and off; the one-time "apply" consent flag the ru
 again. A temporary optimised build remains in the session scratch folder (`scratchpad/dd-opt`)
 because its deletion was declined — remove it so Launch Services cannot resolve the dev app to it.
 
+### Task 8 re-measurement: tile selection after the config and icon changes (2026-09-19)
+
+Re-measures the same flow as the "Select a tile (10–11 apps)" row above, on the same recipe
+(optimised build, same release-sized 2-tile production-shaped config), after tasks in this plan
+that touch the selection path had landed (icon blobs out of the config, the app-icon raster
+cache, actool/codesign off the main actor, the dock-watcher and diagnostics fixes). Two prior
+attempts to start this task were blocked on a bad production-safety precondition supplied by the
+dispatching plan (see the task-8 report); once corrected, the fingerprint check passed cleanly
+before and after and production was never touched.
+
+**Conditions**: `Mac15,10` (Apple M3 Max), macOS 26.6.2 (25G83), optimised build (Debug config,
+`-O`, whole-module, no debug dylib, no testability, `-derivedDataPath /tmp/dd-opt`), release-sized
+dev config (10,414,907 bytes — the production config with bundle IDs rewritten to the dev prefix,
+2 tiles: `AI Tile` 10 apps, `Utils` 11 apps, still carrying the old `iconData` blobs — loaded
+without incident, confirming the model ignores the unknown key). Battery power, 36 % discharging;
+no thermal or performance warning recorded (`pmset -g therm`).
+
+**Method**: one Time Profiler trace (60 s) attached to the running optimised app, six selections
+(`AI Tile` / `Utils` alternating, 3 apart) driven via Accessibility `set selected`, analysed with
+`Scripts/perf/analyze.sh <trace> 20` (main-run-loop busy periods between `waiting_for_events`).
+Each of the six logged sidebar selections lined up 1:1 with one busy period, confirming the
+mapping (no ambiguity, no overlap with unrelated work).
+
+| # | Tile | Busy time |
+|---|---|---|
+| 1 | AI Tile | 946.4 ms |
+| 2 | Utils | 814.5 ms |
+| 3 | AI Tile | 797.5 ms |
+| 4 | Utils | 777.6 ms |
+| 5 | AI Tile | 1010.0 ms |
+| 6 | Utils | 751.0 ms |
+
+**Median: 806.0 ms. Spread: 751.0–1010.0 ms (259 ms).** All six individually exceed both Apple's
+100 ms "instant" bar and its 250 ms hang bar — this is not borderline, and it is a sharp regression
+from the 114–142 ms this same flow measured on 2026-09-18 on the same config shape.
+
+**Verdict: FAIL**, by a wide margin (≈6–10× the 100 ms bar). Per the task's own instructions nothing
+was fixed or further diagnosed here; instead, one CPU Profiler trace of a single ~887 ms selection
+was captured (`xcrun xctrace record --template 'CPU Profiler' --attach <pid> --time-limit 20s`,
+exported as the `cpu-profile` table — the CPU Profiler template names it that, not `time-profile`).
+Of 991 Main Thread samples inside the busy window, the heaviest **leaf** (top-of-stack) frames were:
+
+| Samples | Leaf frame | Binary |
+|---|---|---|
+| 30 | `objc_msgSend` | libobjc.A.dylib |
+| 24 | `<deduplicated_symbol>` | SwiftUICore |
+| 19 | `AG::Graph::propagate_dirty(AG::AttributeID)` | AttributeGraph |
+| 17 | `swift::MetadataCacheKey::operator==(swift::MetadataCacheKey const&) const` | libswiftCore.dylib |
+| 17 | `swift_release` | libswiftCore.dylib |
+| 17 | `specialized find1<A>(_:key:filter:)` | SwiftUICore |
+| 15 | `_xzm_free` | libsystem_malloc.dylib |
+| 11 | `AG::Graph::UpdateStack::update()` | AttributeGraph |
+| 10 | `_xzm_xzone_malloc_tiny` | libsystem_malloc.dylib |
+| 10 | `__CFStringHash` | CoreFoundation |
+| 9 | `util::UntypedTable::lookup(void*, void**) const` | AttributeGraph |
+| 8 | `find1<A>(_:key:filter:)` | SwiftUICore |
+| 8 | `___chkstk_darwin` | libsystem_pthread.dylib |
+| 7 | `swift_retain` | libswiftCore.dylib |
+| 7 | `getCache(swift::TargetTypeContextDescriptor<swift::InProcess> const&)` | libswiftCore.dylib |
+| 6 | `swift::MetadataCacheEntryBase<...>::awaitSatisfyingState(...)` | libswiftCore.dylib |
+| 6 | `CA::AttrList::get(unsigned int, _CAValueType, void*) const` | QuartzCore |
+| 5 | `_swift_getGenericMetadata(...)` | libswiftCore.dylib |
+
+Reads as a large SwiftUI diff/re-render dominated by generic-metadata specialization and
+`AttributeGraph` dependency propagation (`propagate_dirty` / `UpdateStack::update` /
+`UntypedTable::lookup`) plus retain/release and `objc_msgSend` traffic — not I/O, not JSON
+decoding, not icon loading. This is consistent with a costly view-identity change on tile switch
+somewhere in the selection → detail-view path, but the specific call site was not traced further
+(out of scope for this task). **This call tree is the input to a follow-up plan, not a diagnosis.**
+
+Safety: `Scripts/perf/prod_fingerprint.sh` output was byte-identical before and after (including
+the `helpers` pid line — no production helper relaunched). The dev config was restored from the
+`cp -p` backup and its md5 reconfirmed as `a9cb4ec5313484654c7c8775471666aa` (29570 bytes).
+`/tmp/dd-opt` was deleted after the run.
+
 ## Attempt ledger
 
 | Idea | Baseline → Result | Verdict | Why |
 |---|---|---|---|
 | Remove `AppItem.iconData` (icon blobs out of the config) | dev config 130,754,674 → 29,570 bytes; save-block worst 464.8 ms (1 block > 250 ms, 4 > 100 ms) → 63.7 ms (0 blocks > 100 ms) for one Accessibility name edit; main-app footprint at launch 161 MB / peak 579 MB → 62 MB / peak 268 MB; helper footprint right after relaunch 343 MB / peak 558 MB → 55 MB / peak 265 MB | kept | the blob had no reachable display path — the missing-app placeholder already superseded the fallback it fed |
+| Re-measure tile selection after the icon/config perf work (Task 8) | 2026-09-18 optimised-build baseline: 114+54 ms · 142 ms · 75+71 ms warm ("just over instant") → 2026-09-19, same optimised-build recipe and same release-sized config (`AI Tile` 10 apps / `Utils` 11 apps), six selections: 946.4, 814.5, 797.5, 777.6, 1010.0, 751.0 ms → **median 806.0 ms, spread 751.0–1010.0 ms** | **regressed, not fixed** — median is ~6–10× Apple's 100 ms bar, and every one of the six individually exceeds the 250 ms hang bar too (this task measures only; no fix was made) | single-selection CPU Profiler trace, 991 Main Thread samples in the ~887 ms busy window: dominated by `objc_msgSend`, SwiftUICore `find1<A>`/deduplicated symbols, `AttributeGraph` (`propagate_dirty`, `UpdateStack::update`, `UntypedTable::lookup`), and Swift generic-metadata-cache traffic (`MetadataCacheKey::operator==`, `getGenericMetadata`, `swift_retain`/`_release`) — reads as a large SwiftUI diff/re-specialization on tile switch, not I/O; full table and conditions in "Task 8 re-measurement" above, left as input to a follow-up plan |
