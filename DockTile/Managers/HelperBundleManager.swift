@@ -155,11 +155,11 @@ final class HelperBundleManager {
 
         // 2. Write the tile icon into the bundle (declarative Assets.car on macOS 26+, the
         // four baked style variants before that) — after the strip, before signing.
-        try installTileIcons(for: config, at: helperPath)
+        try await installTileIcons(for: config, at: helperPath)
 
         // 3. Code sign the bundle
         AnalyticsService.shared.setBreadcrumb("codesign", for: "install_step")
-        try codesignHelper(at: helperPath)
+        try await codesignHelper(at: helperPath)
         print("   ✓ Code signed")
 
         // 4. Touch the bundle to invalidate icon cache and re-register with Launch Services
@@ -810,7 +810,7 @@ final class HelperBundleManager {
     /// `regenerateHelperBundle` so the two flows cannot diverge, and always AFTER
     /// `generateHelperBundle` (which strips the main app's catalog) and BEFORE `codesignHelper`
     /// — nothing may write into the bundle once it is sealed.
-    private func installTileIcons(for config: DockTileConfiguration, at helperPath: URL) throws {
+    private func installTileIcons(for config: DockTileConfiguration, at helperPath: URL) async throws {
         let resourcesPath = helperPath.appendingPathComponent("Contents/Resources")
 
         guard IconPipeline.isDeclarative else {
@@ -839,7 +839,7 @@ final class HelperBundleManager {
             return
         }
 
-        try installDeclarativeIcon(for: config, resourcesPath: resourcesPath)
+        try await installDeclarativeIcon(for: config, resourcesPath: resourcesPath)
         print("   ✓ Compiled declarative icon (Assets.car + fallback AppIcon.icns)")
     }
 
@@ -847,7 +847,7 @@ final class HelperBundleManager {
     /// per-tile `Assets.car`, and drop one fallback `.icns` beside it. The system then renders
     /// every appearance itself — no variants, no detection, and the bundle's icon is never
     /// touched again after signing.
-    private func installDeclarativeIcon(for config: DockTileConfiguration, resourcesPath: URL) throws {
+    private func installDeclarativeIcon(for config: DockTileConfiguration, resourcesPath: URL) async throws {
         let (specs, pngs) = try declarativeLayerSpecs(for: config)
 
         // Backgrounds are JSON fills, not pixels — and they are exactly the colours the legacy
@@ -882,7 +882,7 @@ final class HelperBundleManager {
         guard let compiler = IconCompiler.bundledCompilerURL else {
             throw IconCompilerError.compilerMissing
         }
-        let car = try IconCompiler.compile(
+        let car = try await IconCompiler.compileOffMain(
             document: document,
             outputDir: scratch.appendingPathComponent("compiled"),
             compilerURL: compiler
@@ -1044,22 +1044,27 @@ final class HelperBundleManager {
         return plist
     }
 
-    private func codesignHelper(at helperPath: URL) throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
-        process.arguments = ["--force", "--deep", "--sign", "-", helperPath.path]
+    private func codesignHelper(at helperPath: URL) async throws {
+        // `codesign --deep` waits hundreds of ms; do that wait off the main actor.
+        let status = try await Task.detached(priority: .userInitiated) {
+            try Self.runCodesign(path: helperPath.path)
+        }.value
 
-        // Suppress output
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-
-        try process.run()
-        process.waitUntilExit()
-
-        guard process.terminationStatus == 0 else {
-            DiagnosticsLog.shared.log("dock", "codesign FAILED (status \(process.terminationStatus)) for \(helperPath.lastPathComponent)")
+        guard status == 0 else {
+            DiagnosticsLog.shared.log("dock", "codesign FAILED (status \(status)) for \(helperPath.lastPathComponent)")
             throw HelperBundleError.codesignFailed
         }
+    }
+
+    private nonisolated static func runCodesign(path: String) throws -> Int32 {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
+        process.arguments = ["--force", "--deep", "--sign", "-", path]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        process.waitUntilExit()
+        return process.terminationStatus
     }
 
     /// Whether the bundle's live `AppIcon.icns` is already the variant for `style`.
@@ -1780,10 +1785,10 @@ final class HelperBundleManager {
         )
 
         // 2. Write the tile icon into the bundle (same branch as install)
-        try installTileIcons(for: config, at: helperPath)
+        try await installTileIcons(for: config, at: helperPath)
 
         // 3. Code sign
-        try codesignHelper(at: helperPath)
+        try await codesignHelper(at: helperPath)
 
         // 4. Touch bundle to refresh icon cache
         touchBundle(at: helperPath)

@@ -178,6 +178,7 @@ enum IconCompiler {
     /// Compiles `document` (an Icon Composer `.icon` directory) into `outputDir/Assets.car` using
     /// the compiler at `compilerURL`. Throws loudly on every failure mode — a missing compiler, a
     /// non-zero compile, or a structurally-invalid result — and never returns an unvalidated car.
+    @available(*, noasync, message: "blocks ~0.9 s on subprocess waits — call compileOffMain from async code")
     static func compile(document: URL, outputDir: URL, compilerURL: URL) throws -> URL {
         try DiagnosticsLog.shared.measure("compile tile car") {
             var isDirectory: ObjCBool = false
@@ -264,6 +265,18 @@ enum IconCompiler {
             }
 
             return carURL
+        }
+    }
+
+    /// `compile`, with its two synchronous subprocess waits moved OFF the main actor. `compile`
+    /// blocks its calling thread for ~0.9 s; called on the main actor that was a proper hang per
+    /// tile (957–1021 ms, docs/performance-baseline-2026-09.md). The synchronous function is kept
+    /// untouched — its pipe-draining order is load-bearing — and simply runs on a background thread.
+    static func compileOffMain(document: URL, outputDir: URL, compilerURL: URL) async throws -> URL {
+        try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                continuation.resume(with: Result { try compile(document: document, outputDir: outputDir, compilerURL: compilerURL) })
+            }
         }
     }
 
