@@ -14,7 +14,9 @@ final class DockPlistWatcher {
 
     // MARK: - Properties
 
-    private var fileDescriptor: Int32 = -1
+    /// `private(set)` so the tests can assert the stop path hands descriptor ownership to the
+    /// source's cancel handler (`-1` here) instead of leaving a second owner behind.
+    private(set) var fileDescriptor: Int32 = -1
     private var dispatchSource: DispatchSourceFileSystemObject?
     private lazy var debouncer = Debouncer(interval: debounceInterval)
 
@@ -106,6 +108,15 @@ final class DockPlistWatcher {
 
         dispatchSource?.cancel()
         dispatchSource = nil
+        // Hand descriptor ownership to the cancel handler above, which captured this fd and will
+        // close it when the source finishes cancelling (asynchronously, on .main). Leaving it set
+        // here left TWO owners: `deinit` closes `fileDescriptor` when it isn't -1, so a
+        // stopWatching() followed by deallocation in the same main-queue turn — every
+        // `defer { watcher.stopWatching() }` in the tests — closed the same descriptor twice.
+        // A double close is not harmless: between the two closes any thread can `open()` and be
+        // handed the same descriptor number, and the pending cancel handler then closes an
+        // unrelated file (a parallel Swift Testing suite is exactly that shape).
+        fileDescriptor = -1
 
         print("   ✓ Stopped watching Dock plist")
     }
