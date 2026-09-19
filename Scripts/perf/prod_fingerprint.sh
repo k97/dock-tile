@@ -16,12 +16,14 @@ done
 # Read the plist FILE, not `defaults read`: reading another app's cfprefsd domain can serve a stale
 # cache (architecture.md, "Reliable reads"), and a consistently stale read would report "unchanged"
 # after a real mutation — a false negative in the one check whose whole purpose is catching that.
-plutil -convert json -o - "$HOME/Library/Preferences/com.apple.dock.plist" 2>/dev/null | python3 -c '
-import json, sys
+python3 -c '
+import plistlib, os
+p = os.path.expanduser("~/Library/Preferences/com.apple.dock.plist")
 try:
-    d = json.load(sys.stdin)
-except Exception:
-    print("dock       UNREADABLE")
+    with open(p, "rb") as f:
+        d = plistlib.load(f)
+except Exception as exc:
+    print("dock       UNREADABLE: " + str(exc))
     raise SystemExit(0)
 for e in d.get("persistent-apps", []):
     td = e.get("tile-data", {})
