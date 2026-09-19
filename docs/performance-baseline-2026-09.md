@@ -481,7 +481,7 @@ process being measured; arrow keys were posted to a process ID, never to the foc
 | Measure | Result | Apple's threshold | Verdict |
 |---|---|---|---|
 | Launch to first window | median 645 ms, spread 49 ms (664 / 615 / 645) | none published | recorded |
-| Select a tile (10–11 apps) | 114 + 54 ms · 142 ms · 75 + 71 ms warm | < 100 ms instant; 250 ms hang | pass on hangs, just over instant |
+| Select a tile (10–11 apps) | 114 + 54 ms · 142 ms · 75 + 71 ms warm | < 100 ms instant; 250 ms hang | pass on hangs, just over instant — **not reproducible (2026-09-19, Task 8): two later runs with the identical method, build recipe and config shape measured 806 ms and 1193 ms median. We do not know what differed about this earlier pass. Its "pass on hangs" verdict should not be relied on — see "Task 8 re-measurement" below.** |
 | Open Smart Add sheet, seconds after launch | 230 ms | 250 ms hang | pass on hangs, fail on instant |
 | One edit to the tile name (render) | 24 / 37 ms | < 100 ms | pass |
 | Debounced save after one edit | **98.9 / 96.5 ms** | < 100 ms | borderline — and grows with every app added |
@@ -506,9 +506,13 @@ process being measured; arrow keys were posted to a process ID, never to the foc
    selection and saves pass Apple's hang threshold on release-scale data. They sit right at the
    100 ms "instant" bar, and the save scales with config bytes, so taking icon blobs out of the
    config is still worth doing — for memory (300 MB helper peaks, ~950 MB main-app peak on large
-   configs) and headroom — but it is no longer the first fix. **Superseded 2026-09-19 (Task 8):**
-   re-measured on the same optimised build and config after items 4–6 landed, tile selection no
-   longer passes the hang threshold — see "Task 8 re-measurement" below.
+   configs) and headroom — but it is no longer the first fix. **Corrected 2026-09-19 (Task 8):**
+   the "tile selection passes the hang threshold" claim above does not hold up — re-measured
+   twice with the identical method, tile selection costs 0.8–1.2 s of main-thread busy time, both
+   before and after this branch's changes (median 1193 ms pre-fix at `10c737e`, 806 ms post-fix —
+   a real ~one-third improvement, but nowhere near the hang bar either way). This is a pre-existing
+   condition this branch did not introduce and does not fully fix — see "Task 8 re-measurement"
+   below.
 2. **The Customise colour drag is the worst main-app flow for real users**, now measured: every
    drag tick queues its own full save because the debounce task is never cancelled
    (`CustomiseTileView.swift:56-71`). Holding the task and cancelling it before starting the next is
@@ -531,8 +535,10 @@ process being measured; arrow keys were posted to a process ID, never to the foc
 5. Icon blobs out of the config hot path — memory peaks, save headroom, launch.
 6. Helper reads only its own tile; fix the hardcoded release config path.
 7. Re-measure tile selection after 5; profile only if it is still over 100 ms. **Done
-   2026-09-19 (Task 8): still over 100 ms, and worse — median 806 ms, regressed from the
-   114–142 ms figure above. See "Task 8 re-measurement" below; a CPU Profiler trace was captured
+   2026-09-19 (Task 8): still far over 100 ms — median 806 ms post-fix, improved from a median
+   1193 ms measured pre-fix at `10c737e` with the identical method (~one-third faster), but the
+   114–142 ms figure above did not reproduce either time and should not be treated as a baseline.
+   See "Task 8 re-measurement" below; a CPU Profiler trace was captured
    as input to a follow-up plan, per instructions nothing was fixed here.
 8. Diagnostics-log stray lines; remaining source-review items.
 
@@ -560,47 +566,69 @@ Dock Lock switch was turned on and off; the one-time "apply" consent flag the ru
 again. A temporary optimised build remains in the session scratch folder (`scratchpad/dd-opt`)
 because its deletion was declined — remove it so Launch Services cannot resolve the dev app to it.
 
-### Task 8 re-measurement: tile selection after the config and icon changes (2026-09-19)
+### Task 8 re-measurement: tile selection before and after the config and icon changes (2026-09-19)
 
 Re-measures the same flow as the "Select a tile (10–11 apps)" row above, on the same recipe
-(optimised build, same release-sized 2-tile production-shaped config), after tasks in this plan
-that touch the selection path had landed (icon blobs out of the config, the app-icon raster
-cache, actool/codesign off the main actor, the dock-watcher and diagnostics fixes). Two prior
-attempts to start this task were blocked on a bad production-safety precondition supplied by the
-dispatching plan (see the task-8 report); once corrected, the fingerprint check passed cleanly
-before and after and production was never touched.
+(optimised build, same release-sized 2-tile production-shaped config). Run twice as a matched
+pair — **post-fix** (this branch, after tasks 1–7 landed: icon blobs out of the config, the
+app-icon raster cache, actool/codesign off the main actor, the dock-watcher and diagnostics
+fixes) and **pre-fix** (commit `10c737e`, the last commit before any of those fixes, built from a
+throwaway git worktree so the working tree's unrelated uncommitted edits were undisturbed) — to
+learn whether the branch caused or fixed the cost. It did neither on its own: **the finding is
+that tile selection is expensive both before and after**, and the branch made it measurably
+better without coming close to fixing it. (Two prior attempts to start the post-fix run were
+blocked on a bad production-safety precondition supplied by the dispatching plan — see the
+task-8 report; once corrected, the fingerprint check passed cleanly before and after every run in
+both passes, and production was never touched.)
 
-**Conditions**: `Mac15,10` (Apple M3 Max), macOS 26.6.2 (25G83), optimised build (Debug config,
-`-O`, whole-module, no debug dylib, no testability, `-derivedDataPath /tmp/dd-opt`), release-sized
-dev config (10,414,907 bytes — the production config with bundle IDs rewritten to the dev prefix,
-2 tiles: `AI Tile` 10 apps, `Utils` 11 apps, still carrying the old `iconData` blobs — loaded
-without incident, confirming the model ignores the unknown key). Battery power, 36 % discharging;
-no thermal or performance warning recorded (`pmset -g therm`).
+**Method (identical for both runs)**: one Time Profiler trace (60 s) attached to the running
+optimised app, six selections (`AI Tile` / `Utils` alternating, ~3.3 s apart) driven via
+Accessibility `set selected`, analysed with `Scripts/perf/analyze.sh <trace> 20` (main-run-loop
+busy periods between `waiting_for_events`). The row-to-tile mapping was confirmed from the
+diagnostics log independently for each run (not assumed to carry over), and each run's six busy
+periods lined up 1:1 with its six logged sidebar selections — no ambiguity, no overlap with
+unrelated work, in either run.
 
-**Method**: one Time Profiler trace (60 s) attached to the running optimised app, six selections
-(`AI Tile` / `Utils` alternating, 3 apart) driven via Accessibility `set selected`, analysed with
-`Scripts/perf/analyze.sh <trace> 20` (main-run-loop busy periods between `waiting_for_events`).
-Each of the six logged sidebar selections lined up 1:1 with one busy period, confirming the
-mapping (no ambiguity, no overlap with unrelated work).
+| # | Tile | Post-fix busy time | Pre-fix (`10c737e`) busy time |
+|---|---|---|---|
+| 1 | AI Tile | 946.4 ms | 1307.6 ms |
+| 2 | Utils | 814.5 ms | 1420.0 ms |
+| 3 | AI Tile | 797.5 ms | 1265.9 ms |
+| 4 | Utils | 777.6 ms | 1120.2 ms |
+| 5 | AI Tile | 1010.0 ms | 1056.1 ms |
+| 6 | Utils | 751.0 ms | 955.3 ms |
+| | **Median** | **806.0 ms** | **1193.05 ms** |
+| | **Spread** | 751.0–1010.0 ms (259 ms) | 955.3–1420.0 ms (464.7 ms) |
 
-| # | Tile | Busy time |
-|---|---|---|
-| 1 | AI Tile | 946.4 ms |
-| 2 | Utils | 814.5 ms |
-| 3 | AI Tile | 797.5 ms |
-| 4 | Utils | 777.6 ms |
-| 5 | AI Tile | 1010.0 ms |
-| 6 | Utils | 751.0 ms |
+**Conditions, post-fix run**: `Mac15,10` (Apple M3 Max), macOS 26.6.2 (25G83), optimised build
+(Debug config, `-O`, whole-module, no debug dylib, no testability, `-derivedDataPath /tmp/dd-opt`),
+release-sized dev config (10,414,907 bytes — the production config with bundle IDs rewritten to
+the dev prefix, 2 tiles: `AI Tile` 10 apps, `Utils` 11 apps, still carrying the old `iconData`
+blobs — loaded without incident, confirming the model ignores the unknown key). **Battery power,
+36 % discharging**; no thermal or performance warning recorded (`pmset -g therm`).
 
-**Median: 806.0 ms. Spread: 751.0–1010.0 ms (259 ms).** All six individually exceed both Apple's
-100 ms "instant" bar and its 250 ms hang bar — this is not borderline, and it is a sharp regression
-from the 114–142 ms this same flow measured on 2026-09-18 on the same config shape.
+**Conditions, pre-fix run**: identical machine, macOS, build recipe (`-derivedDataPath
+/tmp/dd-base`) and config shape — except `AppItem.iconData` is real code at `10c737e`, so the
+blob is actually load-bearing there rather than an ignored unknown key. **AC power, 55 %,
+charging** — a *more favourable* power state than the post-fix run, not a worse one — again no
+thermal or performance warning. This matters for the comparison: the slower (pre-fix) number was
+measured under the better power conditions, which strengthens rather than weakens the finding
+that the branch improved this path.
 
-**Verdict: FAIL**, by a wide margin (≈6–10× the 100 ms bar). Per the task's own instructions nothing
-was fixed or further diagnosed here; instead, one CPU Profiler trace of a single ~887 ms selection
-was captured (`xcrun xctrace record --template 'CPU Profiler' --attach <pid> --time-limit 20s`,
-exported as the `cpu-profile` table — the CPU Profiler template names it that, not `time-profile`).
-Of 991 Main Thread samples inside the busy window, the heaviest **leaf** (top-of-stack) frames were:
+**Verdict: improved, but still far outside Apple's hang threshold, both before and after.** The
+branch reduced the median by roughly a third (1193 ms → 806 ms, about 32 %) — a real
+improvement — but both numbers are ≈6–12× Apple's 100 ms "instant" bar and every individual
+selection in both runs, before and after, exceeds the 250 ms hang bar as well. This is a
+pre-existing cost this branch did not introduce and does not fully fix, **not** a regression: an
+earlier note in this file called the post-fix number alone a regression against the
+114–142 ms figure recorded on 2026-09-18, but that comparison does not hold up — see the
+annotation on that row above. We do not know what was different about that 2026-09-18 pass.
+
+Per the task's instructions nothing was fixed or further diagnosed on the post-fix run; instead,
+one CPU Profiler trace of a single ~887 ms post-fix selection was captured (`xcrun xctrace record
+--template 'CPU Profiler' --attach <pid> --time-limit 20s`, exported as the `cpu-profile` table —
+the CPU Profiler template names it that, not `time-profile`). Of 991 Main Thread samples inside
+the busy window, the heaviest **leaf** (top-of-stack) frames were:
 
 | Samples | Leaf frame | Binary |
 |---|---|---|
@@ -626,18 +654,31 @@ Of 991 Main Thread samples inside the busy window, the heaviest **leaf** (top-of
 Reads as a large SwiftUI diff/re-render dominated by generic-metadata specialization and
 `AttributeGraph` dependency propagation (`propagate_dirty` / `UpdateStack::update` /
 `UntypedTable::lookup`) plus retain/release and `objc_msgSend` traffic — not I/O, not JSON
-decoding, not icon loading. This is consistent with a costly view-identity change on tile switch
-somewhere in the selection → detail-view path, but the specific call site was not traced further
-(out of scope for this task). **This call tree is the input to a follow-up plan, not a diagnosis.**
+decoding, not icon loading. **This signature characterises a pre-existing cost, not something
+this branch introduced**: the pre-fix run's busy times (and the shared architecture of the
+selection → detail-view path, unchanged by this branch's edits) make it near-certain the same
+call tree dominates there too, though only the post-fix trace was profiled at this granularity.
 
-Safety: `Scripts/perf/prod_fingerprint.sh` output was byte-identical before and after (including
-the `helpers` pid line — no production helper relaunched). The dev config was restored from the
-`cp -p` backup and its md5 reconfirmed as `a9cb4ec5313484654c7c8775471666aa` (29570 bytes).
-`/tmp/dd-opt` was deleted after the run.
+**Forward-looking finding — out of scope for this plan, needs its own spec.** Tile selection
+costs roughly 0.8–1.2 s of main-thread busy time regardless of these fixes; the profile is SwiftUI
+view diffing plus `AttributeGraph` dependency propagation plus generic-metadata-cache traffic.
+**Hypothesis, not a diagnosis**: the leading suspect is that Tile Detail's editor rebuilds
+`PopoverPreviewCanvas` — a whole real `StackPopoverView`/`ListPopoverView` popover panel (see
+architecture.md "Tile editor = the real popover") — on every selection, and that this is simply
+an expensive view to construct/diff at 10–11 apps. This has not been traced to a specific call
+site or confirmed against the pre-fix build; a follow-up plan should verify it before proposing a
+fix.
+
+Safety: `Scripts/perf/prod_fingerprint.sh` output was byte-identical before and after both runs
+(including the `helpers` pid line — no production helper relaunched, in either pass). The dev
+config was restored from its `cp -p` backup after each run and its md5 reconfirmed as
+`a9cb4ec5313484654c7c8775471666aa` (29570 bytes) both times. `/tmp/dd-opt` and `/tmp/dd-base` were
+each deleted after their run; the `10c737e` worktree was removed with `git worktree remove`; no
+worktree-specific DerivedData was created (both builds used an explicit `-derivedDataPath`).
 
 ## Attempt ledger
 
 | Idea | Baseline → Result | Verdict | Why |
 |---|---|---|---|
 | Remove `AppItem.iconData` (icon blobs out of the config) | dev config 130,754,674 → 29,570 bytes; save-block worst 464.8 ms (1 block > 250 ms, 4 > 100 ms) → 63.7 ms (0 blocks > 100 ms) for one Accessibility name edit; main-app footprint at launch 161 MB / peak 579 MB → 62 MB / peak 268 MB; helper footprint right after relaunch 343 MB / peak 558 MB → 55 MB / peak 265 MB | kept | the blob had no reachable display path — the missing-app placeholder already superseded the fallback it fed |
-| Re-measure tile selection after the icon/config perf work (Task 8) | 2026-09-18 optimised-build baseline: 114+54 ms · 142 ms · 75+71 ms warm ("just over instant") → 2026-09-19, same optimised-build recipe and same release-sized config (`AI Tile` 10 apps / `Utils` 11 apps), six selections: 946.4, 814.5, 797.5, 777.6, 1010.0, 751.0 ms → **median 806.0 ms, spread 751.0–1010.0 ms** | **regressed, not fixed** — median is ~6–10× Apple's 100 ms bar, and every one of the six individually exceeds the 250 ms hang bar too (this task measures only; no fix was made) | single-selection CPU Profiler trace, 991 Main Thread samples in the ~887 ms busy window: dominated by `objc_msgSend`, SwiftUICore `find1<A>`/deduplicated symbols, `AttributeGraph` (`propagate_dirty`, `UpdateStack::update`, `UntypedTable::lookup`), and Swift generic-metadata-cache traffic (`MetadataCacheKey::operator==`, `getGenericMetadata`, `swift_retain`/`_release`) — reads as a large SwiftUI diff/re-specialization on tile switch, not I/O; full table and conditions in "Task 8 re-measurement" above, left as input to a follow-up plan |
+| Re-measure tile selection after the icon/config perf work (Task 8) | Pre-fix (`10c737e`, throwaway worktree, AC power 55 % charging): six selections 1307.6, 1420.0, 1265.9, 1120.2, 1056.1, 955.3 ms → median 1193.05 ms, spread 955.3–1420.0 ms → Post-fix (this branch, battery 36 % discharging): six selections 946.4, 814.5, 797.5, 777.6, 1010.0, 751.0 ms → **median 806.0 ms, spread 751.0–1010.0 ms** | **improved (~32 %), but still failing** — 1193 ms → 806 ms median, measured under a *less* favourable power state than the slower pre-fix run, so the improvement is not a power-state artefact; both numbers are ≈6–12× Apple's 100 ms bar and every selection in both runs exceeds the 250 ms hang bar too. Not a regression: the 2026-09-18 114–142 ms figure this was first compared against did not reproduce in either run and is annotated as unreliable at line 484 | single-selection CPU Profiler trace (post-fix), 991 Main Thread samples in the ~887 ms busy window: dominated by `objc_msgSend`, SwiftUICore `find1<A>`/deduplicated symbols, `AttributeGraph` (`propagate_dirty`, `UpdateStack::update`, `UntypedTable::lookup`), and Swift generic-metadata-cache traffic (`MetadataCacheKey::operator==`, `getGenericMetadata`, `swift_retain`/`_release`) — reads as a large SwiftUI diff/re-specialization on tile switch, not I/O; characterises a **pre-existing** cost (the pre-fix run's busy times point at the same underlying path, unchanged by this branch). Full tables and conditions in "Task 8 re-measurement" above; out-of-scope forward-looking hypothesis (unconfirmed) recorded there: `PopoverPreviewCanvas` rebuild on selection |
