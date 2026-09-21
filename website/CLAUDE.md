@@ -27,7 +27,7 @@ npx tsc --noEmit
 - `lib/releases.ts` `getReleases()` fetches the `/release-notes` changelog from **GitHub Releases** (server-side, revalidated hourly) — the source of truth is each GitHub release's notes; there's no static list to maintain. To change what the site shows, edit the release on GitHub.
 - All user-facing copy goes through `lib/i18n.ts` (en-AU default) — never hardcode marketing strings.
 - Changed a static asset but kept its filename? Bump its `?v=N` query param or caches serve the old file.
-- Assets load from an R2 CDN in prod, `public/` in dev — route every `/assets/…` ref through `asset()` (`lib/assets.ts`); see assets-cdn rule. New/changed files must also be uploaded to R2.
+- Assets load from a CDN in prod (R2, or S3 for `/assets/bg/`), `public/` in dev — route every `/assets/…` ref through `asset()` (`lib/assets.ts`); see assets-cdn rule. New/changed files must also be uploaded to the matching bucket.
 - Dead code, imported nowhere: `components/{features,screenshot,support,faq,theme-toggle}.tsx`.
 
 ## Rules

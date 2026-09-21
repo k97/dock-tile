@@ -1,17 +1,23 @@
 # Assets, CDN & Dev Port
 
-## Asset delivery (local dev vs R2 in prod)
+## Asset delivery (local dev vs CDN in prod)
 
-Static files under `public/assets/` are mirrored to a **Cloudflare R2 bucket** and served from
-its CDN in production; local dev serves the same files from `public/`. The switch is the pure
-seam `lib/assets.ts`:
+Static files under `public/assets/` are mirrored to a CDN — a **Cloudflare R2 bucket**, except
+the subtrees in `S3_PREFIXES` (currently `/assets/bg/`), which live in the **S3 bucket
+`k97static` under `docktile/`** (same bucket + pattern as the rkarthik-zehn portfolio) — and
+served from there in production; local dev serves the same files from `public/`. The switch is
+the pure seam `lib/assets.ts`:
 
 - `asset(path)` maps a root-relative `/assets/...` path (optionally with a `?v=N` cache-buster) to
-  a local URL in dev or its R2 URL in prod. Absolute URLs / `data:` URIs pass through untouched.
+  a local URL in dev or its CDN URL in prod. Absolute URLs / `data:` URIs pass through untouched.
 - Gate: `NEXT_PUBLIC_IMAGE_SOURCE`. `local` → base `""` (public/). Anything else **including unset
-  (how Vercel builds run)** → the R2 base URL. It's `NEXT_PUBLIC_` so the value inlines client-side.
-- **Bucket layout = root** (the bucket is shared with the portfolio, whose videos sit at root too):
-  `public/assets/foo.png` → `https://pub-e2f1ef02cb5d42f780dd344d8d5a1816.r2.dev/assets/foo.png`.
+  (how Vercel builds run)** → the CDN base URL. It's `NEXT_PUBLIC_` so the value inlines client-side.
+- **R2 bucket layout = root** (the bucket is shared with the portfolio, whose videos sit at root
+  too): `public/assets/foo.png` → `https://pub-e2f1ef02cb5d42f780dd344d8d5a1816.r2.dev/assets/foo.png`.
+- **S3 keys drop the `/assets` segment**: `public/assets/bg/hero-bg.webp` →
+  `https://k97static.s3.ap-southeast-2.amazonaws.com/docktile/bg/hero-bg.webp`. Moving another
+  subtree to S3 = upload it under `docktile/<subtree>/` + add its `/assets/<subtree>/` prefix to
+  `S3_PREFIXES`.
 
 **Always route new asset references through `asset("/assets/…")`** — never hardcode a bare
 `/assets/...` into an `<Image>`/`url()` again, or it won't switch to R2 in prod. Keep the
