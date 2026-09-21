@@ -87,7 +87,25 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
 
     // MARK: - Properties
 
-    private var popover: NSPopover?
+    /// ONE popover for this panel's whole lifetime — a `let` ON PURPOSE (critical).
+    ///
+    /// On macOS 26 every `NSPopover` instance gets a Liquid Glass backdrop (`NSGlassView` + a
+    /// hosting view + an IOSurface the size of the popover), and AppKit never releases it: the
+    /// orphan is kept alive by an observer block AppKit itself registers in
+    /// `-[NSView _commonAwake]`. Building a new `NSPopover` per open therefore abandoned 3–5 MB on
+    /// EVERY click, for the life of the helper (a production tile crept 85 → 149 MB in six days).
+    /// Reproduced in a bare AppKit app with no Dock Tile code, so it is a system bug we were
+    /// triggering — see docs/macos-26-popover-glass-leak.md. One instance, shown and closed
+    /// repeatedly, leaks nothing; neither does swapping its `contentViewController` per open,
+    /// which is how the content still re-reads the Popover Appearance settings on every click.
+    ///
+    /// Being a constant guards ONE regression: assigning a fresh `NSPopover()` to this property per
+    /// open no longer compiles. It does NOT stop a caller constructing a new `FloatingPanel` per
+    /// open (each would own its own popover — both current owners hold one panel for their
+    /// lifetime; keep it that way), nor a local `NSPopover()` elsewhere. The leak itself is
+    /// invisible to unit tests (it lives in AppKit's graphics memory), so the check is a
+    /// `footprint` measurement across ten opens: it must go flat after the first few.
+    private let popover = NSPopover()
     private var anchorWindow: NSWindow?
     private var dismissObserver: NSObjectProtocol?
     private var clickOutsideMonitor: Any?
@@ -200,9 +218,9 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
 
     // MARK: - Popover Management
 
-    private func createPopover() -> NSPopover {
-        let popover = NSPopover()
-
+    /// Prepare the long-lived popover for one presentation: re-read the settings that can change
+    /// between opens and attach FRESH content. Never creates a popover — see `popover`.
+    private func configurePopoverForPresentation() {
         // Appearance configuration
         popover.behavior = .transient  // Closes when clicking outside
         popover.animates = Self.shouldAnimate(
@@ -227,8 +245,6 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         self.hostingController = controller
 
         popover.contentViewController = controller
-
-        return popover
     }
 
     /// Create anchor window and determine the preferred edge for popover.
@@ -305,16 +321,15 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         // Cleanup any stale state
         cleanupPopover()
 
-        // Create popover and anchor window with appropriate edge
-        popover = createPopover()
+        // Fresh content on the reused popover, and a new anchor window with the appropriate edge
+        configurePopoverForPresentation()
         let (window, preferredEdge) = createAnchorWindowAndEdge()
         anchorWindow = window
 
         // Activate app
         NSApp.activate(ignoringOtherApps: true)
 
-        guard let popover = popover,
-              let anchorWindow = anchorWindow,
+        guard let anchorWindow = anchorWindow,
               let anchorView = anchorWindow.contentView else {
             state = .hidden
             return
@@ -349,7 +364,8 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
 
         // Add global click monitor to dismiss on click outside
         clickOutsideMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
-            guard let self = self, let popover = self.popover, popover.isShown else { return }
+            guard let self = self, self.popover.isShown else { return }
+            let popover = self.popover
 
             // Check if click is outside the popover
             if let popoverWindow = popover.contentViewController?.view.window {
@@ -379,7 +395,7 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
         removeEventMonitors()
 
         // Close popover (delegate will handle final cleanup and reset state to .hidden)
-        popover?.close()
+        popover.close()
     }
 
     // MARK: - Cleanup
@@ -402,9 +418,9 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
     private func cleanupPopover() {
         removeEventMonitors()
 
-        // Release popover resources
-        popover?.close()
-        popover = nil
+        // Release the CONTENT, never the popover itself — see `popover`.
+        if popover.isShown { popover.close() }
+        popover.contentViewController = nil
 
         // Clean up anchor window
         cleanupAnchorWindow()
@@ -435,7 +451,10 @@ final class FloatingPanel: NSObject, NSPopoverDelegate {
                 // Stamp the dismissal time for transient closes that bypass hide(), so the
                 // Dock reopen handler can suppress an immediate same-click reshow.
                 self.lastHiddenAt = CFAbsoluteTimeGetCurrent()
-                self.popover = nil
+                // Drop the SwiftUI tree while hidden; the popover itself is kept — see `popover`.
+                // The isShown check is belt-and-braces: `show()` is gated on `.hidden`, which only
+                // this block sets, so a new presentation cannot have attached content yet.
+                if !self.popover.isShown { self.popover.contentViewController = nil }
                 self.cleanupAnchorWindow()
                 self.hostingController = nil
             }
