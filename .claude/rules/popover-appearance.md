@@ -63,7 +63,10 @@ architecture.md "Sidebar Selection & Empty State" for the title-band chrome). Pe
   `ListPopoverView`, so they can't drift. Unit-tested (`PopoverMetricsTests`). Popover Size = grid
   column count (Small 4 / Medium 5 / Large 6) **capped at the app count** so few-app tiles stay tight
   — meaning Popover Size is a visual no-op for a tile with ≤4 apps (the preview uses 6 sample apps so
-  all three tiers differ). Animation is forced to 0 when system Reduce Motion is on.
+  all three tiers differ). Animation is forced to 0 when system Reduce Motion is on. The same
+  decision now reaches AppKit: `FloatingPanel.shouldAnimate(tier:reduceMotion:)` sets
+  `NSPopover.animates`, which used to be hardcoded `true` (Animation = None and Reduce Motion still
+  got the ~0.5 s appearance animation). Guarded by `FloatingPanelAnimationTests`.
 - **Pure panel-geometry seam** (`PopoverPanelLayout`, in the same file): the chrome constants and the
   grid/list **size formulas**, one level above `PopoverMetrics`. `StackPopoverView.popoverWidth` /
   `.calculateHeight`, `ListPopoverView`'s paddings AND `PopoverPreviewCanvas.naturalPanelSize` all

@@ -25,8 +25,8 @@ export function Hero() {
         className="hero-texture"
         style={
           {
-            "--hero-bg": `url("${asset("/assets/hero-bg.webp")}")`,
-            "--hero-bg-dark": `url("${asset("/assets/hero-bg-dark.webp")}")`,
+            "--hero-bg": `url("${asset("/assets/bg/hero-bg.webp")}")`,
+            "--hero-bg-dark": `url("${asset("/assets/bg/hero-bg-dark.webp")}")`,
           } as React.CSSProperties
         }
         aria-hidden

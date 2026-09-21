@@ -435,7 +435,6 @@ struct AppItem: Identifiable, Codable, Hashable {
     let id: UUID
     var bundleIdentifier: String
     var name: String
-    var iconData: Data?  // Serialized NSImage as PNG/TIFF data
     var isFolder: Bool  // v2: Distinguishes folders from applications
     var folderPath: String?  // v2: Path to folder (only set when isFolder is true)
     /// v8: Last on-disk path the app was resolved at. A second installation signal alongside
@@ -449,7 +448,6 @@ struct AppItem: Identifiable, Codable, Hashable {
         id: UUID = UUID(),
         bundleIdentifier: String,
         name: String,
-        iconData: Data? = nil,
         isFolder: Bool = false,
         folderPath: String? = nil,
         lastKnownPath: String? = nil
@@ -457,7 +455,6 @@ struct AppItem: Identifiable, Codable, Hashable {
         self.id = id
         self.bundleIdentifier = bundleIdentifier
         self.name = name
-        self.iconData = iconData
         self.isFolder = isFolder
         self.folderPath = folderPath
         self.lastKnownPath = lastKnownPath
@@ -471,7 +468,6 @@ struct AppItem: Identifiable, Codable, Hashable {
         id = try container.decode(UUID.self, forKey: .id)
         bundleIdentifier = try container.decode(String.self, forKey: .bundleIdentifier)
         name = try container.decode(String.self, forKey: .name)
-        iconData = try container.decodeIfPresent(Data.self, forKey: .iconData)
 
         // v2 fields - optional with defaults
         isFolder = try container.decodeIfPresent(Bool.self, forKey: .isFolder) ?? false
@@ -482,7 +478,7 @@ struct AppItem: Identifiable, Codable, Hashable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, bundleIdentifier, name, iconData
+        case id, bundleIdentifier, name
         case isFolder, folderPath
         case lastKnownPath
     }
@@ -495,20 +491,9 @@ struct AppItem: Identifiable, Codable, Hashable {
         let appName = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
                       ?? appURL.deletingPathExtension().lastPathComponent
 
-        // Extract icon data
-        var iconData: Data?
-        if let iconFile = bundle.object(forInfoDictionaryKey: "CFBundleIconFile") as? String {
-            let iconPath = bundle.path(forResource: iconFile, ofType: nil)
-                          ?? bundle.path(forResource: iconFile, ofType: "icns")
-            if let path = iconPath, let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
-                iconData = data
-            }
-        }
-
         return AppItem(
             bundleIdentifier: bundleId,
             name: appName,
-            iconData: iconData,
             isFolder: false,
             folderPath: nil,
             lastKnownPath: appURL.path  // stamp the resolved path so missing-app detection has two signals
@@ -520,14 +505,9 @@ struct AppItem: Identifiable, Codable, Hashable {
         let folderName = folderURL.lastPathComponent
         let folderPath = folderURL.path
 
-        // Get folder icon from system
-        let icon = NSWorkspace.shared.icon(forFile: folderPath)
-        let iconData = icon.tiffRepresentation
-
         return AppItem(
             bundleIdentifier: "folder.\(folderPath.hashValue)",  // Unique identifier for folder
             name: folderName,
-            iconData: iconData,
             isFolder: true,
             folderPath: folderPath
         )

@@ -22,14 +22,14 @@ export default function Home() {
         rel="preload"
         as="image"
         type="image/webp"
-        href={asset("/assets/hero-bg.webp")}
+        href={asset("/assets/bg/hero-bg.webp")}
         media="(prefers-color-scheme: light)"
       />
       <link
         rel="preload"
         as="image"
         type="image/webp"
-        href={asset("/assets/hero-bg-dark.webp")}
+        href={asset("/assets/bg/hero-bg-dark.webp")}
         media="(prefers-color-scheme: dark)"
       />
       <HeroVeil />

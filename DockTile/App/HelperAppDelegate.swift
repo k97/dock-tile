@@ -21,6 +21,7 @@
 //
 
 import AppKit
+import SwiftUI
 
 @MainActor
 final class HelperAppDelegate: NSObject, NSApplicationDelegate {
@@ -127,6 +128,23 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // (no hang reporting for helpers, 1 h log retention). If this process pegs a core, it now
         // samples itself into <support>/spins/ and Copy Diagnostics carries the hottest frames.
         SpinWatchdog.shared.start()
+
+        // Rasterise this tile's icons BEFORE the first click, one per run-loop turn, so the first
+        // popover open doesn't wait on ~3.5 ms of synchronous IconServices XPC per icon.
+        if let config = getCurrentConfiguration() {
+            let settings = PopoverSettings.load(layout: config.layoutMode)
+            let pointSize = config.layoutMode == .list
+                ? PopoverMetrics.listIconSize(settings.tileSize)
+                : PopoverMetrics.tileIconSize(settings.tileSize)
+            let isDark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let token = TileIconRasterCache.liveAppearanceToken(isDark: isDark)
+            let scales = Array(Set(NSScreen.screens.map(\.backingScaleFactor))).sorted()
+            Task { @MainActor in
+                await TileIconRasterCache.shared.prewarm(items: config.appItems, pointSize: pointSize,
+                                                         scales: scales.isEmpty ? [2] : scales, appearanceToken: token)
+                DiagnosticsLog.shared.log("helper", "Icon cache prewarmed — \(config.appItems.count) item(s)", verbose: true)
+            }
+        }
 
         // Set up icon style observation for dynamic icon switching.
         // NOTE: This observes "Icon and widget style" setting, NOT "Appearance" (Light/Dark).
@@ -487,35 +505,19 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// Read showInAppSwitcher directly from disk (for early initialization)
     /// This is used before ConfigurationManager is created
     private func readShowInAppSwitcherFromDisk() -> Bool {
-        let preferencesDir = FileManager.default.urls(
-            for: .libraryDirectory,
-            in: .userDomainMask
-        )[0].appendingPathComponent("Preferences")
+        // `AppEnvironment.preferencesURL`, never a literal filename: a hardcoded release name made
+        // every DEV helper read the wrong file and fall back to Ghost mode.
+        Self.showInAppSwitcher(inConfigAt: AppEnvironment.preferencesURL, bundleId: currentBundleId)
+    }
 
-        let storageURL = preferencesDir.appendingPathComponent("com.docktile.configs.json")
-
-        guard FileManager.default.fileExists(atPath: storageURL.path),
-              let data = try? Data(contentsOf: storageURL) else {
-            print("   No config file found, defaulting to hidden")
-            return false
-        }
-
-        // Decode configurations and find ours by bundle ID
+    /// Pure lookup seam (guarded by HelperConfigLookupTests). Missing file, undecodable file or an
+    /// unknown bundle id all mean Ghost mode.
+    nonisolated static func showInAppSwitcher(inConfigAt url: URL, bundleId: String) -> Bool {
+        guard let data = try? Data(contentsOf: url) else { return false }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-
-        guard let configs = try? decoder.decode([DockTileConfiguration].self, from: data) else {
-            print("   Failed to decode configs, defaulting to hidden")
-            return false
-        }
-
-        if let config = configs.first(where: { $0.bundleIdentifier == currentBundleId }) {
-            print("   Found config '\(config.name)': showInAppSwitcher = \(config.showInAppSwitcher)")
-            return config.showInAppSwitcher
-        }
-
-        print("   Config not found for \(currentBundleId), defaulting to hidden")
-        return false
+        guard let configs = try? decoder.decode([DockTileConfiguration].self, from: data) else { return false }
+        return configs.first { $0.bundleIdentifier == bundleId }?.showInAppSwitcher ?? false
     }
 
     // MARK: - Icon Style Observation (Dynamic Icon Switching)

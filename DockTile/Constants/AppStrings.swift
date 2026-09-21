@@ -1160,6 +1160,12 @@ enum AppStrings {
             value: "Dock Tile is running from a temporary, read-only location and can't create tiles. Move it to your Applications folder and try again.",
             comment: "Error when the app is translocated and cannot generate helper bundles"
         )
+
+        static let bundleBuildInProgress = NSLocalizedString(
+            "error.bundleBuildInProgress",
+            value: "This tile is already being rebuilt. Wait for that to finish, then try again.",
+            comment: "Error when a second build is requested for a tile whose helper bundle is already being built"
+        )
     }
 
     // MARK: - Log Messages

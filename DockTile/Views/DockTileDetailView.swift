@@ -33,6 +33,9 @@ struct DockTileDetailView: View {
     /// instead of the full `editedConfig` struct, which avoids O(n * icon_data_size) deep equality
     /// checks on every keystroke. The task cancels/restarts on each increment, providing debounce.
     @State private var saveGeneration: Int = 0
+    /// True from an edit until it is persisted — lets `onDisappear` flush an edit whose debounce
+    /// was cancelled because the view is going away.
+    @State private var hasPendingSave = false
 
     /// Fingerprint of the config content as of the last completed toolbar action (or view load).
     /// Drives the dirty state that gates the hidden-tile "Done" button. Seeded in `init` so a
@@ -184,6 +187,7 @@ struct DockTileDetailView: View {
         // to force complete view recreation when switching configs, making sync unnecessary
         .onChange(of: editedConfig) { _, _ in
             guard hasAppearedOnce else { return }
+            hasPendingSave = true
             DispatchQueue.main.async {
                 configManager.markSelectedConfigAsEdited()
                 saveGeneration += 1
@@ -194,21 +198,15 @@ struct DockTileDetailView: View {
         // Debounced auto-save using counter - avoids deep struct equality on every keystroke
         .task(id: saveGeneration) {
             guard hasAppearedOnce, saveGeneration > 0 else { return }
-
-            try? await Task.sleep(nanoseconds: 300_000_000)
-
-            // Visibility is owned EXCLUSIVELY by performDockAction (gated on the Dock op
-            // actually completing). The debounced auto-save persists edits to name, layout,
-            // icon, app list, etc. — but must NOT commit the Show Tile toggle's transient
-            // isVisibleInDock. Otherwise a hide whose un-pin never runs (dropped/interrupted
-            // action, busy main thread at login) leaves a permanent "hidden in config but
-            // still pinned in the Dock" desync. Preserve the stored visibility here.
-            var toSave = editedConfig
-            if let stored = configManager.configuration(for: editedConfig.id) {
-                toSave.isVisibleInDock = stored.isVisibleInDock
-                toSave.lastDockIndex = stored.lastDockIndex
-            }
-            configManager.updateConfiguration(toSave)
+            // A superseded debounce must not save — see SaveDebounce. A view that is going away
+            // flushes through onDisappear instead.
+            guard await SaveDebounce.waitedFullInterval(nanoseconds: 300_000_000) else { return }
+            persistEdits()
+        }
+        .onDisappear {
+            // Leaving within the debounce window (tile switch, Customise, a Settings pane) cancels
+            // the task above; without this flush the last edit would be lost.
+            if hasPendingSave { persistEdits() }
         }
         .onAppear {
             // Check actual Dock state on appear
@@ -518,6 +516,16 @@ struct DockTileDetailView: View {
         isCurrentlyInDock = HelperBundleManager.shared.findInDock(bundleId: editedConfig.bundleIdentifier) != nil
     }
 
+    /// Persist the editor's content edits (name, layout, icon, app list…). Visibility is owned
+    /// EXCLUSIVELY by performDockAction, gated on the Dock op actually completing — so this must
+    /// NOT commit the Show Tile toggle's transient isVisibleInDock, or a hide whose un-pin never
+    /// runs leaves a permanent "hidden in config but still pinned" desync. Preserve the stored value.
+    private func persistEdits() {
+        configManager.updateConfiguration(ConfigurationManager.preservingStoredVisibility(
+            editedConfig, stored: configManager.configuration(for: editedConfig.id)))
+        hasPendingSave = false
+    }
+
     /// Pure consent decision: the one-time Dock-restart dialog shows only until the user has
     /// acknowledged it. Extracted so the rule is testable without UserDefaults or the view layer.
     nonisolated static func shouldShowDockRestartConsent(hasAcknowledged: Bool) -> Bool {
@@ -569,8 +577,16 @@ struct DockTileDetailView: View {
                     // User wants tile in Dock - install/update (full helper re-render)
                     // Clear lastDockIndex after successful install (position is now live in Dock)
                     let wasInDock = isCurrentlyInDock
-                    try await DiagnosticsLog.shared.measure("\(wasInDock ? "Update" : "Install") helper '\(configToSave.name)'") {
+                    let installed = try await DiagnosticsLog.shared.measure("\(wasInDock ? "Update" : "Install") helper '\(configToSave.name)'") {
                         try await HelperBundleManager.shared.installHelper(for: configToSave)
+                    }
+                    // Refused because a migration / Apply batch already owns this bundle id. Stamping
+                    // anyway would claim a rebuild that never happened, and migration keys on that
+                    // stamp — so leave the tile unstamped and let the next launch rebuild it.
+                    guard installed else {
+                        errorMessage = AppStrings.Error.bundleBuildInProgress
+                        isProcessing = false
+                        return
                     }
                     configToSave.lastDockIndex = nil  // Clear saved position
                     configToSave.helperAppVersion = HelperBundleManager.currentAppVersion
@@ -692,6 +708,8 @@ struct DockTileDetailView: View {
     }
 
     private func deleteTile() {
+        // Clear first so the onDisappear that follows doesn't flush a no-op save for a gone tile.
+        hasPendingSave = false
         // Delete will handle uninstalling helper if needed
         // Use editedConfig.id to ensure we delete the correct tile
         configManager.deleteConfiguration(editedConfig.id)

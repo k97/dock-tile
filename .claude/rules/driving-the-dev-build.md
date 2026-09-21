@@ -63,3 +63,12 @@ own older format — a regeneration ping-pong that restarted the Dock on every l
 now resolves the newest product by binary mtime (`findDockTileInDerivedData`), but stale products
 still waste gigabytes and can be resolved by Launch Services elsewhere. When removing a worktree:
 `rm -rf ~/Library/Developer/Xcode/DerivedData/DockTile-<its hash>`.
+
+## The Debug binary is a stub — app code lives in the debug dylib
+
+The Debug product's executable (`Contents/MacOS/Dock Tile Dev`, ~58 KB) is a thin loader; all
+app code is in `Dock Tile Dev.debug.dylib` beside it (Xcode's debug-dylib linking). Hand-patching
+a dev helper bundle by copying only the executable silently runs the OLD code — the 2026-09-07
+issue-#12 live verification "failed" exactly this way until both files were copied (then
+`codesign --force --sign -` to re-seal). Copy stub + dylib together, and verify with
+`md5 -q` against the built product, not by assuming `cp` sufficed.

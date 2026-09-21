@@ -1,0 +1,501 @@
+{
+  "app": "Dock Tile",
+  "version": "2.0.1 (29)",
+  "recorded": "2026-09-18T18:10:00+05:30",
+  "conditions": {
+    "machine": "Mac15,10 (10 P + 4 E cores)",
+    "os": "26.6.2",
+    "build": "Release helpers (AI Tile, Utils) and Debug helpers (Dev Tile, Media, Work) \u2014 see each measurement",
+    "power": "battery, 54%, discharging",
+    "thermal_start": "nominal",
+    "thermal_end": "nominal",
+    "load_average": "5-8 (machine busy)",
+    "iterations": 5,
+    "first_run_discarded": true,
+    "root": false,
+    "trigger": "open -b <helper bundle id>"
+  },
+  "measurements": {
+    "release_10app_main_thread_busy_per_open_warm_ms": {
+      "median": 31,
+      "spread": 14,
+      "runs": [
+        29.8,
+        31.8,
+        30.3,
+        43.7
+      ]
+    },
+    "release_10app_main_thread_busy_first_open_after_idle_ms": {
+      "median": 201,
+      "spread": null,
+      "runs": [
+        200.7
+      ]
+    },
+    "release_10app_main_thread_busy_per_dismiss_ms": {
+      "median": 14,
+      "spread": 4,
+      "runs": [
+        12.2,
+        15.5,
+        16.3,
+        14.2,
+        12.5
+      ]
+    },
+    "debug_102app_show_wall_warm_ms": {
+      "median": 46,
+      "spread": 19,
+      "runs": [
+        46,
+        37,
+        56,
+        50,
+        40
+      ]
+    },
+    "debug_102app_show_wall_first_open_after_idle_ms": {
+      "median": 465,
+      "spread": 71,
+      "runs": [
+        522,
+        465,
+        451
+      ]
+    },
+    "debug_102app_main_thread_busy_first_open_after_idle_ms": {
+      "median": 474,
+      "spread": null,
+      "runs": [
+        474.1
+      ]
+    },
+    "debug_102app_cold_first_open_after_launch_ms": {
+      "median": 2250,
+      "spread": null,
+      "runs": [
+        2250
+      ]
+    },
+    "debug_6app_show_wall_ms": {
+      "median": 138,
+      "spread": 63,
+      "runs": [
+        138,
+        192,
+        129
+      ],
+      "note": "each after idle"
+    },
+    "idle_wakeups_per_s": {
+      "median": 0,
+      "spread": 0,
+      "processes": 5,
+      "window_s": 10
+    },
+    "idle_cpu_percent": {
+      "median": 0.0,
+      "spread": 0.0,
+      "processes": 5
+    },
+    "release_footprint_steady_mb": {
+      "median": 78,
+      "spread": 15,
+      "runs": [
+        85,
+        70
+      ]
+    },
+    "release_footprint_peak_mb": {
+      "median": 302,
+      "spread": 10,
+      "runs": [
+        307,
+        297
+      ]
+    },
+    "debug_footprint_steady_mb": {
+      "median": 138,
+      "spread": 94,
+      "runs": [
+        130,
+        138,
+        224
+      ]
+    },
+    "debug_footprint_peak_mb": {
+      "median": 560,
+      "spread": 24,
+      "runs": [
+        559,
+        560,
+        583
+      ]
+    },
+    "release_footprint_growth_per_open_mb": {
+      "median": 2.3,
+      "spread": null,
+      "evidence": "85 -> 97 MB over 5 opens; IOSurface regions 22 -> 44; unchanged ~10 min later"
+    },
+    "debug_102app_footprint_growth_per_open_mb": {
+      "median": 6.3,
+      "spread": null,
+      "evidence": "224 -> 262 MB over 6 opens; IOSurface regions 21 -> 41; 12 MB reclaimable"
+    },
+    "release_leaked_kb": {
+      "median": 72,
+      "spread": null,
+      "nodes": 1232
+    }
+  },
+  "not_measured": [
+    "main app (Debug product unsigned after a test run; Release not launched to avoid production writes)",
+    "launch to first frame (no signpost; App Launch lifecycle table empty on macOS)",
+    "Release build of a large tile",
+    "QoS distribution, per-cluster residency, timer attribution, cross-process lock holders (need root)",
+    "Thread Performance Checker",
+    "AC power"
+  ],
+  "whole_app_run": {
+    "recorded": "2026-09-18T18:30:00+05:30",
+    "conditions": {
+      "machine": "Mac15,10 (10 P + 4 E cores)",
+      "os": "26.6.2",
+      "build": "Debug main app (rebuilt, codesign --verify passes); Debug Dev Tile helper",
+      "config_bytes": 130754674,
+      "release_config_bytes": 10414899,
+      "power": "battery, 27% -> 21%, discharging",
+      "low_power_mode": false,
+      "thermal_start": "nominal",
+      "thermal_end": "nominal",
+      "load_average": "5-7",
+      "ui_driver": "Accessibility (set selected / click / set value)",
+      "root": false
+    },
+    "measurements": {
+      "mainapp_launch_to_first_window_ms": {
+        "median": 1174,
+        "spread": 31,
+        "runs": [
+          1174,
+          1199,
+          1168
+        ]
+      },
+      "mainapp_post_window_main_thread_blocks_ms": {
+        "median": 453,
+        "spread": null,
+        "runs": [
+          453.2,
+          196.6
+        ]
+      },
+      "mainapp_select_102app_tile_first_ms": {
+        "median": 3665,
+        "spread": null,
+        "runs": [
+          3664.6
+        ]
+      },
+      "mainapp_select_102app_tile_warm_ms": {
+        "median": 333,
+        "spread": null,
+        "runs": [
+          333.1
+        ]
+      },
+      "mainapp_select_6app_tile_ms": {
+        "median": 1254,
+        "spread": 1085,
+        "runs": [
+          711.0,
+          1796.1
+        ]
+      },
+      "mainapp_open_settings_popover_ms": {
+        "median": 281,
+        "spread": null,
+        "runs": [
+          281.0
+        ]
+      },
+      "mainapp_open_settings_general_ms": {
+        "median": 61,
+        "spread": null,
+        "runs": [
+          61.2
+        ]
+      },
+      "mainapp_open_smart_add_sheet_ms": {
+        "median": 148,
+        "spread": null,
+        "runs": [
+          147.9
+        ]
+      },
+      "mainapp_edit_render_ms": {
+        "median": 110,
+        "spread": 26,
+        "runs": [
+          97.0,
+          123.3
+        ]
+      },
+      "mainapp_debounced_save_block_ms": {
+        "median": 1660,
+        "spread": 77,
+        "runs": [
+          1698.4,
+          1621.0
+        ],
+        "config_bound": true
+      },
+      "mainapp_update_tile_wall_ms": {
+        "median": 4266,
+        "spread": null,
+        "runs": [
+          4266
+        ],
+        "compile_car_ms": 985
+      },
+      "mainapp_update_tile_worst_block_ms": {
+        "median": 1638,
+        "spread": null,
+        "runs": [
+          1638.4
+        ],
+        "other_blocks_ms": [
+          526.9,
+          316.7,
+          244.5,
+          121.0,
+          120.7
+        ]
+      },
+      "mainapp_idle_cpu_percent": {
+        "median": 0.1,
+        "spread": null
+      },
+      "mainapp_idle_wakeups_per_s": {
+        "median": 0,
+        "spread": 0
+      },
+      "mainapp_footprint_launch_mb": {
+        "median": 370,
+        "spread": null,
+        "malloc_large_mb": 304,
+        "config_bound": true
+      },
+      "mainapp_footprint_after_use_mb": {
+        "median": 635,
+        "spread": 87,
+        "runs": [
+          591,
+          678
+        ],
+        "peak_mb": 684
+      },
+      "helper_cold_launch_footprint_mb": {
+        "median": 343,
+        "spread": null,
+        "peak_mb": 558,
+        "config_bound": true
+      },
+      "helper_cold_launch_show_call_ms": {
+        "median": 98,
+        "spread": null,
+        "runs": [
+          98
+        ]
+      }
+    },
+    "not_measured": [
+      "Customise view colour drag / stepper (needs continuous pointer input)",
+      "popover hover and keyboard navigation",
+      "Dock Lock event tap (off in dev; needs an Accessibility grant)",
+      "launch migration / self-heal batch (all dev helpers current)",
+      "Release build of the main app (production data paths)",
+      "list-layout popover; Smart Add compute with a cold Spotlight cache",
+      "QoS distribution, timer attribution (root)"
+    ]
+  },
+  "third_pass": {
+    "recorded": "2026-09-19T15:00:00+05:30",
+    "conditions": {
+      "machine": "Mac15,10 (10 P + 4 E cores)",
+      "os": "26.6.2",
+      "power": "battery, 97% -> 91%, discharging",
+      "low_power_mode": false,
+      "root": false,
+      "builds": {
+        "optimised": "Debug configuration with -O, whole-module, no debug dylib, dev data paths",
+        "debug": "standard Debug build (helper regeneration flows)"
+      },
+      "configs": {
+        "dev_bytes": 130754674,
+        "release_sized_test_bytes": 10414905,
+        "release_sized_test": "copy of production config, bundle ids rewritten to dev prefix (never pinned)"
+      },
+      "input": "Accessibility for clicks/values; guarded CGEvent tool for pointer; keys posted to pid"
+    },
+    "measurements": {
+      "opt_bigconfig_launch_to_window_ms": {
+        "median": 1140,
+        "spread": 13,
+        "runs": [
+          1133,
+          1146
+        ],
+        "discarded_first": 2232
+      },
+      "opt_bigconfig_select_102app_first_ms": {
+        "median": 686,
+        "spread": null,
+        "runs": [
+          686.4
+        ]
+      },
+      "opt_bigconfig_select_6app_ms": {
+        "median": 202,
+        "spread": 12,
+        "runs": [
+          195.8,
+          208.1
+        ]
+      },
+      "opt_bigconfig_save_block_ms": {
+        "median": 494,
+        "spread": 147,
+        "runs": [
+          420.1,
+          566.9
+        ]
+      },
+      "opt_bigconfig_footprint_mb": {
+        "median": 621,
+        "spread": null,
+        "peak_mb": 948
+      },
+      "opt_relconfig_launch_to_window_ms": {
+        "median": 645,
+        "spread": 49,
+        "runs": [
+          664,
+          615,
+          645
+        ]
+      },
+      "opt_relconfig_select_tile_ms": {
+        "median": 142,
+        "spread": 28,
+        "runs": [
+          113.8,
+          141.5,
+          74.5
+        ],
+        "note": "first block of each selection; followed by 54-71 ms"
+      },
+      "opt_relconfig_smart_add_cold_ms": {
+        "median": 230,
+        "spread": null,
+        "runs": [
+          230.1
+        ]
+      },
+      "opt_relconfig_edit_render_ms": {
+        "median": 30,
+        "spread": 13,
+        "runs": [
+          24.0,
+          36.6
+        ]
+      },
+      "opt_relconfig_save_block_ms": {
+        "median": 97.7,
+        "spread": 2.4,
+        "runs": [
+          98.9,
+          96.5
+        ]
+      },
+      "opt_relconfig_stepper_step_save_ms": {
+        "median": 95.3,
+        "spread": 6.1,
+        "runs": [
+          95.3,
+          91.2,
+          97.3
+        ]
+      },
+      "opt_relconfig_color_drag_worst_block_ms": {
+        "median": 288,
+        "spread": null,
+        "runs": [
+          287.8
+        ],
+        "blocks_over_50ms": 28,
+        "drag_seconds": 4,
+        "drag_events": 191
+      },
+      "debug_102app_hover_max_block_ms": {
+        "median": 18,
+        "spread": null,
+        "pointer_moves": 287
+      },
+      "debug_102app_open_before_hover_ms": {
+        "median": 498,
+        "spread": null,
+        "runs": [
+          498.2
+        ]
+      },
+      "debug_list_popover_6app_show_ms": {
+        "median": 31,
+        "spread": 5,
+        "runs": [
+          31,
+          26
+        ],
+        "cold_launch_ms": 97
+      },
+      "debug_batch_regeneration_3helpers_wall_ms": {
+        "median": 5380,
+        "spread": 31,
+        "runs": [
+          5395,
+          5364
+        ]
+      },
+      "debug_batch_main_thread_block_per_helper_ms": {
+        "median": 981,
+        "spread": 64,
+        "runs": [
+          998.2,
+          1003.1,
+          957.0,
+          955.2,
+          1020.7,
+          963.5
+        ]
+      },
+      "debug_compile_tile_car_ms": {
+        "median": 871,
+        "spread": 99,
+        "runs": [
+          871,
+          842,
+          941
+        ]
+      }
+    },
+    "not_measured": [
+      "Dock Lock event tap (dev app lacks the Accessibility grant)",
+      "powermetrics / timerfires / spindump (root)",
+      "main-app footprint on the release-sized config",
+      "popover keyboard navigation (keyboard mode not confirmed)",
+      "migration classify step (batch measured via the identical apply path)",
+      "true Release configuration; Thread Performance Checker; AC power; 102-app tile on a Release helper"
+    ]
+  }
+}

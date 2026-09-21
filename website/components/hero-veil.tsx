@@ -22,8 +22,8 @@ import { asset } from "@/lib/assets";
 
 // The wallpapers the hero actually renders (light/dark Ventura dither). Module
 // scope: asset() is pure, so these resolve once to the right dev/R2 URL.
-const HERO_LIGHT = asset("/assets/hero-bg.webp");
-const HERO_DARK = asset("/assets/hero-bg-dark.webp");
+const HERO_LIGHT = asset("/assets/bg/hero-bg.webp");
+const HERO_DARK = asset("/assets/bg/hero-bg-dark.webp");
 
 const MIN_VISIBLE_MS = 320; // floor, so a warm cache doesn't blink the veil
 const MAX_VISIBLE_MS = 1200; // ceiling — lift regardless; never hold the page

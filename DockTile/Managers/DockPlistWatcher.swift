@@ -14,7 +14,9 @@ final class DockPlistWatcher {
 
     // MARK: - Properties
 
-    private var fileDescriptor: Int32 = -1
+    /// `private(set)` so the tests can assert the stop path hands descriptor ownership to the
+    /// source's cancel handler (`-1` here) instead of leaving a second owner behind.
+    private(set) var fileDescriptor: Int32 = -1
     private var dispatchSource: DispatchSourceFileSystemObject?
     private lazy var debouncer = Debouncer(interval: debounceInterval)
 
@@ -25,12 +27,13 @@ final class DockPlistWatcher {
     private let dockPlistPath: String
 
     /// Debounce interval (Dock can write multiple times quickly)
-    private let debounceInterval: TimeInterval = 0.5
+    private let debounceInterval: TimeInterval
 
     // MARK: - Initialization
 
-    init() {
-        dockPlistPath = FileManager.default.homeDirectoryForCurrentUser
+    init(path: String? = nil, debounceInterval: TimeInterval = 0.5) {
+        self.debounceInterval = debounceInterval
+        dockPlistPath = path ?? FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Preferences/com.apple.dock.plist")
             .path
 
@@ -64,22 +67,33 @@ final class DockPlistWatcher {
             return
         }
 
-        // Create dispatch source to monitor file changes
+        // Create dispatch source to monitor file changes. `fd` is captured so THIS source closes
+        // THIS descriptor, whatever `self.fileDescriptor` has become by the time it is cancelled.
+        let fd = fileDescriptor
         let source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fileDescriptor,
+            fileDescriptor: fd,
             eventMask: [.write, .delete, .rename, .attrib],
             queue: .main
         )
 
-        source.setEventHandler { [weak self] in
-            self?.handleFileChange()
+        source.setEventHandler { [weak self, weak source] in
+            guard let self else { return }
+            let flags = source?.data ?? []
+            self.handleFileChange()
+            // cfprefsd rewrites the plist by ATOMIC REPLACE: this descriptor now refers to an
+            // unlinked inode and every later write goes to a file we are not watching. Re-arm on
+            // the path. Clearing `fileDescriptor` first lets `startWatching()` open a fresh one.
+            if !flags.isDisjoint(with: [.rename, .delete]) {
+                source?.cancel()
+                self.dispatchSource = nil
+                self.fileDescriptor = -1
+                self.startWatching()
+            }
         }
 
         source.setCancelHandler { [weak self] in
-            if let fd = self?.fileDescriptor, fd != -1 {
-                close(fd)
-                self?.fileDescriptor = -1
-            }
+            close(fd)
+            if self?.fileDescriptor == fd { self?.fileDescriptor = -1 }
         }
 
         dispatchSource = source
@@ -94,6 +108,15 @@ final class DockPlistWatcher {
 
         dispatchSource?.cancel()
         dispatchSource = nil
+        // Hand descriptor ownership to the cancel handler above, which captured this fd and will
+        // close it when the source finishes cancelling (asynchronously, on .main). Leaving it set
+        // here left TWO owners: `deinit` closes `fileDescriptor` when it isn't -1, so a
+        // stopWatching() followed by deallocation in the same main-queue turn — every
+        // `defer { watcher.stopWatching() }` in the tests — closed the same descriptor twice.
+        // A double close is not harmless: between the two closes any thread can `open()` and be
+        // handed the same descriptor number, and the pending cancel handler then closes an
+        // unrelated file (a parallel Swift Testing suite is exactly that shape).
+        fileDescriptor = -1
 
         print("   ✓ Stopped watching Dock plist")
     }
@@ -137,5 +160,24 @@ final class Debouncer {
     func cancel() {
         workItem?.cancel()
         workItem = nil
+    }
+}
+
+// MARK: - SaveDebounce
+
+/// The wait half of a `.task(id:)` debounce. `try? await Task.sleep` cannot be used for this: it
+/// swallows `CancellationError`, so a debounce superseded by a newer edit falls straight through to
+/// its save — every keystroke, stepper tick and colour-drag tick then writes the whole config.
+enum SaveDebounce {
+    /// Sleeps for `nanoseconds`. Returns `false` when the task was cancelled while waiting — the
+    /// caller must NOT save from the debounce in that case: either a newer edit owns the save, or
+    /// the view is going away and its `onDisappear` flush owns it.
+    static func waitedFullInterval(nanoseconds: UInt64) async -> Bool {
+        do {
+            try await Task.sleep(nanoseconds: nanoseconds)
+            return true
+        } catch {
+            return false
+        }
     }
 }

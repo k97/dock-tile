@@ -609,6 +609,7 @@ struct StackAppItem: View {
     // This triggers view refresh when system icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
 
     /// Mouse hover uses the subtle Liquid-Glass fill (`.quaternary`) like typical Mac apps; the
     /// stronger accent is reserved for keyboard-focus selection (accessibility). Hover honours the
@@ -642,11 +643,12 @@ struct StackAppItem: View {
         // Resolved ONCE per cell: the probe hits Launch Services + stat() and is uncached, and the
         // icon and the "Not installed" caption both need the answer. Computed exactly where the
         // icon's own (unconditional, both-modes) probe already was, so helpers do no extra work.
-        let isMissing = AppInstallChecker.resolve(app).status == .missing
+        let resolution = AppInstallChecker.resolve(app)
+        let isMissing = resolution.status == .missing
 
         VStack(spacing: 4) {
             // App icon, sized by the global Tile Size setting.
-            appIconView(isMissing: isMissing)
+            appIconView(isMissing: isMissing, resolvedPath: resolution.resolvedPath)
                 .frame(width: iconSize, height: iconSize)
 
             if showLabel {
@@ -724,15 +726,20 @@ struct StackAppItem: View {
     }
 
     @ViewBuilder
-    private func appIconView(isMissing: Bool) -> some View {
+    private func appIconView(isMissing: Bool, resolvedPath: String?) -> some View {
         // Resolved synchronously (no @State/onAppear) so a deleted app never flashes its stale
         // cached icon before the placeholder appears.
         if isMissing {
             Image(systemName: "questionmark.app.dashed")
                 .font(.system(size: iconSize * 0.5))
                 .foregroundStyle(.secondary)
-        } else if let nsImage = AppIconLoader.icon(for: app) {
-            Image(nsImage: nsImage)
+        } else if let cgImage = TileIconRasterCache.shared.image(
+            for: app, pointSize: iconSize, scale: displayScale,
+            appearanceToken: TileIconRasterCache.liveAppearanceToken(isDark: colorScheme == .dark),
+            contentStamp: TileIconRasterCache.contentStamp(for: app, resolvedPath: resolvedPath)
+        ) {
+            // A plain bitmap, NOT the IconServices-backed NSImage — see TileIconRasterCache.
+            Image(decorative: cgImage, scale: displayScale)
                 .resizable()
                 .interpolation(.high)
         } else {
@@ -974,6 +981,7 @@ struct ListAppRow: View {
     // This triggers view refresh when system icon style changes
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
 
     /// Mouse hover uses the subtle Liquid-Glass fill (`.quaternary`); the stronger accent is kept for
     /// keyboard-focus selection. Hover honours the global "Highlight on Hover" toggle.
@@ -989,11 +997,12 @@ struct ListAppRow: View {
 
         // Resolved ONCE per row — see StackAppItem: the probe is uncached (Launch Services +
         // stat()) and both the icon and the "Not installed" caption need it.
-        let isMissing = AppInstallChecker.resolve(app).status == .missing
+        let resolution = AppInstallChecker.resolve(app)
+        let isMissing = resolution.status == .missing
 
         HStack(spacing: metrics.rowSpacing) {
             // Icon, sized by the global Tile Size setting.
-            appIconView(isMissing: isMissing)
+            appIconView(isMissing: isMissing, resolvedPath: resolution.resolvedPath)
                 .frame(width: metrics.iconSize, height: metrics.iconSize)
 
             // White text on the accent keyboard-selection; normal text on the subtle hover fill.
@@ -1038,14 +1047,19 @@ struct ListAppRow: View {
     }
 
     @ViewBuilder
-    private func appIconView(isMissing: Bool) -> some View {
+    private func appIconView(isMissing: Bool, resolvedPath: String?) -> some View {
         // Resolved synchronously so a deleted app shows the placeholder, not its stale icon.
         if isMissing {
             Image(systemName: "questionmark.app.dashed")
                 .font(.system(size: metrics.iconSize * 0.75))
                 .foregroundStyle(.secondary)
-        } else if let nsImage = AppIconLoader.icon(for: app) {
-            Image(nsImage: nsImage)
+        } else if let cgImage = TileIconRasterCache.shared.image(
+            for: app, pointSize: metrics.iconSize, scale: displayScale,
+            appearanceToken: TileIconRasterCache.liveAppearanceToken(isDark: colorScheme == .dark),
+            contentStamp: TileIconRasterCache.contentStamp(for: app, resolvedPath: resolvedPath)
+        ) {
+            // A plain bitmap, NOT the IconServices-backed NSImage — see TileIconRasterCache.
+            Image(decorative: cgImage, scale: displayScale)
                 .resizable()
                 .interpolation(.high)
         } else {
