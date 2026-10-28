@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Localization sheets in sync
         run: |
@@ -86,7 +86,7 @@ jobs:
       # xcframeworks like grpc as binary targets). A cache hit skips the network download entirely
       # — both a big speed-up and the fix for the flaky "network connection was lost" red builds.
       - name: Cache SwiftPM dependencies
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ./build/SourcePackages
@@ -132,7 +132,7 @@ jobs:
       # registry keyed on Cargo.lock so an unchanged crate skips the rebuild entirely (mirrors
       # the SwiftPM cache above).
       - name: Cache Rust build (docktile-actool)
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             Vendor/actool/target
@@ -233,7 +233,7 @@ jobs:
 
       - name: Upload Build Log
         if: failure() || cancelled()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: build-logs
           path: |
@@ -244,7 +244,7 @@ jobs:
 
       - name: Upload build artifact
         if: success()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: DockTile-Debug
           path: ./build/Build/Products/Debug/Dock Tile*.app
@@ -270,7 +270,7 @@ jobs:
           tar --exclude='*.dSYM' -czf test-products.tgz -C ./build/Build Products
 
       - name: Upload test products
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-products
           path: test-products.tgz
@@ -293,10 +293,10 @@ jobs:
       # the same /Users/runner/work/<repo>/<repo> path, so a checkout here makes those compiled-in
       # paths resolve on this host too. Without it 11 tests fail with missing files (run 36952618762).
       - name: Checkout
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download test products
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test-products
 
@@ -335,7 +335,7 @@ jobs:
 
       - name: Upload Test Log
         if: failure() || cancelled()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-logs-macos-15
           path: test-macos-15.log
@@ -353,10 +353,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download test products
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: test-products
 
@@ -386,7 +386,7 @@ jobs:
 
       - name: Upload Dock capture
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dock-check-macos-15
           path: |
