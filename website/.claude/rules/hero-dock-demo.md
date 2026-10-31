@@ -110,6 +110,12 @@ pieces rather than copying them — keep it that way:
   Mono plate (`#FFFFFF → #EFEFF1`, `glyphColor="#1f2328"`). The hero's tiles pass `shaded` too
   (owner: "on both the hero and the footer dock"), but keep the 58% glyph size — their
   Bootstrap glyphs carry no padding.
+- **Every designed tile goes through `TileFace` (2026-10-31)**: the Smart Add card's mocks were
+  hand-rolled `.tile-face` spans and missed the shading, rim, glow and lift until the owner caught
+  it. Off-Dock tiles get `TileFace shaded` plus the Dock's lift on a wrapper
+  (`drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]`; a squircle mask clips a box-shadow). Real app icons
+  outside a popover (the Ghost card's ⌘Tab strip) take the lift too, at `rgba(0,0,0,0.4)` — the
+  Ghost card is always dark, where 0.2 vanishes; popover icons stay flat.
 
 ## App-icon assets (`public/assets/app-icons/`)
 

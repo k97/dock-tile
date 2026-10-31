@@ -121,7 +121,7 @@ Back/Forward still restore their position.
 
 ## Shared polish primitives (globals.css)
 
-Three unlayered helpers, used instead of re-deriving them per component:
+Two unlayered helpers, used instead of re-deriving them per component:
 
 - **`.pressable`** — `:active { scale: 0.96 }`, and **nothing else**. It deliberately declares no
   `transition`: the rule is *unlayered*, so a `transition` shorthand here **silently beats and
@@ -134,10 +134,20 @@ Three unlayered helpers, used instead of re-deriving them per component:
   layout change** (critical for the nav pill, whose min-content width is a WebKit landmine). It only
   expands vertically and stays inside the control's own horizontal edges, so adjacent targets
   (nav links, the 28px theme-switcher segments, footer links) can never overlap.
-- **`.image-edge`** — the hairline on app screenshots: pure `black/10` (light) / `white/10` (dark),
-  as a radius-following `outline` with `outline-offset: -1px` so it survives `overflow-hidden`. Never
-  `border-border` on a photographic surface — the tinted zinc picks up the colour beneath it and
-  reads as dirt along the image edge.
+
+**App screenshots are window captures, not framed crops (2026-10-31).** Features / 01 shows the
+window with its own corners and shadow on transparency (cropped to the alpha bounds, light and dark
+to ONE shared box so overlaid marks align) — no frame, no hairline; a box would cage a floating
+window. Its "take a closer look" hotspots (`closer-look.tsx`, Apple HomeView pattern) spotlight a
+region instead of zooming: the capture is only 2×, so a real zoom softens its text on Retina.
+**Encode UI screenshots losslessly and serve them as-is (2026-10-31, owner: "too pixelated")**:
+`sharp(...).extract(box).keepIccProfile().webp({ lossless: true })`, the buffer written straight to
+disk (re-wrapping it in `sharp(buf).toFile()` silently re-encodes it lossy and drops the profile),
+and `<Image unoptimized>` — the optimizer's q75 re-encode blurred the small UI text. Keep the
+capture's ICC profile: macOS screenshots are Display P3, and converting to sRGB shifted saturated
+colours. Verify by decoding and diffing visible pixels against the PNG (expect 0). ~0.3 MB each. The old `.image-edge` hairline was retired with the last framed screenshot. If a framed one
+returns: pure `black/10` / `white/10` outline, never `border-border` — the tinted zinc picks up the
+colour beneath it and reads as dirt along the edge.
 
 Headings get `text-wrap: balance` and body copy `text-wrap: pretty` from the base layer — don't
 re-apply per component unless overriding.

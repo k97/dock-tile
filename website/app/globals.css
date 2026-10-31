@@ -865,17 +865,6 @@
   transform: translateY(-50%);
 }
 
-/* Photographic surfaces (app screenshots) carry a hairline edge so they sit on
-   any background with consistent depth. Pure black / pure white — a tinted
-   neutral picks up the surface underneath and reads as dirt on the edge. */
-.image-edge {
-  outline: 1px solid rgba(0, 0, 0, 0.1);
-  outline-offset: -1px;
-}
-.dark .image-edge {
-  outline-color: rgba(255, 255, 255, 0.1);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .reveal-on-scroll {

@@ -6,7 +6,8 @@ import Image from "next/image";
 import { useLocale } from "@/components/locale-provider";
 import { asset } from "@/lib/assets";
 import { Reveal } from "@/components/reveal";
-import { TileGlyph } from "@/components/tile-glyph";
+import { CloserLook } from "@/components/closer-look";
+import { TileFace } from "@/components/dock-demo";
 
 /* Native app icons for the Grid/List popover mocks — same assets the
    hero dock demo uses, so the popover previews read as real macOS icons. */
@@ -135,9 +136,9 @@ function PopoverShowcase() {
   );
 }
 
-// DockTile's own Dark icon style (see docs/rules/icon-system.md) is the shared
-// `.tile-face` rule in globals.css — one source for the hero dock demo AND the
-// Smart Add mocks below, applied by CSS off the pre-paint `.dark` class.
+// The Smart Add mocks below use the Dock's own `TileFace` (shaded glyph, rim,
+// Dark-style plate + glow) and the Dock's lift shadow, so every designed tile
+// on the page looks the same as the ones in the hero and closing Docks.
 
 /* Ghost Mode — the Cmd+Tab switcher line-up. The `ghost` slot is where a
    Dock Tile tile would sit; it stays hidden, so the selection skips it.
@@ -161,50 +162,23 @@ export function CustomTilesStory() {
   const m = content.marketing;
 
   return (
-    <section
-      id="features"
-      className="mx-auto grid max-w-400 items-center gap-12 px-6 py-24 md:grid-cols-2 md:gap-20 md:px-10 md:py-32"
-    >
-      <Reveal>
+    <section id="features" className="mx-auto max-w-400 px-6 py-24 md:px-10 md:py-32">
+      {/* Stacked, Apple-style: the window is a three-pane app, so it needs the
+          full content width to read — text centred above, screenshot below. */}
+      <Reveal className="mx-auto mb-14 max-w-180 text-center md:mb-16">
         <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
           {m.tilesEyebrow}
         </span>
         <h2 className="mb-6 text-3xl font-semibold tracking-[-0.05em] leading-[1.05] text-foreground md:text-4xl">
           {m.tilesTitle}
         </h2>
-        <p className="max-w-lg text-lg font-light leading-relaxed text-muted-foreground">
+        <p className="mx-auto max-w-150 text-lg font-light leading-relaxed text-muted-foreground">
           {m.tilesBody}
         </p>
       </Reveal>
       <Reveal delay={120}>
-        {/* Two screenshots of the same window (light + dark Customise Tile) —
-            both render and CSS shows the theme's one, so the first frame is
-            already right. They're lazy `next/image`s, so the display:none twin
-            never intersects the viewport and is only fetched if the user
-            actually switches theme. Real screenshots, not mocks — each theme
-            must match the app exactly. */}
-        {/* `image-edge`, not `border-border`: a screenshot's hairline must be
-            pure black (light) / pure white (dark). The tinted zinc border picked
-            up the surface beneath it and read as dirt along the image edge. */}
-        <div className="image-edge relative mx-auto aspect-2048/1374 w-full max-w-md overflow-hidden rounded-3xl shadow-xl md:max-w-none">
-          <Image
-            src={asset("/assets/stage/customise-tile.webp")}
-            alt={m.tilesCaption}
-            fill
-            sizes="(max-width: 768px) 100vw, 640px"
-            className="object-contain dark:hidden"
-          />
-          <Image
-            src={asset("/assets/stage/customise-tile-dark.webp")}
-            alt={m.tilesCaption}
-            fill
-            sizes="(max-width: 768px) 100vw, 640px"
-            className="hidden object-contain dark:block"
-          />
-        </div>
-        <p className="mt-6 text-center text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          {m.tilesCaption}
-        </p>
+        {/* The 2.x window with "take a closer look" hotspots — see closer-look.tsx. */}
+        <CloserLook />
       </Reveal>
     </section>
   );
@@ -264,19 +238,8 @@ export function PowerUserSection() {
           <div className="flex flex-col items-center gap-4 rounded-2xl bg-muted p-5">
             <div className="flex flex-col items-center gap-3">
               <div className="flex w-44 shrink-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
-                <span
-                  className="tile-face squircle flex h-10 w-10 min-w-10 items-center justify-center"
-                  style={
-                    {
-                      "--tile-bg": "linear-gradient(to bottom, #A78BFF, #7C3AED)",
-                      "--tile-glyph-dark": "#A78BFF",
-                    } as React.CSSProperties
-                  }
-                >
-                  <TileGlyph
-                    name="sparkles"
-                    className="h-6 w-6 text-white dark:text-(--tile-glyph-dark)"
-                  />
+                <span className="flex h-11 w-11 min-w-11 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
+                  <TileFace gradient="linear-gradient(to bottom, #A78BFF, #7C3AED)" darkGlyph="#A78BFF" glyph="sparkles" shaded />
                 </span>
                 <span>
                   <p className="text-xs font-bold text-foreground">AI Apps</p>
@@ -284,19 +247,8 @@ export function PowerUserSection() {
                 </span>
               </div>
               <div className="flex w-44 shrink-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
-                <span
-                  className="tile-face squircle flex h-10 w-10 min-w-10 items-center justify-center"
-                  style={
-                    {
-                      "--tile-bg": "linear-gradient(to bottom, #52DFA8, #10B981)",
-                      "--tile-glyph-dark": "#52DFA8",
-                    } as React.CSSProperties
-                  }
-                >
-                  <TileGlyph
-                    name="chat"
-                    className="h-6 w-6 text-white dark:text-(--tile-glyph-dark)"
-                  />
+                <span className="flex h-11 w-11 min-w-11 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
+                  <TileFace gradient="linear-gradient(to bottom, #52DFA8, #10B981)" darkGlyph="#52DFA8" glyph="chat" shaded />
                 </span>
                 <span>
                   <p className="text-xs font-bold text-foreground">Chat</p>
@@ -361,7 +313,7 @@ export function PowerUserSection() {
                       height={44}
                       unoptimized
                       draggable={false}
-                      className={`h-11 w-11 ${app.darkSrc ? "dark:hidden" : ""}`}
+                      className={`h-11 w-11 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] ${app.darkSrc ? "dark:hidden" : ""}`}
                     />
                     {app.darkSrc && (
                       <Image
@@ -371,7 +323,7 @@ export function PowerUserSection() {
                         height={44}
                         unoptimized
                         draggable={false}
-                        className="hidden h-11 w-11 dark:block"
+                        className="hidden h-11 w-11 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] dark:block"
                       />
                     )}
                   </span>

@@ -22,6 +22,10 @@
   a US override for spelling-sensitive strings only. Prefer **spelling-neutral copy** — it avoids
   overrides entirely (this drove the hero headline choice).
 - "Signed & notarized" claims live only on the legal pages, nowhere else.
+- **Check every product claim against the app source before it ships** (`DockTile/`, read-only).
+  On 2026-10-31 three plausible lines were false: "Drag apps in" (the popover only reorders; adding
+  is + Add), App Grid "size and weight" (Symbol only), and "the change applies immediately" (the
+  Dock changes on Update). Copy describes the current app — re-read it after each app release.
 - The Privacy page is honesty-first about analytics: optional anonymous Firebase Analytics +
   Crashlytics, never sold/shared, opt-out via the app's real toggle ("Share anonymous usage data",
   Settings → General). Never reintroduce "collects nothing" claims.

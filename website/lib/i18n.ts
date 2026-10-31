@@ -25,10 +25,22 @@ const marketingBase = {
     "iOS-style folders for the Mac. Group apps into beautiful tiles and launch anything in one click.",
   tryIt: "Try it — click a tile",
   tilesEyebrow: "Features / 01",
-  tilesTitle: "Customised tiles with the simple editor.",
+  tilesTitle: "Pick your apps. Pick a look. Done.",
   tilesBody:
-    "Give every group of apps a face you'll spot at a glance. Pick a colour, then a custom SF Symbol from Apple's library or any emoji — and fine-tune its size and weight — all in one simple editor.",
-  tilesCaption: "Colour, symbols, emoji, size & weight",
+    "Arrange them right in the popover your tile opens, so what you see is what you get. Then show the tile as a grid of its apps, or give it a symbol or an emoji, in colour or mono.",
+  tilesAlt: "Dock Tile editing a tile: its popover in the middle, Customise Tile on the right.",
+  // "Take a closer look" hotspots on the screenshot — label + one or two sentences each
+  tilesSpotPopover: "In This Tile",
+  tilesSpotPopoverBody: "Drag apps into order, or hover to remove one. It's the same popover your tile opens.",
+  tilesSpotStyle: "Style",
+  tilesSpotStyleBody: "App Grid shows the tile's own apps. Or pick a symbol or an emoji.",
+  tilesSpotBackground: "Background",
+  tilesSpotBackgroundBody: "Colour fills the tile. Mono keeps it white in Light Mode and black in Dark Mode.",
+  tilesSpotTile: "Your tile",
+  tilesSpotTileBody: "Every change shows on the tile as you make it.",
+  tilesSpotPrevious: "Previous",
+  tilesSpotNext: "Next",
+  tilesSpotClose: "Close",
   popoverEyebrow: "Features / 02",
   popoverTitle: "Grid or list. Sized your way.",
   popoverBody:
@@ -65,10 +77,10 @@ const marketingBase = {
 
 const marketingUS = {
   ...marketingBase,
-  tilesTitle: "Customized tiles with the simple editor.",
   tilesBody:
-    "Give every group of apps a face you'll spot at a glance. Pick a color, then a custom SF Symbol from Apple's library or any emoji — and fine-tune its size and weight — all in one simple editor.",
-  tilesCaption: "Color, symbols, emoji, size & weight",
+    "Arrange them right in the popover your tile opens, so what you see is what you get. Then show the tile as a grid of its apps, or give it a symbol or an emoji, in color or mono.",
+  tilesAlt: "Dock Tile editing a tile: its popover in the middle, Customize Tile on the right.",
+  tilesSpotBackgroundBody: "Color fills the tile. Mono keeps it white in Light Mode and black in Dark Mode.",
 } as const;
 
 // Legal pages — only spelling-sensitive strings vary by locale
@@ -169,7 +181,7 @@ export const localisedContent = {
       {
         title: "Custom tile icons",
         description:
-          "Design each tile with colour gradients, SF Symbols or emoji. Four icon styles follow Light, Dark, Clear and Tinted appearance.",
+          "Show a grid of the tile's own apps, or an SF Symbol or emoji on a colour or mono background. On macOS Tahoe and later, tiles follow the Light, Dark, Clear and Tinted icon styles.",
       },
     ],
 
@@ -192,7 +204,7 @@ export const localisedContent = {
       {
         question: "Can I change a tile's icon after creating it?",
         answer:
-          'Yes! Select the tile in Dock Tile, click "Customise", and choose a new colour, symbol, or emoji. The change applies immediately.',
+          "Yes. Select the tile and click its icon to open Customise Tile. Show the tile's own apps as a grid, or choose a symbol or an emoji and its background. If the tile is already in your Dock, click Update to apply the new look.",
       },
       {
         question: "Why doesn't right-click show a context menu?",
@@ -202,7 +214,7 @@ export const localisedContent = {
       {
         question: "How do I uninstall a tile?",
         answer:
-          'Select the tile in Dock Tile, scroll down to "Remove from Dock", and click Remove. You can also drag the tile out of the Dock like any app.',
+          "Select the tile, turn off Show Tile, then click Remove from Dock. The tile stays in Dock Tile for later. To delete it for good, click the trash button. You can also drag the tile out of the Dock like any app.",
       },
       {
         question: "How many tiles can I create?",
@@ -222,7 +234,7 @@ export const localisedContent = {
       {
         question: "Can I reorder apps within a tile?",
         answer:
-          "Yes! In the tile editor, drag the grip handle on each app row to reorder them. The order is reflected in the popover.",
+          "Yes. In In This Tile, drag an app to a new spot. It's the same popover your tile opens, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
       },
       {
         question: "What's the difference between Grid and List layout?",
@@ -273,7 +285,7 @@ export const localisedContent = {
       {
         title: "Custom tile icons",
         description:
-          "Design each tile with colour gradients, SF Symbols or emoji. Four icon styles follow Light, Dark, Clear and Tinted appearance.",
+          "Show a grid of the tile's own apps, or an SF Symbol or emoji on a colour or mono background. On macOS Tahoe and later, tiles follow the Light, Dark, Clear and Tinted icon styles.",
       },
     ],
 
@@ -296,7 +308,7 @@ export const localisedContent = {
       {
         question: "Can I change a tile's icon after creating it?",
         answer:
-          'Yes! Select the tile in Dock Tile, click "Customise", and choose a new colour, symbol, or emoji. The change applies immediately.',
+          "Yes. Select the tile and click its icon to open Customise Tile. Show the tile's own apps as a grid, or choose a symbol or an emoji and its background. If the tile is already in your Dock, click Update to apply the new look.",
       },
       {
         question: "Why doesn't right-click show a context menu?",
@@ -306,7 +318,7 @@ export const localisedContent = {
       {
         question: "How do I uninstall a tile?",
         answer:
-          'Select the tile in Dock Tile, scroll down to "Remove from Dock", and click Remove. You can also drag the tile out of the Dock like any app.',
+          "Select the tile, turn off Show Tile, then click Remove from Dock. The tile stays in Dock Tile for later. To delete it for good, click the trash button. You can also drag the tile out of the Dock like any app.",
       },
       {
         question: "How many tiles can I create?",
@@ -326,7 +338,7 @@ export const localisedContent = {
       {
         question: "Can I reorder apps within a tile?",
         answer:
-          "Yes! In the tile editor, drag the grip handle on each app row to reorder them. The order is reflected in the popover.",
+          "Yes. In In This Tile, drag an app to a new spot. It's the same popover your tile opens, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
       },
       {
         question: "What's the difference between Grid and List layout?",
@@ -377,7 +389,7 @@ export const localisedContent = {
       {
         title: "Custom tile icons",
         description:
-          "Design each tile with color gradients, SF Symbols or emoji. Four icon styles follow Light, Dark, Clear and Tinted appearance.",
+          "Show a grid of the tile's own apps, or an SF Symbol or emoji on a color or mono background. On macOS Tahoe and later, tiles follow the Light, Dark, Clear and Tinted icon styles.",
       },
     ],
 
@@ -400,7 +412,7 @@ export const localisedContent = {
       {
         question: "Can I change a tile's icon after creating it?",
         answer:
-          'Yes! Select the tile in Dock Tile, click "Customize", and choose a new color, symbol, or emoji. The change applies immediately.',
+          "Yes. Select the tile and click its icon to open Customize Tile. Show the tile's own apps as a grid, or choose a symbol or an emoji and its background. If the tile is already in your Dock, click Update to apply the new look.",
       },
       {
         question: "Why doesn't right-click show a context menu?",
@@ -410,7 +422,7 @@ export const localisedContent = {
       {
         question: "How do I uninstall a tile?",
         answer:
-          'Select the tile in Dock Tile, scroll down to "Remove from Dock", and click Remove. You can also drag the tile out of the Dock like any app.',
+          "Select the tile, turn off Show Tile, then click Remove from Dock. The tile stays in Dock Tile for later. To delete it for good, click the trash button. You can also drag the tile out of the Dock like any app.",
       },
       {
         question: "How many tiles can I create?",
@@ -430,7 +442,7 @@ export const localisedContent = {
       {
         question: "Can I reorder apps within a tile?",
         answer:
-          "Yes! In the tile editor, drag the grip handle on each app row to reorder them. The order is reflected in the popover.",
+          "Yes. In In This Tile, drag an app to a new spot. It's the same popover your tile opens, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
       },
       {
         question: "What's the difference between Grid and List layout?",

@@ -6,8 +6,11 @@ Favicons in `website/public/favicon/` and `website/app/favicon.ico` (both must b
 # Regenerate favicons from 1024px PNG source (requires ImageMagick + Lanczos filter)
 magick dock-tile-icon-1024.png -resize 96x96 -filter Lanczos favicon-96x96.png
 
-# Convert stage PNGs to webp
+# Convert stage PNGs to webp — photographic/marketing images only
 magick input.png -quality 80 output.webp
+# App UI screenshots (small text) are LOSSLESS, keep their Display P3 profile, and are served
+# <Image unoptimized> — lossy + the optimizer's q75 re-encode read as pixelated (2026-10-31).
+# Recipe + pixel-diff check: website/.claude/rules/design-system.md "App screenshots…".
 
 # Generate blur placeholder base64 for screenshot carousel
 magick input.webp -resize 10x7 -quality 20 webp:- | base64
