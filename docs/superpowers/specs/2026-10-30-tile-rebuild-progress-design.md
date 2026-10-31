@@ -96,6 +96,22 @@ answers two questions on macOS 27, then on the CI runners' 15 and 26 if it works
 2. If not: does switching the helper to `.regular` for the rebuild (it then appears in ⌘Tab for
    those seconds) make it draw, and does switching back restore Ghost mode cleanly?
 
+**Spike result (macOS 27, 2026-10-31)** — a throwaway `LSUIElement` app pinned to the owner's Dock
+(written then SIGKILL; the pinned list restored byte-identical afterwards), Dock window captured by ID:
+
+1. **No.** As `.accessory`, `NSApp.dockTile.contentView` + `display()` never reached the pinned
+   icon: five captures across the bar were byte-identical and showed the plain bundle icon.
+2. **Yes.** `setActivationPolicy(.regular)` for the bar's duration, then back to `.accessory`:
+   the bar drew on the SAME pinned tile and filled step by step (no second tile). After the switch
+   back the icon and the Ghost state were restored (no running dot, policy logged as accessory).
+   The switch did **not** take focus (frontmost app unchanged, `NSApp.isActive` false).
+
+So Ghost tiles switch to `.regular` while their bar shows. Side effects for those seconds, which
+App-mode tiles already have all the time: a running dot under the tile, an entry in ⌘Tab and the
+Force Quit window, and the Dock's standard right-click menu (Options, Show in Finder, Quit). Quit
+or Force Quit there hits the helper itself, never the main app: the swap still lands and the new
+helper launches. Not yet checked on macOS 15 and 26 (the plan carries that check).
+
 **If neither works**, style C is not possible for Ghost tiles. Decided (owner, 2026-10-31): 2.6.3
 then ships the atomic swap alone, and progress comes in a later release. The swap matters more
 than the indicator, so the plan orders the swap first and the bar second, each shippable alone.
