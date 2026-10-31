@@ -19,6 +19,13 @@ func write(_ a: [[String: Any]]) {
 }
 func isSpike(_ e: [String: Any]) -> Bool { ((e["tile-data"] as? [String: Any])?["bundle-identifier"] as? String) == spikeId }
 
+// pin/unpin rewrite the Dock: CI only, unless a person running it by hand opts in.
+let env = ProcessInfo.processInfo.environment
+if ["pin", "unpin"].contains(args.count > 1 ? args[1] : ""),
+   env["GITHUB_ACTIONS"] == nil, env["SPIKE_ALLOW_LOCAL_DOCK"] != "1" {
+    print("refusing to rewrite a non-CI Dock (set SPIKE_ALLOW_LOCAL_DOCK=1 to run it by hand)"); exit(2)
+}
+
 switch args.count > 1 ? args[1] : "" {
 case "backup":
     let data = try! PropertyListSerialization.data(fromPropertyList: apps(), format: .xml, options: 0)
