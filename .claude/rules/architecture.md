@@ -6,13 +6,40 @@ Users create Helper Bundles (copies of main app) stored in `~/Library/Applicatio
 
 ## Helper Bundle Lifecycle
 
-**Creation** (`HelperBundleManager.installHelper`):
+**Creation** (`HelperBundleManager.installHelper`), steps 1–5 built in STAGING (below):
 1. Copies main DockTile.app as template
 2. **Removes `Assets.car`** — prevents main app icon overriding custom icons (macOS prioritises asset catalogs over `CFBundleIconFile`). The copy also carries every `.lproj` (helpers localize to the system language). It must never carry an `InfoPlist.strings`: that overrides the rewritten `CFBundleName`, so every tile would read "Dock Tile" (see localization-macos.md)
 3. Updates Info.plist (unique bundle ID, name, LSUIElement based on mode)
 4. Generates `.icns` icon for all 4 style variants
 5. Code signs with ad-hoc signature
-6. Saves/restores Dock position, restarts Dock, launches helper
+6. Quits the old helper, swaps the new bundle in, registers + launches it, re-seats (or adds) the Dock entry at its saved position, verified Dock restart
+
+**Staged rebuild + swap (critical, 2.6.3)**: every rebuild (`installHelper`, `regenerateHelperBundle`
+→ migration / self-heal / Popover Apply) runs `buildAndSwap`: build at `<support>/.staging/<bundleId>.app`
+while the old helper keeps running, then quit it and `renamex_np(RENAME_SWAP)` into place. WHY: the
+in-place rebuild left the tile's folder holding a copy of the MAIN app (its bundle id) for a moment;
+the Dock resolves a pinned entry by bundle id (#35), so on 2026-10-29 Force Quit on the dead tile
+killed Dock Tile itself mid-migration and the migration ran twice. The ORDER is the fix and is pinned
+by the pure seam `runStagedRebuild` (`StagedRebuildTests`): build/sign → quit old → swap → remove a
+renamed tile's old folder (decided BEFORE the swap by `oldFolderToRemove`, path-normalised, or a
+trailing-slash spelling would delete the new bundle) → register → quit AGAIN (a Dock click in the gap
+relaunches the old bundle) → launch. A build failure leaves the old tile untouched; a swap failure
+relaunches it. Never register the staging path; it is dot-prefixed (Spotlight skips it) and every
+support-folder scan lists top-level `*.app` only. A per-tile `flock` (`TileBuildLock`) stops a second
+Dock Tile process; the launch task removes unlocked leftovers (`removeStaleStaging`). Needs APFS (any
+supported boot volume). **Update no longer removes the Dock entry before building** — that only
+guarded against the Dock relaunching a half-built bundle; it re-seats after the swap instead.
+
+**Rebuild bar (2.6.3)**: while a pinned tile rebuilds, the main app posts `TileRebuildSignal` stages
+(distributed notification, object = the tile's bundle id) and the RUNNING helper's
+`TileRebuildPresenter` draws style C (icon darkened, white bar along its bottom) into `NSApp.dockTile`
+and ignores Dock clicks, ⌘Tab activation and its custom Dock menu. A Ghost helper switches to
+`.regular` while the bar shows: as `.accessory` its dock tile never reaches the pinned icon (measured
+macOS 15/26/27, spec 2026-10-30-tile-rebuild-progress-design.md). For those seconds a Ghost tile has
+a running dot, a ⌘Tab / Force Quit entry and the Dock's standard menu (Quit hits only the tile). No
+bar where no helper of 2.6.3+ is running (the update TO 2.6.3, a stopped helper) — built silently. The
+signal is spoofable by any local process (worst case: clicks ignored for the 30 s expiry). No timer
+runs in a helper while no bar shows.
 
 **Same-name disambiguation (critical)**: helpers are stored on disk by display name
 (`<name>.app`), but two tiles may legitimately share a name. Identity is the unique bundle ID
@@ -503,12 +530,12 @@ built from public AppKit pieces.
 
 **Version tracking**: `helperAppVersion` (v6 schema field) stamps which app version built each helper. `nil` = pre-migration, treated as stale. **This per-tile field is the source of truth**; `UserDefaultsKeys.lastMigratedAppVersion` is only a fast-path/bookkeeping marker.
 
-**Flow**: classify every tile (pure `classifyForMigration` seam) → stamp the confident no-rebuild ones → quit + regenerate stale visible+pinned helpers via `regenerateHelperBundle()` → single Dock restart → relaunch the regenerated ones.
+**Flow**: classify every tile (pure `classifyForMigration` seam) → stamp the confident no-rebuild ones → regenerate stale visible+pinned helpers via `regenerateHelperBundle()` (each staged, then quit + swapped + relaunched, so its bar clears at its own swap) → re-seat → single Dock restart → launch any regenerated helper not running.
 
 **Convergent, not one-shot (critical)**: migration does **not** hard-early-return on `lastMigrated == currentVersion`. It re-derives per-tile state from `helperAppVersion` each launch, so a tile left stale by a previous run **retries until it succeeds** (the loop is cheap when all are current — each is `skipUpToDate` with no probe). This fixes the "some very-first bundles never migrated" class: a single transient miss no longer stamps a tile "migrated" forever. **Once per launch, the whole sequence (2.6.2):** the main window's `.task` (migrate → scan → self-heal) is gated by `HelperMigrationManager.beginLaunchMaintenance()`. A window reopened mid-launch re-runs the `.task` while the first is still inside its batch; a migration-only guard sent that second pass straight to self-heal, which read the mid-rebuild tile and the unreached ones as broken and started a second batch that killed the Dock in turns with the first. Convergence across launches is unchanged (the flag starts cleared each launch).
 
 - **Reliable reads (critical)**: every Dock read (`findInDock`/`findDockIndex`/`isInDock`/`addToDock`) calls `CFPreferencesAppSynchronize("com.apple.dock")` **before** `CFPreferencesCopyAppValue` — reading another app's domain can return a cold/stale cfprefsd cache (notably right after login), which used to make `findInDock` miss genuinely-pinned tiles and skip them.
-- **Refresh the Dock icon cache after an in-place regenerate (critical)**: rewriting a helper's `.icns` in place + `touchBundle` (mtime bump + `lsregister`) does **NOT** invalidate the Dock's per-entry icon cache — the Dock keeps drawing the OLD render for the unchanged `persistent-apps` entry. So `regenerateBatch` calls `HelperBundleManager.refreshDockEntry(for:)` (remove + re-add the entry at the same index → new GUID → fresh icon load) for every regenerated tile **before** the single Dock restart. This is why `installHelper` (which removes + re-adds) always showed new icons while the migration/self-heal batch shipped correct files that the Dock rendered stale (1.8.2 regression). Any new "regenerate in place then restart" path MUST re-seat the entry or icons silently go stale.
+- **Refresh the Dock icon cache after a regenerate at the same path (critical; staged + swapped since 2.6.3, the rule is unchanged)**: rewriting a helper's `.icns` in place + `touchBundle` (mtime bump + `lsregister`) does **NOT** invalidate the Dock's per-entry icon cache — the Dock keeps drawing the OLD render for the unchanged `persistent-apps` entry. So `regenerateBatch` calls `HelperBundleManager.refreshDockEntry(for:)` (remove + re-add the entry at the same index → new GUID → fresh icon load) for every regenerated tile **before** the single Dock restart. This is why `installHelper` (which removes + re-adds) always showed new icons while the migration/self-heal batch shipped correct files that the Dock rendered stale (1.8.2 regression). Any new "regenerate in place then restart" path MUST re-seat the entry or icons silently go stale.
 - **Stamp on SUCCESS only (`runRegenerationBatch`)**: a failed regeneration is left **unstamped** so it retries next launch (heals a killed-mid-generation / transient-FS failure), reversing the old "stamp anyway". Failures never restart the Dock (only successes do), so a persistently-broken tile can't churn it.
 - **Translocation pre-flight**: if `AppRelocationManager.canGenerateBundles` is false, the regenerate batch is **skipped entirely** (not force-quit-then-fail) and tiles are left stale to retry once the app is moved — the launch relocation nudge asks the user.
 - **Completion**: `lastMigratedAppVersion` is stamped only when **no visible tile remains stale** (fully converged); otherwise it's left so the next launch retries the remainder.
