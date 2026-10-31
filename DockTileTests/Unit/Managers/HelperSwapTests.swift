@@ -87,6 +87,20 @@ struct HelperSwapTests {
         #expect(HelperBundleManager.oldFolderToRemove(existing: nil, final: bare) == nil)
     }
 
+    /// Final review, 2026-10-31: on case-insensitive APFS (the default) a tile renamed "utils" →
+    /// "Utils" gets `final = …/Utils.app` (it "exists") while `findExistingHelper` returns the disk
+    /// spelling `…/utils.app`. Compared as strings they differ, and removing the "old" folder after
+    /// the swap deleted the NEW bundle. Same file on disk → nothing to remove.
+    @Test("A case-only rename is the same folder on disk: nothing is removed")
+    func oldFolderIsKeptOnACaseOnlyRename() throws {
+        let dir = try makeTempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try makeBundle(dir.appendingPathComponent("utils.app"), marker: "tile")
+
+        #expect(HelperBundleManager.oldFolderToRemove(existing: dir.appendingPathComponent("utils.app"),
+                                                      final: dir.appendingPathComponent("Utils.app")) == nil)
+    }
+
     @Test("After a rename the old folder is the one removed")
     func oldFolderIsRemovedAfterARename() {
         let old = URL(fileURLWithPath: "/x/Old.app")

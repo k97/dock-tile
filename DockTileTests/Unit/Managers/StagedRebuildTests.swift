@@ -77,14 +77,16 @@ struct StagedRebuildTests {
         #expect(!recorder.log.contains("launchNew"))
     }
 
-    @Test("A failed swap relaunches the old tile instead of leaving it dead")
+    /// The bar is cancelled too (final review, 2026-10-31): a helper `quitOld` could not stop would
+    /// otherwise keep a full bar and ignore clicks until the 30 s expiry.
+    @Test("A failed swap clears the bar and relaunches the old tile instead of leaving it dead")
     func swapFailureRelaunchesTheOldTile() async {
         let recorder = StepRecorder()
         recorder.failing = "swap"
         await #expect(throws: StepError.self) {
             try await HelperBundleManager.runStagedRebuild(recorder.steps())
         }
-        #expect(Array(recorder.log.suffix(4)) == ["quitOld", "swap", "removeStaged", "launchExisting"])
+        #expect(Array(recorder.log.suffix(5)) == ["quitOld", "swap", "post:cancelled", "removeStaged", "launchExisting"])
         #expect(!recorder.log.contains("removeOldFolder"))
         #expect(!recorder.log.contains("register"))
         #expect(!recorder.log.contains("launchNew"))

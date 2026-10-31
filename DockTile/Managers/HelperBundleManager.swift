@@ -2142,9 +2142,10 @@ final class HelperBundleManager {
     }
 
     /// The folder to delete after a swap: the tile's previous folder when a rename moved it, else
-    /// nil. Compared as standardized paths without a trailing slash — `contentsOfDirectory` and
-    /// `appendingPathComponent` can spell one folder differently, and deleting on a false
-    /// "different" AFTER the swap would delete the brand-new bundle.
+    /// nil. `contentsOfDirectory` and `appendingPathComponent` can spell one folder differently, and
+    /// deleting on a false "different" AFTER the swap deletes the brand-new bundle. So: same
+    /// standardized path without a trailing slash, OR the same file on disk (`isSameFile`) — a
+    /// case-only rename (`utils.app` → `Utils.app`) is one folder on case-insensitive APFS.
     nonisolated static func oldFolderToRemove(existing: URL?, final: URL) -> URL? {
         guard let existing else { return nil }
         func normalized(_ url: URL) -> String {
@@ -2152,7 +2153,8 @@ final class HelperBundleManager {
             while path.count > 1 && path.hasSuffix("/") { path.removeLast() }
             return path
         }
-        return normalized(existing) == normalized(final) ? nil : existing
+        if normalized(existing) == normalized(final) { return nil }
+        return isSameFile(existing.path, final.path) ? nil : existing
     }
 
     /// The staged rebuild's ORDER, with every side effect injected so it is pinned by
@@ -2180,6 +2182,7 @@ final class HelperBundleManager {
         do {
             try steps.swap()
         } catch {
+            steps.post(.cancelled)
             steps.removeStaged()
             steps.launchExisting()
             throw error
@@ -2220,7 +2223,8 @@ final class HelperBundleManager {
             quitOld: { await self.quitHelperAndWait(bundleId: bundleId) },
             swap: { try Self.swapIntoPlace(staged: staged, final: final) },
             removeOldFolder: {
-                guard let oldFolder else { return }
+                // Never the folder now holding the new bundle, however it is spelled.
+                guard let oldFolder, !Self.isSameFile(oldFolder.path, final.path) else { return }
                 do { try FileManager.default.removeItem(at: oldFolder) } catch {
                     DiagnosticsLog.shared.log("tile", "Could not remove renamed tile's old folder \(oldFolder.lastPathComponent): \(error.localizedDescription)")
                 }
