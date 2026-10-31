@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.3] - 2026-10-31
+
+### Added
+
+- **tiles:** Show progress on a tile while Dock Tile updates it: the tile darkens and a bar fills along its bottom, and clicks on it are ignored until it is done. It appears from the first update after 2.6.3, because the tiles this update replaces were built before it existed ([a829ebf](https://github.com/k97/dock-tile/commit/a829ebf), [9e78441](https://github.com/k97/dock-tile/commit/9e78441))
+
+### Changed
+
+- **tiles:** While its progress bar shows, a tile hidden from ⌘Tab appears there for those few seconds and its Dock right-click menu offers Quit, which closes only that tile ([9e78441](https://github.com/k97/dock-tile/commit/9e78441))
+
+### Fixed
+
+- **tiles:** Keep a tile working while Dock Tile updates it. The new version is built beside the old one and swapped in only once it is complete, so a tile no longer goes unresponsive mid-update, and choosing Force Quit on it can no longer quit Dock Tile itself ([f7ccd92](https://github.com/k97/dock-tile/commit/f7ccd92), [dcd6c81](https://github.com/k97/dock-tile/commit/dcd6c81))
+- **tiles:** Leave the old tile exactly as it was, still working, when an update of it fails ([f7ccd92](https://github.com/k97/dock-tile/commit/f7ccd92), [487c775](https://github.com/k97/dock-tile/commit/487c775))
+
+## [2.6.2] - 2026-10-30
+
+### Changed
+
+- **dock:** Say so ("The Dock didn't keep this change. Try again.") when the Dock does not keep a change, instead of failing silently
+- **dock:** Restart the Dock in a way that cannot lose Dock Tile's changes. One side effect: Dock icons rearranged in the second before pressing Update may not be kept
+
+### Fixed
+
+- **tiles:** Fix renaming a tile and pressing Update leaving a broken tile in the Dock that points at its old name
+- **dock:** Fix Dock changes made a few seconds after another Dock restart (for example just after launch or an update) being undone by the Dock
+- **tiles:** Repair tiles left broken in the Dock by an earlier version the next time Dock Tile opens
+- **tiles:** Fix a tile being briefly marked hidden while it is added or updated
+- **dock:** Start the Dock again if it does not come back after Dock Tile restarts it
+- **migration:** Fix reopening the Dock Tile window during a tile update starting a second round of updates
+
 ## [2.6.1] - 2026-10-28
 
 No changes to the app itself.
@@ -128,7 +159,9 @@ so every fix below reaches them without any action from you.
 - **customise:** Fix Customise overwriting a tile's Dock visibility with the value from when the editor was opened ([eaa93c6](https://github.com/k97/dock-tile/commit/eaa93c6))
 - **diagnostics:** Fix multi-line entries in Copy Diagnostics surviving the one-hour trim forever ([1e5a6a9](https://github.com/k97/dock-tile/commit/1e5a6a9))
 
-[Unreleased]: https://github.com/k97/dock-tile/compare/v2.6.1...HEAD
+[Unreleased]: https://github.com/k97/dock-tile/compare/v2.6.3...HEAD
+[2.6.3]: https://github.com/k97/dock-tile/compare/v2.6.2...v2.6.3
+[2.6.2]: https://github.com/k97/dock-tile/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/k97/dock-tile/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/k97/dock-tile/compare/v2.5.1...v2.6.0
 [2.5.1]: https://github.com/k97/dock-tile/compare/v2.5.0...v2.5.1
