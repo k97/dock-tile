@@ -710,8 +710,8 @@ final class ConfigurationManager: ObservableObject {
         operationInFlight: Bool
     ) -> DockVisibilityResolution {
         // A tile whose Dock operation is still running (built, removed, or verified by a batch) is
-        // mid-change: install removes its entry early and re-adds it seconds later, and reacting to
-        // that gap marked the tile hidden. The worst case of skipping is "visible but absent" until
+        // mid-change: install re-seats its entry (remove + re-add) after the swap, and before 2.6.3
+        // removed it early and re-added it seconds later; reacting to such a gap marked the tile hidden. The worst case of skipping is "visible but absent" until
         // the next Dock change or launch — never "hidden but pinned".
         if operationInFlight { return .inSync }
         if isVisibleInConfig, !isActuallyInDock {

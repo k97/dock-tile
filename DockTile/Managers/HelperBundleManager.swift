@@ -2077,7 +2077,7 @@ final class HelperBundleManager {
         _ = try await buildAndSwap(for: config)
     }
 
-    /// Quit a helper and wait for termination (public for migration)
+    /// Quit a helper and wait for termination (the staged rebuild's `quitOld` step)
     func quitHelperAndWait(bundleId: String) async {
         guard isHelperRunning(bundleId: bundleId) else { return }
         quitHelper(bundleId: bundleId)

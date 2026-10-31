@@ -1,7 +1,6 @@
 # Tile rebuild without a dead tile, with progress on the tile
 
-Date: 2026-10-30. Status: brainstormed with the owner; builder check done and answered
-(2026-10-31); pending the owner's approval.
+Date: 2026-10-30. Status: approved by the owner (2026-10-31) and built on `fix/tile-rebuild-swap`.
 Scope: the macOS app. Target release: 2.6.3.
 
 ## Why
