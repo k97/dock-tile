@@ -63,13 +63,14 @@ struct MacOSFloorGuardTests {
     /// Every REQUIREMENT the website states — "Requires macOS N …", "For macOS N …",
     /// "runs on macOS N …", "macOS N.0 or later" (schema.org), "macOS N+" (badges) — must be the
     /// deployment target's. A feature note such as "On macOS 26 (Tahoe) and later, tile icons …"
-    /// is not a requirement and is left alone.
+    /// is not a requirement and is left alone. `home-sections.tsx` left the list on 2026-10-31: the
+    /// closing banner that held its "macOS 15+" was removed (79f00bf); the hero, the requirements
+    /// line, the FAQ and schema.org still state the floor.
     @Test("The website states the real floor everywhere it names one", arguments: [
         "website/lib/i18n.ts",
         "website/lib/schema.ts",
         "website/lib/config.ts",
         "website/components/hero.tsx",
-        "website/components/home-sections.tsx",
     ])
     func websiteStatesTheRealFloor(_ path: String) throws {
         let target = try Self.deploymentTarget()
