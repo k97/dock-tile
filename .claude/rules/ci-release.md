@@ -31,6 +31,11 @@ macOS N", "For macOS N+", schema.org `operatingSystem`). The site said "macOS 26
 months while the binary and appcast said 15.0 — macOS 15 users ran a build the site disowned, on
 a path nothing tested, and the 2.0.2 oversized-tile report came from there. Raising the floor is
 therefore a single edit to `Base.xcconfig` plus whatever the guard then lists.
+**A website-only push skips app CI (`paths-ignore`), so it can turn this guard red on `main` unseen**:
+79f00bf removed the homepage banner holding "macOS 15+" and the guard failed only when the next
+app branch ran tests (2026-10-31). After a website change to requirement copy, run
+`-only-testing:DockTileTests/MacOSFloorGuardTests`; when a listed file stops stating the floor but
+the site still does elsewhere, drop that file from the guard's list rather than re-adding copy.
 
 **A CI check's negative control goes on a throwaway branch (2026-10-29).** Invert one expectation in
 a commit on `<branch>-negative`, dispatch it, require it to FAIL with the expected count, then delete

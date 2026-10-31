@@ -90,6 +90,13 @@ windowless quit) presented the window (#29). Count windows by PID with `CGWindow
 - **Prove a timing race with an uncommitted experiment build**, not human speed: stretch the interval
   (the 300 ms save debounce → 5 s), add log lines, act, read the log and the config, then
   `git checkout` the experiment away. A human ⌘Q "instantly" is ~300 ms and proved nothing for #30.
+  Gate each experiment behind a `defaults write com.docktile.dev.app <key>` read at the call site, so
+  one build serves several cases (2.6.3: an 8 s build stretch and a forced signing failure); delete
+  the keys with the checkout.
+- **The dev log also holds test-run lines.** The test host is the dev app, so a suite run writes
+  deliberate failures ("Swap FAILED … /T/HelperSwapTests-…", "compile tile car FAILED") into the same
+  `diagnostics.log`, and a relaunch's trim replays them to a `tail -F`. Read only lines from the
+  running dev app's `[main <pid>]` / helper pids.
 
 ## The test host is the dev app
 

@@ -73,6 +73,12 @@ The app product name is **"Dock Tile"** (with space), not "DockTile". File syste
   concurrent compile tests (2026-10-19); 15 compiles on a 14-core Mac reproduce it
   (`IconCompilerTests.concurrentCompilesFinish`). Read the one pipe you need on the calling thread
   and send the other stream to a file or `/dev/null`. A bounded `wait(timeout:)` is acceptable.
+- **"Same folder?" is a file-identity question, never a string compare (critical).** The boot volume is
+  case-insensitive APFS: `utils.app` and `Utils.app` are one folder, and `contentsOfDirectory` vs
+  `appendingPathComponent` spell paths differently. Before deleting or replacing by path, compare with
+  `HelperBundleManager.isSameFile` (device + inode). The 2.6.3 staged swap deleted its own new bundle
+  on a case-only rename until review caught it (`oldFolderIsKeptOnACaseOnlyRename`); a test of such
+  a rule must touch the real file system, since string-only fixtures cannot reproduce it.
 - **Assets fail SILENTLY — never assume one rendered.** An unknown SF Symbol name
   (`Image(systemName:)`) and a bundled image that fails to decode both draw **nothing**: no warning,
   no placeholder, no crash — the affordance is simply absent. `app.badge.plus` shipped that way in
