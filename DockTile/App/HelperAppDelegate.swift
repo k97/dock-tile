@@ -58,6 +58,10 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// can never be closed from the Dock.
     private let dismissReshowGuard: CFAbsoluteTime = 0.25
 
+    /// Draws the rebuild bar on this tile while the main app rebuilds it (2.6.3) and says when
+    /// clicks, ⌘Tab activation and the custom Dock menu must be ignored. Created at launch.
+    private var rebuildPresenter: TileRebuildPresenter?
+
     /// Current icon style (Default/Dark/Clear/Tinted)
     private var currentIconStyle: IconStyle = .defaultStyle
 
@@ -131,6 +135,12 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // samples itself into <support>/spins/ and Copy Diagnostics carries the hottest frames.
         SpinWatchdog.shared.start()
 
+        // Listen for the main app rebuilding this tile: show the bar, ignore clicks meanwhile.
+        let presenter = TileRebuildPresenter(bundleId: currentBundleId,
+                                             hidePopover: { [weak self] in self?.hidePopover() })
+        presenter.start()
+        rebuildPresenter = presenter
+
         // Rasterise this tile's icons BEFORE the first click, one per run-loop turn, so the first
         // popover open doesn't wait on ~3.5 ms of synchronous IconServices XPC per icon.
         if let config = getCurrentConfiguration() {
@@ -196,6 +206,9 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     /// Called when app becomes active (e.g., via Cmd+Tab)
     func applicationDidBecomeActive(_ notification: Notification) {
+        // Nothing opens while the tile is being rebuilt (App-mode ⌘Tab included).
+        guard rebuildPresenter?.ignoresInteraction != true else { return }
+
         // Only show popover on activation if showInAppSwitcher is enabled
         guard let config = getCurrentConfiguration(), config.showInAppSwitcher else {
             return
@@ -237,6 +250,10 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         print("🖱️ Helper dock icon clicked (hasVisibleWindows: \(flag))")
         DiagnosticsLog.shared.ui("Dock icon clicked (popover \(floatingPanel.isVisible ? "open" : "closed"))")
+        if rebuildPresenter?.ignoresInteraction == true {
+            DiagnosticsLog.shared.log("helper", "Dock click ignored — tile is rebuilding", verbose: true)
+            return true
+        }
         let now = CFAbsoluteTimeGetCurrent()
 
         // Swallow the reopen macOS delivers right after a user cold-launch or a ⌘Tab
@@ -322,6 +339,8 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         // NOTE: This method is only called when the helper is in "App Mode" (showInAppSwitcher = true)
         // In "Ghost Mode" (LSUIElement = true), the Dock treats the app as a shortcut
         // and doesn't call this delegate method.
+        // No Configure… mid-rebuild (a Ghost tile is .regular then); the Dock's own items remain.
+        guard rebuildPresenter?.ignoresInteraction != true else { return nil }
         NSLog("🔧 applicationDockMenu called (App Mode)")
         print("🔧 applicationDockMenu called (App Mode)")
         let menu = NSMenu()
