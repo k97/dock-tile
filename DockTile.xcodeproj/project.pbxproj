@@ -11,6 +11,7 @@
 		AA0003 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0004 /* AppDelegate.swift */; };
 		AA0020 /* FloatingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0021 /* FloatingPanel.swift */; };
 		AA0900 /* PopoverItemMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0901 /* PopoverItemMenu.swift */; };
+		AA0910 /* TileRebuildBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0911 /* TileRebuildBar.swift */; };
 		AA0022 /* LauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0023 /* LauncherView.swift */; };
 		AA09AE0F /* ConfigurationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFE26F /* ConfigurationModels.swift */; };
 		AA0E9A37 /* DockTileIconPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA547156 /* DockTileIconPreview.swift */; };
@@ -112,6 +113,7 @@
 		AA0009 /* Dock Tile Dev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dock Tile Dev.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0021 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
 		AA0901 /* PopoverItemMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverItemMenu.swift; sourceTree = "<group>"; };
+		AA0911 /* TileRebuildBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileRebuildBar.swift; sourceTree = "<group>"; };
 		AA0023 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
 		AA05B3C0 /* DockTileSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileSidebarView.swift; sourceTree = "<group>"; };
 		AA0D6A16 /* ConfigurationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationModels.swift; sourceTree = "<group>"; };
@@ -269,6 +271,7 @@
 				AA0023 /* LauncherView.swift */,
 				AANPV02 /* NativePopoverViews.swift */,
 				AA0901 /* PopoverItemMenu.swift */,
+				AA0911 /* TileRebuildBar.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -631,6 +634,7 @@
 				AAHELP01 /* HelperAppDelegate.swift in Sources */,
 				AA0020 /* FloatingPanel.swift in Sources */,
 				AA0900 /* PopoverItemMenu.swift in Sources */,
+				AA0910 /* TileRebuildBar.swift in Sources */,
 				AA0022 /* LauncherView.swift in Sources */,
 				AANPV01 /* NativePopoverViews.swift in Sources */,
 				AAU00001 /* IconGenerator.swift in Sources */,
