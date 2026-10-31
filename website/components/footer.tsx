@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { siteConfig } from "@/lib/config";
 import { trackExternalLinkClick } from "@/lib/analytics";
 import { withReferral } from "@/lib/referral";
+import { isActiveRoute } from "@/lib/nav";
 
 const STUDIO_URL = withReferral(siteConfig.authorUrl);
 
@@ -13,6 +15,7 @@ const STUDIO_URL = withReferral(siteConfig.authorUrl);
 // the legal pages. Everything else lives once in the page above it.
 export function Footer() {
   const { content } = useLocale();
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -35,18 +38,24 @@ export function Footer() {
       </div>
 
       <div className="order-3 flex items-center gap-6 justify-self-center text-sm md:justify-self-end">
-        <Link
-          href="/privacy"
-          className="hit-area text-muted-foreground transition-colors duration-300 hover:text-foreground"
-        >
-          {content.privacy}
-        </Link>
-        <Link
-          href="/terms"
-          className="hit-area text-muted-foreground transition-colors duration-300 hover:text-foreground"
-        >
-          {content.terms}
-        </Link>
+        {[
+          { href: "/privacy", label: content.privacy },
+          { href: "/terms", label: content.terms },
+        ].map(({ href, label }) => {
+          const current = isActiveRoute(pathname, href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={current ? "page" : undefined}
+              className={`hit-area transition-colors duration-300 hover:text-foreground ${
+                current ? "text-foreground" : "text-muted-foreground"
+              }`}
+            >
+              {label}
+            </Link>
+          );
+        })}
       </div>
     </footer>
   );

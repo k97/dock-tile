@@ -7,12 +7,7 @@ import { usePathname } from "next/navigation";
 import { siteConfig } from "@/lib/config";
 import { asset } from "@/lib/assets";
 import { DownloadActionButton } from "@/components/action-button";
-
-const navLinks = [
-  { label: "Features", href: "/#features" },
-  { label: "Privacy", href: "/privacy" },
-  { label: "FAQ", href: "/faq" },
-];
+import { NAV_LINKS, currentFor } from "@/lib/nav";
 
 export function Header() {
   const pathname = usePathname();
@@ -33,6 +28,9 @@ export function Header() {
   // Which tone of section sits behind the nav right now. Drives an inverse
   // pill: light frost over dark sections, dark frost over light ones.
   const [overDark, setOverDark] = React.useState(true);
+  // Which homepage section is on screen (`data-nav-section`), for section links
+  // like Features; null elsewhere. Read by the same scroll sampling as the tone.
+  const [activeSection, setActiveSection] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let raf = 0;
@@ -46,6 +44,9 @@ export function Header() {
       const el = document.elementFromPoint(r.left + r.width / 2, r.bottom + 10);
       const toned = el?.closest<HTMLElement>("[data-nav-tone]");
       setOverDark(toned?.dataset.navTone !== "light");
+      // The section crossing 40% of the viewport is the one being read.
+      const reading = document.elementFromPoint(window.innerWidth / 2, window.innerHeight * 0.4);
+      setActiveSection(reading?.closest<HTMLElement>("[data-nav-section]")?.dataset.navSection ?? null);
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(sample);
@@ -108,7 +109,7 @@ export function Header() {
         ref={navRef}
         data-over={overDark ? "dark" : "light"}
         data-ready={ready || undefined}
-        className="glass-nav pointer-events-auto flex items-center gap-1 rounded-full py-1.5 pl-2 pr-2 md:pl-3 md:pr-1.5"
+        className="glass-nav pointer-events-auto flex items-center gap-1 rounded-full px-1.5 py-1.5"
       >
         <Link
           href="/"
@@ -127,7 +128,7 @@ export function Header() {
             const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
           }}
-          className={`flex shrink-0 items-center gap-2 rounded-full py-1.5 pl-1 pr-2.5 transition-colors duration-300 md:pr-3 ${logoHover}`}
+          className={`flex shrink-0 items-center gap-2 rounded-full py-1.5 pl-1.5 pr-2.5 transition-colors duration-300 md:pr-3 ${logoHover}`}
         >
           {/* `max-w-none` overrides Tailwind preflight's `img { max-width: 100% }`
               (critical). WebKit counts an <img> with a PERCENTAGE max-width as
@@ -157,13 +158,14 @@ export function Header() {
 
         {/* The three links stay inline at every width — on mobile they ARE the
             nav's content, since Download drops out (below). */}
-        {navLinks.map((link) => {
-          const isActive = pathname.startsWith(link.href);
+        {NAV_LINKS.map((link) => {
+          const current = currentFor(link, pathname, activeSection);
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`${linkBase} ${isActive ? linkActive : linkIdle}`}
+              aria-current={current}
+              className={`${linkBase} ${current ? linkActive : linkIdle}`}
             >
               {link.label}
             </Link>

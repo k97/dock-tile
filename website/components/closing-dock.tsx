@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { MacOSDock, type DockApp } from "@/components/ui/mac-os-dock";
 import { ICON_CONTENT_RATIO, TileFace } from "@/components/dock-demo";
@@ -21,9 +22,9 @@ import { trackContactClick, trackExternalLinkClick, trackReleaseNotesClick } fro
  * the hero's list popover (`dock-demo.tsx`) — keep them in sync.
  */
 
-// The product's medium list tier is 240; +8 so the header's full studio name
-// fits beside its 24px tile on one line.
-const POPOVER_WIDTH = 248;
+// The hero's list popover width (240, the product's medium list tier) + 16, so the
+// studio row — tile, "happymachines.company" and its ↗ — fits on one line.
+const POPOVER_WIDTH = 256;
 // The GitHub / fire / mail SVGs carry ~2/24 of built-in padding, so they need a
 // larger box than the hero's 58% to fill the tile like a macOS 26 icon glyph.
 const GLYPH_SIZE = "70%";
@@ -272,10 +273,28 @@ export function ClosingDock() {
     ? "dock-pop-out 140ms var(--ease-out-strong) forwards"
     : "dock-scale-out 190ms cubic-bezier(0.4, 0, 1, 1) forwards";
 
+  // The hero's list popover, exactly (dock-demo.tsx): rows, hover, stagger and the
+  // divider before the studio row — plus a "You're here" caption on Dock Tile and
+  // a ↗ on the external app rows (owner). "Early access" rides in Lango's tooltip.
   const row =
-    "flex min-h-7 items-center gap-2.5 rounded px-3 py-1 text-left text-[13px] text-zinc-800 outline-none transition-colors duration-150 hover:bg-black/5 focus-visible:bg-black/10 dark:text-zinc-100 dark:hover:bg-white/10 dark:focus-visible:bg-white/15";
+    "flex min-h-7 items-center gap-2.5 rounded px-3 py-1 text-left outline-none transition-colors duration-150 hover:bg-black/5 focus-visible:bg-black/10 dark:hover:bg-white/10 dark:focus-visible:bg-white/15";
+  const label = "truncate text-[13px] text-zinc-800 dark:text-zinc-100";
+  const stagger = (i: number): React.CSSProperties | undefined =>
+    reduced ? undefined : { animation: "dock-app-in 240ms var(--ease-out-strong) both", animationDelay: `${i * 30}ms` };
   const hint = <span className="sr-only"> {m.opensInNewTab}</span>;
-  const rowArrow = <ArrowUpRight aria-hidden className="ml-auto h-3 w-3 shrink-0 text-zinc-400" />;
+  // One aligned right-hand ↗ column for the external app rows.
+  const rowArrow = <ArrowUpRight aria-hidden className="ml-auto h-3 w-3 shrink-0 text-zinc-500 dark:text-zinc-400" />;
+
+  // Dock Tile: back to the hero at the top of this page. Never hand focus back
+  // to the Studio tile on the way (that would scroll back down).
+  const goHome = (e: React.MouseEvent) => {
+    e.preventDefault();
+    viaKeyboardRef.current = false;
+    close();
+    if (window.location.hash) history.replaceState(null, "", "/");
+    window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+    (document.activeElement as HTMLElement | null)?.blur();
+  };
 
   return (
     <div
@@ -306,26 +325,26 @@ export function ClosingDock() {
             animation: closing ? animOut : animIn,
           }}
         >
-          {/* Same icon column as the rows below: px-3, 24px tile, gap-2.5 */}
-          <p className="flex min-h-7 items-center gap-2.5 px-3 pb-1 pt-1.5 text-left text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">
-            <HmcGlassTile className="h-6 w-6 shrink-0" />
-            <span className="min-w-0 truncate">{siteConfig.authorName}</span>
+          {/* text-left: the closing band centres its text, the hero's context doesn't */}
+          <p className="px-3 pb-1 pt-1.5 text-left text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">
+            {siteConfig.authorName}
           </p>
           <div className="flex flex-col">
-            <span className={`${row} bg-black/10 hover:bg-black/10 dark:bg-white/15 dark:hover:bg-white/15`}>
+            <Link href="/" onClick={goHome} aria-current="page" className={row} style={stagger(0)}>
               <span className="h-6 w-6 shrink-0">{dockTileIcon}</span>
-              <span className="truncate">{siteConfig.appName}</span>
-              <span className="ml-auto shrink-0 text-[11px] text-zinc-500 dark:text-zinc-400">{m.studioHere}</span>
-            </span>
+              <span className={label}>{siteConfig.appName}</span>
+              <span className="shrink-0 text-[11px] text-zinc-500 dark:text-zinc-400">{m.studioHere}</span>
+            </Link>
             <a
               href={SPADES_URL}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackExternalLinkClick(SPADES_URL, "studio_popover")}
               className={row}
+              style={stagger(1)}
             >
               <span className="h-6 w-6 shrink-0">{spadesIcon}</span>
-              <span className="truncate">{siteConfig.spadesAudioName}</span>
+              <span className={label}>{siteConfig.spadesAudioName}</span>
               {hint}
               {rowArrow}
             </a>
@@ -333,16 +352,16 @@ export function ClosingDock() {
               href={LANGO_URL}
               target="_blank"
               rel="noopener noreferrer"
+              title={m.studioEarlyAccess}
               onClick={() => trackExternalLinkClick(LANGO_URL, "studio_popover")}
               className={row}
+              style={stagger(2)}
             >
               <span className="h-6 w-6 shrink-0">{langoIcon}</span>
-              <span className="truncate">{siteConfig.langoName}</span>{" "}
-              <span className="ml-auto flex shrink-0 items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400">
-                {m.studioEarlyAccess}
-                <ArrowUpRight aria-hidden className="h-3 w-3 text-zinc-400" />
-              </span>
+              <span className={label}>{siteConfig.langoName}</span>
+              <span className="sr-only"> — {m.studioEarlyAccess}</span>
               {hint}
+              {rowArrow}
             </a>
           </div>
           <div className="mx-3 my-1 border-t border-black/10 dark:border-white/10" />
@@ -351,9 +370,11 @@ export function ClosingDock() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackExternalLinkClick(STUDIO_URL, "studio_popover")}
-            className={`${row} text-zinc-700 dark:text-zinc-300`}
+            className={row}
+            style={stagger(3)}
           >
-            {STUDIO_HOST}
+            <HmcGlassTile className="h-6 w-6 shrink-0" />
+            <span className={label}>{STUDIO_HOST}</span>
             {hint}
             {rowArrow}
           </a>

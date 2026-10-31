@@ -96,9 +96,16 @@ pieces rather than copying them — keep it that way:
   aria-label overrides child text), `tooltip` (node, for the ↗), `label` (touch-only caption;
   a labelled Dock widens its spacing where there is no hover), `kind: "divider"` (never
   magnified; all layout maths is cumulative, which equals the old index formula without one).
-- **The Studio popover's markup is a deliberate copy** of the hero's list popover, like the
-  bento clone — keep them in sync. It renders AFTER the Dock in the DOM (Tab flows into it;
-  a keyboard open focuses its first link). The band clips only its background layers, never
+- **The Studio popover is an exact copy of the hero's LIST popover — keep them in sync** (owner,
+  2026-10-31, after a detour: a centred 15px title + notes + a ↗ column read as "off" beside the
+  hero). Width 256px (the hero's 240 + 16 for the studio row), left-aligned 13px semibold title (`text-left` is required — the closing
+  band centres its text), 24px icon rows with the hero's hover and stagger, and the studio site as
+  a full row under the divider (the glass Happy Machines tile in the 24px icon column, label and ↗ aligned with the rows above; content inset 21px on both sides). Every row is a link; Dock Tile
+  scrolls back to the hero (`aria-current="page"`, never refocusing the Studio tile on the way).
+  Two owner additions on top of the copy: a muted 11px "You're here" caption beside Dock Tile and
+  a ↗ column (`ml-auto`) on the external app rows; "Early access" stays in Lango's tooltip +
+  screen-reader text. It renders AFTER the
+  Dock in the DOM (Tab flows into it; a keyboard open focuses its first link). The band clips only its background layers, never
   the section, so the popover can't be cut off near the band's edge.
 - **Studio face** = the App Grid 2×2 (HMC mark, Dock Tile, Spades Audio, Lango) on
   `public/assets/studio/*.png`, all normalised to 232/256 content. Its cells sit on definite

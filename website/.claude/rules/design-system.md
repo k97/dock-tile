@@ -80,6 +80,18 @@ Either guard alone fixes it; both are kept because each is independently correct
 **any `w-fit`/shrink-to-fit box containing an `<img>` is exposed** — verify layout in WebKit
 (`npx playwright install webkit`), not just Chrome.
 
+**Current link = one rule for nav AND footer (`lib/nav.ts`, 2026-10-31).** `usePathname()` never
+includes the `#hash`, so the old `pathname.startsWith("/#features")` left Features dead forever,
+and the footer had no current state at all. Route links use `isActiveRoute` (exact or a `/`
+sub-path); section links (Features) are current on `/` while a `data-nav-section="features"`
+section crosses 40% of the viewport, read by the header's existing scroll sampler (no second
+listener). Tagged: Features / 01, Dock Lock, the power-user cards — never the hero or the closing
+band. Current links carry `aria-current` ("page" / "location").
+
+**The pill's ends are concentric.** The Download button sits 7px from the pill's edge on every
+side, so the logo's hover pill does too (`px-1.5` on the pill, `pl-1.5` in the logo link → icon
+13px from the side, top and bottom alike). It was 13px / 17px on the left, which read as lopsided.
+
 Below `md` the pill drops **Download** (`max-md:hidden`) and keeps logo + wordmark + the three
 text links inline — on a phone nobody installs a macOS app from the nav, and the links are the
 contextual actions (the hero + the closing band still offer Download). No hamburger. The wordmark stays

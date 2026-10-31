@@ -162,7 +162,7 @@ export function CustomTilesStory() {
   const m = content.marketing;
 
   return (
-    <section id="features" className="mx-auto max-w-400 px-6 py-24 md:px-10 md:py-32">
+    <section id="features" data-nav-section="features" className="mx-auto max-w-400 px-6 py-24 md:px-10 md:py-32">
       {/* Stacked, Apple-style: the window is a three-pane app, so it needs the
           full content width to read — text centred above, screenshot below. */}
       <Reveal className="mx-auto mb-14 max-w-180 text-center md:mb-16">
@@ -193,7 +193,7 @@ export function PowerUserSection() {
   const m = content.marketing;
 
   return (
-    <section className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-32">
+    <section data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-32">
       <Reveal className="mb-14 text-center">
         <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
           {m.powerUserEyebrow}
@@ -356,7 +356,7 @@ export function DockLockStory() {
   const m = content.marketing;
 
   return (
-    <section data-nav-tone="dark" className="relative mx-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 md:mx-4">
+    <section data-nav-tone="dark" data-nav-section="features" className="relative mx-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 md:mx-4">
       <div className="grain" />
       <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-950/40" />
       <div className="relative mx-auto grid max-w-400 items-center gap-12 px-6 py-24 md:grid-cols-2 md:gap-20 md:px-10 md:py-32">
