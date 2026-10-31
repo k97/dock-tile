@@ -110,7 +110,11 @@ So Ghost tiles switch to `.regular` while their bar shows. Side effects for thos
 App-mode tiles already have all the time: a running dot under the tile, an entry in ⌘Tab and the
 Force Quit window, and the Dock's standard right-click menu (Options, Show in Finder, Quit). Quit
 or Force Quit there hits the helper itself, never the main app: the swap still lands and the new
-helper launches. Not yet checked on macOS 15 and 26 (the plan carries that check).
+helper launches. **Same on macOS 15 and 26 (CI, 2026-10-31, run 41164745626, throwaway branch since deleted):** on
+both runners the five `.accessory` captures were byte-identical; in `.regular` the three mid-bar
+captures differed from the before capture and showed the bar on the pinned tile by eye, the after
+capture equalled the before one, and the log read `switch → accessory ok=true policy=1`. Focus was
+not taken (Finder stayed frontmost).
 
 **If neither works**, style C is not possible for Ghost tiles. Decided (owner, 2026-10-31): 2.6.3
 then ships the atomic swap alone, and progress comes in a later release. The swap matters more
