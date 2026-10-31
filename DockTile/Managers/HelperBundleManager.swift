@@ -2265,6 +2265,81 @@ final class HelperBundleManager {
         }
     }
 
+    // MARK: - Staged rebuild (2.6.3)
+    //
+    // A tile's new bundle is built in a hidden staging folder on the same volume while its old helper
+    // keeps running, then swapped in with ONE atomic rename. WHY: the in-place rebuild left the tile's
+    // folder holding a copy of the main app, with the main app's bundle id, for a moment; the Dock
+    // resolves a pinned entry by bundle id, so on 2026-10-29 Force Quit on a dead tile killed Dock
+    // Tile itself mid-migration. The staging folder is dot-prefixed so Spotlight skips it, every
+    // support-folder scan lists only top-level `*.app`, and it is never registered with Launch Services.
+
+    /// `<support>/.staging`
+    nonisolated static func stagingDirectory(helperDirectory: URL) -> URL {
+        helperDirectory.appendingPathComponent(".staging", isDirectory: true)
+    }
+
+    /// `<support>/.staging/<bundleId>.app` — one per tile, so a leftover is found by the next build.
+    nonisolated static func stagingBundleURL(helperDirectory: URL, bundleId: String) -> URL {
+        stagingDirectory(helperDirectory: helperDirectory).appendingPathComponent("\(bundleId).app", isDirectory: true)
+    }
+
+    /// Put `staged` at `final` atomically. With a bundle already at `final`, `RENAME_SWAP` exchanges
+    /// the two (so `final` always holds a complete bundle), then the old one, now at `staged`, is
+    /// deleted. Needs APFS, which every supported boot volume is. On any failure `final` is untouched.
+    nonisolated static func swapIntoPlace(staged: URL, final: URL) throws {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: staged.path) else {
+            DiagnosticsLog.shared.log("tile", "Swap FAILED: no staged bundle at \(staged.path)")
+            throw HelperBundleError.bundleCopyFailed
+        }
+        let exchanging = fm.fileExists(atPath: final.path)
+        let status = exchanging
+            ? renamex_np(staged.path, final.path, UInt32(RENAME_SWAP))
+            : rename(staged.path, final.path)
+        guard status == 0 else {
+            let code = errno
+            DiagnosticsLog.shared.log("tile", "Swap FAILED (\(exchanging ? "exchange" : "rename"), errno \(code): \(String(cString: strerror(code)))) for \(final.lastPathComponent)")
+            throw HelperBundleError.bundleCopyFailed
+        }
+        if exchanging {
+            do { try fm.removeItem(at: staged) } catch {
+                DiagnosticsLog.shared.log("tile", "Old bundle left in staging after swap (\(error.localizedDescription)); removed on next launch")
+            }
+        }
+    }
+
+    /// The folder to delete after a swap: the tile's previous folder when a rename moved it, else
+    /// nil. Compared as standardized paths without a trailing slash — `contentsOfDirectory` and
+    /// `appendingPathComponent` can spell one folder differently, and deleting on a false
+    /// "different" AFTER the swap would delete the brand-new bundle.
+    nonisolated static func oldFolderToRemove(existing: URL?, final: URL) -> URL? {
+        guard let existing else { return nil }
+        func normalized(_ url: URL) -> String {
+            var path = url.standardizedFileURL.path
+            while path.count > 1 && path.hasSuffix("/") { path.removeLast() }
+            return path
+        }
+        return normalized(existing) == normalized(final) ? nil : existing
+    }
+
+    /// Delete staging bundles no build owns (left by a crash or a Force Quit mid-build). A bundle is
+    /// removed only when its tile's `TileBuildLock` can be taken, so another process's live build is
+    /// never pulled from under it. Returns the removed folder names.
+    nonisolated static func removeStaleStaging(stagingDirectory: URL) -> [String] {
+        let items = (try? FileManager.default.contentsOfDirectory(atPath: stagingDirectory.path)) ?? []
+        var removed: [String] = []
+        for name in items.sorted() where name.hasSuffix(".app") {
+            let bundleId = String(name.dropLast(".app".count))
+            guard let lock = TileBuildLock.acquire(bundleId: bundleId, stagingDirectory: stagingDirectory) else { continue }
+            defer { lock.release() }
+            if (try? FileManager.default.removeItem(at: stagingDirectory.appendingPathComponent(name))) != nil {
+                removed.append(name)
+            }
+        }
+        return removed
+    }
+
     // MARK: - Helpers
 
     /// Sanitize app name for use as bundle name (replace special chars)
@@ -2276,6 +2351,32 @@ final class HelperBundleManager {
             .trimmingCharacters(in: .whitespaces)
     }
 
+}
+
+/// Exclusive per-tile build lock shared by every Dock Tile process of one build flavour (an
+/// `flock`-style `O_EXLOCK` on `<staging>/<bundleId>.lock`). The in-process `buildingBundleIds` set
+/// cannot see a second process; this can, and the kernel drops it when its holder dies, so a crash
+/// never leaves a tile locked. Two `open()`s conflict even within one process.
+final class TileBuildLock: @unchecked Sendable {
+    private var fd: Int32
+
+    private init(fd: Int32) { self.fd = fd }
+
+    /// nil when another build (any process) holds this tile's lock, or the lock file can't be made.
+    static func acquire(bundleId: String, stagingDirectory: URL) -> TileBuildLock? {
+        try? FileManager.default.createDirectory(at: stagingDirectory, withIntermediateDirectories: true)
+        let path = stagingDirectory.appendingPathComponent("\(bundleId).lock").path
+        let fd = open(path, O_CREAT | O_RDWR | O_EXLOCK | O_NONBLOCK, 0o644)
+        return fd == -1 ? nil : TileBuildLock(fd: fd)
+    }
+
+    func release() {
+        guard fd != -1 else { return }
+        close(fd)
+        fd = -1
+    }
+
+    deinit { release() }
 }
 
 // MARK: - Errors
