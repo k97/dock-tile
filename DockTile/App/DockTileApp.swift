@@ -64,6 +64,10 @@ struct DockTileApp: App {
                         return
                     }
 
+                    // Remove staging bundles a crash or Force Quit left mid-rebuild (never one
+                    // another process is still building).
+                    HelperBundleManager.shared.removeStaleStaging()
+
                     // Migrate stale helper bundles after app launch
                     let migration = HelperMigrationManager(configManager: configManager)
                     await migration.migrateIfNeeded()

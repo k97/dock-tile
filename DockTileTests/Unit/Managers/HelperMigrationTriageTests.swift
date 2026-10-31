@@ -83,11 +83,9 @@ struct HelperMigrationBatchTests {
     func stampsOnSuccessOnly() async {
         let ok = DockTileConfiguration(name: "ok-tile")
         let bad = DockTileConfiguration(name: "bad-tile")
-        var quitOrder: [String] = []
 
         let outcome = await HelperMigrationManager.runRegenerationBatch(
             [ok, bad],
-            quit: { quitOrder.append($0) },
             regenerate: { config in
                 if config.name == "bad-tile" { throw BatchTestError.boom }
             }
@@ -96,8 +94,6 @@ struct HelperMigrationBatchTests {
         // Only the success is stamped — the failure stays stale so it retries next launch.
         #expect(outcome.stampedIds == [ok.id])
         #expect(outcome.regeneratedIds == [ok.id])
-        // Both were still quit before their (attempted) regeneration.
-        #expect(Set(quitOrder) == Set([ok.bundleIdentifier, bad.bundleIdentifier]))
     }
 
     @Test("All-success batch stamps and regenerates every config")
@@ -106,7 +102,7 @@ struct HelperMigrationBatchTests {
         let b = DockTileConfiguration(name: "b")
 
         let outcome = await HelperMigrationManager.runRegenerationBatch(
-            [a, b], quit: { _ in }, regenerate: { _ in })
+            [a, b], regenerate: { _ in })
 
         #expect(outcome.stampedIds == [a.id, b.id])
         #expect(outcome.regeneratedIds == [a.id, b.id])
@@ -118,7 +114,7 @@ struct HelperMigrationBatchTests {
         let b = DockTileConfiguration(name: "b")
 
         let outcome = await HelperMigrationManager.runRegenerationBatch(
-            [a, b], quit: { _ in }, regenerate: { _ in throw BatchTestError.boom })
+            [a, b], regenerate: { _ in throw BatchTestError.boom })
 
         #expect(outcome.stampedIds.isEmpty)
         #expect(outcome.regeneratedIds.isEmpty)

@@ -238,9 +238,10 @@ final class HelperMigrationManager {
     private func regenerateBatch(_ configs: [DockTileConfiguration], currentVersion: String) async {
         let helperManager = HelperBundleManager.shared
 
+        // Each tile is built in staging while its old helper runs (showing the rebuild bar), then
+        // quit, swapped and relaunched by regenerateHelperBundle — so its bar clears at its own swap.
         let outcome = await Self.runRegenerationBatch(
             configs,
-            quit: { await helperManager.quitHelperAndWait(bundleId: $0) },
             regenerate: { config in
                 do {
                     try await helperManager.regenerateHelperBundle(for: config)
@@ -267,7 +268,7 @@ final class HelperMigrationManager {
         guard !regeneratedConfigs.isEmpty else { return }
 
         // Re-seat each regenerated tile's Dock entry BEFORE the restart so the Dock loads FRESH
-        // icons. An in-place regenerate + touchBundle leaves the Dock serving its cached icon;
+        // icons. A regenerate at the same path + touchBundle leaves the Dock serving its cached icon;
         // re-adding the persistent-apps entry (new GUID) is what forces the refresh — the same
         // mechanism installHelper uses, batched here into the single restart below. Without this the
         // new icons regenerate on disk but the Dock keeps showing the old render until the tile is
@@ -291,7 +292,7 @@ final class HelperMigrationManager {
             pinnedIndices: pinnedIndices)
         _ = await helperManager.restartDockAndVerify(expectations, ownedBundleIds: [])
 
-        // Relaunch regenerated helpers
+        // Relaunch any regenerated helper that is not running (each swap already launched its own).
         for config in regeneratedConfigs {
             helperManager.launchHelperIfExists(for: config)
         }
@@ -305,22 +306,21 @@ final class HelperMigrationManager {
     }
 
     /// Drives a regeneration batch with injected side effects, so the **stamp-on-success**
-    /// invariant is unit-testable without touching real bundles or the Dock: each config is quit,
-    /// then regenerated; a config is stamped (and reported regenerated) ONLY if `regenerate`
-    /// returned without throwing. A failure is left unstamped so `migrateIfNeeded` retries it on a
+    /// invariant is unit-testable without touching real bundles or the Dock: each config is
+    /// regenerated (which quits its old helper only after the new bundle is built — see
+    /// `HelperBundleManager.runStagedRebuild`); a config is stamped (and reported regenerated) ONLY
+    /// if `regenerate` returned without throwing. A failure is left unstamped so `migrateIfNeeded` retries it on a
     /// later launch (convergent migration) rather than permanently marking a broken helper
     /// "migrated". (MainActor-isolated via the enclosing class — the injected closures capture
     /// MainActor state.)
     static func runRegenerationBatch(
         _ configs: [DockTileConfiguration],
-        quit: (String) async -> Void,
         regenerate: (DockTileConfiguration) async throws -> Void
     ) async -> BatchOutcome {
         var stamped: [UUID] = []
         var regenerated: [UUID] = []
 
         for config in configs {
-            await quit(config.bundleIdentifier)
             do {
                 try await regenerate(config)
                 regenerated.append(config.id)

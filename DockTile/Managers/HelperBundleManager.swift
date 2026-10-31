@@ -86,8 +86,9 @@ final class HelperBundleManager {
         !inFlight.contains(bundleId)
     }
 
-    /// Install a helper bundle for the given configuration
-    /// If helper already exists (by bundle ID), updates it in place
+    /// Install a helper bundle for the given configuration, or update the existing one (found by
+    /// bundle ID). The new bundle is built in staging and swapped in, so the old one stays whole and
+    /// running (showing the rebuild bar) until then — see `runStagedRebuild`.
     ///
     /// Returns `false` when a build for this bundle id is already in flight and this install was
     /// refused — the caller must NOT then stamp `helperAppVersion`, or the config would claim a
@@ -115,22 +116,10 @@ final class HelperBundleManager {
         AnalyticsService.shared.setBreadcrumb(config.bundleIdentifier, for: "installing_bundle_id")
         AnalyticsService.shared.setBreadcrumb("start", for: "install_step")
 
-        // Display name (CFBundleName) stays the clean human name; the FOLDER may be disambiguated
-        // when another tile already owns `<name>.app` (same-name tiles are allowed).
-        let appName = sanitizeAppName(config.name)
-        let helperPath = preferredHelperPath(for: config)
-
-        // Check if a helper with this bundle ID already exists (possibly with different name)
-        let existingHelperPath = findExistingHelper(bundleId: config.bundleIdentifier)
-        let isUpdate = existingHelperPath != nil
-        let wasRunning = isHelperRunning(bundleId: config.bundleIdentifier)
-
         // Check if this bundle ID is already in the Dock (might be with different name)
-        let existingDockPath = findInDock(bundleId: config.bundleIdentifier)
-        let wasInDock = existingDockPath != nil
+        let wasInDock = findInDock(bundleId: config.bundleIdentifier) != nil
 
-        // Save the original Dock position before removal (for updates)
-        // If currently in Dock, use live position; otherwise fall back to saved lastDockIndex
+        // The Dock position to keep: live when pinned, else the saved lastDockIndex
         let originalDockIndex: Int?
         if wasInDock {
             originalDockIndex = findDockIndex(bundleId: config.bundleIdentifier)
@@ -139,69 +128,23 @@ final class HelperBundleManager {
             originalDockIndex = config.lastDockIndex
         }
 
-        print("   isUpdate: \(isUpdate), wasRunning: \(wasRunning), wasInDock: \(wasInDock), originalIndex: \(originalDockIndex ?? -1), savedLastDockIndex: \(config.lastDockIndex ?? -1)")
+        print("   wasInDock: \(wasInDock), originalIndex: \(originalDockIndex ?? -1), savedLastDockIndex: \(config.lastDockIndex ?? -1)")
 
-        // CRITICAL: Remove from Dock FIRST to prevent auto-relaunch during update
-        // The Dock can relaunch persistent apps when it restarts, which causes stale process issues
-        if wasInDock {
-            print("   Removing from Dock before update (prevents auto-relaunch)")
-            removeFromDock(bundleId: config.bundleIdentifier)
-        }
-
-        // If helper is running, force quit it and wait for it to fully terminate
-        if wasRunning {
-            quitHelper(bundleId: config.bundleIdentifier)
-            // Wait for the app to fully terminate
-            var waitCount = 0
-            while isHelperRunning(bundleId: config.bundleIdentifier) && waitCount < 20 {
-                try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-                waitCount += 1
-            }
-
-            // Verify termination
-            if isHelperRunning(bundleId: config.bundleIdentifier) {
-                print("   ⚠️ Helper still running after 2 seconds, proceeding anyway")
-            } else {
-                print("   Helper terminated after \(waitCount) checks")
-            }
-
-            // Extra delay to ensure clean termination and file handle release
-            try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
-        }
-
-        // If updating and name changed, clean up old helper bundle
-        if let existingPath = existingHelperPath, existingPath != helperPath {
-            print("   Renaming helper from \(existingPath.lastPathComponent) to \(helperPath.lastPathComponent)")
-            try? FileManager.default.removeItem(at: existingPath)
-        }
-
-        // 1. Generate helper bundle structure (copy main app)
+        // 1–4. Build in staging while the old helper keeps running (it shows the rebuild bar), then
+        // swap the complete, signed bundle in, register and launch it. The Dock entry is NOT removed
+        // first any more: that only guarded against the Dock relaunching a half-built bundle, and
+        // the tile's folder never holds one now.
         AnalyticsService.shared.setBreadcrumb("bundle_copy", for: "install_step")
-        try generateHelperBundle(
-            appName: appName,
-            bundleId: config.bundleIdentifier,
-            helperPath: helperPath,
-            showInAppSwitcher: config.showInAppSwitcher,
-            iconSignature: config.iconSignature,
-            dockSignature: config.dockSignature
-        )
+        let helperPath = try await buildAndSwap(for: config)
+        print("   ✓ Built, signed and swapped in")
 
-        // 2. Write the tile icon into the bundle (declarative Assets.car on macOS 26+, the
-        // four baked style variants before that) — after the strip, before signing.
-        try await installTileIcons(for: config, at: helperPath)
-
-        // 3. Code sign the bundle
-        AnalyticsService.shared.setBreadcrumb("codesign", for: "install_step")
-        try await codesignHelper(at: helperPath)
-        print("   ✓ Code signed")
-
-        // 4. Touch the bundle to invalidate icon cache and re-register with Launch Services
-        touchBundle(at: helperPath)
-        print("   ✓ Refreshed icon cache")
-
-        // 5. Add to Dock (we already removed it earlier if it was there)
-        // If this is an update, restore the original position; otherwise append to end
-        addToDock(at: helperPath, atIndex: originalDockIndex)
+        // 5. Re-seat a pinned entry (a new GUID makes the Dock load the new icon) at its slot, or
+        // add a new tile at its saved position (end when none).
+        if wasInDock {
+            refreshDockEntry(for: config)
+        } else {
+            addToDock(at: helperPath, atIndex: originalDockIndex)
+        }
 
         // 6–8. Restart the Dock, then verify the entry is at THIS helper's path (retrying once).
         // A failure is thrown at the end, after the helper is launched: the bundle is built either way.
@@ -210,28 +153,6 @@ final class HelperBundleManager {
             [DockExpectation(bundleId: config.bundleIdentifier, path: helperPath.path,
                              index: originalDockIndex, name: config.diagnosticName)],
             ownedBundleIds: [config.bundleIdentifier])
-
-        // 9. Launch the helper app (Dock doesn't auto-launch persistent apps)
-        AnalyticsService.shared.setBreadcrumb("launch", for: "install_step")
-        if !isHelperRunning(bundleId: config.bundleIdentifier) {
-            print("   Launching helper app...")
-            launchHelper(at: helperPath)
-
-            // Wait for launch to complete
-            var launchWaitCount = 0
-            while !isHelperRunning(bundleId: config.bundleIdentifier) && launchWaitCount < 10 {
-                try await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
-                launchWaitCount += 1
-            }
-
-            if isHelperRunning(bundleId: config.bundleIdentifier) {
-                print("   ✓ Helper launched successfully")
-            } else {
-                print("   ⚠️ Helper may not have launched - user may need to click the Dock icon")
-            }
-        } else {
-            print("   ✓ Helper already running")
-        }
 
         AnalyticsService.shared.setBreadcrumb("done", for: "install_step")
         print("✅ Helper installed at: \(helperPath.path)")
@@ -1567,69 +1488,6 @@ final class HelperBundleManager {
         return nil
     }
 
-    /// Remove app from Dock by bundle ID (checks Info.plist of each app)
-    /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
-    func removeFromDock(bundleId: String) {
-        print("📌 Removing from Dock by bundle ID: \(bundleId)")
-
-        // Read current persistent-apps using CFPreferences
-        let dockAppId = "com.apple.dock" as CFString
-        // Fresh read before mutating persistent-apps (avoid a stale-cache read-modify-write).
-        CFPreferencesAppSynchronize(dockAppId)
-        guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
-            print("   ⚠️ Could not read persistent-apps from CFPreferences")
-            return
-        }
-
-        // Filter out apps with matching bundle ID
-        let filteredApps = currentApps.filter { entry in
-            guard let tileData = entry["tile-data"] as? [String: Any],
-                  let fileData = tileData["file-data"] as? [String: Any],
-                  let urlString = fileData["_CFURLString"] as? String,
-                  let url = URL(string: urlString) else {
-                return true  // Keep entries we can't parse
-            }
-
-            let appPath = "/" + url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-
-            // First check the bundle-identifier stored directly in tile-data
-            if let storedBundleId = tileData["bundle-identifier"] as? String,
-               storedBundleId == bundleId {
-                print("   Found and removing (tile-data): \(appPath)")
-                return false  // Remove this entry
-            }
-
-            // Fallback: check Info.plist
-            let infoPlistPath = URL(fileURLWithPath: appPath)
-                .appendingPathComponent("Contents/Info.plist")
-
-            if let plist = NSDictionary(contentsOf: infoPlistPath),
-               let existingBundleId = plist["CFBundleIdentifier"] as? String,
-               existingBundleId == bundleId {
-                print("   Found and removing (Info.plist): \(appPath)")
-                return false  // Remove this entry
-            }
-            return true  // Keep this entry
-        }
-
-        if filteredApps.count < currentApps.count {
-            // Write using CFPreferences API
-            CFPreferencesSetAppValue(
-                "persistent-apps" as CFString,
-                filteredApps as CFArray,
-                dockAppId
-            )
-
-            if CFPreferencesAppSynchronize(dockAppId) {
-                print("   ✓ Removed from Dock via CFPreferences")
-            } else {
-                print("   ⚠️ CFPreferences sync failed")
-            }
-        } else {
-            print("   ✓ Bundle ID not found in Dock")
-        }
-    }
-
     /// Remove app from Dock plist by bundle ID (doesn't require bundle to exist)
     /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
     /// Used during uninstall when bundle may be deleted before Dock restart
@@ -1717,13 +1575,13 @@ final class HelperBundleManager {
     /// same index — WITHOUT restarting the Dock, so a *subsequent* single restart makes the Dock load
     /// a FRESH icon for it. No-op if the tile isn't pinned.
     ///
-    /// WHY (critical): after an **in-place** regenerate, `touchBundle` (mtime bump + `lsregister`)
-    /// does NOT invalidate the Dock's per-entry icon cache — the Dock keeps drawing the OLD render
-    /// for the unchanged persistent-apps entry even though `AppIcon.icns` on disk is new. Only
-    /// re-adding the entry (which mints a new GUID) forces a fresh icon load. This is exactly why
-    /// `installHelper` (remove + re-add) shows the new icon immediately, while the migration/self-heal
-    /// batch — which regenerated in place and only restarted the Dock — kept showing stale icons
-    /// until the user manually re-configured each tile.
+    /// WHY (critical): after a rebuild at the same path (in place before 2.6.3, staged + swapped
+    /// since), `touchBundle` (mtime bump + `lsregister`) does NOT invalidate the Dock's per-entry
+    /// icon cache — the Dock keeps drawing the OLD render for the unchanged persistent-apps entry
+    /// even though the icon on disk is new. Only re-adding the entry (which mints a new GUID) forces
+    /// a fresh icon load. The migration/self-heal batch once regenerated and only restarted the Dock,
+    /// and kept showing stale icons until the user manually re-configured each tile; `installHelper`
+    /// and the batch both re-seat through here now.
     func refreshDockEntry(for config: DockTileConfiguration) {
         // findDockIndex matches the bundle id BEFORE parsing the URL (findInDock skips an
         // unparseable entry), so the stale entries self-heal flags are re-seated too.
@@ -2201,7 +2059,7 @@ final class HelperBundleManager {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
     }
 
-    /// Regenerate a helper bundle in-place WITHOUT Dock operations.
+    /// Rebuild a helper in staging and swap it in (then launch it), WITHOUT Dock operations.
     /// Used by HelperMigrationManager for batch updates (single Dock restart at end).
     func regenerateHelperBundle(for config: DockTileConfiguration) async throws {
         // Same critical section as installHelper, so the same lock — see canBeginBundleBuild.
@@ -2216,35 +2074,7 @@ final class HelperBundleManager {
         buildingBundleIds.insert(config.bundleIdentifier)
         defer { buildingBundleIds.remove(config.bundleIdentifier) }
 
-        let appName = sanitizeAppName(config.name)
-        let helperPath = preferredHelperPath(for: config)
-
-        // If existing helper has a different name (was renamed), find by bundle ID
-        let existingHelperPath = findExistingHelper(bundleId: config.bundleIdentifier)
-
-        // If name changed, clean up old path
-        if let existingPath = existingHelperPath, existingPath != helperPath {
-            try? FileManager.default.removeItem(at: existingPath)
-        }
-
-        // 1. Generate helper bundle structure (copy main app)
-        try generateHelperBundle(
-            appName: appName,
-            bundleId: config.bundleIdentifier,
-            helperPath: helperPath,
-            showInAppSwitcher: config.showInAppSwitcher,
-            iconSignature: config.iconSignature,
-            dockSignature: config.dockSignature
-        )
-
-        // 2. Write the tile icon into the bundle (same branch as install)
-        try await installTileIcons(for: config, at: helperPath)
-
-        // 3. Code sign
-        try await codesignHelper(at: helperPath)
-
-        // 4. Touch bundle to refresh icon cache
-        touchBundle(at: helperPath)
+        _ = try await buildAndSwap(for: config)
     }
 
     /// Quit a helper and wait for termination (public for migration)
@@ -2258,8 +2088,10 @@ final class HelperBundleManager {
         }
     }
 
-    /// Launch helper for a config (public for migration)
+    /// Launch helper for a config (public for migration). Skips a running helper: opening a running
+    /// app can deliver a reopen, which would open its popover.
     func launchHelperIfExists(for config: DockTileConfiguration) {
+        guard !isHelperRunning(bundleId: config.bundleIdentifier) else { return }
         if let path = findExistingHelper(bundleId: config.bundleIdentifier) {
             launchHelper(at: path)
         }
@@ -2323,6 +2155,110 @@ final class HelperBundleManager {
         return normalized(existing) == normalized(final) ? nil : existing
     }
 
+    /// The staged rebuild's ORDER, with every side effect injected so it is pinned by
+    /// `StagedRebuildTests`: build and sign while the old helper runs (posting the bar's stages), quit
+    /// it, swap, remove a renamed tile's old folder, register, quit AGAIN (a Dock click in the gap
+    /// relaunches the old bundle from the tile path), launch. A build failure cancels the bar and
+    /// leaves the old tile untouched; a swap failure relaunches whatever bundle is still in place.
+    static func runStagedRebuild(_ steps: StagedRebuildSteps) async throws {
+        guard steps.acquireLock() else { throw HelperBundleError.bundleBuildInProgress }
+        steps.post(.begin)
+        do {
+            try await steps.copy()
+            steps.post(.copied)
+            try await steps.buildIcons()
+            steps.post(.iconsBuilt)
+            try await steps.sign()
+            steps.post(.signed)
+        } catch {
+            steps.post(.cancelled)
+            steps.removeStaged()
+            throw error
+        }
+        steps.post(.ready)
+        await steps.quitOld()
+        do {
+            try steps.swap()
+        } catch {
+            steps.removeStaged()
+            steps.launchExisting()
+            throw error
+        }
+        steps.removeOldFolder()
+        steps.register()
+        await steps.quitOld()
+        steps.launchNew()
+    }
+
+    /// Build the tile's helper in staging and swap it into place (the one build path of
+    /// `installHelper` and `regenerateHelperBundle`). Returns the final helper path; the new helper
+    /// is running. Callers hold `buildingBundleIds` and have run `verifyCanGenerateBundles`.
+    private func buildAndSwap(for config: DockTileConfiguration) async throws -> URL {
+        let bundleId = config.bundleIdentifier
+        let stagingDirectory = Self.stagingDirectory(helperDirectory: helperDirectory)
+        let staged = Self.stagingBundleURL(helperDirectory: helperDirectory, bundleId: bundleId)
+        let final = preferredHelperPath(for: config)
+        // Decided BEFORE the swap: afterwards the tile's folder holds the new bundle.
+        let oldFolder = Self.oldFolderToRemove(existing: findExistingHelper(bundleId: bundleId), final: final)
+        var lock: TileBuildLock?
+        defer { lock?.release() }
+
+        let steps = StagedRebuildSteps(
+            acquireLock: {
+                lock = TileBuildLock.acquire(bundleId: bundleId, stagingDirectory: stagingDirectory)
+                return lock != nil
+            },
+            post: { self.postRebuild($0, bundleId: bundleId) },
+            copy: {
+                try self.generateHelperBundle(
+                    appName: self.sanitizeAppName(config.name), bundleId: bundleId, helperPath: staged,
+                    showInAppSwitcher: config.showInAppSwitcher, iconSignature: config.iconSignature,
+                    dockSignature: config.dockSignature)
+            },
+            buildIcons: { try await self.installTileIcons(for: config, at: staged) },
+            sign: { try await self.codesignHelper(at: staged) },
+            quitOld: { await self.quitHelperAndWait(bundleId: bundleId) },
+            swap: { try Self.swapIntoPlace(staged: staged, final: final) },
+            removeOldFolder: {
+                guard let oldFolder else { return }
+                do { try FileManager.default.removeItem(at: oldFolder) } catch {
+                    DiagnosticsLog.shared.log("tile", "Could not remove renamed tile's old folder \(oldFolder.lastPathComponent): \(error.localizedDescription)")
+                }
+            },
+            removeStaged: { try? FileManager.default.removeItem(at: staged) },
+            register: { self.touchBundle(at: final) },
+            launchNew: { self.launchHelper(at: final) },
+            launchExisting: {
+                if let path = self.findExistingHelper(bundleId: bundleId) { self.launchHelper(at: path) }
+            }
+        )
+
+        do {
+            try await Self.runStagedRebuild(steps)
+        } catch {
+            DiagnosticsLog.shared.log("tile", "Staged rebuild FAILED for \(config.diagnosticName): \(error.localizedDescription)")
+            throw error
+        }
+        DiagnosticsLog.shared.log("tile", "Swapped \(config.diagnosticName) into place")
+        return final
+    }
+
+    /// Tell the tile's running helper how far its rebuild is (it draws the bar). A helper that is not
+    /// running, or was built before 2.6.3, has no observer: the tile is then rebuilt silently.
+    func postRebuild(_ stage: TileRebuildStage, bundleId: String) {
+        DistributedNotificationCenter.default().postNotificationName(
+            TileRebuildSignal.name, object: bundleId,
+            userInfo: TileRebuildSignal.userInfo(stage), deliverImmediately: true)
+    }
+
+    /// Launch-time sweep of staging leftovers (main app only, from the launch maintenance task).
+    func removeStaleStaging() {
+        let removed = Self.removeStaleStaging(stagingDirectory: Self.stagingDirectory(helperDirectory: helperDirectory))
+        if !removed.isEmpty {
+            DiagnosticsLog.shared.log("tile", "Removed \(removed.count) stale staging bundle(s): \(removed.joined(separator: ", "))")
+        }
+    }
+
     /// Delete staging bundles no build owns (left by a crash or a Force Quit mid-build). A bundle is
     /// removed only when its tile's `TileBuildLock` can be taken, so another process's live build is
     /// never pulled from under it. Returns the removed folder names.
@@ -2351,6 +2287,24 @@ final class HelperBundleManager {
             .trimmingCharacters(in: .whitespaces)
     }
 
+}
+
+/// The side effects of one staged rebuild, injected into `HelperBundleManager.runStagedRebuild` so its
+/// order is unit-tested without real bundles, Launch Services or the Dock.
+@MainActor
+struct StagedRebuildSteps {
+    var acquireLock: () -> Bool
+    var post: (TileRebuildStage) -> Void
+    var copy: () async throws -> Void
+    var buildIcons: () async throws -> Void
+    var sign: () async throws -> Void
+    var quitOld: () async -> Void
+    var swap: () throws -> Void
+    var removeOldFolder: () -> Void
+    var removeStaged: () -> Void
+    var register: () -> Void
+    var launchNew: () -> Void
+    var launchExisting: () -> Void
 }
 
 /// Exclusive per-tile build lock shared by every Dock Tile process of one build flavour (an
