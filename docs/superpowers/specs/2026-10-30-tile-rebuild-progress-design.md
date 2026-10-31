@@ -132,7 +132,8 @@ than the indicator, so the plan orders the swap first and the bar second, each s
 ## Settled by the designer (check these while reading)
 
 - **Update stops taking the tile off the Dock and quitting its helper before the build.** Today
-  `performDockAction` removes the entry and quits the helper first, which is part of why the tile
+  `HelperBundleManager.installHelper` (called by Tile Detail's `performDockAction`) removes the
+  entry and quits the helper first, which is part of why the tile
   goes dead. The new order is: build in staging while the old helper runs and shows the bar, then
   swap, re-seat the entry, verified restart, relaunch. The old reason for removing first (stop the
   Dock relaunching a half-built app) is gone once the old bundle stays whole until the swap. The
