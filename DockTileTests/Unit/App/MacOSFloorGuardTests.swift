@@ -65,12 +65,14 @@ struct MacOSFloorGuardTests {
     /// deployment target's. A feature note such as "On macOS 26 (Tahoe) and later, tile icons …"
     /// is not a requirement and is left alone. `home-sections.tsx` left the list on 2026-10-31: the
     /// closing banner that held its "macOS 15+" was removed (79f00bf); the hero, the requirements
-    /// line, the FAQ and schema.org still state the floor.
-    @Test("The website states the real floor everywhere it names one", arguments: [
+    /// line, the FAQ and schema.org still state the floor. The repo README joined on 2026-11-04
+    /// ("macOS 15.0 (Sequoia) or later" and the "macOS 15.0+" badge) — GitHub visitors read it.
+    @Test("The website and README state the real floor everywhere they name one", arguments: [
         "website/lib/i18n.ts",
         "website/lib/schema.ts",
         "website/lib/config.ts",
         "website/components/hero.tsx",
+        "README.md",
     ])
     func websiteStatesTheRealFloor(_ path: String) throws {
         let target = try Self.deploymentTarget()
@@ -78,6 +80,8 @@ struct MacOSFloorGuardTests {
         let claims = source.matches(of: /(?i)(?:requires |for |runs on )macOS (\d+)/).map { Int($0.1) ?? -1 }
             + source.matches(of: /macOS (\d+)\.0 or later/).map { Int($0.1) ?? -1 }
             + source.matches(of: /macOS (\d+)\+/).map { Int($0.1) ?? -1 }
+            + source.matches(of: /macOS (\d+)\.0 \([A-Za-z ]+\) or later/).map { Int($0.1) ?? -1 }
+            + source.matches(of: /macOS[ -](\d+)\.0\+/).map { Int($0.1) ?? -1 }
         let stated = claims
         #expect(!stated.isEmpty, "\(path) names no macOS version at all; expected at least one mention of the \(target.major) floor")
         for version in stated where version != target.major {

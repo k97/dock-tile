@@ -14,13 +14,16 @@ Think of it as customisable Dock folders - with native vibrancy effects, SF Symb
 ## Features
 
 - **Multiple Tiles** - Create as many dock tiles as you need, each completely independent
-- **Custom Icons** - Choose from hundreds of SF Symbols or use any emoji as your tile icon
-- **Colour Themes** - Pick from 8 preset gradient colours or create your own custom colour
+- **Custom Icons** - Show the tile's own apps as an App Grid, or choose an SF Symbol or any emoji
+- **Colour Themes** - Pick from 7 preset gradient colours or create your own, on a Colour or Mono background
 - **Adjustable Icon Size** - Fine-tune the icon size with the built-in scale control
 - **Flexible Layouts** - Display apps in a grid or list view
+- **Smart Add** - Suggests ready-made tiles from the apps you use, learned on your Mac and never sent anywhere
 - **Native Experience** - Built with SwiftUI and AppKit for an authentic macOS look and feel
 - **Dock Integration** - Tiles appear in the Dock just like regular apps
 - **App Switcher Support** - Optionally show tiles in Cmd+Tab
+- **Dock Lock** - Keep the Dock on one display on multi-monitor setups
+- **Start at Login** - Tiles are ready the moment you log in
 
 ## Screenshots
 
@@ -29,7 +32,9 @@ Think of it as customisable Dock folders - with native vibrancy effects, SF Symb
 ## Requirements
 
 - macOS 15.0 (Sequoia) or later
-- Apple Silicon or Intel Mac
+- A Mac with Apple silicon (Intel Macs aren't supported)
+
+Questions? See the [FAQ](https://docktile.app/faq).
 
 ## Installation
 
@@ -41,22 +46,27 @@ Think of it as customisable Dock folders - with native vibrancy effects, SF Symb
    cd dock-tile
    ```
 
-2. Open in Xcode and build, or use the command line:
+2. Build the bundled icon compiler once (needs a [Rust toolchain](https://rustup.rs)):
+   ```bash
+   ./Scripts/build-compiler.sh
+   ```
+
+3. Open in Xcode and build, or use the command line:
    ```bash
    xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Release build
    ```
 
-3. Copy the built app to Applications:
+4. Copy the built app to Applications:
    ```bash
-   cp -r ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Release/DockTile.app /Applications/
+   cp -R ~/Library/Developer/Xcode/DerivedData/DockTile-*/Build/Products/Release/"Dock Tile.app" /Applications/
    ```
 
 ## Getting Started
 
 1. **Launch Dock Tile** - Open the app from your Applications folder
-2. **Create a Tile** - Click the "+" button in the sidebar to create a new tile
-3. **Customise** - Click "Customise" to choose an icon and colour
-4. **Add Apps** - Click "+" in the Selected Items section to add apps
+2. **Create a Tile** - Click the "+" button in the sidebar, then pick a Smart Add suggestion or "Create New Tile"
+3. **Add Apps** - Click "+" in the In This Tile section to add apps and folders
+4. **Customise** - Click the tile's icon (or the Customise Tile toggle in the toolbar) to choose its style, icon and colour
 5. **Add to Dock** - Click "Add to Dock" to pin the tile
 6. **Use It** - Click your new tile in the Dock to see your apps!
 
@@ -87,10 +97,9 @@ Dock Tile creates lightweight helper applications for each tile you configure. T
 ### Tile doesn't appear in the Dock
 1. Ensure "Show Tile" is toggled on
 2. Click "Add to Dock" to apply changes
-3. Try toggling "Show Tile" off and on again
 
 ### Icon not updating
-If a tile's icon doesn't update after customisation, toggle "Show Tile" off and on to regenerate the helper bundle.
+Click "Update" on the tile to rebuild it. The button is highlighted while the Dock shows an older version of the tile.
 
 ## Translations
 
