@@ -11,8 +11,6 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
-    private var floatingPanel: FloatingPanel?
-
     // Configuration manager (set by DockTileApp on launch)
     var configManager: ConfigurationManager? {
         didSet {
@@ -82,61 +80,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private static let minWindowHeight: CGFloat = 500
 
-    // MARK: - Runtime Detection
-
-    /// Current bundle ID
-    private var currentBundleId: String {
-        Bundle.main.bundleIdentifier ?? AppEnvironment.mainAppBundleId
-    }
-
-    /// Detect if running as main app or helper bundle
-    private var isHelperApp: Bool {
-        // Main app has bundle ID like "com.docktile.app" or "com.docktile.dev.app"
-        // Helper apps have IDs like "com.docktile.UUID-STRING" or "com.docktile.dev.UUID-STRING"
-        let bundleId = currentBundleId
-        let mainBundleId = AppEnvironment.mainAppBundleId
-        let helperPrefix = AppEnvironment.helperBundlePrefix
-
-        if bundleId == mainBundleId {
-            return false
-        }
-        return bundleId.hasPrefix("\(helperPrefix).")
-    }
-
     // MARK: - Application Lifecycle
 
+    // Main app only: `main.swift` gives a helper bundle `HelperAppDelegate` instead (`AppEnvironment.isHelper`).
     func applicationDidFinishLaunching(_ notification: Notification) {
         print(AppStrings.Log.launching)
-        print("   Bundle ID: \(currentBundleId)")
-        print("   Is Helper: \(isHelperApp)")
+        print("   Bundle ID: \(AppEnvironment.mainAppBundleId)")
 
-        if isHelperApp {
-            configureAsHelper()
-        } else {
-            Self.instance = self
-            configureAsMainApp()
-        }
+        Self.instance = self
+        configureAsMainApp()
 
         print(AppStrings.Log.ready)
-    }
-
-    private func configureAsHelper() {
-        // Helper apps: regular mode to show in Dock
-        NSApp.setActivationPolicy(.regular)
-
-        // Create our own ConfigurationManager for helpers since SwiftUI might not pass it in time
-        if configManager == nil {
-            configManager = ConfigurationManager()
-        }
-
-        // Pre-load and verify configuration
-        if let config = getCurrentConfiguration() {
-            print("✓ Loaded config: \(config.name) with \(config.appItems.count) apps")
-        } else {
-            print("⚠️ No configuration found for bundle ID: \(currentBundleId)")
-        }
-
-        print("✓ Helper app configured (dock mode)")
     }
 
     private func configureAsMainApp() {
@@ -294,8 +248,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     /// Handle URLs like: docktile://configure?bundleId=com.docktile.XXXXX
     func application(_ application: NSApplication, open urls: [URL]) {
-        guard !isHelperApp else { return }  // Only main app handles URLs
-
         for url in urls {
             handleDeepLink(url)
         }
@@ -355,11 +307,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
 
-    /// Keep helper apps running even when all windows are closed
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        // Helper apps should stay running to respond to dock clicks
-        if isHelperApp { return false }
-        // Main app: stay resident while Dock Lock is active so the event tap keeps
+        // Stay resident while Dock Lock is active so the event tap keeps
         // running in the background (controlled from the menu-bar item).
         return !DockLockManager.shared.isEnabled
     }
@@ -367,58 +316,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     // MARK: - Dock Icon Click Handler
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        print("🖱️ Dock icon clicked (hasVisibleWindows: \(flag), isHelper: \(isHelperApp))")
-
-        if isHelperApp {
-            // Helper tiles: show popover with apps
-            print("📍 About to show popover...")
-            print("   Config manager: \(configManager != nil ? "exists" : "nil")")
-            print("   Current config: \(getCurrentConfiguration()?.name ?? "nil")")
-            togglePopover()
-        } else {
-            // Main DockTile app: show configuration window
-            showConfigurationWindow()
-        }
-
+        print("🖱️ Dock icon clicked (hasVisibleWindows: \(flag))")
+        showConfigurationWindow()
         return true
-    }
-
-    // MARK: - UI Management
-
-    /// Toggle popover for helper tiles only
-    private func togglePopover() {
-        if let panel = floatingPanel, panel.isVisible {
-            hidePopover()
-        } else {
-            showPopover()
-        }
-    }
-
-    private func showPopover() {
-        print("📍 Showing popover for helper tile")
-
-        // Get configuration first
-        let config = getCurrentConfiguration()
-        print("   Configuration: \(config?.name ?? "nil") with \(config?.appItems.count ?? 0) apps")
-
-        // Create panel if not exists
-        if floatingPanel == nil {
-            print("   Creating new FloatingPanel...")
-            floatingPanel = FloatingPanel()
-        }
-
-        // Set configuration before showing
-        floatingPanel?.configuration = config
-
-        // Show popover
-        print("   Calling floatingPanel.show()...")
-        floatingPanel?.show(animated: true)
-        print("   Popover show complete")
-    }
-
-    private func hidePopover() {
-        print("🚫 Hiding popover")
-        floatingPanel?.hide(animated: true)
     }
 
     // MARK: - Context Menu (Right-Click)
@@ -426,7 +326,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
         let menu = NSMenu()
 
-        // "Configure..." option (opens main app if helper, or brings to front if main app)
+        // "Configure..." option (brings the configuration window to front)
         menu.addItem(NSMenuItem(
             title: AppStrings.Menu.configure,
             action: #selector(openConfigurator),
@@ -472,75 +372,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc private func openConfigurator() {
-        if isHelperApp {
-            // Launch main DockTile.app
-            launchMainApp()
-        } else {
-            // Already main app, just bring to front
-            NSApp.activate(ignoringOtherApps: true)
-            showConfigurationWindow()
-        }
-    }
-
-    private func launchMainApp() {
-        let workspace = NSWorkspace.shared
-
-        // Try standard locations (PRODUCT_NAME has a space: "Dock Tile")
-        let mainAppPaths = [
-            "/Applications/Dock Tile.app",
-            "\(NSHomeDirectory())/Applications/Dock Tile.app"
-        ]
-
-        for path in mainAppPaths {
-            if FileManager.default.fileExists(atPath: path) {
-                let url = URL(fileURLWithPath: path)
-                let config = NSWorkspace.OpenConfiguration()
-                workspace.openApplication(at: url, configuration: config) { _, error in
-                    if let error = error {
-                        print("❌ Failed to open main app: \(error.localizedDescription)")
-                    } else {
-                        print("✅ Launched main DockTile.app")
-                    }
-                }
-                return
-            }
-        }
-
-        // Fallback: try to find in DerivedData for development
-        if let derivedDataApp = findDockTileInDerivedData() {
-            let config = NSWorkspace.OpenConfiguration()
-            workspace.openApplication(at: derivedDataApp, configuration: config) { _, error in
-                if let error = error {
-                    print("❌ Failed to open main app from DerivedData: \(error.localizedDescription)")
-                } else {
-                    print("✅ Launched main DockTile.app from DerivedData")
-                }
-            }
-        } else {
-            print("❌ Could not find main DockTile.app")
-        }
-    }
-
-    private func findDockTileInDerivedData() -> URL? {
-        let derivedData = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Developer/Xcode/DerivedData")
-
-        guard let contents = try? FileManager.default.contentsOfDirectory(
-            at: derivedData,
-            includingPropertiesForKeys: nil
-        ) else { return nil }
-
-        let appNames = ["Dock Tile Dev.app", "Dock Tile.app"]
-        for dir in contents where dir.lastPathComponent.hasPrefix("DockTile-") {
-            let productsDir = dir.appendingPathComponent("Build/Products/Debug")
-            for name in appNames {
-                let appPath = productsDir.appendingPathComponent(name)
-                if FileManager.default.fileExists(atPath: appPath.path) {
-                    return appPath
-                }
-            }
-        }
-        return nil
+        NSApp.activate(ignoringOtherApps: true)
+        showConfigurationWindow()
     }
 
     @objc private func launchApp(_ sender: NSMenuItem) {
@@ -564,13 +397,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private func getCurrentConfiguration() -> DockTileConfiguration? {
         guard let configManager = configManager else { return nil }
-
-        if isHelperApp {
-            // Find config by bundle ID for helper apps
-            return configManager.configuration(forBundleId: currentBundleId)
-        } else {
-            // Main app: use selected configuration (or first if none selected)
-            return configManager.selectedConfiguration ?? configManager.configurations.first
-        }
+        // Selected configuration, or the first if none is selected
+        return configManager.selectedConfiguration ?? configManager.configurations.first
     }
 }

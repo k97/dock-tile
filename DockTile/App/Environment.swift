@@ -28,7 +28,8 @@ enum AppEnvironment {
 
     // MARK: - Bundle Identifiers
 
-    /// Main app bundle identifier (e.g., "com.docktile.app" or "com.docktile.dev.app")
+    /// THIS process's bundle identifier: the main app's ("com.docktile.app" / "com.docktile.dev.app")
+    /// in the main app, but a helper's own per-tile id inside a helper.
     static let mainAppBundleId: String = {
         Bundle.main.bundleIdentifier ?? "com.docktile.app"
     }()
@@ -39,14 +40,16 @@ enum AppEnvironment {
     }()
 
     /// Whether this process is a helper bundle (a copy of the main app with a per-tile
-    /// bundle ID like `com.docktile.<UUID>`) rather than the main app itself.
-    /// Mirrors the detection in `main.swift`.
-    static let isHelper: Bool = {
+    /// bundle ID like `com.docktile.<UUID>`) rather than the main app itself. The ONE helper check:
+    /// `main.swift` branches on it to pick the helper or main-app delegate.
+    static let isHelper: Bool = isHelper(bundleId: mainAppBundleId)
+
+    /// The rule behind `isHelper`, on a plain value (`HelperDetectionTests`).
+    static func isHelper(bundleId: String) -> Bool {
         let mainAppBundleIds: Set<String> = ["com.docktile.app", "com.docktile.dev.app", "com.docktile"]
-        let id = mainAppBundleId
-        if mainAppBundleIds.contains(id) { return false }
-        return id.hasPrefix("com.docktile.")
-    }()
+        if mainAppBundleIds.contains(bundleId) { return false }
+        return bundleId.hasPrefix("com.docktile.")
+    }
 
     /// Analytics/Crashlytics role label for the current process.
     static var appRole: String { isHelper ? "helper" : "main" }

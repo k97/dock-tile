@@ -8,35 +8,14 @@
 
 import AppKit
 
-/// Detect if running as helper app based on bundle ID
-/// Main apps: com.docktile.app (release) or com.docktile.dev.app (dev)
-/// Helper apps: com.docktile.<UUID> (release) or com.docktile.dev.<UUID> (dev)
-private func isHelperApp() -> Bool {
-    let bundleId = Bundle.main.bundleIdentifier ?? "com.docktile.app"
-
-    // Main app bundle IDs (not helpers)
-    let mainAppBundleIds = [
-        "com.docktile.app",      // Release
-        "com.docktile.dev.app",  // Dev
-        "com.docktile"           // Legacy/fallback
-    ]
-
-    if mainAppBundleIds.contains(bundleId) {
-        return false
-    }
-
-    // Helper apps have bundle IDs like com.docktile.<UUID> or com.docktile.dev.<UUID>
-    return bundleId.hasPrefix("com.docktile.")
-}
-
 // Check before any SwiftUI initialization
 if CommandLine.arguments.contains(LoginTileSpawner.flag) {
     // Headless login path: the SMAppService launcher agent started us to warm the
     // tiles. Launch the visible helpers and exit — never spins up an NSApplication,
     // so no Dock icon or window appears at login.
     LoginTileSpawner.run()
-} else if isHelperApp() {
-    // Helper app: Pure AppKit, no SwiftUI WindowGroup
+} else if AppEnvironment.isHelper {
+    // Helper app (bundle ID com.docktile.<UUID> / com.docktile.dev.<UUID>): Pure AppKit, no SwiftUI WindowGroup
     let bundleId = Bundle.main.bundleIdentifier ?? "unknown"
     NSLog("🚀 Starting as helper app (pure AppKit) - Bundle ID: %@", bundleId)
     print("🚀 Starting as helper app (pure AppKit) - Bundle ID: \(bundleId)")
