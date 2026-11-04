@@ -37,7 +37,7 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `IconStyle.from(…isDarkMode:)` / `.resolve(…isDarkMode:)` (unrecognised value → nil = don't act, never Default; the observed macOS value set is guarded by `IconStyleResolveTests`),
 `HelperBundleManager.iconMatchesStyle` (launch self-heal: live icon vs the resolved style's variant, byte-compared; unanswerable → match — guarded by `HelperIconMatchTests`),
 `shouldReregisterOnLaunch`, `classifyForMigration`,
-`runRegenerationBatch`, `helperInfoPlist` / `stripMainAppIcons`, `Debouncer`,
+`runRegenerationBatch` (+ its required `current:` re-read: a tile deleted mid-batch is skipped, an edited one built from its current config; `HelperMigrationBatchTests`), `helperInfoPlist` / `stripMainAppIcons`, `Debouncer`,
 `AppInstallChecker.classifyInstallStatus`, `PopoverMetrics` / `PopoverSettings.resolve`,
 `SmartAddEngine.rankGroups` (app + identity de-dup — no two cards share a name/icon) / `.score` / `.coLaunchClusters` / `.dominantCategory` (nil without signal, never a silent `.productivity`) / `SmartAddCategory.identity` + `Identity.coLaunch` backstop,
 `AnalyticsService.resolveConsent` / `.shouldCollect`,
@@ -48,9 +48,10 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `HelperBundleManager.unmetExpectations` / `.batchExpectations` / `.retryableExpectations` / `.incrementingCounts` + `.decrementingCounts` / `.runDockVerification` (the verified restart: absent = no entry, present = the shared predicate; a batch expects only tiles pinned before it; a retry never touches a tile another operation is building or removing, except the caller's own; overlapping checks of one tile are counted; retry once, never loop, re-check only what was retried; `DockExpectationTests`),
 `HelperBundleManager.runStagedRebuild` (the 2.6.3 rebuild order: build/sign while the old helper runs → quit → swap → remove a renamed tile's old folder → register → quit again → launch; a build failure cancels the bar and never touches the old tile, a swap failure relaunches it; `StagedRebuildTests`) / `.swapIntoPlace` / `.oldFolderToRemove` (path-normalised, decided before the swap — a trailing slash must not delete the new bundle) / `.stagingBundleURL` / `.removeStaleStaging` + `TileBuildLock` (per-tile flock, conflicts across opens; `HelperSwapTests`),
 `TileRebuildSignal` / `RebuildBarState` (bar never moves back, 30 s expiry, `eased` lands exactly so the animation timer stops) / `RebuildTileView.barRect` / `.shapeRect` (icon drawn at full bounds — no second icon-grid inset; `TileRebuildBarTests`),
-`HelperBundleManager.shouldPerformDockRemoval` / `.helperFolderName` (same-name tiles disambiguate to distinct folders) / `.dockFileLabel` (Dock tooltip = display name, never the folder stem) / `.helperIconsComplete` (bundle icon-integrity probe), `HelperMigrationManager.classifyHelperHealth` (self-heal targets pinned tiles only — drafts safe — whose bundle is broken OR whose Dock entry is stale by the shared predicate), `DiagnosticsLog.shouldRecord` (verbose dev/prod gate),
+`HelperBundleManager.shouldPerformDockRemoval` / `.helperFolderName` (same-name tiles disambiguate to distinct folders) / `.helperBaseName` (a name that sanitizes to nothing → "Dock Tile <shortId>", never `.app`) / `.isHelperFolderName` (adopts the legacy bare `.app`; `HelperFolderNameTests`) / `.dockFileLabel` (Dock tooltip = display name, never the folder stem; whitespace-only counts as blank) / `.helperIconsComplete` (bundle icon-integrity probe), `HelperMigrationManager.classifyHelperHealth` (self-heal targets pinned tiles only — drafts safe — whose bundle is broken OR whose Dock entry is stale by the shared predicate), `DiagnosticsLog.shouldRecord` (verbose dev/prod gate),
 `ConfigurationManager.canCreateNewTile` (sidebar + gate — never deadlock at zero tiles),
 `DockTileConfiguration.decodeTolerantly` (every config reader decodes per tile: one tile this build cannot read is skipped, never the whole list; a whole-file failure is flagged; `ConfigDecodeToleranceTests`),
+`ConfigurationManager.readFailed` (a config file that exists but can't be READ refuses every save; a real manager on a `chmod 000` temp file, `ConfigReadFailureTests`),
 `AppEnvironment.isHelper(bundleId:)` (the one helper check — `main.swift` picks the delegate from it; `HelperDetectionTests`),
 `IconDepthMetrics` (glyph size-ratio cap + glass stroke + Liquid-Glass surface/glyph sheen + shadow + shading, per style, size-gated — shared by the baked `.icns` renderer and the live preview; `glyphSheen` covers symbols 0.55 and emoji 0.18),
 `ToneMap.fit` / `.contrastRatio` + `TilePalette.resolve` (+ `fillWasDeepened`) (every tile colour role derived with every drawn pair >= 3:1 — the Dark-glyph `#5F00FF` visibility case lives here; replaced `liftedForDarkGlyph`), `CustomiseTileView.colourRowState`, `DockTileIconPreview.displayStyle` (canonical forced previews), `HelperBundleManager.declarativeFillsP3`, + `TintColor.colors`/`.nsColors(for:iconType:background:)` (Dark splits SF Symbol vs emoji, guarded by `DarkGlyphTreatmentTests`) + `.badgeColors(for:tint:)` (Settings-badge mirror, lock-step guarded by `BadgeColorMappingTests`),
@@ -62,6 +63,7 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `AppListEditor.removing(_:from:)` / `.moving(_:onto:in:)` (tile editor's remove/reorder reducer, guarded by `AppListEditorTests`),
 `PopoverPreviewCanvas.fitScale` (hero zoom that scales the fixed-size real popover into a `.worstCase` frame, guarded by `PopoverPreviewCanvasTests`),
 `PopoverPanelLayout.gridPanelSize` / `.listPanelSize` (the panel size formulas shared by the real panels and the editor canvas — the list pins only its width, so an undershoot here CLIPS the panel; the grid's `includesMissingCaption` bills the editor-only "Not installed" line),
+`PopoverPanelLayout.listRowsScrollHeight` (the shipped list scrolls its rows only past the 600 pt whole-panel cap; nil keeps the intrinsic layout; `PopoverPreviewCanvasTests`),
 `PopoverPreviewCanvas.naturalPanelSize` / `.naturalScale` (the `.natural` fit — the panel's intrinsic size and the scale that fits it into the fixed-width detail column),
 `ConfigurationManager.displayName(for:)` / `.commitDisplayName` (the sidebar/title-band name lags the stored one until an explicit commit — seeded on load, or the mechanism is silently inert),
 `SmartAddEngine.cardStyles(count:using:)` (Add a Tile cards: one App Grid, one Symbol, one Emoji, shuffled per open; the created tile follows its card; `SmartAddCardStyleTests` + `tileMatchesTheCardsDesign`),
@@ -173,6 +175,13 @@ UI/integration tests run locally only.
 the latter deliberately strips `/private`, so a `/System/Volumes/Data` spelling built from it does
 not exist (`dataVolumeSpellingIsCurrent` caught this with a `#require`, 2026-10-29). Count suites by
 `Test case '<Suite>/` prefixes: a name regex without digits silently undercounts.
+
+**A wrong `-only-testing:` name runs ZERO tests and still says TEST SUCCEEDED (2026-11-04).**
+The filter takes the Swift TYPE name, not the file or the `@Suite` title: `ColorExtensionsTests` (the
+file) matched nothing in `ColorExtensionTests`, and `AnalyticsServiceTests` names no type at all. Two
+"passing" runs, one of them a negative control, proved nothing. Always print the per-test lines
+(`grep "passed on\|failed on"`) and require the expected count; take names from
+`grep -h "^struct" <file>`. A negative control that PASSES is the alarm.
 
 **Count tests per suite, not by grepping a whole log.** `grep -c "passed"` over an `xcodebuild`
 log drifted between runs of the same tree (748/750/765 for one branch), so a "+N tests" claim

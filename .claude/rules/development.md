@@ -30,6 +30,9 @@ skipped and the rest load; the main app first copies the file aside as
 it replaced emptied the list on one bad tile, and the launch-time save then wrote that over every
 tile. Any new reader of the config file goes through the seam. The v1 keys stay REQUIRED
 (`missingRequiredFieldThrows`): a half-built tile is skipped, never loaded.
+A file that exists but can't be READ (permissions, I/O) is different: there is nothing to copy, so
+`readFailed` refuses every save and the main window shows one alert and quits (`DockTileApp`). It used
+to load an empty list that the next save wrote over every tile (2026-11-04 audit).
 
 ## Shared Utilities
 

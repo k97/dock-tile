@@ -84,6 +84,12 @@ windowless quit) presented the window (#29). Count windows by PID with `CGWindow
 
 ## Hands-on evidence comes from the dev log, not the owner's eyes
 
+- **Follow a tile by its log tag, not its pid.** Any Update, Popover Apply or migration relaunches the
+  helper (2026-11-04: a consent check spanned a Popover Apply and the helper's pid changed mid-check).
+  Grep `helper:<name> (<shortId>)`. A timing window like "delete during Apply" is ~4 s for two tiles:
+  repeat the action until the log shows the window was hit (the `waiting for its in-flight Dock
+  operation` line), instead of trusting the owner's sense that it was too quick.
+
 - **Prod and dev windows look alike.** The owner runs prod (Dock Lock on) beside dev; on 2026-10-23
   two "done" steps landed in the prod window. Confirm each step from the dev log's `[main <pid>] [ui]`
   lines (Release drops `ui` lines, so a click in prod leaves no trace), or quit prod first.

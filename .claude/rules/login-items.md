@@ -35,6 +35,11 @@ or HelperBundleManager (avoids DockPlistWatcher side effects + MainActor before 
 after a **Sparkle update** — replacing the app bundle demotes the SMAppService item to
 `.requiresApproval`/`.notRegistered`, which previously read as the toggle silently turning off.
 
+**Never sweep `~/Library/LaunchAgents` by name prefix (2026-11-04).** A clean-up for per-tile agents
+that never shipped deleted every `<helperPrefix>.*.plist` on each Start-at-Login enable, and both
+prefixes matched `com.docktile.dev.memwatch` (performance-measurement.md). The launcher agent is the
+only plist this feature owns; touch nothing else there.
+
 ## UI
 
 `GeneralSettingsView` toggle reflects `isEnabled || requiresApproval` (so a held-for-approval item
