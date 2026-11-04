@@ -242,7 +242,7 @@ final class HelperBundleManager {
             try await Task.sleep(nanoseconds: 300_000_000)
         }
 
-        // Always attempt plist cleanup (also sweeps stale entries); remember whether it changed.
+        // Always attempt plist cleanup; remember whether it changed.
         let didRemoveFromDock = removeFromDockPlist(bundleId: config.bundleIdentifier)
 
         // Delete the bundle if it exists
@@ -1460,16 +1460,9 @@ final class HelperBundleManager {
                 return false  // Remove this entry
             }
 
-            // Also check if path contains bundle ID pattern (for when bundle is already deleted)
-            // Our bundle IDs follow pattern: com.docktile.helper.XXXXXX
-            if appPath.contains("DockTile") {
-                // Check if Info.plist doesn't exist (bundle was deleted) - remove stale entry
-                if !FileManager.default.fileExists(atPath: infoPlistPath.path) {
-                    print("   Found stale entry (bundle deleted): \(appPath)")
-                    return false  // Remove this stale entry
-                }
-            }
-
+            // No sweep of other "DockTile" entries whose bundle is missing (removed 2026-11-04): it
+            // unpinned OTHER tiles' broken entries — the case self-heal repairs — on every Hide,
+            // Delete and re-seat. Our own entry is matched by its bundle id above.
             return true  // Keep this entry
         }
 
