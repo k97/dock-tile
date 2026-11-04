@@ -135,6 +135,17 @@ struct ColorExtensionTests {
 
     // MARK: - Hex Output
 
+    /// A custom tile colour was saved through deviceRGB and truncated, while every reader treats the
+    /// stored hex as sRGB, so the Dock baked a slightly different colour than the one picked. The
+    /// expected hexes are literals; the old path gives #1A679D for the P3 colour, so it fails here.
+    @Test("A picked colour is stored as its sRGB hex, rounded")
+    func srgbHexString() {
+        #expect(Color(.sRGB, red: 95 / 255.0, green: 0, blue: 1).srgbHexString() == "#5F00FF")
+        #expect(Color(.displayP3, red: 0.2, green: 0.4, blue: 0.6).srgbHexString() == "#1B689D")
+        // An out-of-gamut colour comes back as a valid, clamped hex.
+        #expect(Color(.displayP3, red: 1, green: 0, blue: 0).srgbHexString() == "#FF0000")
+    }
+
     @Test("Color converts to hex string")
     func toHexString() {
         let color = Color(hex: "#FF5733")

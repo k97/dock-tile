@@ -401,11 +401,8 @@ struct CustomiseTileView: View {
         Binding {
             Color(hex: editedConfig.appsBackgroundColor)
         } set: { color in
-            guard let rgb = NSColor(color).usingColorSpace(.sRGB) else { return }
-            let channels = [rgb.redComponent, rgb.greenComponent, rgb.blueComponent].map {
-                Int((min(1, max(0, $0)) * 255).rounded())
-            }
-            editedConfig.appsBackgroundColor = String(format: "#%02X%02X%02X", channels[0], channels[1], channels[2])
+            guard let hex = color.srgbHexString() else { return }
+            editedConfig.appsBackgroundColor = hex
         }
     }
 
@@ -503,7 +500,7 @@ struct CustomiseTileView: View {
                 isSelected: isCustomColorSelected,
                 size: 20
             ) { newColor in
-                let hexString = newColor.toHexString()
+                guard let hexString = newColor.srgbHexString() else { return }
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     editedConfig.tintColor = .custom(hexString)
                 }
@@ -805,17 +802,15 @@ private class ColorPanelDelegate: NSObject {
 // MARK: - Color Extension for Hex Conversion
 
 extension Color {
-    func toHexString() -> String {
-        let nsColor = NSColor(self)
-        guard let rgbColor = nsColor.usingColorSpace(.deviceRGB) else {
-            return "#007AFF"  // Default to blue
+    /// `#RRGGBB` in sRGB, clamped and rounded — the space every reader of a stored hex assumes
+    /// (`SRGB(hex:)`, `Color(hex:)`). Converting through deviceRGB and truncating baked a slightly
+    /// different colour than the one picked (2026-11-04 audit). `nil` when the colour has no sRGB form.
+    func srgbHexString() -> String? {
+        guard let rgb = NSColor(self).usingColorSpace(.sRGB) else { return nil }
+        let channels = [rgb.redComponent, rgb.greenComponent, rgb.blueComponent].map {
+            Int((min(1, max(0, $0)) * 255).rounded())
         }
-
-        let red = Int(rgbColor.redComponent * 255)
-        let green = Int(rgbColor.greenComponent * 255)
-        let blue = Int(rgbColor.blueComponent * 255)
-
-        return String(format: "#%02X%02X%02X", red, green, blue)
+        return String(format: "#%02X%02X%02X", channels[0], channels[1], channels[2])
     }
 }
 
