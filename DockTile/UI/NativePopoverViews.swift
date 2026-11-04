@@ -420,13 +420,9 @@ struct StackPopoverView: View {
                     }
                     .buttonStyle(.plain)
                     .help(AppStrings.Menu.configureTile)
-                    .onHover { hovering in
-                        if hovering {
-                            NSCursor.pointingHand.push()
-                        } else {
-                            NSCursor.pop()
-                        }
-                    }
+                    // Not an NSCursor push/pop: clicking the gear closes the popover before the hover
+                    // ends, so the pop never ran and every click leaked a pushed cursor.
+                    .pointerStyle(.link)
                 } else {
                     Color.clear
                         .frame(width: 28, height: 28)
