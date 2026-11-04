@@ -214,6 +214,55 @@ struct HelperFolderNameTests {
             baseName: "Ship", cleanNameTakenByOther: true, shortId: "52300A6C")
         #expect(first != second)
     }
+
+    /// A name of only emoji or punctuation sanitized to "" and gave `<support>/.app`, a hidden folder
+    /// that `findExistingHelper` never found (Update, Delete and self-heal all missed the bundle).
+    /// Failing value: without the fallback the base is "" and the folder ".app".
+    @Test("A name with nothing to keep falls back to the short id")
+    func emptyBaseFallsBackToShortId() {
+        #expect(HelperBundleManager.helperBaseName(name: "🚀", shortId: "B4EF96A2") == "B4EF96A2")
+        #expect(HelperBundleManager.helperBaseName(name: " !!! ", shortId: "B4EF96A2") == "B4EF96A2")
+        #expect(HelperBundleManager.helperFolderName(
+            baseName: HelperBundleManager.helperBaseName(name: "🚀", shortId: "B4EF96A2"),
+            cleanNameTakenByOther: false, shortId: "B4EF96A2") == "B4EF96A2.app")
+    }
+
+    @Test("A name with something to keep is sanitized as before")
+    func nonEmptyBaseIsSanitized() {
+        #expect(HelperBundleManager.helperBaseName(name: "Work & Play", shortId: "B4EF96A2") == "Work  Play")
+        #expect(HelperBundleManager.helperBaseName(name: "🚀 Ship", shortId: "B4EF96A2") == "Ship")
+    }
+
+    /// The legacy `.app` folder must be adopted so the tile's next rebuild removes it. `pathExtension`
+    /// of a bare `.app` is "" — the reason the old `== "app"` filter never saw it.
+    @Test("The scan accepts *.app and the legacy bare .app, nothing else")
+    func helperFolderNames() throws {
+        #expect(HelperBundleManager.isHelperFolderName("Dev.app"))
+        #expect(HelperBundleManager.isHelperFolderName("Ship-52300A6C.app"))
+        #expect(HelperBundleManager.isHelperFolderName(".app"))
+        #expect(!HelperBundleManager.isHelperFolderName(".staging"))
+        #expect(!HelperBundleManager.isHelperFolderName("diagnostics.log"))
+        #expect(!HelperBundleManager.isHelperFolderName("Dev"))
+        #expect(URL(fileURLWithPath: "/a/.app").pathExtension == "")
+    }
+
+    /// On the real file system: a directory listing includes the hidden `.app` folder, and the scan
+    /// rule picks it out.
+    @Test("A real directory listing yields the hidden legacy folder")
+    func legacyFolderIsListed() throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HelperFolderNameTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir.appendingPathComponent(".app"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: dir.appendingPathComponent("Dev.app"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let listed = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+            .map(\.lastPathComponent)
+            .filter(HelperBundleManager.isHelperFolderName)
+            .sorted()
+
+        #expect(listed == [".app", "Dev.app"])
+    }
 }
 
 // MARK: - Dock entry label (the tooltip must be the tile name, never the folder stem)

@@ -45,7 +45,10 @@ runs in a helper while no bar shows.
 (`<name>.app`), but two tiles may legitimately share a name. Identity is the unique bundle ID
 (`<prefix>.<UUID>`), not the folder — so the write path resolves through `preferredHelperPath`:
 clean `<name>.app` when free or already this tile's, else `<name>-<shortId>.app` (pure
-`HelperBundleManager.helperFolderName` seam, guarded by `HelperFolderNameTests`). Without this the
+`HelperBundleManager.helperFolderName` seam, guarded by `HelperFolderNameTests`; a name that sanitizes to
+nothing — emoji or punctuation only — falls back to the short id via `helperBaseName`, because it used to
+give a hidden `<support>/.app` no scan found, and `isHelperFolderName` still adopts that legacy folder so
+the tile's next rebuild removes it). Without this the
 second same-named install overwrote the first's `<name>.app` and orphaned it — a broken Dock icon
 plus permanent "visible but never pinned" churn (its bundle ID no longer had a bundle on disk).
 `findExistingHelper(bundleId:)` still locates the bundle by ID for update/regenerate, so renames and

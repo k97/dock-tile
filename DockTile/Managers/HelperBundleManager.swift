@@ -167,7 +167,7 @@ final class HelperBundleManager {
             includingPropertiesForKeys: nil
         ) else { return nil }
 
-        for item in contents where item.pathExtension == "app" {
+        for item in contents where Self.isHelperFolderName(item.lastPathComponent) {
             let infoPlistPath = item.appendingPathComponent("Contents/Info.plist")
             if let plist = NSDictionary(contentsOf: infoPlistPath),
                let existingBundleId = plist["CFBundleIdentifier"] as? String,
@@ -318,7 +318,7 @@ final class HelperBundleManager {
     /// tile's; otherwise suffix with the tile's short id (`<name>-<shortId>.app`). Identity on disk
     /// stays the unique bundle ID — only the folder name is disambiguated.
     private func preferredHelperPath(for config: DockTileConfiguration) -> URL {
-        let base = sanitizeAppName(config.name)
+        let base = Self.helperBaseName(name: config.name, shortId: config.shortId)
         let cleanPath = helperDirectory.appendingPathComponent("\(base).app")
         let takenByOther = FileManager.default.fileExists(atPath: cleanPath.path)
             && bundleId(atHelperPath: cleanPath) != config.bundleIdentifier
@@ -328,6 +328,25 @@ final class HelperBundleManager {
             shortId: config.shortId
         )
         return helperDirectory.appendingPathComponent(folder)
+    }
+
+    /// Pure rule for the stem of a helper's folder: the tile name with only letters, digits, `-`, `_`
+    /// and spaces kept, or the tile's short id when that leaves nothing. A name made only of emoji or
+    /// punctuation used to give `<support>/.app`, a hidden folder no scan found (2026-11-04 audit).
+    nonisolated static func helperBaseName(name: String, shortId: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(.init(charactersIn: "-_ "))
+        let sanitized = name
+            .components(separatedBy: allowed.inverted)
+            .joined()
+            .trimmingCharacters(in: .whitespaces)
+        return sanitized.isEmpty ? shortId : sanitized
+    }
+
+    /// Whether a support-folder entry can be a helper bundle: any `*.app`, plus the bare `.app` that a
+    /// pre-fix emoji-only tile was built into (`pathExtension` is "" for it). Adopting that folder lets
+    /// the tile's next rebuild remove it (`oldFolderToRemove`).
+    nonisolated static func isHelperFolderName(_ name: String) -> Bool {
+        name == ".app" || (name as NSString).pathExtension == "app"
     }
 
     /// Pure rule for the on-disk folder name of a helper bundle. Clean `<name>.app` unless a
@@ -487,7 +506,7 @@ final class HelperBundleManager {
         ) else { return [:] }
 
         var states: [String: HelperSealState] = [:]
-        for bundle in entries where bundle.pathExtension == "app" {
+        for bundle in entries where Self.isHelperFolderName(bundle.lastPathComponent) {
             states[bundle.lastPathComponent] = Self.sealState(bundlePath: bundle)
         }
         return states
@@ -1957,7 +1976,7 @@ final class HelperBundleManager {
             post: { self.postRebuild($0, bundleId: bundleId) },
             copy: {
                 try self.generateHelperBundle(
-                    appName: self.sanitizeAppName(config.name), bundleId: bundleId, helperPath: staged,
+                    appName: config.name, bundleId: bundleId, helperPath: staged,
                     showInAppSwitcher: config.showInAppSwitcher, iconSignature: config.iconSignature,
                     dockSignature: config.dockSignature)
             },
@@ -2022,18 +2041,6 @@ final class HelperBundleManager {
         }
         return removed
     }
-
-    // MARK: - Helpers
-
-    /// Sanitize app name for use as bundle name (replace special chars)
-    private func sanitizeAppName(_ name: String) -> String {
-        let allowed = CharacterSet.alphanumerics.union(.init(charactersIn: "-_ "))
-        return name
-            .components(separatedBy: allowed.inverted)
-            .joined()
-            .trimmingCharacters(in: .whitespaces)
-    }
-
 }
 
 /// The side effects of one staged rebuild, injected into `HelperBundleManager.runStagedRebuild` so its
