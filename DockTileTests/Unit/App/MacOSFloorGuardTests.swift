@@ -77,12 +77,14 @@ struct MacOSFloorGuardTests {
     func websiteStatesTheRealFloor(_ path: String) throws {
         let target = try Self.deploymentTarget()
         let source = try Self.text(path)
-        let claims = source.matches(of: /(?i)(?:requires |for |runs on )macOS (\d+)/).map { Int($0.1) ?? -1 }
-            + source.matches(of: /macOS (\d+)\.0 or later/).map { Int($0.1) ?? -1 }
-            + source.matches(of: /macOS (\d+)\+/).map { Int($0.1) ?? -1 }
-            + source.matches(of: /macOS (\d+)\.0 \([A-Za-z ]+\) or later/).map { Int($0.1) ?? -1 }
-            + source.matches(of: /macOS[ -](\d+)\.0\+/).map { Int($0.1) ?? -1 }
-        let stated = claims
+        // Appended one pattern at a time: as one `+` chain, five of these timed out the type checker
+        // on CI's Xcode 26.2 ("unable to type-check this expression in reasonable time").
+        var stated: [Int] = []
+        stated += source.matches(of: /(?i)(?:requires |for |runs on )macOS (\d+)/).map { Int($0.1) ?? -1 }
+        stated += source.matches(of: /macOS (\d+)\.0 or later/).map { Int($0.1) ?? -1 }
+        stated += source.matches(of: /macOS (\d+)\+/).map { Int($0.1) ?? -1 }
+        stated += source.matches(of: /macOS (\d+)\.0 \([A-Za-z ]+\) or later/).map { Int($0.1) ?? -1 }
+        stated += source.matches(of: /macOS[ -](\d+)\.0\+/).map { Int($0.1) ?? -1 }
         #expect(!stated.isEmpty, "\(path) names no macOS version at all; expected at least one mention of the \(target.major) floor")
         for version in stated where version != target.major {
             Issue.record("\(path) claims macOS \(version) where the deployment target is \(target.version)")
