@@ -1,275 +1,275 @@
-# Audit round 2 (documented 2026-11-04, starts after round 1 merges)
+# Audit round 2 (2026-11-04)
 
-Everything from the 2026-11-04 whole-repo audit that round 1
-(`2026-11-04-audit-must-fix.md`, items 1–5) does not cover: audit items 6–20, the 12 smaller findings the
-report left out, and the decisions about which of those NOT to do. Owner decisions recorded here were made
-2026-11-04 in the same session.
+Everything from the 2026-11-04 whole-repo audit that round 1 (`2026-11-04-audit-must-fix.md`, items 1–5)
+did not cover. The first version of this plan (25 changes) went through the plan gate ("Needs answers") and
+then an owner review that cut it to the 12 items below; every other item is under "Not doing", with its
+reason. All decisions were made by the owner on 2026-11-04, one question at a time. The trimmed plan's
+gate (run 2) found every fact true and asked two blocking questions (how catalog entries leave; when the
+list height is pinned); both are answered below, and its text notes are applied.
 
-**Status: documented, not gated.** Run the `--plan` stage gate on this file when round 2 starts. Round 1
-moves lines and adds a `current:` parameter, so re-check every file:line below against `main` first. Every
-fact below was read in code on 2026-11-04 unless marked *(reviewer reading)*.
+**Branch:** `fix/audit-must-fix`, the same branch as round 1. Both rounds merge together and ship in one
+release. One commit per item. **Code state:** round 1 done at `fd3592b`. Line numbers were read there.
 
-Branch: `fix/audit-round-2`, one commit per numbered group, no push until asked. The same verification as
-round 1: targeted suites, the full suite on the Default icon style, a negative control per new test, a
-signed rebuild, then `--dev`.
+**Verification for every commit:** a build, plus the item's own check below. Before the `--dev` gate: the
+full suite on the Default icon style, the l10n commands whenever strings change, a signed rebuild with
+`codesign --verify`, and a dev-app relaunch. Then a regression pass over both rounds (CI on macOS 26 and
+macOS 15, an independent caller-by-caller review, and the hands-on checks named below), then the
+`--release` gate, the merge and the release.
 
 Load assumed: one person, one Mac, ~5–30 tiles; helpers run all day.
 
 ---
 
-## Group A — correctness (Must fix in the audit)
+## A1 · A tile named only with emoji or punctuation (audit #6)
 
-### A1 · A tile named only with emoji or punctuation (audit #6)
-- **Facts:** `sanitizeAppName` (HelperBundleManager.swift:2013-2019) keeps letters, digits, `-`, `_`,
-  space; `preferredHelperPath` (:305) builds `"\(base).app"`. "🚀" → `.app`, a hidden file, and
-  `URL(fileURLWithPath: "/a/.app").pathExtension == ""` (checked), so `findExistingHelper` (:170, filters
-  on `pathExtension == "app"`) never finds it: Update, Delete and self-heal miss the bundle. `buildAndSwap`
-  passes the SANITIZED name as `appName` (:1940), so `CFBundleName` is "" (blank in ⌘Tab / Force Quit)
-  and "Work & Play" reads "Work  Play".
-- **Owner decision:** folder fallback AND the real name in the bundle.
-- **Change:** (1) the pure seam `helperFolderName(baseName:…)` (:320) gets the fallback: an empty
-  `baseName` → `shortId`, so the rule stays in the tested seam. (2) Pass `config.name` (unsanitized) as
-  `appName` to `generateHelperBundle`; check what else reads `appName` there (bundle names only; the
-  folder already comes from `preferredHelperPath`).
-- **Behaviour change, stated:** existing tiles whose names hold punctuation or emoji show their real name in
-  ⌘Tab / Force Quit / the Dock tooltip after their next rebuild (the next version-bump migration rebuilds
-  every pinned tile). `dockSignature` already uses `config.name`, so no tile reads "Update pending".
-- **Verify:** `HelperFolderNameTests` cases: `"" → "<shortId>.app"`; `""` with the clean name taken →
-  still distinct from another tile's. A test that `helperInfoPlist` (or whichever seam writes
-  `CFBundleName`) keeps "Work & Play" and "🚀" verbatim. Negative control: drop the fallback → the empty
-  case returns ".app".
+- **Facts:** `sanitizeAppName` (HelperBundleManager.swift:2029-2035) keeps letters, digits, `-`, `_` and
+  space. `preferredHelperPath` (:320-331) builds `cleanPath = "\(base).app"` and checks it is free BEFORE
+  calling the pure seam `helperFolderName` (:336). So "🚀" → `<support>/.app`, a hidden folder.
+  `URL(fileURLWithPath: "/a/.app").pathExtension == ""` (checked), so `findExistingHelper` (:164-179,
+  `item.pathExtension == "app"`) never finds it: Update, Delete and self-heal miss the bundle.
+  `buildAndSwap` passes the SANITIZED name as `appName` (:1960), so `CFBundleName` is "" (blank in ⌘Tab
+  and Force Quit) and "Work & Play" reads "Work  Play".
+- **Change:**
+  1. In `preferredHelperPath`, fall back BEFORE building `cleanPath`: an empty sanitized name uses
+     `config.shortId`. Put the rule in a pure seam (e.g. `helperBaseName(sanitized:shortId:)`), so it is
+     testable and the path check and the folder name read the same value.
+  2. `findExistingHelper` also accepts a folder named exactly `.app` (the legacy emoji-tile folder), so the
+     next rebuild finds it as the tile's existing folder, and `oldFolderToRemove` removes it after the
+     swap. The release's version bump rebuilds every pinned tile, so existing users are cleaned up then.
+  3. Pass the unsanitized `config.name` as `appName` to `generateHelperBundle`. Check every other reader
+     of `appName` there first: the folder already comes from `preferredHelperPath`.
+  4. `LoginTileSpawner.helperBundleURL` (:90-104) mirrors the scan but is NOT changed: login-items.md
+     keeps it free of `HelperBundleManager`, and the legacy `.app` folder is gone after the release's
+     rebuild. Until then an emoji tile's helper is not warmed at login, which is today's behaviour.
+- **Behaviour change, stated:** after their next rebuild, existing tiles whose names hold punctuation or
+  emoji get their real name as `CFBundleName` / `CFBundleDisplayName`, and so as the Dock tooltip
+  (`dockFileLabel`). What ⌘Tab and Force Quit show is not documented
+  (docs/dock-tile-display-names.md §3), and Ghost tiles appear in neither, so that is checked by eye, not
+  claimed. `dockSignature` already uses `config.name`, so no tile starts reading "Update pending".
+- **Verify:**
+  - Seam tests: empty → the short id; non-empty → unchanged.
+  - A real-filesystem `HelperSwapTests` case (with `realpath()`): a bundle at `<dir>/.app` carrying the
+    tile's bundle id is found by the same scan rule (extract the scan's filter as a seam if needed).
+  - The unsanitized-name change (step 3) is code-read only: `helperInfoPlist` assigns `appName` as given,
+    so a test of it could not fail on the call-site regression (testing.md "A guard must be able to fail").
+  - By eye (owner, dev build): App-mode tiles named "🚀" and "Work & Play" show those names in ⌘Tab and
+    their Dock tooltip after Update; a "🚀" tile's folder is `<shortId>.app`.
+  - Negative control: drop the fallback → the empty case returns ".app".
 
-### A2 · Turning analytics off doesn't reach running helpers (audit #7)
-- **Facts:** each process applies consent once in `configure()` (AnalyticsService.swift:106-124);
-  `setConsent` (:128) re-applies only in the main app. `log` / `record` check only `isConfigured`
-  (:146, :166). A helper started at login keeps Firebase collection on after the user opts out, until it
-  is rebuilt or the user logs out.
-- **Change:** `log` and `record` call `applyCollectionState()` first (a shared-suite read + two Firebase
-  setters, per event — events are per popover open, so cheap). Read the shared suite synchronize-first:
-  architecture.md records a cross-process cfprefsd cache split that made `@AppStorage` read a stale value
-  (Popover Apply consent).
-- **Verify:** Debug never collects (`isRelease` false), so the Release path can't be exercised on the dev
-  build. Unit-test what is testable: a seam deciding "re-apply needed" is decorative (it is
-  `shouldCollect`), so the guard is code-read + the existing `AnalyticsServiceTests`. State the gap.
-  Hands-on (owner, Release build only, optional): turn analytics off, open a tile, check Firebase
-  DebugView shows no event from that helper.
+## A2 · Turning analytics off reaches running helpers (audit #7)
 
-### A3 · A List tile with many apps runs off the screen (audit #8)
+- **Facts:** each process applies consent once, in `configure()` (AnalyticsService.swift:106-124).
+  `setConsent` (:128-131) re-applies only in the main app; its one caller is GeneralSettingsView.swift:177.
+  A helper started at login keeps Analytics and Crashlytics collection on after the user opts out.
+- **Change:**
+  1. `setConsent` posts a distributed notification after persisting, `deliverImmediately: true` (AppKit
+     holds distributed notifications for an inactive app, and helpers are always inactive; the same as
+     `TileRebuildSignal`). The name is ONE `static let` used by both the post and the observer, which is
+     the structural guarantee that they match.
+  2. In helpers only (`AppEnvironment.isHelper`), `configure()` registers an observer that calls
+     `applyCollectionState()` on the main actor (`.main` queue + `MainActor.assumeIsolated`, the
+     `TileRebuildSignal` pattern).
+  3. `consentGranted` reads the shared suite synchronize-first (`CFPreferencesAppSynchronize` on the
+     suite), because architecture.md records a cross-process cfprefsd cache split that made a read stale.
+- **Accepted:** any local process can post the notification. The worst it can do is make a helper re-read
+  the real setting (the same class `TileRebuildSignal` accepts).
+- **Verify:** Debug never collects (`isRelease` false), so the end-to-end path cannot run on the dev build,
+  and a unit test of the name would be decorative. Hands-on (dev build; `GoogleService-Info.plist` ships in
+  Debug, so `configure()` runs): toggle the setting OFF then ON, and see a running dev helper's pid log a
+  non-verbose `[analytics] consent re-applied (consent=false)` then `(consent=true)`. Logging `consent`, not
+  `collect` (always false in Debug), is what shows the re-read is fresh. The line stays.
+
+## A3 · A long List popover runs off the screen (audit #8)
+
 - **Facts:** the list rows are a plain `VStack` (NativePopoverViews.swift:858-878) with no `ScrollView`;
-  `PopoverPanelLayout.listPanelSize` (PopoverAppearance.swift:398-420) has no cap. The grid wraps its rows
-  in a `ScrollView` (:446) and caps the height at `gridScrollCap` 600 (:546, PopoverAppearance.swift:319).
-  ~30 rows ≈ 1,200 pt, taller than a laptop's visible frame, so rows past the edge can't be reached.
-- **Change (consistency with the grid — Apple-design "familiarity"):** outside edit mode, wrap the rows in
-  `ScrollView(.vertical)` and cap the content at the same 600 pt; apply the same cap in `listPanelSize` so
-  the canvas's estimate (which the list relies on — it pins only its width) matches. The utility rows stay
-  OUTSIDE the scroll view, always visible. Keyboard navigation: arrow-key selection must scroll the
-  selected row into view — copy whatever the grid does (check for a `ScrollViewReader` there first; if the
-  grid has none, keyboard selection off-screen is a second, shared bug — note it, don't widen this fix).
-- **Verify:** `PopoverPanelLayout` test: `listPanelSize(appCount: 40, isEditing: false)` height == cap +
-  utility rows + padding; `isEditing: true` stays uncapped (edit mode has no inner scroll view, same rule
-  as the grid, :540-546). Negative control: remove the cap → test fails. By eye (owner): a 30-app list tile
-  scrolls; the gear row stays visible.
+  `PopoverPanelLayout.listPanelSize` (PopoverAppearance.swift:398-420) has no cap. The grid caps the WHOLE
+  panel at `gridScrollCap` 600 (NativePopoverViews.swift:546; PopoverAppearance.swift:319) and scrolls
+  inside it (:446). The list pins only its width and takes an intrinsic height (popover-appearance.md).
+- **Change (owner decisions: the grid's whole-panel cap; pin only past it):** `listPanelSize` stays
+  uncapped, like `gridPanelSize` (the grid caps in the view, `min(totalHeight, gridScrollCap)`, :546). A new
+  pure seam returns the rows' scroll height: `nil` when the uncapped panel estimate is ≤ `gridScrollCap`
+  (the list keeps today's intrinsic `VStack`, unchanged), else `gridScrollCap` minus header, utility rows
+  and outer padding. Only past the cap do the app rows go into a `ScrollView` framed to that height, with
+  the header and the utility rows outside it, always visible. The estimate over-reserves on purpose
+  (~24 pt utility rows), so pinning every list from it would show slack or clipping on every list tile;
+  past the cap the slack only shortens the scroll area. Edit mode never scrolls (same as the grid,
+  :540-546).
+- **Comments and rules that become false** (fix them in this commit): NativePopoverViews.swift:901-902, the
+  `listPanelSize` doc comment, popover-appearance.md ("the list pins only its width"). testing.md's
+  `listPanelSize` entry joins the testing.md follow-up below.
+- **Not in scope:** keeping the arrow-key selection in view while scrolling. The grid doesn't do it
+  either; it is filed as a follow-up issue (owner decision).
+- **Verify:**
+  - The rows seam: 3 apps → `nil`; 40 apps → exactly `gridScrollCap` minus the chrome (a literal computed
+    from the layout constants in the test); edit mode → `nil`.
+  - Negative control: make the seam always return `nil` → the 40-app case fails.
+  - No existing `listPanelSize` / `PopoverPreviewCanvas` test changes: none reaches 600 pt.
+  - By eye (owner, dev build): a 30-app list tile scrolls, with the header and gear row visible.
 
-### A4 · Hiding one tile can unpin another broken tile (audit #9)
-- **Facts:** `removeFromDockPlist` (HelperBundleManager.swift:1385) matches its own entry by
-  `tile-data.bundle-identifier` first (:1400), then by the bundle's Info.plist. After that, a sweep
-  (:1430-1435) drops ANY entry whose path contains "DockTile" and whose Info.plist is missing — another
-  tile's pinned-but-missing bundle (the case self-heal repairs; self-heal only walks pinned tiles), plus
-  anything under `DockTile-Dev/` or a `DockTile-<hash>` DerivedData path.
-- **Change:** delete the sweep (5 lines). The first match already covers our own entry, including one
-  whose URL can't be parsed.
-- **Verify:** grep that no test depends on the sweep; if a seam-level test of the filter is cheap, add one
-  case (another tile's missing-bundle entry is kept). Full suite.
+## A4 · Hiding one tile can unpin another broken tile (audit #9)
 
-### A5 · The Dock right-click menus can't open folders (audit #10)
-- **Facts:** both menus store `appItem.bundleIdentifier` and resolve it with `urlForApplication` —
-  HelperAppDelegate.swift:376 + :498-520 (App-mode tile menu) and AppDelegate.swift:355 + :379-394 (main
-  app's Dock menu). A folder's id is `folder.<hash>`, so it resolves to nil and only logs. PWAs sharing a
-  bundle id open whichever copy Launch Services picks, unlike the popover's `AppLauncher` (lastKnownPath
-  first).
-- **Change:** both set `representedObject = appItem` and call `AppLauncher.launch(item, source:)`
-  (`"context_menu"` / `"main_dock_menu"` — check the existing analytics `source` values first). Drop the
-  handlers' own `appLaunchedFromTile` log, because `AppLauncher.launch` already logs it (AppLauncher.swift:17)
-  — otherwise every menu launch counts twice. Two near-copies → one shared launch path.
-- **Verify:** build + full suite; by eye (owner): App-mode tile's Dock menu opens a folder; the main app's
-  Dock menu opens an app.
+- **Facts:** `removeFromDockPlist` (HelperBundleManager.swift:1401) matches its own entry by
+  `tile-data.bundle-identifier` first (:1416); `addToDock` always writes that key (+Dock.swift ~:409). Then
+  a sweep (:1444-1451) drops ANY entry whose path contains "DockTile" and whose Info.plist is missing:
+  another tile's pinned-but-missing bundle, which is the case self-heal repairs. It also runs inside
+  `refreshDockEntry` (:1492), so a batch re-seat can delete other tiles' broken entries.
+- **Change:** delete the sweep, and fix the comment at :245 ("also sweeps stale entries").
+- **Trade-off, stated:** an orphan entry whose tile no longer exists in the config is no longer cleared by
+  any Hide or Delete. Self-heal only walks configured tiles, so such an entry stays until the user removes
+  it from the Dock by hand.
+- **Verify:** build + full suite; grep that nothing depends on it.
 
-### A6 · The Dock-plist watcher stops after a real delete (audit #11)
-- **Facts:** on `.delete`/`.rename` the watcher cancels and calls `startWatching()` at once
-  (DockPlistWatcher.swift:86-90); if the file isn't there yet (`defaults delete com.apple.dock`), `open`
-  fails (:63-68) and nothing retries. Visibility sync is dead until the app relaunches.
-- **Change:** when `open` fails, retry once a second (`DispatchQueue.main.asyncAfter(deadline: .now() + 1)
-  { [weak self] in self?.startWatching() }`), stopping when `stopWatching` was called (check how the
-  watcher is torn down so a stopped watcher doesn't resurrect).
-- **Verify:** extend `DockPlistWatcherReplaceTests` (it already drives a real temp file): delete the file,
-  recreate it 1.5 s later, write → the handler fires. Mind the CI flake history of that suite
-  (testing.md): generous deadline, diagnostics in the `#expect` message.
+## A5 · The Dock right-click menus can't open folders (audit #10)
 
-### A7 · A custom tile colour is saved in the wrong colour space (audit #12)
+- **Facts:** both menus store `appItem.bundleIdentifier` and resolve it with `urlForApplication`:
+  HelperAppDelegate.swift:376 + :498-520 (the App-mode tile menu; it logs `appLaunchedFromTile`
+  `source: "context_menu"` itself) and AppDelegate.swift:355 + :379-394 (the main app's Dock menu; logs
+  nothing). A folder's id is `folder.<hash>`, so clicking it does nothing. Web apps sharing a bundle id open
+  whichever copy Launch Services picks.
+- **Change:** both set `representedObject = appItem` and call `AppLauncher.launch(item, source:)`, with
+  `"context_menu"` (unchanged) and `"main_dock_menu"`. The helper handler's own log line goes, because
+  `AppLauncher.launch` logs (AppLauncher.swift:17). Owner decision: the main-app path now produces
+  `app_launched_from_tile` with `source: "main_dock_menu"`; `source` is an existing parameter. Add
+  `main_dock_menu` to the `source` values listed in `AppLauncher.launch`'s doc comment.
+- **Verify:** build + full suite. By eye (owner): an App-mode tile's Dock menu opens a folder, and the main
+  app's Dock menu opens an app.
+
+## A7 · A custom tile colour is saved in the wrong colour space (audit #12)
+
 - **Facts:** `Color.toHexString` (CustomiseTileView.swift:806-819) converts through `.deviceRGB` and
-  truncates (`Int(x * 255)`); its one caller is the colour panel (:506). Every reader treats the hex as
-  sRGB (`SRGB(hex:)`, `Color(hex:)` uses `.sRGB`). The same file already converts correctly
-  (sRGB, clamped, rounded) at :400-409.
-- **Change:** move that correct conversion into one function both call sites use, and delete
-  `toHexString`.
-- **Verify:** unit test: a known sRGB colour (e.g. `#5F00FF`) round-trips through the function to the same
-  hex; a Display P3 colour converts to the sRGB hex `NSColor.usingColorSpace(.sRGB)` gives. Negative
-  control: the old deviceRGB path gives a different hex for the P3 colour.
+  truncates; its one caller is the colour panel (:506). Every reader treats the hex as sRGB. The same file
+  already converts correctly at :403-407 (sRGB, clamped, rounded).
+- **Change:** make that correct conversion one function (e.g. `static func srgbHex(_ color: Color) ->
+  String?`), used by both call sites; delete `toHexString`.
+- **Verify:** a test with a pinned literal: `#5F00FF` round-trips unchanged, and a fixed Display P3 colour
+  gives a hex literal written into the test. Negative control: the old deviceRGB path gives a different
+  hex for that P3 colour.
 
----
+## C1 · Dead code (audit #13; every symbol grepped across DockTile/, DockTileTests/, DockTileUITests/, Scripts/)
 
-## Group B — smaller correctness and robustness (left out of the report, kept)
+Delete:
+- `ConfigurationManager.addAppItem` / `removeAppItem` / `reorderAppItems` (:367-410) and `stopDockWatcher`
+  (:814)
+- `LauncherView.DesignTokens`
+- `HelperBundleManager.removeFromDock(at:)` (:1498)
+- `isInDock(at:)` (+Dock.swift:35), together with its `HelperBundleLifecycleTests` call
+- `HelperBundleError.mainAppNotFound`: also `AppStrings.Error.mainAppNotFound`, its `AppStringsTests` case
+  and its `HelperBuildExclusionTests` entry
+- `appSwitcherChanged` in `performDockAction`: the `let` (:654), its `if` + print (:719), and
+  `originalConfig` plus the comment above it (:650-653), which only that `let` used
+- the one-argument `IconStyle.from(preferencesValue:)` / `.resolve(preferencesValue:)`
+  (IconStyleManager.swift:81-89)
+- `ListMenuRow.hasSubmenu`, its chevron branch and the `hasSubmenu:` arguments (NativePopoverViews.swift:889,
+  :896)
+- the analytics events `tileShown` / `tintColorChanged` / `layoutModeChanged`
+- the AppStrings keys `popoverLayout` / `dockLockAccessibilityGranted` / `settingsSectionHeader`
+- **Catalog entries stay (owner decision 2026-11-04):** `l10n.py` has no remove command, hand edits other
+  than English values are forbidden, and the tests require only code keys ⊆ catalog. The four entries
+  (these three plus `error.mainAppNotFound`) stay as unused rows, ship as a few bytes and break nothing.
 
-### B1 · A failed bundle delete skips the Dock restart *(reviewer reading, confirmed in code)*
-- **Facts:** `uninstallHelper` (HelperBundleManager.swift:232-247): `removeItem` throws AFTER the plist
-  entry was removed, so the verified restart never runs; the running Dock can then flush its old list back
-  (the dying-Dock rule) and the deleted tile stays pinned.
-- **Change:** catch the delete error, still restart when `didRemoveFromDock`, then rethrow.
+Also fix every comment or rule that names a deleted symbol (coding-guardrails: grep the words): the header
+comment in `HelperBundleManager+Dock.swift` (:9), and architecture.md's "Reliable reads", which lists
+`isInDock`.
 
-### B2 · A batch restarts the Dock with nothing to check *(reviewer reading)*
-- **Facts:** `regenerateBatch` calls `restartDockAndVerify(expectations, …)` (HelperMigrationManager.swift
-  ~:290) even when no regenerated tile was pinned (Popover Apply targets `isVisibleInDock && helperExists`),
-  breaking "restart the Dock only when it actually changed".
-- **Change:** skip the restart when no regenerated tile was pinned (`pinnedIndices.isEmpty`) — check first
-  whether `batchExpectations` can be empty while a re-seat happened.
+Verify: build, the full suite, `l10n.py check` + the l10n unit tests, and a grep of each deleted name that
+returns nothing.
 
-### B3 · Two same-named tiles built at once can swap into one folder *(reviewer reading)*
-- **Facts:** `buildAndSwap` picks `final = preferredHelperPath(for:)` (:1930) before its awaits; two tiles
-  renamed to the same name and built concurrently both pick `<name>.app`.
-- **Change:** in the swap step, abort (throw) when the bundle now at `final` belongs to another bundle id.
+## C2 · Stray files (audit #14)
 
-### B4 · Re-seat can pick a stale copy of a renamed tile *(reviewer reading)*
-- **Facts:** `refreshDockEntry` (:1472-1477) and the batch expectations resolve the path through
-  `helperPath(for:)` / `findExistingHelper`, a directory scan in no defined order; a failed old-folder
-  removal leaves two folders with one bundle id.
-- **Change:** have `buildAndSwap` return `final` and thread it to the re-seat and the expectation. Decide
-  at the gate whether this is worth it (it needs a failed delete first).
+`git rm` all five, nothing references any of them:
+- `Scripts/generate_helper.sh`
+- `Scripts/add-string.py` (re-dumps the catalog, which localization-macos.md forbids)
+- `DockTile.xcodeproj/project.pbxproj.bak`
+- `add_files_to_xcode.py` (tracked since the initial commit)
+- `Scripts/setup-tests.sh` (prints instructions, no callers)
 
-### B5 · The icon compiler can hang a build forever *(reviewer reading)*
-- **Facts:** no timeout on the `docktile-actool` / `assetutil` waits (DeclarativeIconPipeline.swift
-  ~:303, ~:339); `iconutil` (IconGenerator.swift:888-905) reads stderr only after `waitUntilExit` (the
-  pipe-deadlock pattern development.md forbids; harmless while stderr is small). After round 1, a hung
-  build also makes a Delete of that tile wait forever.
-- **Change:** a bounded wait (e.g. 60 s, then `terminate()` and throw); iconutil's stderr read before the
-  wait or sent to a file, its text put into the thrown error / `DiagnosticsLog` instead of `print`.
-- **Verify:** `IconCompilerTests` already compiles end to end; add a timeout case only if it can be made
-  deterministic (a stub executable that sleeps).
+Old plan docs that mention `add-string.py` stay; they are history.
 
-### B6 · Start-at-Login reconcile blocks launch on XPC *(reviewer reading)*
-- **Facts:** `reconcileOnLaunch` (LoginItemManager.swift:121-136) reads `service.status` (~20 ms XPC, per
-  the file's own comment) and may `register()`, on the main thread at launch; the General pane already
-  moved its reads off main (`readStatus`).
-- **Change:** run it in a detached task like `readStatus`, publishing the result on main.
+Verify: `git grep` for each name returns only those plan docs; build.
 
-### B7 · Hex parsers disagree (audit #16)
-- **Facts:** `Color(hex:)` (ColorExtensions.swift:15-38) reads 8 digits as AARRGGBB and returns BLACK for
-  invalid input; `SRGB(hex:)` (TilePalette.swift:30-38) reads RRGGBBAA and returns nil (callers fall back to
-  a default). A bad plate hex shows a black swatch in Customise while the Dock bakes the default plate.
-- **Change:** build `Color(hex:)` on `SRGB(hex:)` (one parser); check the 9 `Color(hex:)` call sites for any
-  that pass 3- or 8-digit strings before dropping those formats.
+## C3 · Colour helpers that `TilePalette` replaced (audit #15)
 
----
+Re-grep each before deleting; anything with a production caller stays:
+- `TintColor`/`PresetColor` `colorTop` / `colorBottom` / `color` (keep `PresetColor.colorBottom`, used at
+  CustomiseTileView.swift:490)
+- `Color.lighterShade` + `Color.toHex` (ColorExtensions.swift:41-85)
+- `Managers/AppearanceManager.swift`: `NSColor(hex:)` is used only by GlyphLayerRenderTests:84;
+  `Color(_ nsColor:)` only forwards to `Color(nsColor:)`. Rewrite its call sites, fix the file header that
+  calls the code "live", and remove the file's pbxproj entry
+- the test-only `IconGenerator` forwarders / `symbol:` overloads / `generatePreview`
+- the `static let IconDepthMetrics.warningThreshold` (:75). NOT `warningThreshold(for:)` (:79), which is
+  live
+- the legacy `DockTileIconPreview` initialisers used only by `#Preview` and one test
 
-## Group C — lean (delete code nobody calls)
+Repoint the tests at `TilePalette` / `IconDepthMetrics` / the full init. Tests to delete or rewrite (gate
+read): ColorExtensionsTests.swift:138-260 (`toHex`, `lighterShade`), TintColorTests,
+ConfigurationModelsTests.swift:599-611, TilePaletteTests.swift:139-141 (preset `colorTop`),
+IconGeneratorTests.swift:79, IconDepthMetricsTests.swift:86.
 
-Each deletion is re-grepped across `DockTile/`, `DockTileTests/`, `DockTileUITests/`, `Scripts/` (and
-string/dynamic references) at implementation time; anything with a caller stays.
+Comments and rules that name a deleted symbol (grep the words): TilePalette.swift:47
+(`Color.lighterShade`), icon-system.md:233 (`colorTop`/`colorBottom`), :292 (the
+`IconGenerator.warningThreshold` forwarder) and :468 ("Custom Colour Gradients"),
+IconPreviewGeometryTests.swift:274.
 
-### C1 · Dead code (audit #13, confirmed by grep 2026-11-04)
-`ConfigurationManager.addAppItem` / `removeAppItem` / `reorderAppItems` / `stopDockWatcher`;
-`LauncherView.DesignTokens`; `HelperBundleManager.removeFromDock(at:)` (unverified restart, substring
-match); `isInDock(at:)` (test-only, substring match — delete with its `HelperBundleLifecycleTests` call);
-`HelperBundleError.mainAppNotFound` (never thrown; update `HelperBuildExclusionTests`' case list); the
-`appSwitcherChanged` print in `performDockAction`; `IconStyle.from(preferencesValue:)` /
-`.resolve(preferencesValue:)` one-argument overloads (IconStyleManager.swift:81-89, no callers);
-`ListMenuRow.hasSubmenu` (always `false`, NativePopoverViews.swift:889/896/1107); analytics events
-`tileShown` / `tintColorChanged` / `layoutModeChanged`; AppStrings keys `popoverLayout` /
-`dockLockAccessibilityGranted` / `settingsSectionHeader` (remove the catalog entries through `l10n.py`,
-then `check`).
+Verify: build, the full suite, and a grep of each deleted name.
 
-### C2 · Stray files (audit #14)
-`git rm Scripts/generate_helper.sh` (first commit, nothing calls it), `Scripts/add-string.py` (re-dumps the
-catalog — forbidden by localization-macos.md; `l10n.py sync-keys` replaces it),
-`DockTile.xcodeproj/project.pbxproj.bak` (554 lines, unchanged since 2026-01-30),
-`Scripts/setup-tests.sh` *(reviewer reading — read it first)*; delete the untracked
-`add_files_to_xcode.py`. Old plan docs that mention `add-string.py` stay (history).
+## D1 · Diagnostics log grows forever for users who never open the main app (audit #17)
 
-### C3 · Colour helpers that `TilePalette` replaced (audit #15, reviewer reading — re-grep each)
-`TintColor`/`PresetColor` `colorTop` / `colorBottom` / `color` (keep `PresetColor.colorBottom`, used at
-CustomiseTileView.swift:490), `Color.lighterShade` + `Color.toHex` (ColorExtensions.swift:41-85),
-`Managers/AppearanceManager.swift` (`NSColor(hex:)` used only by a test; `Color(_ nsColor:)` only forwards to
-`Color(nsColor:)` — rewrite its 4 sites; remove the file's pbxproj entry), the test-only `IconGenerator`
-forwarders / `symbol:` overloads / `generatePreview` and `IconDepthMetrics.warningThreshold`, the legacy
-`DockTileIconPreview` initialisers used only by `#Preview` and one test. Repoint the tests at `TilePalette`
-/ `IconDepthMetrics` / the full init. Estimate ~250 lines.
-
-### C4 · Small duplicates in code this round touches
-`brandRatio`'s 0.30/0.035 slope (SymbolPickerGrid.swift:161) repeats the symbol mapping in
-IconDepthMetrics — one constant; the brand-glyph view written twice (SymbolPickerGrid.swift:110-122,
-DockTileIconPreview.swift:323-337) — one view *(reviewer reading)*; `EmojiPickerGrid` filters each category
-twice per render (`categoryHasMatches` + `filteredEmojis`, :42/:50) — compute once into a `let`, as
-`SymbolPickerGrid` does.
-
----
-
-## Group D — small performance (Nice to have)
-
-### D1 · Diagnostics log grows forever for users who never open the main app (audit #17)
 "Popover shown …" is logged non-verbose on every open (HelperAppDelegate.swift:327); only a main-app
-launch trims the file (`main.swift`). → `verbose: true` (per-click churn, diagnostics.md).
+launch trims the file.
 
-### D2 · Smart Add rewrites its log on every app switch (audit #18)
-`recordLaunch` (SmartAddEngine.swift:236-245) → `saveLog()` re-encodes up to 800 events and writes
-atomically on the main thread on every activation. → save on a 30 s debounce plus `willTerminate`.
-Verify the terminate flush the way architecture.md describes for #30 (no unit test reaches ⌘Q).
+Change: `verbose: true`. It is per-click churn (diagnostics.md). memwatch parses "✔ Show popover", not
+this line.
 
-### D3 · App Grid desaturation re-creates Core Image work per redraw (audit #19)
-`IconGenerator.desaturated(_ cg:)` (IconGenerator.swift:1415-1432) runs a `CIFilter` into a fresh bitmap on
-every call; `DockTileIconPreview` calls it per mini per body evaluation under Clear/Tinted (:257). →
-cache the desaturated `CGImage` in `TileIconRasterCache` (its key already carries the appearance token).
-Per performance-measurement.md: measure a same-session A/B on an optimised build before and after; drop
-the change if the difference is inside the noise band.
+Verify: build; code-read only.
 
-### D4 · The gear button leaks a cursor push (audit #20)
-`NSCursor.pointingHand.push()` on hover (NativePopoverViews.swift:423-429); clicking the gear closes the
-popover before the hover ends, so the `pop()` never runs. → `.pointerStyle(.link)` (macOS 15+, matches the
-15.0 floor).
+## D4 · The gear button leaks a cursor push (audit #20)
 
----
+`NSCursor.pointingHand.push()` on hover (NativePopoverViews.swift:423-429): clicking the gear closes the
+popover before the hover ends, so the `pop()` never runs.
 
-## Group E — measure first, then decide (owner decision)
+Change: `.pointerStyle(.link)`, which is macOS 15+ and fits the 15.0 floor.
 
-Code changes only if the numbers show a problem; record the numbers either way.
+Verify: build. By eye (owner): after clicking the gear, the cursor is an arrow again.
 
-### E1 · Popover cells probe Launch Services on every re-render *(reviewer reading)*
-Each cell body runs `AppInstallChecker.resolve` + a `contentStamp` stat (NativePopoverViews.swift ~:658,
-~:755, ~:1028, ~:1088); arrow keys and right-click re-render the parent, and the closure props stop SwiftUI
-skipping cells. **Measure:** optimised build, a 100-app grid tile, `sample` while holding an arrow key
-(performance-measurement.md recipe). **Candidate fix:** resolve every item once per open and pass the result
-into the cells.
+## B5-min · iconutil reads stderr after waiting
 
-### E2 · A helper may read a stale icon style *(reviewer reading)*
-On macOS 26+ nothing in a helper calls `CFPreferencesAppSynchronize` before reading the style for the raster
-cache key (AppIconLoader.swift ~:190); IconStyleManager.swift:312-315 (issue #22) says an unsynced read can
-return a cached value. **Measure:** a 15-minute probe in a running helper while switching Icon & widget
-style by hand, logging the raw value each popover open (icon-style-detection.md process lessons).
-**Candidate fix:** synchronize once per open in `FloatingPanel.configurePopoverForPresentation()`.
+`IconGenerator.swift:888-905` reads its stderr pipe only after `waitUntilExit`, the pipe-order pattern
+development.md forbids (harmless while stderr is small).
+
+Change: read stderr to EOF before `waitUntilExit`. Nothing else: the error keeps its shape (putting the
+text in it would change `IconGeneratorError.icnsConversionFailed` and its tests, IconGeneratorTests.swift:440,
+for no user gain).
+
+Verify: build; the legacy-path tests in the full suite.
 
 ---
 
-## Won't fix (decided 2026-11-04)
-
-The owner was offered these and ticked none (answer recorded as "Other" with no text; confirm if that was
-meant otherwise).
+## Not doing (owner decisions, 2026-11-04)
 
 | Item | Why not |
 |---|---|
-| 11 copies of the `NSBitmapImageRep` setup in `IconGenerator` | Mostly the frozen macOS 15 path, which icon-system.md says gets no further investment; pixel-change risk for no user gain. |
-| `SettingsBadgeIcon` repeats the glyph drawing | Deliberate raw-`Color` mirror, kept in lock-step by `BadgeColorMappingTests`. |
-| `iconScale` not clamped on decode | The stepper allows only 10–22; only a hand-edited config reaches a bad value. |
-| Raster cache keeps replaced bitmaps after an app update | A few KB each; every helper is rebuilt on every Dock Tile release. |
+| A6 watcher re-arm after the Dock plist is deleted | Only after a manual `defaults delete com.apple.dock`; heals on relaunch; the retry needs pending/stopped flags (gate F4). |
+| B1 a failed bundle delete skips the restart | Needs `removeItem` to fail on our own folder; never seen. |
+| B2 a batch restarts with nothing to check | Popover Apply with no pinned tile; rare, and the restart is harmless. |
+| B3 two same-named tiles built at once | Needs two tiles renamed to one name and built concurrently; never seen. |
+| B4 re-seat picking a stale renamed copy | Only after a failed old-folder delete. |
+| B5 watchdog for hung build tools | No hang ever seen; round 1 accepted the risk. Revisit if a stuck build appears in a diagnostics report. |
+| B6 Start-at-Login reconcile off the main thread | ~20 ms once per launch; moving it can race a toggle. |
+| B7 one hex parser | Only a hand-edited config reaches the bad input. |
+| C4 small duplicates | In code this round does not touch. |
+| D2 Smart Add writes on every app switch | A small cost; performance-measurement.md wants a number first. |
+| D3 App Grid desaturation per redraw | The same; measure first. |
+| E1 per-cell Launch Services probes, E2 a stale icon-style read in helpers | Measure only if a symptom is reported. |
+| Arrow-key selection scrolling into view | Separate follow-up issue (shared by the grid and the list). |
+| 11 copies of the bitmap setup in `IconGenerator` | Mostly the frozen macOS 15 path; pixel risk for no user gain. |
+| `SettingsBadgeIcon` repeats the glyph drawing | A deliberate mirror, kept in lock-step by `BadgeColorMappingTests`. |
+| `iconScale` not clamped on decode | The stepper allows only 10–22. |
+| The raster cache keeps replaced bitmaps | A few KB each; every helper is rebuilt each release. |
 
-## Follow-up outside this plan
-- `testing.md`'s seam list needs entries for round 1's `runRegenerationBatch(current:)` and the new tests.
-  `testing.md` and `development.md` hold another session's uncommitted edits, so neither round edits them
-  until that work lands.
+## Follow-ups outside this plan
+
+- `testing.md` (seam list: `runRegenerationBatch(current:)`, `ConfigReadFailureTests`, round 2's new seams)
+  and `development.md` (read failure vs decode failure) hold another session's uncommitted edits. Update
+  them once that work lands.
+- File the arrow-key scroll-into-view issue.
