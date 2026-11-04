@@ -53,7 +53,8 @@ Load assumed: one person, one Mac, ~5–30 tiles; helpers run all day.
   - The unsanitized-name change (step 3) is code-read only: `helperInfoPlist` assigns `appName` as given,
     so a test of it could not fail on the call-site regression (testing.md "A guard must be able to fail").
   - By eye (owner, dev build): App-mode tiles named "🚀" and "Work & Play" show those names in ⌘Tab and
-    their Dock tooltip after Update; a "🚀" tile's folder is `<shortId>.app`.
+    their Dock tooltip after Update; a "🚀" tile's folder is `Dock Tile <shortId>.app` (owner decision after
+    the hands-on check: a bare `<shortId>.app` showed in a macOS permission prompt and said nothing about whose it was).
   - Negative control: drop the fallback → the empty case returns ".app".
 
 ## A2 · Turning analytics off reaches running helpers (audit #7)
@@ -273,3 +274,14 @@ Verify: build; the legacy-path tests in the full suite.
   and `development.md` (read failure vs decode failure) hold another session's uncommitted edits. Update
   them once that work lands.
 - File the arrow-key scroll-into-view issue.
+- **Folder names for emoji / punctuation tile names (owner, 2026-11-04, "work through this later").** macOS
+  permission prompts show the helper's FOLDER name whenever it differs from the display name, so a "🚀" tile
+  asks as "Dock Tile FEE45F76.app" and "Work & Play" as "Work  Play.app". Option to evaluate: keep emoji and
+  most punctuation in folder names (sanitize only path-unsafe characters: `/`, `:`, a leading dot), so the
+  folder matches the tile name and prompts show it. It renames those tiles' folders on their next rebuild,
+  and emoji paths must be verified through codesign, Launch Services, the Dock plist URL and TCC.
+- **A tile holding Downloads (or another protected folder) raises a TCC prompt at helper launch.** Seen in
+  the 2026-11-04 hands-on: the prompt followed "Icon cache prewarmed" — rendering the folder's icon counts as
+  a Downloads access. Predates this branch. Ad-hoc signed helpers are re-identified by cdhash, so the prompt
+  may come back after every rebuild; measure that, then consider a generic folder icon for protected
+  folders, or skipping the prewarm for them.

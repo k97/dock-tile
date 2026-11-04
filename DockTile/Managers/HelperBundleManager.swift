@@ -331,15 +331,17 @@ final class HelperBundleManager {
     }
 
     /// Pure rule for the stem of a helper's folder: the tile name with only letters, digits, `-`, `_`
-    /// and spaces kept, or the tile's short id when that leaves nothing. A name made only of emoji or
+    /// and spaces kept, or "Dock Tile <shortId>" when that leaves nothing. A name made only of emoji or
     /// punctuation used to give `<support>/.app`, a hidden folder no scan found (2026-11-04 audit).
+    /// The product name is there because macOS permission prompts show this folder name for such a
+    /// tile (its display name doesn't match the folder), and a bare id said nothing about whose it was.
     nonisolated static func helperBaseName(name: String, shortId: String) -> String {
         let allowed = CharacterSet.alphanumerics.union(.init(charactersIn: "-_ "))
         let sanitized = name
             .components(separatedBy: allowed.inverted)
             .joined()
             .trimmingCharacters(in: .whitespaces)
-        return sanitized.isEmpty ? shortId : sanitized
+        return sanitized.isEmpty ? "Dock Tile \(shortId)" : sanitized
     }
 
     /// Whether a support-folder entry can be a helper bundle: any `*.app`, plus the bare `.app` that a

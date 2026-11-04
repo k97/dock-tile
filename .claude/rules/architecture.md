@@ -46,7 +46,8 @@ runs in a helper while no bar shows.
 (`<prefix>.<UUID>`), not the folder — so the write path resolves through `preferredHelperPath`:
 clean `<name>.app` when free or already this tile's, else `<name>-<shortId>.app` (pure
 `HelperBundleManager.helperFolderName` seam, guarded by `HelperFolderNameTests`; a name that sanitizes to
-nothing — emoji or punctuation only — falls back to the short id via `helperBaseName`, because it used to
+nothing — emoji or punctuation only — falls back to "Dock Tile <shortId>" via `helperBaseName` (the product name because macOS permission prompts
+show this folder name for such a tile), because it used to
 give a hidden `<support>/.app` no scan found, and `isHelperFolderName` still adopts that legacy folder so
 the tile's next rebuild removes it). Without this the
 second same-named install overwrote the first's `<name>.app` and orphaned it — a broken Dock icon

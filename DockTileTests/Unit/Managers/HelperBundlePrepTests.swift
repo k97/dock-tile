@@ -218,13 +218,13 @@ struct HelperFolderNameTests {
     /// A name of only emoji or punctuation sanitized to "" and gave `<support>/.app`, a hidden folder
     /// that `findExistingHelper` never found (Update, Delete and self-heal all missed the bundle).
     /// Failing value: without the fallback the base is "" and the folder ".app".
-    @Test("A name with nothing to keep falls back to the short id")
+    @Test("A name with nothing to keep falls back to Dock Tile + the short id")
     func emptyBaseFallsBackToShortId() {
-        #expect(HelperBundleManager.helperBaseName(name: "🚀", shortId: "B4EF96A2") == "B4EF96A2")
-        #expect(HelperBundleManager.helperBaseName(name: " !!! ", shortId: "B4EF96A2") == "B4EF96A2")
+        #expect(HelperBundleManager.helperBaseName(name: "🚀", shortId: "B4EF96A2") == "Dock Tile B4EF96A2")
+        #expect(HelperBundleManager.helperBaseName(name: " !!! ", shortId: "B4EF96A2") == "Dock Tile B4EF96A2")
         #expect(HelperBundleManager.helperFolderName(
             baseName: HelperBundleManager.helperBaseName(name: "🚀", shortId: "B4EF96A2"),
-            cleanNameTakenByOther: false, shortId: "B4EF96A2") == "B4EF96A2.app")
+            cleanNameTakenByOther: false, shortId: "B4EF96A2") == "Dock Tile B4EF96A2.app")
     }
 
     @Test("A name with something to keep is sanitized as before")
@@ -264,9 +264,9 @@ struct HelperFolderNameTests {
         #expect(listed == [".app", "Dev.app"])
 
         // Adopted as the tile's existing folder, the legacy `.app` is what the rebuild removes once
-        // the bundle has moved to `<shortId>.app`.
+        // the bundle has moved to `Dock Tile <shortId>.app`.
         let legacy = dir.appendingPathComponent(".app")
-        let moved = dir.appendingPathComponent("B4EF96A2.app")
+        let moved = dir.appendingPathComponent("Dock Tile B4EF96A2.app")
         #expect(HelperBundleManager.oldFolderToRemove(existing: legacy, final: moved) == legacy)
     }
 }
