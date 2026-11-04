@@ -79,11 +79,11 @@ enum LoginTileSpawner {
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601  // matches ConfigurationManager
-        guard let configs = try? decoder.decode([DockTileConfiguration].self, from: data) else {
-            NSLog("🌅 LoginTileSpawner: could not decode configs at %@", url.path)
-            return []
+        let decoded = DockTileConfiguration.decodeTolerantly(data, using: decoder)
+        if decoded.skipped > 0 || decoded.wholeFileUnreadable {
+            NSLog("🌅 LoginTileSpawner: could not decode some configs at %@ (skipped %ld)", url.path, decoded.skipped)
         }
-        return configs.filter { $0.isVisibleInDock }
+        return decoded.tiles.filter { $0.isVisibleInDock }
     }
 
     /// Find a helper `.app` in the support folder whose Info.plist bundle ID matches.

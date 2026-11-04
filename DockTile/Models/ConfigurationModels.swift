@@ -253,6 +253,52 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     }
 }
 
+// MARK: - Tolerant Decoding
+
+/// What `DockTileConfiguration.decodeTolerantly` read from a config file.
+struct TolerantDecode {
+    var tiles: [DockTileConfiguration]
+    /// Elements that failed to decode and were left out.
+    var skipped: Int
+    /// The first decode error (an element's, or the whole file's).
+    var firstError: Error?
+    /// The file is not a JSON array at all (truncated, not JSON, another shape): no tiles.
+    var wholeFileUnreadable: Bool
+}
+
+extension DockTileConfiguration {
+    /// Decode a config file one tile at a time, so one tile this build cannot read (a value from a
+    /// newer build, a hand edit) is skipped instead of failing the whole array. The whole-array
+    /// decode it replaced turned one bad tile into an empty list, and the next save then wrote that
+    /// list over every tile. Every reader of the config file goes through this (`ConfigDecodeToleranceTests`).
+    nonisolated static func decodeTolerantly(_ data: Data, using decoder: JSONDecoder) -> TolerantDecode {
+        let elements: [FailableTile]
+        do {
+            elements = try decoder.decode([FailableTile].self, from: data)
+        } catch {
+            return TolerantDecode(tiles: [], skipped: 0, firstError: error, wholeFileUnreadable: true)
+        }
+        var tiles: [DockTileConfiguration] = []
+        var firstError: Error?
+        for element in elements {
+            switch element.result {
+            case .success(let tile): tiles.append(tile)
+            case .failure(let error): if firstError == nil { firstError = error }
+            }
+        }
+        return TolerantDecode(tiles: tiles, skipped: elements.count - tiles.count,
+                              firstError: firstError, wholeFileUnreadable: false)
+    }
+
+    /// One array element that keeps its own decode error rather than throwing it to the array.
+    private struct FailableTile: Decodable {
+        let result: Result<DockTileConfiguration, Error>
+        init(from decoder: Decoder) throws {
+            result = Result { try DockTileConfiguration(from: decoder) }
+        }
+    }
+}
+
 // MARK: - Saved Glyph
 
 /// A symbol or emoji the tile showed before its Style switched away, with the icon size it had.

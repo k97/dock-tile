@@ -503,22 +503,73 @@ final class ConfigurationManager: ObservableObject {
             return
         }
 
+        let data: Data
         do {
-            let data = try Data(contentsOf: storageURL)
-            configurations = try decoder.decode([DockTileConfiguration].self, from: data)
-            // Seed the listed names from what was loaded. Without this the map is empty and
-            // `displayName(for:)` falls through to the LIVE name, which the editor's auto-save
-            // rewrites on every keystroke — so the sidebar tracked each character until the tile
-            // happened to be actioned once in that session, which is the behaviour this map exists
-            // to prevent.
-            committedNames = Dictionary(configurations.map { ($0.id, $0.name) },
-                                        uniquingKeysWith: { _, latest in latest })
-            print("📂 Loaded \(configurations.count) configuration(s) from \(storageURL.lastPathComponent)")
+            data = try Data(contentsOf: storageURL)
         } catch {
-            print("❌ Failed to load configurations: \(error.localizedDescription)")
-            print("   Starting with empty configuration list")
-            DiagnosticsLog.shared.log("config", "FAILED to load/decode configurations (starting empty): \(error.localizedDescription)")
+            print("❌ Failed to read configurations: \(error.localizedDescription)")
+            DiagnosticsLog.shared.log("config", "FAILED to read configurations (starting empty): \(error.localizedDescription)")
             configurations = []
+            return
+        }
+
+        let decoded = DockTileConfiguration.decodeTolerantly(data, using: decoder)
+        if decoded.skipped > 0 || decoded.wholeFileUnreadable {
+            reportUnreadableConfig(data, decoded)
+        }
+        configurations = decoded.tiles
+        // Seed the listed names from what was loaded. Without this the map is empty and
+        // `displayName(for:)` falls through to the LIVE name, which the editor's auto-save
+        // rewrites on every keystroke — so the sidebar tracked each character until the tile
+        // happened to be actioned once in that session, which is the behaviour this map exists
+        // to prevent.
+        committedNames = Dictionary(configurations.map { ($0.id, $0.name) },
+                                    uniquingKeysWith: { _, latest in latest })
+        print("📂 Loaded \(configurations.count) configuration(s) from \(storageURL.lastPathComponent)")
+    }
+
+    /// The config file holds tiles this build cannot read. The next save writes only the tiles that
+    /// loaded, so FIRST keep the file as it is (`<name>.unreadable-<time>.json` beside it), then
+    /// report. Main app only: helpers also load the config, but never write it.
+    private func reportUnreadableConfig(_ data: Data, _ decoded: TolerantDecode) {
+        guard !AppEnvironment.isHelper else { return }
+        let copyName = keepUnreadableCopy(of: data)
+        let what = decoded.wholeFileUnreadable ? "the whole file" : "\(decoded.skipped) tile(s)"
+        let reason = decoded.firstError.map { String(describing: $0) } ?? "unknown"
+        print("❌ Could not read \(what) in \(storageURL.lastPathComponent): \(reason)")
+        DiagnosticsLog.shared.log("config", "Could not read \(what) (loaded \(decoded.tiles.count)); copy: \(copyName ?? "none"); \(reason)")
+        if let error = decoded.firstError {
+            AnalyticsService.shared.record(error, context: "config_decode", keys: [
+                "skipped": String(decoded.skipped),
+                "whole": String(decoded.wholeFileUnreadable),
+            ])
+        }
+    }
+
+    /// Copy the unreadable file aside, unless the newest earlier copy already holds these exact bytes
+    /// (a skipped tile stays in the file until the next save, so every launch would copy it again).
+    /// Returns the copy's file name; nil when the copy failed. Never throws: the copy is best-effort.
+    private func keepUnreadableCopy(of data: Data) -> String? {
+        let directory = storageURL.deletingLastPathComponent()
+        let stem = storageURL.deletingPathExtension().lastPathComponent
+        let prefix = "\(stem).unreadable-"
+        let earlier = (try? FileManager.default.contentsOfDirectory(atPath: directory.path))?
+            .filter { $0.hasPrefix(prefix) && $0.hasSuffix(".json") }
+            .sorted()  // the timestamp sorts chronologically
+        if let newest = earlier?.last,
+           let existing = try? Data(contentsOf: directory.appendingPathComponent(newest)),
+           existing == data {
+            return newest
+        }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withYear, .withMonth, .withDay, .withTime, .withTimeZone]  // basic, UTC: 20261103T233000Z
+        let name = "\(prefix)\(formatter.string(from: Date())).json"
+        do {
+            try data.write(to: directory.appendingPathComponent(name), options: [.withoutOverwriting])
+            return name
+        } catch {
+            DiagnosticsLog.shared.log("config", "FAILED to keep a copy of the unreadable config: \(error.localizedDescription)")
+            return nil
         }
     }
 

@@ -82,14 +82,17 @@ Ghost mode.
      `AnalyticsService.shared.record(firstError, context: "config_decode", keys: ["skipped": …, "whole": …])`;
    - `configurations = tiles` in every process (empty when the whole file is unreadable).
 3. `LoginTileSpawner` and `HelperAppDelegate` use the seam (tiles only); no copy, no log, no non-fatal.
-4. `DockTileConfiguration.init(from:)`: `symbolEmoji` → `decodeIfPresent … ?? ConfigurationDefaults.symbolEmoji`.
+4. ~~`symbolEmoji` → `decodeIfPresent`~~ — DROPPED 2026-11-04 (owner): the existing contract guard
+   `missingRequiredFieldThrows` keeps every v1 key required on purpose (a tile missing `symbolEmoji` and
+   `iconValue` would load as an SF Symbol named "⭐" and draw nothing). With per-tile decoding such a
+   tile now costs only itself; the test case below pins that instead.
 5. Tests `DockTileTests/Unit/Models/ConfigDecodeToleranceTests.swift` (seam only, no file system, no
    `UserDefaults.standard`). Fixtures must REALLY fail: `LayoutMode`, `TileBackground`, `IconFace` and
    `AppsGridBackground` decode unknown values tolerantly; `IconType` and required v1 keys do not.
    - 3 good tiles → 3 tiles, 0 skipped, `firstError` nil;
    - good, bad (no `id` key), good → the two good tiles in order, skipped 1, `firstError` non-nil;
    - good, unknown enum (`"iconType": "widget"`), good → 2 tiles, skipped 1;
-   - a tile with no `symbolEmoji` key → loads, `iconValue` intact;
+   - a tile with no `symbolEmoji` key → that tile skipped, the other loads;
    - `{"not": "an array"}` and truncated JSON → `wholeFileUnreadable`, 0 tiles.
    Guard check: revert the seam body to `decoder.decode([DockTileConfiguration].self …)` locally once —
    cases 2 and 3 must fail (0 tiles instead of 2) — then restore.

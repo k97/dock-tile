@@ -539,7 +539,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         guard let data = try? Data(contentsOf: url) else { return false }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        guard let configs = try? decoder.decode([DockTileConfiguration].self, from: data) else { return false }
+        let configs = DockTileConfiguration.decodeTolerantly(data, using: decoder).tiles
         return configs.first { $0.bundleIdentifier == bundleId }?.showInAppSwitcher ?? false
     }
 
