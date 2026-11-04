@@ -702,8 +702,13 @@ struct DockTileDetailView: View {
                     DiagnosticsLog.shared.log("dock", "Saved hidden tile \(configToSave.diagnosticName) — no Dock op, Dock NOT restarted")
                 }
 
-                // Save configuration changes (including lastDockIndex)
-                configManager.updateConfiguration(configToSave)
+                // Save the LATEST edits, with the Dock bookkeeping (visibility, Dock index, helper
+                // version) taken from what the action did. The action took seconds and only its
+                // button was disabled, so a rename or an added app saved meanwhile must survive;
+                // saving `configToSave` wrote the pre-action copy over it. Same field split as the
+                // editors' auto-save, so the one seam owns it.
+                let saved = ConfigurationManager.preservingStoredVisibility(editedConfig, stored: configToSave)
+                configManager.updateConfiguration(saved)
 
                 // The user has acted on this tile (added/updated/removed) — retire the one-time
                 // Smart Add provenance banner.
@@ -716,8 +721,8 @@ struct DockTileDetailView: View {
                 }
 
                 // Update local state to match saved config
-                editedConfig = configToSave
-                tileName = configToSave.name
+                editedConfig = saved
+                tileName = saved.name
 
                 // THIS is the moment the sidebar row and title band adopt a rename — see
                 // ConfigurationManager.committedNames.
