@@ -83,7 +83,7 @@ struct IconDepthMetricsTests {
         #expect(IconDepthMetrics.isAtSafeAreaLimit(iconScale: 20, iconType: .sfSymbol) == true)
         // maxSafeRatio / warningThreshold are the documented magnitudes.
         #expect(IconDepthMetrics.maxSafeRatio == 0.60)
-        #expect(IconDepthMetrics.warningThreshold == 0.57)
+        #expect(abs(IconDepthMetrics.warningThreshold(for: .sfSymbol) - 0.57) < 1e-9)
         // 0.78 until the squircle-inscribed-square correction; the geometry is re-derived from
         // rendered pixels in IconPreviewGeometryTests.emojiCeilingFitsTheInscribedSquare.
         #expect(IconDepthMetrics.emojiMaxSafeRatio == 0.67)

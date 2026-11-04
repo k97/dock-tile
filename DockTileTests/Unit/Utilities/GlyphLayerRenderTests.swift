@@ -81,7 +81,7 @@ struct GlyphLayerRenderTests {
         let rendered = try #require(glyphLuminances.max())
         let foreground = violet.nsColors(for: .dark, iconType: .sfSymbol, background: .colour).foreground
         let expected = Self.perceivedLuminance(foreground)
-        let unlifted = Self.perceivedLuminance(try #require(NSColor(hex: "#5F00FF")))
+        let unlifted = Self.perceivedLuminance(NSColor(srgbRed: 0x5F / 255.0, green: 0, blue: 1, alpha: 1))
         let fg = try #require(foreground.usingColorSpace(.sRGB))
         // The seam lifted at all: the shaded glyph bottom clears 3:1 on the near-black tile.
         #expect(ToneMap.contrastRatio(SRGB(r: fg.redComponent, g: fg.greenComponent, b: fg.blueComponent).darkened(by: 0.10),

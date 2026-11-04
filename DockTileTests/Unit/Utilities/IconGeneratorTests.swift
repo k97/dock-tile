@@ -15,14 +15,14 @@ struct IconGeneratorTests {
     func iconRatioScale10SFSymbol() {
         // Access private method via testing the observable behavior
         // We test this indirectly through isAtSafeAreaLimit
-        let isAtLimit = IconGenerator.isAtSafeAreaLimit(iconScale: 10, iconType: .sfSymbol)
+        let isAtLimit = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 10, iconType: .sfSymbol)
         #expect(isAtLimit == false)  // 0.30 is well below 0.57 threshold
     }
 
     @Test("Icon ratio at scale 14 is 0.44 for SF Symbol")
     func iconRatioScale14SFSymbol() {
         // 0.30 + (14-10) * 0.035 = 0.30 + 0.14 = 0.44
-        let isAtLimit = IconGenerator.isAtSafeAreaLimit(iconScale: 14, iconType: .sfSymbol)
+        let isAtLimit = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 14, iconType: .sfSymbol)
         #expect(isAtLimit == false)  // 0.44 is below 0.57 threshold
     }
 
@@ -32,8 +32,8 @@ struct IconGeneratorTests {
         // This is capped at maxSafeRatio (0.60), and 0.545 < 0.57 (warning threshold)
         // Actually: 0.545 < 0.57, so NOT at limit
         // Let's test scale 18: 0.30 + 0.28 = 0.58, which is > 0.57
-        let isAtLimitScale17 = IconGenerator.isAtSafeAreaLimit(iconScale: 17, iconType: .sfSymbol)
-        let isAtLimitScale18 = IconGenerator.isAtSafeAreaLimit(iconScale: 18, iconType: .sfSymbol)
+        let isAtLimitScale17 = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 17, iconType: .sfSymbol)
+        let isAtLimitScale18 = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 18, iconType: .sfSymbol)
 
         // Scale 17 = 0.545, which is below 0.57 threshold
         // Scale 18 = 0.58, which is above 0.57 threshold
@@ -47,8 +47,8 @@ struct IconGeneratorTests {
         // SF Symbol: 0.30 + 0.14 = 0.44
         // Emoji: 0.44 + 0.05 = 0.49
         // Both below threshold
-        let sfAtLimit = IconGenerator.isAtSafeAreaLimit(iconScale: 14, iconType: .sfSymbol)
-        let emojiAtLimit = IconGenerator.isAtSafeAreaLimit(iconScale: 14, iconType: .emoji)
+        let sfAtLimit = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 14, iconType: .sfSymbol)
+        let emojiAtLimit = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 14, iconType: .emoji)
 
         #expect(sfAtLimit == false)
         #expect(emojiAtLimit == false)
@@ -56,8 +56,8 @@ struct IconGeneratorTests {
         // At scale 16:
         // SF Symbol: 0.30 + 0.21 = 0.51
         // Emoji: 0.51 + 0.05 = 0.56 (still below 0.57)
-        let sfAtLimit16 = IconGenerator.isAtSafeAreaLimit(iconScale: 16, iconType: .sfSymbol)
-        let emojiAtLimit16 = IconGenerator.isAtSafeAreaLimit(iconScale: 16, iconType: .emoji)
+        let sfAtLimit16 = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 16, iconType: .sfSymbol)
+        let emojiAtLimit16 = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 16, iconType: .emoji)
 
         #expect(sfAtLimit16 == false)
         #expect(emojiAtLimit16 == false)  // 0.56 < 0.57
@@ -65,24 +65,18 @@ struct IconGeneratorTests {
         // At scale 19:
         // Emoji: 0.615 + 0.05 = 0.665 — under the emoji ceiling's warning threshold
         // (0.78 × 0.95 = 0.741), so no warning; only the top step (22 → 0.77) fires.
-        let emojiAtLimit19 = IconGenerator.isAtSafeAreaLimit(iconScale: 19, iconType: .emoji)
-        let emojiAtLimit22 = IconGenerator.isAtSafeAreaLimit(iconScale: 22, iconType: .emoji)
+        let emojiAtLimit19 = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 19, iconType: .emoji)
+        let emojiAtLimit22 = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 22, iconType: .emoji)
         #expect(emojiAtLimit19 == false)
         #expect(emojiAtLimit22 == true)
     }
 
     // MARK: - Safe Area Limit
 
-    @Test("Safe area limit values are correct")
-    func safeAreaLimitConstants() {
-        #expect(IconGenerator.maxSafeRatio == 0.60)
-        #expect(IconGenerator.warningThreshold == 0.57)
-    }
-
     @Test("isAtSafeAreaLimit returns false for low scales")
     func safeAreaLimitLowScales() {
         for scale in 10...14 {
-            let sfLimit = IconGenerator.isAtSafeAreaLimit(iconScale: scale, iconType: .sfSymbol)
+            let sfLimit = IconDepthMetrics.isAtSafeAreaLimit(iconScale: scale, iconType: .sfSymbol)
             #expect(sfLimit == false, "Scale \(scale) SF Symbol should not be at limit")
         }
     }
@@ -91,7 +85,7 @@ struct IconGeneratorTests {
     func safeAreaLimitHighScales() {
         // Scale 20: 0.30 + 0.35 = 0.65, capped at 0.60
         // 0.60 >= 0.57 = true
-        let sfLimit20 = IconGenerator.isAtSafeAreaLimit(iconScale: 20, iconType: .sfSymbol)
+        let sfLimit20 = IconDepthMetrics.isAtSafeAreaLimit(iconScale: 20, iconType: .sfSymbol)
         #expect(sfLimit20 == true)
     }
 
@@ -219,33 +213,6 @@ struct IconGeneratorTests {
 
             #expect(image.isValid, "Image at scale \(scale) should be valid")
         }
-    }
-
-    // MARK: - Preview Generation
-
-    @Test("generatePreview returns correct default size")
-    func generatePreviewDefaultSize() {
-        let preview = IconGenerator.generatePreview(
-            tintColor: .blue,
-            iconType: .sfSymbol,
-            iconValue: "star.fill", background: .colour
-        )
-
-        #expect(preview.size.width == 80)
-        #expect(preview.size.height == 80)
-    }
-
-    @Test("generatePreview with custom size")
-    func generatePreviewCustomSize() {
-        let preview = IconGenerator.generatePreview(
-            tintColor: .blue,
-            iconType: .sfSymbol,
-            iconValue: "star.fill",
-            background: .colour, size: 160
-        )
-
-        #expect(preview.size.width == 160)
-        #expect(preview.size.height == 160)
     }
 
     // MARK: - ICNS Generation
@@ -380,148 +347,5 @@ struct IconGeneratorTests {
 
         // But .icns should exist
         #expect(FileManager.default.fileExists(atPath: outputURL.path))
-    }
-
-    // MARK: - Legacy Methods
-
-    @Test("Legacy generateIcon method works")
-    func legacyGenerateIcon() {
-        let image = IconGenerator.generateIcon(
-            tintColor: .blue,
-            symbol: "📁",
-            size: CGSize(width: 64, height: 64)
-        )
-
-        #expect(image.isValid)
-    }
-
-    @Test("Legacy generatePreview method works")
-    func legacyGeneratePreview() {
-        let preview = IconGenerator.generatePreview(
-            tintColor: .green,
-            symbol: "⭐"
-        )
-
-        #expect(preview.size.width == 80)
-    }
-
-    @Test("Legacy generateIcns method works")
-    func legacyGenerateIcns() throws {
-        let tempDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("IconGeneratorTests-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-
-        defer {
-            try? FileManager.default.removeItem(at: tempDir)
-        }
-
-        let outputURL = tempDir.appendingPathComponent("legacy.icns")
-
-        try IconGenerator.generateIcns(
-            tintColor: .purple,
-            symbol: "📁",
-            outputURL: outputURL
-        )
-
-        #expect(FileManager.default.fileExists(atPath: outputURL.path))
-    }
-}
-
-// MARK: - IconGeneratorError Tests
-
-@Suite("IconGeneratorError Tests")
-struct IconGeneratorErrorTests {
-
-    @Test("Error descriptions are not empty")
-    func errorDescriptions() {
-        let errors: [IconGeneratorError] = [
-            .imageConversionFailed,
-            .pngExportFailed,
-            .icnsConversionFailed,
-            .colorConversionFailed,
-            .symbolUnresolvable(name: "not.a.real.symbol"),
-            .brandGlyphMissing
-        ]
-
-        for error in errors {
-            #expect(!error.localizedDescription.isEmpty)
-        }
-    }
-
-    /// `error.localizedDescription` on an `any Error` existential (the shape
-    /// `DockTileDetailView`'s generic `catch` actually holds) resolves through the NSError
-    /// bridge, which only reads a real message when the type conforms to `LocalizedError`.
-    /// Without that conformance every case here reads as the generic
-    /// "The operation couldn't be completed." — this proves the real messages actually surface.
-    @Test("localizedDescription on the any-Error existential surfaces the real message, not the NSError default")
-    func localizedDescriptionSurfacesOnErrorExistential() {
-        let error: any Error = IconGeneratorError.colorConversionFailed
-        #expect(error.localizedDescription == "Failed to convert a tile colour to the required colour space")
-    }
-
-    /// The brand-glyph-missing case names a missing bundled resource — a different failure from
-    /// an unresolvable symbol name — so it must not share text with the generic symbol case.
-    @Test("brandGlyphMissing has its own message, distinct from symbolUnresolvable")
-    func brandGlyphMissingHasOwnMessage() throws {
-        let brandMessage = try #require(IconGeneratorError.brandGlyphMissing.errorDescription)
-        let symbolMessage = try #require(IconGeneratorError.symbolUnresolvable(name: "bogus.symbol").errorDescription)
-        #expect(brandMessage != symbolMessage)
-        #expect(symbolMessage.contains("bogus.symbol"))
-    }
-}
-
-// MARK: - IconGenerator Fallback Reason Tests
-
-/// Guards the pure decision of WHICH error a caller reports when an SF Symbol image fails to
-/// resolve — the brand sentinel vs. an ordinary unknown symbol name are different failures
-/// (missing bundled resource vs. bad/unsupported symbol name) and must not be conflated.
-@Suite("IconGenerator Fallback Reason Tests")
-struct IconGeneratorFallbackReasonTests {
-
-    @Test("The brand glyph sentinel name reports brandGlyphMissing")
-    func brandSentinelReportsBrandGlyphMissing() {
-        let reason = IconGenerator.fallbackReason(forUnresolvedSymbol: SFSymbolCatalog.brandSymbolName)
-        #expect(reason == .brandGlyphMissing)
-    }
-
-    @Test("An ordinary unresolved symbol name reports symbolUnresolvable with that name")
-    func ordinarySymbolReportsSymbolUnresolvable() {
-        let reason = IconGenerator.fallbackReason(forUnresolvedSymbol: "not.a.real.symbol")
-        #expect(reason == .symbolUnresolvable(name: "not.a.real.symbol"))
-    }
-}
-
-// MARK: - NSImage Tinting Extension Tests
-
-@Suite("NSImage Tinting Tests")
-struct NSImageTintingTests {
-
-    @Test("Tinted image returns valid image")
-    @MainActor
-    func tintedImageIsValid() {
-        guard let originalImage = NSImage(systemSymbolName: "star.fill", accessibilityDescription: nil) else {
-            Issue.record("Could not create test image")
-            return
-        }
-
-        let tintedImage = originalImage.tinted(with: .red)
-
-        #expect(tintedImage.isValid)
-        #expect(tintedImage.size == originalImage.size)
-    }
-
-    @Test("Tinted image preserves size")
-    @MainActor
-    func tintedImagePreservesSize() {
-        guard let originalImage = NSImage(systemSymbolName: "folder.fill", accessibilityDescription: nil) else {
-            Issue.record("Could not create test image")
-            return
-        }
-
-        let originalSize = originalImage.size
-        let tintedImage = originalImage.tinted(with: .blue)
-
-        #expect(tintedImage.size.width == originalSize.width)
-        #expect(tintedImage.size.height == originalSize.height)
     }
 }

@@ -11,13 +11,6 @@ private func rgba(_ color: Color) -> (r: CGFloat, g: CGFloat, b: CGFloat, a: CGF
     return (c.redComponent, c.greenComponent, c.blueComponent, c.alphaComponent)
 }
 
-/// Sum of the RGB channels — a simple, monotonic proxy for "lightness". The TintColor gradient
-/// invariant is that the TOP stop is always lighter (higher sum) than the BOTTOM stop.
-private func lightness(_ color: Color) -> CGFloat? {
-    guard let c = rgba(color) else { return nil }
-    return c.r + c.g + c.b
-}
-
 // MARK: - TintColor Extended Tests
 
 /// Additional focused tests for TintColor functionality
@@ -25,35 +18,6 @@ private func lightness(_ color: Color) -> CGFloat? {
 struct TintColorExtendedTests {
 
     // MARK: - Preset Color Properties
-
-    @Test("Red preset gradient: red channel dominates and the two stops differ")
-    func redPresetColors() throws {
-        let red = TintColor.preset(.red)
-        let top = try #require(rgba(red.colorTop))
-        let bottom = try #require(rgba(red.colorBottom))
-
-        // Red dominates both stops.
-        #expect(top.r > top.g && top.r > top.b)
-        #expect(bottom.r > bottom.g && bottom.r > bottom.b)
-        // The gradient is not flat.
-        #expect(top != bottom)
-        #expect(red.displayName == "Red")
-    }
-
-    /// Gradient invariant for EVERY preset: the top stop is strictly lighter than the bottom,
-    /// and the two stops are distinct. A regression that flattens or inverts a gradient (e.g. a
-    /// copy-paste error in the colour table) fails here instead of shipping a flat icon.
-    @Test("Every preset's top stop is lighter than its bottom stop")
-    func presetsHaveDistinctGradients() throws {
-        for preset in TintColor.PresetColor.allCases {
-            let color = TintColor.preset(preset)
-            let topLight = try #require(lightness(color.colorTop), "\(preset) colorTop")
-            let bottomLight = try #require(lightness(color.colorBottom), "\(preset) colorBottom")
-
-            #expect(topLight > bottomLight, "\(preset): top should be lighter than bottom")
-            #expect(rgba(color.colorTop)! != rgba(color.colorBottom)!, "\(preset): stops must differ")
-        }
-    }
 
     @Test("PresetColor allCases contains all colors")
     func allCasesComplete() {
@@ -63,23 +27,7 @@ struct TintColorExtendedTests {
 
     // MARK: - Custom Color Properties
 
-    @Test("Custom colorBottom equals the input hex; colorTop is a lighter shade")
-    func customColorBottom() throws {
-        // #FF5733 → r=1.0, g=0x57/255≈0.341, b=0x33/255=0.2
-        let color = TintColor.custom("#FF5733")
-        let bottom = try #require(rgba(color.colorBottom))
-
-        #expect(abs(bottom.r - 1.0) < 0.01)
-        #expect(abs(bottom.g - 0.341) < 0.01)
-        #expect(abs(bottom.b - 0.2) < 0.01)
-
-        // Top is a genuinely lighter shade of the same base.
-        let topLight = try #require(lightness(color.colorTop))
-        let bottomLight = try #require(lightness(color.colorBottom))
-        #expect(topLight > bottomLight)
-    }
-
-    @Test("Custom colorBottom round-trips the input hex across formats", arguments: [
+    @Test("Color(hex:) round-trips a custom colour's hex across formats", arguments: [
         ("#FF0000", 1.0, 0.0, 0.0),
         ("#00FF00", 0.0, 1.0, 0.0),
         ("#0000FF", 0.0, 0.0, 1.0),
@@ -87,7 +35,7 @@ struct TintColorExtendedTests {
         ("#abcdef", 0.6706, 0.8039, 0.9373)        // case-insensitive
     ] as [(String, Double, Double, Double)])
     func customColorVariousFormats(_ hex: String, _ r: Double, _ g: Double, _ b: Double) throws {
-        let comps = try #require(rgba(TintColor.custom(hex).colorBottom))
+        let comps = try #require(rgba(Color(hex: hex)))
         #expect(abs(comps.r - CGFloat(r)) < 0.01, "\(hex) red")
         #expect(abs(comps.g - CGFloat(g)) < 0.01, "\(hex) green")
         #expect(abs(comps.b - CGFloat(b)) < 0.01, "\(hex) blue")

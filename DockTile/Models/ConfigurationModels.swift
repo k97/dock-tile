@@ -472,46 +472,9 @@ enum TintColor: Hashable, Codable {
             }
         }
 
-        /// Primary color for icon background gradient (top) - lighter shade
-        var colorTop: Color { Color(hex: lightHex) }
-
-        /// Secondary color for icon background gradient (bottom) - darker/saturated shade
+        /// The saturated base as a SwiftUI colour (the Customise swatch). The tile's own colours
+        /// all come from `TilePalette`.
         var colorBottom: Color { Color(hex: baseHex) }
-
-        /// Primary SwiftUI Color (uses bottom/saturated color)
-        var color: Color {
-            return colorBottom
-        }
-    }
-
-    // MARK: - Color Properties
-
-    /// Primary color for icon background gradient (top)
-    var colorTop: Color {
-        switch self {
-        case .preset(let preset):
-            return preset.colorTop
-        case .custom(let hex):
-            // For custom colors, create a lighter shade for the top gradient
-            // Using a lighter shade (not opacity) ensures the gradient fills completely
-            let baseColor = Color(hex: hex)
-            return baseColor.lighterShade(by: 0.15)
-        }
-    }
-
-    /// Secondary color for icon background gradient (bottom)
-    var colorBottom: Color {
-        switch self {
-        case .preset(let preset):
-            return preset.colorBottom
-        case .custom(let hex):
-            return Color(hex: hex)
-        }
-    }
-
-    /// SwiftUI Color for UI elements
-    var color: Color {
-        return colorBottom
     }
 
     var displayName: String {

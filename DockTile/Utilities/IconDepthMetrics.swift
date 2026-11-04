@@ -71,9 +71,6 @@ enum IconDepthMetrics {
         iconType == .emoji ? emojiMaxSafeRatio : maxSafeRatio
     }
 
-    /// Threshold for the customiser's "near the edge" warning (95% of the safe area).
-    static let warningThreshold: CGFloat = 0.57
-
     /// Per-type warning threshold — 95% of the type's own ceiling, so the warning means
     /// "near YOUR limit" for emoji too instead of firing across their whole upper range.
     static func warningThreshold(for iconType: IconType) -> CGFloat {

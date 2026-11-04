@@ -587,30 +587,6 @@ struct TintColorTests {
 
         #expect(color == .preset(.blue))
     }
-
-    // MARK: - Color Properties
-
-    @Test("Preset colors have gradient top and bottom")
-    func presetGradientColors() {
-        for preset in TintColor.PresetColor.allCases {
-            let color = TintColor.preset(preset)
-
-            // Just verify they don't crash and return colors
-            _ = color.colorTop
-            _ = color.colorBottom
-            _ = color.color
-        }
-    }
-
-    @Test("Custom colors have gradient top and bottom")
-    func customGradientColors() {
-        let color = TintColor.custom("#FF5733")
-
-        // Just verify they don't crash and return colors
-        _ = color.colorTop
-        _ = color.colorBottom
-        _ = color.color
-    }
 }
 
 // MARK: - LayoutMode Tests

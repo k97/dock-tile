@@ -11,11 +11,6 @@ struct IconPreviewBackgroundTests {
         #expect(DockTileIconPreview.fromConfig(config, size: 24).tileBackground == .mono)
     }
 
-    @Test("Legacy initializers (no config) are Colour")
-    func legacyInitIsColour() {
-        #expect(DockTileIconPreview(tintColor: .blue, iconType: .sfSymbol, iconValue: "star", size: 24).tileBackground == .colour)
-    }
-
     @Test("A forced style wins over a fixed system icon style (canonical Light/Dark previews)")
     func forcedStyleWins() {
         // ClearAutomatic would render Clear in both schemes — the forced pair must still differ.

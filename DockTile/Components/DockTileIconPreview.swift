@@ -77,34 +77,6 @@ struct DockTileIconPreview: View {
         iconStyle == .dark
     }
 
-    // Legacy initializer for backward compatibility
-    init(tintColor: TintColor, symbol: String, size: CGFloat) {
-        self.tintColor = tintColor
-        self.iconType = .emoji
-        self.iconValue = symbol
-        self.iconScale = ConfigurationDefaults.iconScale
-        self.iconWeight = ConfigurationDefaults.iconWeight
-        self.tileBackground = .colour
-        self.size = size
-        self.appsFaceItems = nil
-        self.appsBackground = ConfigurationDefaults.appsBackground
-        self.appsBackgroundColor = ConfigurationDefaults.appsBackgroundColor
-    }
-
-    // New initializer with explicit icon type (legacy without scale)
-    init(tintColor: TintColor, iconType: IconType, iconValue: String, size: CGFloat) {
-        self.tintColor = tintColor
-        self.iconType = iconType
-        self.iconValue = iconValue
-        self.iconScale = ConfigurationDefaults.iconScale
-        self.iconWeight = ConfigurationDefaults.iconWeight
-        self.tileBackground = .colour
-        self.size = size
-        self.appsFaceItems = nil
-        self.appsBackground = ConfigurationDefaults.appsBackground
-        self.appsBackgroundColor = ConfigurationDefaults.appsBackgroundColor
-    }
-
     // Full initializer with icon scale and weight
     init(
         tintColor: TintColor,
@@ -419,26 +391,6 @@ struct DockTileIconPreview: View {
 // MARK: - Convenience Initializers
 
 extension DockTileIconPreview {
-    /// Create preview for Screen 3 (80×80pt) - Legacy emoji support
-    static func small(tintColor: TintColor, symbol: String) -> DockTileIconPreview {
-        DockTileIconPreview(tintColor: tintColor, symbol: symbol, size: 80)
-    }
-
-    /// Create preview for Screen 4 (160×160pt) - Legacy emoji support
-    static func large(tintColor: TintColor, symbol: String) -> DockTileIconPreview {
-        DockTileIconPreview(tintColor: tintColor, symbol: symbol, size: 160)
-    }
-
-    /// Create preview for Screen 3 (80×80pt)
-    static func small(tintColor: TintColor, iconType: IconType, iconValue: String) -> DockTileIconPreview {
-        DockTileIconPreview(tintColor: tintColor, iconType: iconType, iconValue: iconValue, size: 80)
-    }
-
-    /// Create preview for Screen 4 (160×160pt)
-    static func large(tintColor: TintColor, iconType: IconType, iconValue: String) -> DockTileIconPreview {
-        DockTileIconPreview(tintColor: tintColor, iconType: iconType, iconValue: iconValue, size: 160)
-    }
-
     /// Create from a full configuration
     static func fromConfig(_ config: DockTileConfiguration, size: CGFloat) -> DockTileIconPreview {
         DockTileIconPreview(
@@ -612,21 +564,6 @@ extension View {
             )
         }
 
-        HStack(spacing: 20) {
-            DockTileIconPreview.small(tintColor: .orange, symbol: "🎨")
-            DockTileIconPreview.small(tintColor: .red, symbol: "❤️")
-            DockTileIconPreview.small(tintColor: .gray, symbol: "⚙️")
-        }
-
-        HStack(spacing: 20) {
-            DockTileIconPreview.large(
-                tintColor: .green,
-                iconType: .sfSymbol,
-                iconValue: "leaf.fill"
-            )
-            DockTileIconPreview.large(tintColor: .pink, symbol: "🚀")
-        }
-
         DockTileIconPreview(
             tintColor: .blue,
             iconType: .sfSymbol,
@@ -669,20 +606,6 @@ extension View {
             )
         }
 
-        HStack(spacing: 20) {
-            DockTileIconPreview.small(tintColor: .orange, symbol: "🎨")
-            DockTileIconPreview.small(tintColor: .red, symbol: "❤️")
-            DockTileIconPreview.small(tintColor: .gray, symbol: "⚙️")
-        }
-
-        HStack(spacing: 20) {
-            DockTileIconPreview.large(
-                tintColor: .green,
-                iconType: .sfSymbol,
-                iconValue: "leaf.fill"
-            )
-            DockTileIconPreview.large(tintColor: .pink, symbol: "🚀")
-        }
     }
     .padding(60)
     .background(Color(hex: "#1C1C1E"))

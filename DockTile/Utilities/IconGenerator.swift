@@ -16,22 +16,6 @@ import SwiftUI
 @MainActor
 struct IconGenerator {
 
-    // MARK: - Icon Scale Helper
-
-    /// Maximum safe ratio - matches the outer guide circle (~60% of icon bounds).
-    /// Forwarded from the shared `IconDepthMetrics` seam so the baked renderer and the live
-    /// preview read the same value (kept here for existing callers/tests).
-    static let maxSafeRatio: CGFloat = IconDepthMetrics.maxSafeRatio
-
-    /// Threshold for showing warning (95% of max safe ratio). Forwarded from the seam.
-    static let warningThreshold: CGFloat = IconDepthMetrics.warningThreshold
-
-    /// Check if the icon scale is at or near the safe area limit.
-    /// Used by CustomiseTileView to show a visual warning. Delegates to the shared seam.
-    static func isAtSafeAreaLimit(iconScale: Int, iconType: IconType) -> Bool {
-        IconDepthMetrics.isAtSafeAreaLimit(iconScale: iconScale, iconType: iconType)
-    }
-
     // MARK: - Squircle Path Generation
 
     /// Create a continuous corner (superellipse/squircle) path matching SwiftUI's .continuous style
@@ -196,23 +180,6 @@ struct IconGenerator {
         image.addRepresentation(bitmapRep)
 
         return image
-    }
-
-    /// Legacy method for backward compatibility (assumes emoji)
-    static func generateIcon(
-        tintColor: TintColor,
-        symbol: String,
-        size: CGSize
-    ) -> NSImage {
-        return generateIcon(
-            tintColor: tintColor,
-            iconType: .emoji,
-            iconValue: symbol,
-            iconScale: ConfigurationDefaults.iconScale,
-            background: .colour,
-            size: size,
-            iconStyle: IconStyle.current
-        )
     }
 
     // MARK: - Gradient Drawing
@@ -905,23 +872,6 @@ struct IconGenerator {
         }
     }
 
-    /// Legacy method for backward compatibility
-    static func generateIcns(
-        tintColor: TintColor,
-        symbol: String,
-        outputURL: URL
-    ) throws {
-        try generateIcns(
-            tintColor: tintColor,
-            iconType: .emoji,
-            iconValue: symbol,
-            iconScale: ConfigurationDefaults.iconScale,
-            background: .colour,
-            outputURL: outputURL,
-            iconStyle: IconStyle.current
-        )
-    }
-
     // MARK: - PNG Export
 
     private static func saveAsPNG(image: NSImage, url: URL) throws {
@@ -937,49 +887,6 @@ struct IconGenerator {
         }
 
         try pngData.write(to: url)
-    }
-
-    // MARK: - Quick Preview Generation
-
-    /// Generate a preview image for UI display (faster, single size)
-    /// Supports icon style-aware rendering for Default/Dark/Clear/Tinted modes
-    static func generatePreview(
-        tintColor: TintColor,
-        iconType: IconType,
-        iconValue: String,
-        iconScale: Int = ConfigurationDefaults.iconScale,
-        iconWeight: IconWeight = ConfigurationDefaults.iconWeight,
-        background: TileBackground,
-        size: CGFloat = 80,
-        iconStyle: IconStyle = IconStyle.current
-    ) -> NSImage {
-        return generateIcon(
-            tintColor: tintColor,
-            iconType: iconType,
-            iconValue: iconValue,
-            iconScale: iconScale,
-            iconWeight: iconWeight,
-            background: background,
-            size: CGSize(width: size, height: size),
-            iconStyle: iconStyle
-        )
-    }
-
-    /// Legacy method for backward compatibility
-    static func generatePreview(
-        tintColor: TintColor,
-        symbol: String,
-        size: CGFloat = 80
-    ) -> NSImage {
-        return generateIcon(
-            tintColor: tintColor,
-            iconType: .emoji,
-            iconValue: symbol,
-            iconScale: ConfigurationDefaults.iconScale,
-            background: .colour,
-            size: CGSize(width: size, height: size),
-            iconStyle: IconStyle.current
-        )
     }
 }
 

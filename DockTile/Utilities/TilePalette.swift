@@ -43,8 +43,8 @@ struct SRGB: Hashable, Sendable {
         SRGB(r: r * (1 - fraction), g: g * (1 - fraction), b: b * (1 - fraction))
     }
 
-    /// HSB lighten: brightness + amount, saturation − amount × 0.3. Pure mirror of
-    /// `Color.lighterShade(by:)` (custom colours' lighter gradient stop).
+    /// HSB lighten: brightness + amount, saturation − amount × 0.3 (custom colours' lighter
+    /// gradient stop).
     nonisolated func lighterShade(by amount: Double) -> SRGB {
         let (h, s, v) = hsv
         return SRGB.fromHSV(h: h, s: max(0, s - amount * 0.3), v: min(1, v + amount))

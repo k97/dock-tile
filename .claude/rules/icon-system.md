@@ -230,7 +230,7 @@ also calls into.
 
 **Shape**: Continuous corners (squircle) via `RoundedRectangle(.continuous)`, radius = 22.5% of the shape's width. **On the icon grid, like the Tahoe fallback `.icns`** — the shape is inset by `IconDepthMetrics.contentInsetRatio` on a cleared canvas, and the glyph stays measured against the FULL canvas (so the two bakes place it identically). It shipped **full-bleed** through 2.0.2: the Dock scales every icon to one tile size, so a macOS 15 tile drew ~24% larger than every neighbour (feedback 2026-09-30). Guarded by `LegacyIcnsMarginTests` — mid-edge transparent in all four styles, opaque extent equal to a real system icon's (Finder at 1024 px), max-scale glyphs inside the inset shape. The live preview deliberately does NOT inset (a UI slot has no neighbours — see the seam table).
 
-**Background**: Linear gradient from `TintColor.colorTop` to `colorBottom`.
+**Background**: Linear gradient between the tile's two fill stops, from `TilePalette.resolve`.
 
 **Glass effect**: White inner stroke, line width scales proportionally (0.5pt at 160pt). Opacity + width now come from the shared `IconDepthMetrics` seam (see below), not inline constants. Legacy-only — the declarative lean layers carry no stroke or sheen at all.
 
@@ -289,7 +289,7 @@ renderer (`IconGenerator`) and the live preview (`DockTileIconPreview`) so they 
 - **The seam also owns the two things the renderers used to disagree on**: the glyph **size ratio**
   (`glyphSizeRatio`, with the 0.60 SF-Symbol safe-area cap — the preview's inline copy used to omit
   it) and the glass **stroke width** (`strokeLineWidth`, scaled — the preview used a fixed 0.5).
-  `IconGenerator.maxSafeRatio` / `.warningThreshold` / `.isAtSafeAreaLimit` now forward to the seam.
+  Callers read `IconDepthMetrics` directly (the `IconGenerator` forwarders were deleted 2026-11-04).
   Guarded by `IconDepthMetricsTests`.
 - **Same treatment on non-tile squircles**: `SettingsBadgeIcon` (sidebar Settings rows) follows
   the LIVE icon style like the tile icons beside it — `IconStyle.forDisplay` +
@@ -465,7 +465,7 @@ alongside `CFBundleIconFile` — the car is deliberate there, not a leftover.
 
 ## Custom Colour Gradients
 
-Custom colours use `lighterShade(by:)` (increases brightness) for the top gradient — not `opacity()`, which creates semi-transparent colours that leave gaps in CoreGraphics gradient rendering.
+Custom colours use `SRGB.lighterShade(by:)` (`TilePalette`, increases brightness) for the top gradient — not `opacity()`, which creates semi-transparent colours that leave gaps in CoreGraphics gradient rendering.
 
 ## Runtime Icon Updates
 

@@ -30,7 +30,6 @@
 		AAAB0001 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAB0002 /* AboutView.swift */; };
 		AAALB01 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAALB02 /* AppLauncher.swift */; };
 		AAANS01 /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAANS02 /* AnalyticsService.swift */; };
-		AAAPM001 /* AppearanceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAPM002 /* AppearanceManager.swift */; };
 		AACFS001 /* ConfigurationSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFS002 /* ConfigurationSchema.swift */; };
 		AAD57BC8 /* DockTileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADDFDF7 /* DockTileDetailView.swift */; };
 		AADPW002 /* DockPlistWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADPW001 /* DockPlistWatcher.swift */; };
@@ -130,7 +129,6 @@
 		AAAB0002 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		AAALB02 /* AppLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLauncher.swift; sourceTree = "<group>"; };
 		AAANS02 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
-		AAAPM002 /* AppearanceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceManager.swift; sourceTree = "<group>"; };
 		AAC2BA1B /* DockTileIconPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileIconPreview.swift; sourceTree = "<group>"; };
 		AAC45935 /* CustomiseTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomiseTileView.swift; sourceTree = "<group>"; };
 		AAC48362 /* ConfigurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationManager.swift; sourceTree = "<group>"; };
@@ -371,7 +369,6 @@
 		AA624C88 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
-				AAAPM002 /* AppearanceManager.swift */,
 				AAISM002 /* IconStyleManager.swift */,
 				AAC48362 /* ConfigurationManager.swift */,
 				AAANS02 /* AnalyticsService.swift */,
@@ -664,7 +661,6 @@
 				AACFS001 /* ConfigurationSchema.swift in Sources */,
 				AASPGV02 /* SymbolPickerGrid.swift in Sources */,
 				AAEPGV02 /* EmojiPickerGrid.swift in Sources */,
-				AAAPM001 /* AppearanceManager.swift in Sources */,
 				AAISM001 /* IconStyleManager.swift in Sources */,
 				AASTR001 /* AppStrings.swift in Sources */,
 				AAUPC001 /* UpdateController.swift in Sources */,

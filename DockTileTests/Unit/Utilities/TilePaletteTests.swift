@@ -136,8 +136,7 @@ struct TilePaletteTests {
         for (p, light, base) in table {
             #expect(TintColor.preset(p).lightRGB == light, "\(p) light")
             #expect(TintColor.preset(p).baseRGB == base, "\(p) base")
-            let top = try rgb(p.colorTop), bottom = try rgb(p.colorBottom)
-            #expect(abs(top.0 - light.r) < 0.002 && abs(top.1 - light.g) < 0.002 && abs(top.2 - light.b) < 0.002, "\(p) colorTop")
+            let bottom = try rgb(p.colorBottom)
             #expect(abs(bottom.0 - base.r) < 0.002 && abs(bottom.1 - base.g) < 0.002 && abs(bottom.2 - base.b) < 0.002, "\(p) colorBottom")
         }
     }
