@@ -91,7 +91,6 @@ final class LoginItemManager {
 
     /// Register the launcher agent so visible tiles warm at login. Clears the opt-out flag.
     func enable() throws {
-        cleanupLegacyPerTileAgents()
         do {
             try service.register()
         } catch {
@@ -135,36 +134,6 @@ final class LoginItemManager {
     /// Open System Settings → Login Items so the user can approve a held item.
     func openLoginItemsSettings() {
         SMAppService.openSystemSettingsLoginItems()
-    }
-
-    // MARK: - Legacy cleanup
-
-    /// Remove any leftover per-tile LaunchAgent plists written by the earlier approach
-    /// (`~/Library/LaunchAgents/<helperPrefix>.<UUID>.plist`). This is unreleased work,
-    /// so this only ever cleans up developer machines — but it keeps things tidy.
-    private func cleanupLegacyPerTileAgents() {
-        let dir = FileManager.default
-            .urls(for: .libraryDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("LaunchAgents")
-        let prefix = "\(AppEnvironment.helperBundlePrefix)."
-        guard let contents = try? FileManager.default.contentsOfDirectory(
-            at: dir, includingPropertiesForKeys: nil
-        ) else { return }
-
-        for url in contents where url.pathExtension == "plist" {
-            let name = url.deletingPathExtension().lastPathComponent
-            // Match per-tile agents (com.docktile.<UUID>) but NOT the launcher agent.
-            guard name.hasPrefix(prefix), !name.hasSuffix(".tilelauncher") else { continue }
-            let target = "gui/\(getuid())/\(name)"
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-            p.arguments = ["bootout", target]
-            p.standardOutput = FileHandle.nullDevice
-            p.standardError = FileHandle.nullDevice
-            try? p.run(); p.waitUntilExit()
-            try? FileManager.default.removeItem(at: url)
-            print("🧹 LoginItem: removed legacy per-tile agent \(name)")
-        }
     }
 
     private var statusDescription: String {
