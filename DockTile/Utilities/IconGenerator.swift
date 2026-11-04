@@ -862,10 +862,12 @@ struct IconGenerator {
         process.standardError = pipe
 
         try process.run()
+        // Read stderr to EOF BEFORE waiting: a child that fills the pipe while this thread waits
+        // would never exit (development.md).
+        let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
 
         guard process.terminationStatus == 0 else {
-            let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
             let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
             print("iconutil error: \(errorMessage)")
             throw IconGeneratorError.icnsConversionFailed
