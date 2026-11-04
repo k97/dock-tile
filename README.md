@@ -65,7 +65,7 @@ Questions? See the [FAQ](https://docktile.app/faq).
 
 1. **Launch Dock Tile** - Open the app from your Applications folder
 2. **Create a Tile** - Click the "+" button in the sidebar, then pick a Smart Add suggestion or "Create New Tile"
-3. **Add Apps** - Click "+" in the In This Tile section to add apps and folders
+3. **Add Apps** - Click "Add" in the In This Tile section to add apps and folders
 4. **Customise** - Click the tile's icon (or the Customise Tile toggle in the toolbar) to choose its style, icon and colour
 5. **Add to Dock** - Click "Add to Dock" to pin the tile
 6. **Use It** - Click your new tile in the Dock to see your apps!
