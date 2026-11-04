@@ -366,7 +366,8 @@ final class HelperBundleManager {
     /// See docs/dock-tile-display-names.md. Blank values count as absent.
     nonisolated static func dockFileLabel(infoPlist: [String: Any], folderStem: String) -> String {
         for key in ["CFBundleDisplayName", "CFBundleName"] {
-            if let value = infoPlist[key] as? String, !value.isEmpty { return value }
+            // Whitespace-only counts as blank: a name of spaces would otherwise be an empty tooltip.
+            if let value = infoPlist[key] as? String, !value.trimmingCharacters(in: .whitespaces).isEmpty { return value }
         }
         return folderStem
     }

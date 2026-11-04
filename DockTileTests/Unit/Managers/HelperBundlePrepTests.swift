@@ -276,6 +276,14 @@ struct HelperFolderNameTests {
 @Suite("Dock file-label")
 struct DockFileLabelTests {
 
+    /// Bundle names now carry the tile's real name, so a name of only spaces reached the Dock as a
+    /// blank tooltip. Failing value: an `isEmpty`-only check returns "   ".
+    @Test("A whitespace-only bundle name falls back to the folder stem")
+    func whitespaceNameFallsBack() {
+        let plist: [String: Any] = ["CFBundleDisplayName": "   ", "CFBundleName": "   "]
+        #expect(HelperBundleManager.dockFileLabel(infoPlist: plist, folderStem: "B4EF96A2") == "B4EF96A2")
+    }
+
     @Test("Display name wins over a disambiguated folder stem")
     func displayNameBeatsFolderStem() {
         // The shipped bug: the second same-named tile lives in Utils-B4EF96A2.app and the Dock
