@@ -26,11 +26,16 @@ finds ~2 and reads as a broken leg when it is not.
 `MACOSX_DEPLOYMENT_TARGET` in `Base.xcconfig` is the source of truth; the guard fails on any
 drift in: the appcast floor (`MIN_OS` in `generate-appcast-entry.sh`), the macOS 15 CI leg
 (required while the target is below 26, and must be DELETED once it is 26+ — the named deletion
-trigger for the frozen legacy icon path), and every requirement the website states ("Requires
-macOS N", "For macOS N+", schema.org `operatingSystem`). The site said "macOS 26 or later" for
+trigger for the frozen legacy icon path), and every requirement the website and the repo README
+state ("Requires macOS N", "For macOS N+", schema.org `operatingSystem`, README's "macOS N.0
+(Sequoia) or later" and badge). The site said "macOS 26 or later" for
 months while the binary and appcast said 15.0 — macOS 15 users ran a build the site disowned, on
 a path nothing tested, and the 2.0.2 oversized-tile report came from there. Raising the floor is
 therefore a single edit to `Base.xcconfig` plus whatever the guard then lists.
+**When the legacy icon path is deleted, also split the declarative icon install out of
+`HelperBundleManager.swift` into `HelperBundleManager+Icons.swift`** (deferred 2026-11-03: until then
+that section mixes the frozen legacy style swap with the live install and the move would need
+`private` widened). Same rule as `HelperBundleManager+Dock.swift`: a pure move, no visibility change.
 **A website-only push skips app CI (`paths-ignore`), so it can turn this guard red on `main` unseen**:
 79f00bf removed the homepage banner holding "macOS 15+" and the guard failed only when the next
 app branch ran tests (2026-10-31). After a website change to requirement copy, run

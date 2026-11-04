@@ -48,6 +48,7 @@
 		AAPAM01 /* PopoverAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAPAM02 /* PopoverAppearance.swift */; };
 		AAPAV01 /* PopoverAppearanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAPAV02 /* PopoverAppearanceView.swift */; };
 		AAH00001 /* HelperBundleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAH00002 /* HelperBundleManager.swift */; };
+		AAHBD001 /* HelperBundleManager+Dock.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHBD002 /* HelperBundleManager+Dock.swift */; };
 		AAHELP01 /* HelperAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHELP02 /* HelperAppDelegate.swift */; };
 		AAHMM01 /* HelperMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAHMM02 /* HelperMigrationManager.swift */; };
 		AAICND01 /* AppIcon-Dev.icon in Resources */ = {isa = PBXBuildFile; fileRef = AAICND02 /* AppIcon-Dev.icon */; };
@@ -157,6 +158,7 @@
 		AAPAM02 /* PopoverAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverAppearance.swift; sourceTree = "<group>"; };
 		AAPAV02 /* PopoverAppearanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverAppearanceView.swift; sourceTree = "<group>"; };
 		AAH00002 /* HelperBundleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperBundleManager.swift; sourceTree = "<group>"; };
+		AAHBD002 /* HelperBundleManager+Dock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HelperBundleManager+Dock.swift"; sourceTree = "<group>"; };
 		AAHELP02 /* HelperAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperAppDelegate.swift; sourceTree = "<group>"; };
 		AAHMM02 /* HelperMigrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperMigrationManager.swift; sourceTree = "<group>"; };
 		AAICND02 /* AppIcon-Dev.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.icon; path = "AppIcon-Dev.icon"; sourceTree = "<group>"; };
@@ -374,6 +376,7 @@
 				AAC48362 /* ConfigurationManager.swift */,
 				AAANS02 /* AnalyticsService.swift */,
 				AAH00002 /* HelperBundleManager.swift */,
+				AAHBD002 /* HelperBundleManager+Dock.swift */,
 				AAHMM02 /* HelperMigrationManager.swift */,
 				AALGN02 /* LoginItemManager.swift */,
 				AADPW001 /* DockPlistWatcher.swift */,
@@ -642,6 +645,7 @@
 				AATPL001 /* TilePalette.swift in Sources */,
 				AADIP001 /* DeclarativeIconPipeline.swift in Sources */,
 				AAH00001 /* HelperBundleManager.swift in Sources */,
+				AAHBD001 /* HelperBundleManager+Dock.swift in Sources */,
 				AAANS01 /* AnalyticsService.swift in Sources */,
 				AAHMM01 /* HelperMigrationManager.swift in Sources */,
 				AADPW002 /* DockPlistWatcher.swift in Sources */,

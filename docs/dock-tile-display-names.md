@@ -166,7 +166,7 @@ Apple's older text warning the lookup "does incur a performance penalty". It als
 for the tooltip by itself: the Dock keeps whatever `file-label` was written (verified).
 
 **(c) Recommended minimal fix.** In `HelperBundleManager.addToDock(at:atIndex:)`
-([HelperBundleManager.swift](../DockTile/Managers/HelperBundleManager.swift), `file-label` in the new entry) write
+([HelperBundleManager+Dock.swift](../DockTile/Managers/HelperBundleManager+Dock.swift), `file-label` in the new entry) write
 `file-label` from the helper's own `Info.plist` — `CFBundleDisplayName`, else `CFBundleName`, else
 the folder stem — instead of `appPath.deletingPathExtension().lastPathComponent`; the plist is
 already read there for `CFBundleIdentifier`. For every bundle whose folder matches its name this is
