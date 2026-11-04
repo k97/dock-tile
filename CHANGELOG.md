@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.4] - 2026-11-04
+
+### Changed
+
+- **tiles:** Show a tile's real name in ⌘Tab, Force Quit and its Dock tooltip, punctuation and emoji included ("Work & Play" used to read "Work  Play") ([7578fbc](https://github.com/k97/dock-tile/commit/7578fbc))
+- **analytics:** Count launches from the main app's Dock menu like every other launch ([f5898f0](https://github.com/k97/dock-tile/commit/f5898f0))
+
+### Fixed
+
+- **tiles:** Keep edits made while Add to Dock or Update is running; they used to be undone when it finished ([4bea5bc](https://github.com/k97/dock-tile/commit/4bea5bc))
+- **tiles:** Fix deleting a tile while it was being updated leaving it in the Dock with no tile behind it ([64e2a15](https://github.com/k97/dock-tile/commit/64e2a15), [fd3592b](https://github.com/k97/dock-tile/commit/fd3592b))
+- **settings:** Never overwrite the tile settings file when it can't be read. Dock Tile now says so, names the file and quits, leaving every tile as it was ([1c48021](https://github.com/k97/dock-tile/commit/1c48021), [d26f565](https://github.com/k97/dock-tile/commit/d26f565))
+- **tiles:** Fix a tile named only with emoji or punctuation, which Dock Tile could then no longer update or remove ([7578fbc](https://github.com/k97/dock-tile/commit/7578fbc), [9ca7e12](https://github.com/k97/dock-tile/commit/9ca7e12), [baaf7d1](https://github.com/k97/dock-tile/commit/baaf7d1))
+- **dock:** Fix hiding or deleting one tile removing another, broken tile from the Dock instead of letting Dock Tile repair it ([f7b5bc1](https://github.com/k97/dock-tile/commit/f7b5bc1))
+- **popover:** Scroll a long List popover instead of letting it run off the screen ([6cc2658](https://github.com/k97/dock-tile/commit/6cc2658))
+- **dock:** Open folders from a tile's Dock right-click menu, and open the same copy of an app the popover opens ([f5898f0](https://github.com/k97/dock-tile/commit/f5898f0))
+- **analytics:** Stop running tiles collecting as soon as "Share anonymous usage data" is turned off, not after their next update ([38673b0](https://github.com/k97/dock-tile/commit/38673b0), [f71efba](https://github.com/k97/dock-tile/commit/f71efba))
+- **tiles:** Store a custom tile colour exactly as picked ([950722d](https://github.com/k97/dock-tile/commit/950722d))
+- **tiles:** Fix a tile being rebuilt again on the next launch after it was edited ([3622e2d](https://github.com/k97/dock-tile/commit/3622e2d))
+- **popover:** Fix the cursor staying a pointing hand after clicking a popover's settings button ([e2bb65b](https://github.com/k97/dock-tile/commit/e2bb65b))
+- **diagnostics:** Stop the shared diagnostics log growing with every popover opened ([5186159](https://github.com/k97/dock-tile/commit/5186159))
+
 ## [2.6.3] - 2026-10-31
 
 ### Added
