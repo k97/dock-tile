@@ -116,49 +116,49 @@
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dock Tile konnte seine Einstellungsdatei nicht öffnen und wird beendet, ohne sie zu ändern. Deine Kacheln sind also noch darin. Prüfe, ob du %@ öffnen kannst, und öffne Dock Tile dann erneut."
+            "value": "Deine Kacheln wurden nicht geändert. Dock Tile konnte seine Einstellungsdatei nicht öffnen und wird beendet. Prüfe, ob du %@ öffnen kannst, und öffne Dock Tile dann erneut."
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dock Tile couldn't open its settings file and quit without changing it, so your tiles are still in it. Check that you can open %@, then open Dock Tile again."
+            "value": "Your tiles haven't been changed. Dock Tile couldn't open its settings file and will quit. Check that you can open %@, then open Dock Tile again."
           }
         },
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dock Tile couldn't open its settings file and quit without changing it, so your tiles are still in it. Check that you can open %@, then open Dock Tile again."
+            "value": "Your tiles haven't been changed. Dock Tile couldn't open its settings file and will quit. Check that you can open %@, then open Dock Tile again."
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dock Tile couldn't open its settings file and quit without changing it, so your tiles are still in it. Check that you can open %@, then open Dock Tile again."
+            "value": "Your tiles haven't been changed. Dock Tile couldn't open its settings file and will quit. Check that you can open %@, then open Dock Tile again."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dock Tile n’a pas pu ouvrir son fichier de réglages et va se fermer sans le modifier : vos tuiles s’y trouvent toujours. Vérifiez que vous pouvez ouvrir %@, puis rouvrez Dock Tile."
+            "value": "Vos tuiles n’ont pas été modifiées. Dock Tile n’a pas pu ouvrir son fichier de réglages et va se fermer. Vérifiez que vous pouvez ouvrir %@, puis rouvrez Dock Tile."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dock Tileは設定ファイルを開けなかったため、ファイルを変更せずに終了します。タイルはファイルに残っています。%@を開けることを確認してから、もう一度Dock Tileを開いてください。"
+            "value": "タイルは変更されていません。Dock Tileは設定ファイルを開けなかったため、終了します。%@を開けることを確認してから、もう一度Dock Tileを開いてください。"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dock Tile не удалось открыть файл настроек, поэтому программа завершит работу, не изменяя его: ваши плитки по-прежнему в нем. Убедитесь, что вы можете открыть %@, затем снова откройте Dock Tile."
+            "value": "Ваши плитки не изменены. Dock Tile не удалось открыть файл настроек, поэтому программа завершит работу. Убедитесь, что вы можете открыть %@, затем снова откройте Dock Tile."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dock Tile无法打开其设置文件，将退出且不对其做任何更改，你的磁贴仍保存在其中。请确认你可以打开%@，然后再次打开Dock Tile。"
+            "value": "你的磁贴未被更改。Dock Tile无法打开其设置文件，将会退出。请确认你可以打开%@，然后再次打开Dock Tile。"
           }
         }
       }

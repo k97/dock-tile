@@ -54,7 +54,7 @@ enum AppStrings {
         static func configUnreadableMessage(_ path: String) -> String {
             String(format: NSLocalizedString(
                 "alert.configUnreadable.message",
-                value: "Dock Tile couldn't open its settings file and quit without changing it, so your tiles are still in it. Check that you can open %@, then open Dock Tile again.",
+                value: "Your tiles haven't been changed. Dock Tile couldn't open its settings file and will quit. Check that you can open %@, then open Dock Tile again.",
                 comment: "Launch alert message when the tile settings file can't be read; %@ = the file's full path. The app quits when the alert closes."
             ), path)
         }

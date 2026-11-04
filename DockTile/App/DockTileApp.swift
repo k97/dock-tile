@@ -65,7 +65,8 @@ struct DockTileApp: App {
                         let alert = NSAlert()
                         alert.alertStyle = .warning
                         alert.messageText = AppStrings.Alert.configUnreadableTitle
-                        alert.informativeText = AppStrings.Alert.configUnreadableMessage(AppEnvironment.preferencesURL.path)
+                        alert.informativeText = AppStrings.Alert.configUnreadableMessage(
+                            (AppEnvironment.preferencesURL.path as NSString).abbreviatingWithTildeInPath)
                         alert.addButton(withTitle: AppStrings.Alert.configUnreadableQuit)
                         alert.runModal()
                         NSApp.terminate(nil)
