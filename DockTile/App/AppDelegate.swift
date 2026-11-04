@@ -352,7 +352,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                         action: #selector(launchApp(_:)),
                         keyEquivalent: ""
                     )
-                    item.representedObject = appItem.bundleIdentifier
+                    item.representedObject = appItem
                     item.target = self
                     menu.addItem(item)
                 }
@@ -376,21 +376,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         showConfigurationWindow()
     }
 
+    /// The popover's launch path, so folders open and a web app sharing a bundle id opens the copy
+    /// the tile holds — resolving the bundle id here did neither (2026-11-04 audit).
     @objc private func launchApp(_ sender: NSMenuItem) {
-        guard let bundleId = sender.representedObject as? String else { return }
-
-        let workspace = NSWorkspace.shared
-
-        if let appURL = workspace.urlForApplication(withBundleIdentifier: bundleId) {
-            let config = NSWorkspace.OpenConfiguration()
-            workspace.openApplication(at: appURL, configuration: config) { _, error in
-                if let error = error {
-                    print("❌ Failed to launch app: \(error.localizedDescription)")
-                }
-            }
-        } else {
-            print("❌ Could not find application with bundle ID: \(bundleId)")
-        }
+        guard let appItem = sender.representedObject as? AppItem else { return }
+        AppLauncher.launch(appItem, source: "main_dock_menu")
     }
 
     // MARK: - Configuration Access

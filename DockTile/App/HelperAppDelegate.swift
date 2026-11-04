@@ -373,7 +373,7 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
                         action: #selector(launchApp(_:)),
                         keyEquivalent: ""
                     )
-                    item.representedObject = appItem.bundleIdentifier
+                    item.representedObject = appItem
                     item.target = self
                     menu.addItem(item)
                 }
@@ -495,27 +495,11 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         return newest?.url
     }
 
+    /// The popover's launch path (it logs the analytics event), so folders open and a web app sharing
+    /// a bundle id opens the copy the tile holds — resolving the bundle id here did neither.
     @objc private func launchApp(_ sender: NSMenuItem) {
-        guard let bundleId = sender.representedObject as? String else { return }
-
-        AnalyticsService.shared.log(.appLaunchedFromTile, ["source": "context_menu"])
-
-        let workspace = NSWorkspace.shared
-
-        if let appURL = workspace.urlForApplication(withBundleIdentifier: bundleId) {
-            let config = NSWorkspace.OpenConfiguration()
-            workspace.openApplication(at: appURL, configuration: config) { _, error in
-                if let error = error {
-                    print("❌ Failed to launch app: \(error.localizedDescription)")
-                    DiagnosticsLog.shared.log("helper", "App launch FAILED (context menu) \(bundleId): \(error.localizedDescription)")
-                } else {
-                    DiagnosticsLog.shared.log("helper", "Launched app (context menu) \(bundleId)")
-                }
-            }
-        } else {
-            print("❌ Could not find application with bundle ID: \(bundleId)")
-            DiagnosticsLog.shared.log("helper", "App not found (context menu) \(bundleId)")
-        }
+        guard let appItem = sender.representedObject as? AppItem else { return }
+        AppLauncher.launch(appItem, source: "context_menu")
     }
 
     // MARK: - Configuration Access
