@@ -324,7 +324,9 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
             floatingPanel.show(animated: true, withKeyboardFocus: withKeyboardFocus)
         }
         print("   Popover show complete")
-        DiagnosticsLog.shared.log("helper", "Popover shown — \(config?.appItems.count ?? 0) app(s), layout=\(config?.layoutMode.rawValue ?? "?"), keyboard=\(withKeyboardFocus)")
+        // Verbose: one line per open grew the shared log forever for a user who never reopens the
+        // main app, the only process that trims it.
+        DiagnosticsLog.shared.log("helper", "Popover shown — \(config?.appItems.count ?? 0) app(s), layout=\(config?.layoutMode.rawValue ?? "?"), keyboard=\(withKeyboardFocus)", verbose: true)
     }
 
     private func hidePopover() {
