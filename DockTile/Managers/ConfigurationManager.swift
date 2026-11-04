@@ -264,6 +264,10 @@ final class ConfigurationManager: ObservableObject {
     /// overwritten, leaving the config claiming "visible" with nothing pinned. That desync has
     /// shipped once before and does not self-heal until the next launch reconcile.
     ///
+    /// `helperAppVersion` is bookkeeping the editor never owns either: launch migration stamps it in
+    /// the manager after the edit session was created, and a save of the session's old stamp made
+    /// the next launch rebuild the tile and restart the Dock again (2026-11-04 audit).
+    ///
     /// Both editors (Tile Detail and Customise) route their saves through here so the rule has ONE
     /// implementation. `stored == nil` (unknown id) returns the snapshot untouched — `updateConfiguration`
     /// no-ops on an unknown id anyway. Guarded by `VisibilityOwnershipTests`.
@@ -275,6 +279,7 @@ final class ConfigurationManager: ObservableObject {
         var result = edited
         result.isVisibleInDock = stored.isVisibleInDock
         result.lastDockIndex = stored.lastDockIndex
+        result.helperAppVersion = stored.helperAppVersion
         return result
     }
 

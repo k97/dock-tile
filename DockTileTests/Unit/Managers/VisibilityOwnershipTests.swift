@@ -66,6 +66,23 @@ struct VisibilityOwnershipTests {
         #expect(ConfigurationManager.preservingStoredVisibility(edited, stored: stored).lastDockIndex == nil)
     }
 
+    /// Launch migration stamps `helperAppVersion` in the manager AFTER the edit session was created,
+    /// so the session still holds the old stamp. Saving it back made the next launch rebuild the
+    /// tile and restart the Dock again. Failing value: without the seam's stamp line the result
+    /// keeps the editor's "2.6.2".
+    @Test("The stored migration stamp wins over the editor's stale one, nil included")
+    func storedHelperVersionWins() {
+        var edited = config(name: "Work", visible: true, dockIndex: nil)
+        edited.helperAppVersion = "2.6.2"
+        var stored = edited
+        stored.helperAppVersion = "2.6.3"
+
+        #expect(ConfigurationManager.preservingStoredVisibility(edited, stored: stored).helperAppVersion == "2.6.3")
+
+        stored.helperAppVersion = nil
+        #expect(ConfigurationManager.preservingStoredVisibility(edited, stored: stored).helperAppVersion == nil)
+    }
+
     /// An unknown id has nothing to preserve. `updateConfiguration` no-ops on one anyway, so the
     /// snapshot passes through unchanged rather than being silently blanked.
     @Test("With no stored copy the snapshot passes through untouched")
