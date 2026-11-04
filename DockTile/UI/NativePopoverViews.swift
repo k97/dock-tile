@@ -832,6 +832,29 @@ struct ListPopoverView: View {
         configuration?.name ?? AppStrings.appName
     }
 
+    private var appRows: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in
+                ListAppRow(
+                    app: app,
+                    isSelected: selectedIndex == index || menuTargetID == app.id,
+                    metrics: metrics,
+                    highlightOnHover: settings.highlightOnHover,
+                    editing: editing,
+                    itemMenu: itemMenuHooks,
+                    onLaunch: onLaunch
+                )
+                // Force view recreation when icon style changes
+                // This clears NSWorkspace icon cache for this view
+                .id("\(app.id)-\(displayIconStyle.rawValue)")
+                .onTapGesture {
+                    launchAppAt(index: index)
+                }
+                .reorderable(editing, app: app, dragged: $draggedItem)
+            }
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Title header (like native folder name)
@@ -851,30 +874,16 @@ struct ListPopoverView: View {
                     .padding(.vertical, PopoverPanelLayout.listHeaderVerticalPadding)
             }
 
-            // App list
+            // App list — scrolls only past the whole-panel cap (`listRowsScrollHeight`).
             if apps.isEmpty {
                 emptyStateView
+            } else if let rowsHeight = PopoverPanelLayout.listRowsScrollHeight(
+                metrics: metrics, appCount: apps.count, isEditing: editing != nil, hasHeader: !tileName.isEmpty
+            ) {
+                ScrollView(.vertical, showsIndicators: true) { appRows }
+                    .frame(height: rowsHeight)
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(apps.enumerated()), id: \.element.id) { index, app in
-                        ListAppRow(
-                            app: app,
-                            isSelected: selectedIndex == index || menuTargetID == app.id,
-                            metrics: metrics,
-                            highlightOnHover: settings.highlightOnHover,
-                            editing: editing,
-                            itemMenu: itemMenuHooks,
-                            onLaunch: onLaunch
-                        )
-                        // Force view recreation when icon style changes
-                        // This clears NSWorkspace icon cache for this view
-                        .id("\(app.id)-\(displayIconStyle.rawValue)")
-                        .onTapGesture {
-                            launchAppAt(index: index)
-                        }
-                        .reorderable(editing, app: app, dragged: $draggedItem)
-                    }
-                }
+                appRows
             }
 
             // Utility items — the editor drops them: Tile Detail already IS the configurator.
@@ -898,8 +907,9 @@ struct ListPopoverView: View {
                 )
             }
         }
-        // This panel pins only its WIDTH and takes an intrinsic height, so every vertical term here
-        // is mirrored in `PopoverPanelLayout.listPanelSize` for the canvas that frames it.
+        // This panel pins only its WIDTH and takes an intrinsic height (past `gridScrollCap` its rows
+        // scroll at a pinned height instead), so every vertical term here is mirrored in
+        // `PopoverPanelLayout.listPanelSize` for the canvas that frames it.
         .padding(.vertical, PopoverPanelLayout.listOuterVerticalPadding)
         .frame(width: metrics.width)
         // LIQUID GLASS: Transparent SwiftUI background to allow NSVisualEffectView through

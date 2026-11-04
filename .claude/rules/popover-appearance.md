@@ -79,6 +79,12 @@ architecture.md "Sidebar Selection & Empty State" for the title-band chrome). Pe
   is load-bearing — the canvas frames the panel and clips to that frame, and an underestimate cuts
   the panel off. Two copies of the list formula did drift exactly there: the empty-tile case billed
   one 36pt row against a ~110pt empty state, clipping the tile-name header and the hint.
+  **Past the grid's whole-panel cap (600 pt), the shipped list scrolls its rows** at the height
+  `PopoverPanelLayout.listRowsScrollHeight` returns, with the header and utility rows outside the scroll
+  view; `nil` (the panel fits) keeps the intrinsic layout, so lists under the cap are untouched and the
+  over-reserving estimate is pinned only where its slack shortens the scroll area (2026-11-04: a 30-app
+  list ran off a laptop screen). Edit mode never scrolls. Arrow-key selection does not scroll into view
+  (grid and list alike; a follow-up).
 - **Applied to real helper popovers** (per-tile by layout): `LauncherView` routes each helper to
   `StackPopoverView` (grid tiles) or `ListPopoverView` (list tiles) by the tile's own
   `layoutMode`; each reads its own config via `PopoverSettings.load(layout:)` (grid tiles `.grid`,

@@ -94,6 +94,29 @@ struct PopoverPreviewCanvasTests {
         #expect(empty == CGSize(width: 240, height: 96))
     }
 
+    /// A 30-app list ran off a laptop screen with its last rows unreachable: past the grid's 600pt
+    /// whole-panel cap the shipped list scrolls its rows; under it nothing changes. Failing value: a
+    /// seam that always returns nil (no scroll) fails the 40-app case.
+    @Test("The shipped list scrolls its rows only past the 600pt cap")
+    func listRowsScrollOnlyPastTheCap() {
+        let metrics = PopoverMetrics.list(popoverSize: .medium, tileSize: .medium, spacing: .comfortable)
+        func rows(_ count: Int, editing: Bool = false, header: Bool = true) -> CGFloat? {
+            PopoverPanelLayout.listRowsScrollHeight(
+                metrics: metrics, appCount: count, isEditing: editing, hasHeader: header)
+        }
+        // 36pt rows: 32 header + 13 × 36 + 57 utility + 16 padding = 573 fits; 14 apps make 609.
+        #expect(rows(3) == nil)
+        #expect(rows(13) == nil)
+        // 600 − 32 header − 57 utility − 16 padding = 495 of scrolling rows, the panel ending at 600.
+        #expect(rows(14) == 495)
+        #expect(rows(40) == 495)
+        // No title row → the rows get its 32pt: 600 − 57 − 16.
+        #expect(rows(40, header: false) == 527)
+        // The editor never scrolls (Tile Detail does), however long the list.
+        #expect(rows(40, editing: true) == nil)
+        #expect(rows(0) == nil)
+    }
+
     @Test("A cleared tile name drops the title row from the estimate, not just from the panel")
     func naturalListPanelSizeWithoutHeader() {
         // `ListPopoverView` renders its title row only `if !tileName.isEmpty`. Billing for a row the

@@ -384,8 +384,9 @@ enum PopoverPanelLayout {
         return CGSize(width: max(width, gridMinWidth), height: height)
     }
 
-    /// A list panel's intrinsic size. The width is what `ListPopoverView` pins; the height is the
-    /// estimate the canvas must not undershoot.
+    /// A list panel's intrinsic size, uncapped. The width is what `ListPopoverView` pins; the height is
+    /// the estimate the canvas must not undershoot. Past `gridScrollCap` the shipped panel scrolls its
+    /// rows instead (`listRowsScrollHeight`).
     ///
     /// `hasHeader` mirrors `ListPopoverView`'s `if !tileName.isEmpty` — a tile whose name has been
     /// cleared draws no title row, and billing for one leaves a visible gap under the panel.
@@ -418,5 +419,25 @@ enum PopoverPanelLayout {
             + (isEditing ? 0 : listUtilityRowsHeight)
             + listOuterVerticalPadding * 2
         return CGSize(width: metrics.width, height: height)
+    }
+
+    /// Height of the scrolling app-rows area of a shipped list panel that would grow past
+    /// `gridScrollCap` (the grid's whole-panel cap), so the panel ends at the cap with its header and
+    /// utility rows still visible. `nil` when the panel fits — the rows then lay out naturally, so
+    /// every list under the cap renders exactly as before. Only past the cap is the over-reserving
+    /// estimate pinned, where its slack only shortens the scroll area. A 30-app list ran off a laptop
+    /// screen with its last rows unreachable (2026-11-04 audit). Never in the editor, which does not
+    /// scroll (Tile Detail does).
+    nonisolated static func listRowsScrollHeight(
+        metrics: PopoverListMetrics,
+        appCount: Int,
+        isEditing: Bool,
+        hasHeader: Bool
+    ) -> CGFloat? {
+        guard !isEditing, appCount > 0 else { return nil }
+        let full = listPanelSize(metrics: metrics, appCount: appCount, isEditing: false, hasHeader: hasHeader)
+        guard full.height > gridScrollCap else { return nil }
+        let header = hasHeader ? listHeaderHeight : 0
+        return gridScrollCap - header - listUtilityRowsHeight - listOuterVerticalPadding * 2
     }
 }
