@@ -70,6 +70,12 @@ final class ConfigurationManager: ObservableObject {
     // MARK: - Storage
 
     private let storageURL: URL
+
+    /// The config file exists but could not be READ at launch (permissions, an I/O error). Every
+    /// save is then refused — the in-memory list is empty, and writing it would replace every tile —
+    /// and the main window shows an alert and quits (`DockTileApp`). A decode failure is different:
+    /// that file was read, and `reportUnreadableConfig` keeps a copy before the next save.
+    private(set) var readFailed = false
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
@@ -82,11 +88,12 @@ final class ConfigurationManager: ObservableObject {
 
     // MARK: - Initialization
 
-    init() {
+    /// `storageURL` is a parameter for tests only; the app always uses the environment's file.
+    init(storageURL: URL = AppEnvironment.preferencesURL) {
         // Set up storage location using environment-specific filename
         // Dev: ~/Library/Preferences/com.docktile.dev.configs.json
         // Release: ~/Library/Preferences/com.docktile.configs.json
-        self.storageURL = AppEnvironment.preferencesURL
+        self.storageURL = storageURL
 
         // Configure JSON encoder/decoder
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -490,6 +497,10 @@ final class ConfigurationManager: ObservableObject {
 
     /// Save all configurations to JSON file
     private func saveConfigurations() {
+        guard !readFailed else {
+            DiagnosticsLog.shared.log("config", "Save REFUSED — the config file could not be read at launch, and \(configurations.count) tile(s) in memory would replace it")
+            return
+        }
         do {
             let data = try encoder.encode(configurations)
             try data.write(to: storageURL, options: [.atomic])
@@ -512,8 +523,13 @@ final class ConfigurationManager: ObservableObject {
         do {
             data = try Data(contentsOf: storageURL)
         } catch {
+            readFailed = true
             print("❌ Failed to read configurations: \(error.localizedDescription)")
-            DiagnosticsLog.shared.log("config", "FAILED to read configurations (starting empty): \(error.localizedDescription)")
+            DiagnosticsLog.shared.log("config", "FAILED to read configurations — saving is OFF, the file is left untouched: \(error.localizedDescription)")
+            // Main app only, like `reportUnreadableConfig`: helpers load the file too, never save it.
+            if !AppEnvironment.isHelper {
+                AnalyticsService.shared.record(error, context: "config_read")
+            }
             configurations = []
             return
         }

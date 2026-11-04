@@ -58,6 +58,19 @@ struct DockTileApp: App {
                     // Never regenerate helpers or scan under a test host — it runs against the
                     // user's live dev tiles (migration once corrupted one mid-generation).
                     guard !AppEnvironment.isRunningTests else { return }
+                    // The config file exists but couldn't be read: saving is off, and a session that
+                    // can't save could still pin a tile whose config is never written (an orphan).
+                    // Say so once and quit — before migration, so no batch runs.
+                    if configManager.readFailed {
+                        let alert = NSAlert()
+                        alert.alertStyle = .warning
+                        alert.messageText = AppStrings.Alert.configUnreadableTitle
+                        alert.informativeText = AppStrings.Alert.configUnreadableMessage(AppEnvironment.preferencesURL.path)
+                        alert.addButton(withTitle: AppStrings.Alert.configUnreadableQuit)
+                        alert.runModal()
+                        NSApp.terminate(nil)
+                        return
+                    }
                     // Once per launch: a window reopened mid-launch must not start a second batch.
                     guard HelperMigrationManager.beginLaunchMaintenance() else {
                         DiagnosticsLog.shared.log("migration", "Launch maintenance already started this launch — skipped for the reopened window", verbose: true)

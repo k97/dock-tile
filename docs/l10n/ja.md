@@ -9,6 +9,9 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 |---|---|---|---|---|
 | `alert.applyPopover.message` | Dock Tile will rebuild your pinned tiles with the new popover look and briefly restart the Dock. Your other Dock items won't be affected. | Dock Tileは、Dockにあるタイルを新しいポップオーバーの外観で再構築し、Dockを一時的に再起動します。Dock内のほかの項目には影響しません。 | machine | Confirmation message warning the Dock will restart when applying popover settings |
 | `alert.applyPopover.title` | Apply to your Dock tiles? | Dockのタイルに適用しますか? | machine | Confirmation title before rebuilding tiles to apply popover appearance settings |
+| `alert.configUnreadable.message` | Dock Tile couldn't open its settings file and quit without changing it, so your tiles are still in it. Check that you can open %@, then open Dock Tile again. | Dock Tileは設定ファイルを開けなかったため、ファイルを変更せずに終了します。タイルはファイルに残っています。%@を開けることを確認してから、もう一度Dock Tileを開いてください。 | machine | Launch alert message when the tile settings file can't be read; %@ = the file's full path. The app quits when the alert closes. |
+| `alert.configUnreadable.quit` | Quit | 終了 | machine | Only button of the can't-read-tiles launch alert; quits Dock Tile |
+| `alert.configUnreadable.title` | Dock Tile Can't Read Your Tiles | Dock Tileがタイルを読み込めません | machine | Launch alert title: the tile settings file exists but could not be opened; the app quits after it |
 | `alert.deleteTile.message` | This will permanently delete the tile and remove it from the dock. | このタイルは完全に削除され、Dockからも取り除かれます。 | machine | Delete-tile confirmation message |
 | `alert.missingApps.message` | Some apps in your tiles can't be found on this Mac. Remove them from your tiles? | タイル内の一部のアプリがこのMacで見つかりません。タイルから取り除きますか? | machine | Alert message offering to remove uninstalled apps from tiles |
 | `alert.missingApps.title` | Some apps are no longer installed | 一部のアプリがインストールされていません | machine | Alert title when apps referenced by tiles can't be found on disk |

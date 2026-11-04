@@ -9,6 +9,9 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 |---|---|---|---|---|
 | `alert.applyPopover.message` | Dock Tile will rebuild your pinned tiles with the new popover look and briefly restart the Dock. Your other Dock items won't be affected. | Dock Tile将使用新的弹出面板外观重建程序坞中的磁贴，并短暂重新启动程序坞。程序坞中的其他项目不受影响。 | machine | Confirmation message warning the Dock will restart when applying popover settings |
 | `alert.applyPopover.title` | Apply to your Dock tiles? | 要应用到程序坞中的磁贴吗？ | machine | Confirmation title before rebuilding tiles to apply popover appearance settings |
+| `alert.configUnreadable.message` | Dock Tile couldn't open its settings file and quit without changing it, so your tiles are still in it. Check that you can open %@, then open Dock Tile again. | Dock Tile无法打开其设置文件，将退出且不对其做任何更改，你的磁贴仍保存在其中。请确认你可以打开%@，然后再次打开Dock Tile。 | machine | Launch alert message when the tile settings file can't be read; %@ = the file's full path. The app quits when the alert closes. |
+| `alert.configUnreadable.quit` | Quit | 退出 | machine | Only button of the can't-read-tiles launch alert; quits Dock Tile |
+| `alert.configUnreadable.title` | Dock Tile Can't Read Your Tiles | Dock Tile无法读取你的磁贴 | machine | Launch alert title: the tile settings file exists but could not be opened; the app quits after it |
 | `alert.deleteTile.message` | This will permanently delete the tile and remove it from the dock. | 此操作将永久删除该磁贴，并将其从程序坞中移除。 | machine | Delete-tile confirmation message |
 | `alert.missingApps.message` | Some apps in your tiles can't be found on this Mac. Remove them from your tiles? | 你的磁贴中有些App在这台Mac上找不到了。要将它们从磁贴中移除吗？ | machine | Alert message offering to remove uninstalled apps from tiles |
 | `alert.missingApps.title` | Some apps are no longer installed | 部分App已不再安装 | machine | Alert title when apps referenced by tiles can't be found on disk |

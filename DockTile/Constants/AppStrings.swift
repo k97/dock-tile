@@ -46,6 +46,23 @@ enum AppStrings {
     // MARK: - Alert Messages
 
     enum Alert {
+        static let configUnreadableTitle = NSLocalizedString(
+            "alert.configUnreadable.title",
+            value: "Dock Tile Can't Read Your Tiles",
+            comment: "Launch alert title: the tile settings file exists but could not be opened; the app quits after it"
+        )
+        static func configUnreadableMessage(_ path: String) -> String {
+            String(format: NSLocalizedString(
+                "alert.configUnreadable.message",
+                value: "Dock Tile couldn't open its settings file and quit without changing it, so your tiles are still in it. Check that you can open %@, then open Dock Tile again.",
+                comment: "Launch alert message when the tile settings file can't be read; %@ = the file's full path. The app quits when the alert closes."
+            ), path)
+        }
+        static let configUnreadableQuit = NSLocalizedString(
+            "alert.configUnreadable.quit",
+            value: "Quit",
+            comment: "Only button of the can't-read-tiles launch alert; quits Dock Tile"
+        )
         static let deleteTileMessage = NSLocalizedString(
             "alert.deleteTile.message",
             value: "This will permanently delete the tile and remove it from the dock.",
