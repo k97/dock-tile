@@ -41,7 +41,7 @@ struct HelperBuildExclusionTests {
     func refusalIsItsOwnError() {
         #expect(HelperBundleError.bundleBuildInProgress.errorDescription == AppStrings.Error.bundleBuildInProgress)
         let others = [HelperBundleError.bundleCopyFailed, .codesignFailed, .appTranslocated,
-                      .mainAppNotFound, .infoPlistReadFailed, .infoPlistWriteFailed]
+                      .infoPlistReadFailed, .infoPlistWriteFailed]
         for other in others {
             #expect(other.errorDescription != AppStrings.Error.bundleBuildInProgress)
         }

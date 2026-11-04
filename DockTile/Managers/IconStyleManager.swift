@@ -70,23 +70,13 @@ enum IconStyle: String, CaseIterable, Sendable {
         return resolve(preferencesValue: string, isDarkMode: isDarkMode)
     }
 
-    /// Convert from UserDefaults value to IconStyle
-    /// Known macOS Tahoe values (as of 2026-02):
-    /// - nil or not set = Default (colorful)
-    /// - "RegularAutomatic" = Automatic — follows system appearance (Dark → dark icons)
-    /// - "RegularDark" = Dark (explicit)
-    /// - "RegularLight" = Light/Default (explicit)
-    /// - "ClearAutomatic" = Clear
-    /// - "TintedAutomatic" = Tinted
-    static func from(preferencesValue: String?) -> IconStyle {
-        from(preferencesValue: preferencesValue, isDarkMode: systemAppearanceIsDark)
-    }
-
-    /// Strict variant of `from(preferencesValue:)`, reading the live system appearance.
-    /// Returns `nil` for an unrecognised string — see `resolve(preferencesValue:isDarkMode:)`.
-    static func resolve(preferencesValue: String?) -> IconStyle? {
-        resolve(preferencesValue: preferencesValue, isDarkMode: systemAppearanceIsDark)
-    }
+    // Known macOS Tahoe values (as of 2026-02; the observed set lives in IconStyleResolveTests):
+    // - nil or not set = Default (colorful)
+    // - "RegularAutomatic" = Automatic — follows system appearance (Dark → dark icons)
+    // - "RegularDark" = Dark (explicit)
+    // - "RegularLight" = Light/Default (explicit)
+    // - "ClearAutomatic" = Clear
+    // - "TintedAutomatic" = Tinted
 
     /// SEEDED mapping seam: like `resolve(preferencesValue:isDarkMode:)` but falls back to
     /// `.defaultStyle` for an unrecognised value. Correct only where an INITIAL style must be

@@ -648,11 +648,6 @@ struct DockTileDetailView: View {
                 // editedConfig.name is already synced with tileName on every keystroke
                 var configToSave = editedConfig
 
-                // Check if showInAppSwitcher changed (requires helper restart)
-                // Compare against the stored config in manager, not the stale `config` property
-                let originalConfig = configManager.configuration(for: editedConfig.id)
-                let appSwitcherChanged = originalConfig?.showInAppSwitcher != configToSave.showInAppSwitcher
-
                 // Resolve the action from the toggle + actual Dock presence. The saveOnly case
                 // (hidden AND not pinned) must never reach HelperBundleManager — there is no
                 // Dock work to do, and reaching it was the "Dock restarts on every Done" bug.
@@ -713,12 +708,6 @@ struct DockTileDetailView: View {
                 // The user has acted on this tile (added/updated/removed) — retire the one-time
                 // Smart Add provenance banner.
                 configManager.clearSmartAddProvenance(configToSave.id)
-
-                // If only showInAppSwitcher changed but tile was already visible,
-                // we need to restart the helper to pick up the new activation policy
-                if appSwitcherChanged && isCurrentlyInDock && configToSave.isVisibleInDock {
-                    print("🔄 App Switcher setting changed - helper was restarted")
-                }
 
                 // Update local state to match saved config
                 editedConfig = saved

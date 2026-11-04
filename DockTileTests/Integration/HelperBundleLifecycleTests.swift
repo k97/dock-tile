@@ -119,16 +119,6 @@ struct DockIntegrationTests {
 
         #expect(result == nil)
     }
-
-    @Test("isInDock returns false for non-existent path")
-    func isInDockReturnsFalse() async {
-        let manager = HelperBundleManager.shared
-        let fakePath = URL(fileURLWithPath: "/Applications/NonExistentApp.app")
-
-        let result = await manager.isInDock(at: fakePath)
-
-        #expect(result == false)
-    }
 }
 
 // MARK: - Icon Generation Integration Tests

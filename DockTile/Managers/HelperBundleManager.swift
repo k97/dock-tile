@@ -1505,50 +1505,6 @@ final class HelperBundleManager {
         addToDock(at: helperPath(for: config), atIndex: index)
     }
 
-    /// Remove app from Dock (by path)
-    /// Uses CFPreferences API (industry standard - same as dockutil) for reliable sync
-    func removeFromDock(at appPath: URL) {
-        print("📌 Removing from Dock: \(appPath.lastPathComponent)")
-
-        // Read current persistent-apps using CFPreferences
-        let dockAppId = "com.apple.dock" as CFString
-        // Fresh read before mutating persistent-apps (avoid a stale-cache read-modify-write).
-        CFPreferencesAppSynchronize(dockAppId)
-        guard let currentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
-            print("   ⚠️ Could not read persistent-apps from CFPreferences")
-            return
-        }
-
-        // Filter out the app
-        let appName = appPath.lastPathComponent
-        let filteredApps = currentApps.filter { entry in
-            if let tileData = entry["tile-data"] as? [String: Any],
-               let fileData = tileData["file-data"] as? [String: Any],
-               let path = fileData["_CFURLString"] as? String {
-                return !path.contains(appName)
-            }
-            return true
-        }
-
-        if filteredApps.count < currentApps.count {
-            // Write using CFPreferences API
-            CFPreferencesSetAppValue(
-                "persistent-apps" as CFString,
-                filteredApps as CFArray,
-                dockAppId
-            )
-
-            if CFPreferencesAppSynchronize(dockAppId) {
-                print("   ✓ Removed from Dock via CFPreferences")
-                restartDock()
-            } else {
-                print("   ⚠️ CFPreferences sync failed")
-            }
-        } else {
-            print("   ✓ Was not in Dock")
-        }
-    }
-
     /// `killall` arguments for every Dock restart: SIGKILL, so the dying Dock cannot save its
     /// stale persistent-apps over the write we just made (SIGTERM lost 14/14 writes within 2.5 s
     /// of a restart, SIGKILL kept 13/13 — docs/dock-modification-prior-art.md §6). launchd
@@ -2087,7 +2043,6 @@ enum HelperBundleError: Error, LocalizedError {
     case infoPlistWriteFailed
     case bundleCopyFailed
     case codesignFailed
-    case mainAppNotFound
     /// The app is running from an App Translocation mount (quarantined + launched from e.g.
     /// ~/Downloads), so it cannot copy itself as a helper template. Actionable: move to /Applications.
     case appTranslocated
@@ -2108,8 +2063,6 @@ enum HelperBundleError: Error, LocalizedError {
             return AppStrings.Error.failedToCopyBundle
         case .codesignFailed:
             return AppStrings.Error.failedToCodeSign
-        case .mainAppNotFound:
-            return AppStrings.Error.mainAppNotFound
         case .appTranslocated:
             return AppStrings.Error.appTranslocated
         case .bundleBuildInProgress:

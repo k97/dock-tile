@@ -895,14 +895,12 @@ struct ListPopoverView: View {
                 ListMenuRow(
                     icon: "gearshape",
                     title: AppStrings.Menu.configure,
-                    hasSubmenu: false,
                     action: openConfigurator
                 )
 
                 ListMenuRow(
                     icon: "folder",
                     title: AppStrings.Menu.openInFinder,
-                    hasSubmenu: false,
                     action: openInFinder
                 )
             }
@@ -1114,7 +1112,6 @@ struct ListAppRow: View {
 struct ListMenuRow: View {
     let icon: String
     let title: String
-    let hasSubmenu: Bool
     let action: () -> Void
 
     @State private var isHovered = false
@@ -1132,12 +1129,6 @@ struct ListMenuRow: View {
                     .foregroundStyle(.primary)
 
                 Spacer()
-
-                if hasSubmenu {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 4)

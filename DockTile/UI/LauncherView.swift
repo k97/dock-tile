@@ -28,24 +28,6 @@ extension Notification.Name {
 
 struct LauncherView: View {
 
-    // MARK: - Design Tokens (Kept for backwards compatibility)
-
-    enum DesignTokens {
-        // Colors
-        static let background = Color(hex: "#F5F5F7").opacity(0.8)
-        static let textColor = Color(hex: "#1D1D1F")
-        static let strokeColor = Color.white.opacity(0.5)
-
-        // Spacing
-        static let gridPadding: CGFloat = 16
-        static let itemSpacing: CGFloat = 12
-        static let cornerRadius: CGFloat = 24
-
-        // Typography
-        static let appNameSize: CGFloat = 11
-        static let iconSize: CGFloat = 48
-    }
-
     // MARK: - Configuration
 
     let configuration: DockTileConfiguration?

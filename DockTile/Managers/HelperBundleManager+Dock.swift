@@ -6,7 +6,7 @@
 //  HelperBundleManager.swift (2026-11-04) so the Dock side can be read on its own. Pure move.
 //
 //  Kept in HelperBundleManager.swift on purpose, because they use members that are private to it:
-//  removeFromDockPlist, refreshDockEntry, removeFromDock(at:), restartDock, dockRestartArguments,
+//  removeFromDockPlist, refreshDockEntry, restartDock, dockRestartArguments,
 //  and the verified restart (it mutates the private in-flight sets).
 //
 //  Swift 6 - Strict Concurrency
@@ -30,29 +30,6 @@ extension HelperBundleManager {
     //
     // The Dock stores persistent apps in com.apple.dock → "persistent-apps" array.
     // Each entry has: tile-data → { bundle-identifier, file-data → { _CFURLString } }
-
-    /// Check if app is already in Dock (by path)
-    func isInDock(at appPath: URL) -> Bool {
-        let dockAppId = "com.apple.dock" as CFString
-        // Force cfprefsd to pull the latest on-disk state before reading ANOTHER app's domain —
-        // a cold/stale cache (notably right after login, when the Dock has just repopulated) would
-        // otherwise miss genuinely-pinned tiles and silently skip them during migration.
-        CFPreferencesAppSynchronize(dockAppId)
-        guard let persistentApps = CFPreferencesCopyAppValue("persistent-apps" as CFString, dockAppId) as? [[String: Any]] else {
-            return false
-        }
-
-        let appName = appPath.lastPathComponent
-        return persistentApps.contains { entry in
-            if let tileData = entry["tile-data"] as? [String: Any],
-               let fileData = tileData["file-data"] as? [String: Any],
-               let path = fileData["_CFURLString"] as? String {
-                // Check if path contains our app name
-                return path.contains(appName)
-            }
-            return false
-        }
-    }
 
     /// Find the index of an app in the Dock by bundle ID
     /// Returns nil if not found

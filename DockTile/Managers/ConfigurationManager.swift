@@ -361,51 +361,6 @@ final class ConfigurationManager: ObservableObject {
         return duplicate
     }
 
-    // MARK: - App Item Management
-
-    /// Add an app to a configuration
-    func addAppItem(_ item: AppItem, to configId: UUID) {
-        guard let index = configurations.firstIndex(where: { $0.id == configId }) else {
-            print("⚠️ Configuration not found: \(configId)")
-            return
-        }
-
-        configurations[index].appItems.append(item)
-        saveConfigurations()
-
-        DiagnosticsLog.shared.log("tile", "Added \(item.isFolder ? "folder" : "app") '\(item.name)' to '\(configurations[index].name)' (\(configurations[index].appItems.count) item(s))")
-        print("➕ Added app '\(item.name)' to configuration: \(configurations[index].name)")
-    }
-
-    /// Remove an app from a configuration
-    func removeAppItem(_ itemId: UUID, from configId: UUID) {
-        guard let configIndex = configurations.firstIndex(where: { $0.id == configId }) else {
-            print("⚠️ Configuration not found: \(configId)")
-            return
-        }
-
-        let removed = configurations[configIndex].appItems.first { $0.id == itemId }
-        configurations[configIndex].appItems.removeAll { $0.id == itemId }
-        saveConfigurations()
-
-        DiagnosticsLog.shared.log("tile", "Removed item '\(removed?.name ?? "unknown")' from \(configurations[configIndex].diagnosticName) (\(configurations[configIndex].appItems.count) item(s) left)")
-        print("➖ Removed app from configuration: \(configurations[configIndex].name)")
-    }
-
-    /// Reorder apps in a configuration
-    func reorderAppItems(from source: IndexSet, to destination: Int, in configId: UUID) {
-        guard let configIndex = configurations.firstIndex(where: { $0.id == configId }) else {
-            print("⚠️ Configuration not found: \(configId)")
-            return
-        }
-
-        configurations[configIndex].appItems.move(fromOffsets: source, toOffset: destination)
-        saveConfigurations()
-
-        DiagnosticsLog.shared.log("tile", "Reordered items in \(configurations[configIndex].diagnosticName)", verbose: true)
-        print("🔄 Reordered apps in configuration: \(configurations[configIndex].name)")
-    }
-
     // MARK: - Missing App Detection
 
     /// Sweep every tile's apps and flag the ones whose underlying app/folder is no longer
@@ -808,11 +763,5 @@ final class ConfigurationManager: ObservableObject {
             self?.syncDockVisibility()
         }
         dockWatcher?.startWatching()
-    }
-
-    /// Stop watching for Dock changes (call on app termination if needed)
-    func stopDockWatcher() {
-        dockWatcher?.stopWatching()
-        dockWatcher = nil
     }
 }

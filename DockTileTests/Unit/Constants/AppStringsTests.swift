@@ -230,7 +230,6 @@ struct AppStringsTests {
         #expect(!AppStrings.PopoverOption.editingNoAppsSubtitle.isEmpty)
 
         // Error messages
-        #expect(!AppStrings.Error.mainAppNotFound.isEmpty)
         #expect(!AppStrings.Error.failedToReadInfoPlist.isEmpty)
         #expect(!AppStrings.Error.failedToWriteInfoPlist.isEmpty)
         #expect(!AppStrings.Error.failedToCopyBundle.isEmpty)

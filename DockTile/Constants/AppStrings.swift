@@ -511,12 +511,6 @@ enum AppStrings {
 
         // MARK: Popover Appearance controls
 
-        static let popoverLayout = NSLocalizedString(
-            "label.popover.layout",
-            value: "Layout",
-            comment: "Label for the Grid/List preview toggle in popover settings"
-        )
-
         static let popoverSize = NSLocalizedString(
             "label.popover.size",
             value: "Popover Size",
@@ -827,12 +821,6 @@ enum AppStrings {
             "settings.dockLock.accessibilityNeededDetail",
             value: "Dock Tile needs Accessibility access to keep the Dock in place. Turn on Dock Tile in System Settings.",
             comment: "Explanation of why Accessibility access is needed"
-        )
-
-        static let dockLockAccessibilityGranted = NSLocalizedString(
-            "settings.dockLock.accessibilityGranted",
-            value: "Accessibility access granted",
-            comment: "Status shown when Accessibility permission is granted"
         )
 
         static let dockLockOpenSettings = NSLocalizedString(
@@ -1254,12 +1242,6 @@ enum AppStrings {
             comment: "Footer note stating Smart Add suggestions are computed on-device only"
         )
 
-        static let settingsSectionHeader = NSLocalizedString(
-            "smartAdd.settings.sectionHeader",
-            value: "Smart Add",
-            comment: "General settings section header for the Smart Add toggle"
-        )
-
         static let settingsToggleTitle = NSLocalizedString(
             "smartAdd.settings.toggleTitle",
             value: "Suggest tiles from my apps",
@@ -1484,12 +1466,6 @@ enum AppStrings {
 
     /// Error messages shown to users (not debug logs)
     enum Error {
-        static let mainAppNotFound = NSLocalizedString(
-            "error.mainAppNotFound",
-            value: "Main Dock Tile.app not found",
-            comment: "Error when main app bundle cannot be found"
-        )
-
         static let failedToReadInfoPlist = NSLocalizedString(
             "error.failedToReadInfoPlist",
             value: "Failed to read Info.plist",
