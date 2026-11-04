@@ -280,8 +280,9 @@ Verify: build; the legacy-path tests in the full suite.
   most punctuation in folder names (sanitize only path-unsafe characters: `/`, `:`, a leading dot), so the
   folder matches the tile name and prompts show it. It renames those tiles' folders on their next rebuild,
   and emoji paths must be verified through codesign, Launch Services, the Dock plist URL and TCC.
-- **A tile holding Downloads (or another protected folder) raises a TCC prompt at helper launch.** Seen in
+- **A tile holding Downloads (or another protected folder) raises a TCC prompt at helper launch** (issue #36). Seen in
   the 2026-11-04 hands-on: the prompt followed "Icon cache prewarmed" — rendering the folder's icon counts as
-  a Downloads access. Predates this branch. Ad-hoc signed helpers are re-identified by cdhash, so the prompt
-  may come back after every rebuild; measure that, then consider a generic folder icon for protected
-  folders, or skipping the prewarm for them.
+  a Downloads access. Predates this branch. **Confirmed by the owner: the prompt comes back after EVERY
+  Update** (ad-hoc signed helpers are re-identified by cdhash, so each rebuild is a new identity to TCC).
+  Options: a generic folder icon for protected folders, skipping the prewarm for them, or a stable
+  designated requirement for helpers.
