@@ -296,7 +296,9 @@ final class HelperMigrationManager {
         _ = await helperManager.restartDockAndVerify(expectations, ownedBundleIds: [])
 
         // Relaunch any regenerated helper that is not running (each swap already launched its own).
-        for config in regeneratedConfigs {
+        // Re-checked here: a tile deleted during the verified restart above is still in
+        // `regeneratedConfigs`, and relaunching it could start a helper after its bundle is gone.
+        for config in regeneratedConfigs where configManager.configuration(for: config.id) != nil {
             helperManager.launchHelperIfExists(for: config)
         }
     }

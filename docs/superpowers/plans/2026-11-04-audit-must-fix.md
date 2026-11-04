@@ -204,6 +204,21 @@ Verify: new `ConfigReadFailureTests` (serialized, temp dir resolved with `realpa
   bytes are unchanged; then `chmod 600` it back.
 - `python3 -I -m unittest discover -s Scripts/l10n -p 'test_*.py'` and `python3 -I Scripts/l10n/l10n.py check` green.
 
+## Regression pass (owner-approved 2026-11-04)
+
+An independent caller-by-caller review of `main...d26f565` found no regression and two gaps that predate
+the branch:
+- **B, closed:** the batch's relaunch loop used the list read before its verified restart, so a tile
+  deleted during that restart could be relaunched after the uninstall's quits (`openApplication` is
+  async). The loop now skips tiles whose config is gone.
+- **A, accepted:** Hide (`.remove`) and Done (`.saveOnly`) save the session's `helperAppVersion`, which
+  can predate the launch migration's stamp. No effect: the tile is hidden, and migration treats a hidden
+  tile as `stampOnly` (no rebuild, no Dock restart). Revisit if hidden tiles are ever rebuilt on launch.
+
+Then: CI on both macOS legs, the full suite on the tip, a signed rebuild, and three hands-on checks (owner
+clicks, the agent reads the dev log and config): delete during Popover Apply, rename during Update, and a
+`chmod 000` dev config at launch.
+
 ## Whole-round verification
 
 1. Build Debug: `xcodebuild -project DockTile.xcodeproj -scheme DockTile -configuration Debug build`.
