@@ -66,7 +66,7 @@ pinned tile's label. Existing wrong labels self-heal on the next version-bump mi
 
 **Runtime** (`HelperAppDelegate`): Sets activation policy based on Ghost/App mode, shows NSPopover on click.
 
-**Deletion** (`HelperBundleManager.uninstallHelper`): Quits helper → removes from Dock plist → deletes bundle → restarts Dock. Uses `async Task.sleep` (not sync `Thread.sleep`).
+**Deletion** (`HelperBundleManager.uninstallHelper`): Waits out any in-flight Dock operation on the tile (build, removal, verification) → quits helper → removes from Dock plist → deletes bundle → quits again → restarts Dock. Uses `async Task.sleep` (not sync `Thread.sleep`). **The wait is the fix, not a refusal (critical, 2026-11-04)**: `deleteConfiguration` removes the config before the uninstall runs, so a build that finished after the delete swapped its bundle back in and pinned a helper no config owned; a batch likewise re-reads each tile at its turn (`runRegenerationBatch(current:)`) and skips a deleted one.
 
 ## Ghost Mode vs App Mode
 

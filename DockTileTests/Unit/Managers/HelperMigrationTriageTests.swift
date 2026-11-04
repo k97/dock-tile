@@ -7,6 +7,7 @@
 //  Exercises the pure `HelperMigrationManager.classifyForMigration(...)` seam.
 //
 
+import Foundation
 import Testing
 @testable import Dock_Tile
 
@@ -75,6 +76,11 @@ private enum BatchTestError: Error { case boom }
 @MainActor
 struct HelperMigrationBatchTests {
 
+    /// `current` over a fixed list — the batch's view of the live configs.
+    private static func lookup(_ configs: [DockTileConfiguration]) -> (UUID) -> DockTileConfiguration? {
+        { id in configs.first { $0.id == id } }
+    }
+
     /// THE convergence invariant: a config that FAILS to regenerate must NOT be stamped, so the
     /// next launch retries it (a transient failure — killed mid-generation, a momentary FS error —
     /// heals instead of being permanently marked "migrated" while broken). Only successes are
@@ -86,6 +92,7 @@ struct HelperMigrationBatchTests {
 
         let outcome = await HelperMigrationManager.runRegenerationBatch(
             [ok, bad],
+            current: Self.lookup([ok, bad]),
             regenerate: { config in
                 if config.name == "bad-tile" { throw BatchTestError.boom }
             }
@@ -102,7 +109,7 @@ struct HelperMigrationBatchTests {
         let b = DockTileConfiguration(name: "b")
 
         let outcome = await HelperMigrationManager.runRegenerationBatch(
-            [a, b], regenerate: { _ in })
+            [a, b], current: Self.lookup([a, b]), regenerate: { _ in })
 
         #expect(outcome.stampedIds == [a.id, b.id])
         #expect(outcome.regeneratedIds == [a.id, b.id])
@@ -114,9 +121,46 @@ struct HelperMigrationBatchTests {
         let b = DockTileConfiguration(name: "b")
 
         let outcome = await HelperMigrationManager.runRegenerationBatch(
-            [a, b], regenerate: { _ in throw BatchTestError.boom })
+            [a, b], current: Self.lookup([a, b]), regenerate: { _ in throw BatchTestError.boom })
 
         #expect(outcome.stampedIds.isEmpty)
         #expect(outcome.regeneratedIds.isEmpty)
+    }
+
+    /// A tile deleted while the batch runs (its config gone by its turn) must not be rebuilt: the
+    /// build would swap a bundle in and launch a helper with no config, which nothing removes.
+    /// Failing value: building from the input copy reports and stamps the deleted id.
+    @Test("A tile deleted mid-batch is neither rebuilt nor stamped")
+    func deletedMidBatchIsSkipped() async {
+        let kept = DockTileConfiguration(name: "kept")
+        let deleted = DockTileConfiguration(name: "deleted")
+        var built: [UUID] = []
+
+        let outcome = await HelperMigrationManager.runRegenerationBatch(
+            [kept, deleted],
+            current: Self.lookup([kept]),
+            regenerate: { built.append($0.id) })
+
+        #expect(built == [kept.id])
+        #expect(outcome.stampedIds == [kept.id])
+        #expect(outcome.regeneratedIds == [kept.id])
+    }
+
+    /// A tile edited (here: renamed) while the batch runs is rebuilt from its CURRENT config, not
+    /// the copy taken when the batch began. Failing value: the build sees "before".
+    @Test("A tile edited mid-batch is rebuilt from its current config")
+    func editedMidBatchUsesCurrent() async {
+        let original = DockTileConfiguration(name: "before")
+        var edited = original
+        edited.name = "after"
+        var builtNames: [String] = []
+
+        let outcome = await HelperMigrationManager.runRegenerationBatch(
+            [original],
+            current: Self.lookup([edited]),
+            regenerate: { builtNames.append($0.name) })
+
+        #expect(builtNames == ["after"])
+        #expect(outcome.regeneratedIds == [original.id])
     }
 }

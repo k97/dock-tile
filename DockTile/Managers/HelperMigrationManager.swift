@@ -242,6 +242,7 @@ final class HelperMigrationManager {
         // quit, swapped and relaunched by regenerateHelperBundle — so its bar clears at its own swap.
         let outcome = await Self.runRegenerationBatch(
             configs,
+            current: { self.configManager.configuration(for: $0) },
             regenerate: { config in
                 do {
                     try await helperManager.regenerateHelperBundle(for: config)
@@ -264,7 +265,9 @@ final class HelperMigrationManager {
             stampVersion(id, version: currentVersion)
         }
 
-        let regeneratedConfigs = configs.filter { outcome.regeneratedIds.contains($0.id) }
+        // Fresh values, not the batch's input copies: a tile deleted after its own build drops out of
+        // the re-seat, the expectations and the relaunch below.
+        let regeneratedConfigs = outcome.regeneratedIds.compactMap { configManager.configuration(for: $0) }
         guard !regeneratedConfigs.isEmpty else { return }
 
         // Re-seat each regenerated tile's Dock entry BEFORE the restart so the Dock loads FRESH
@@ -313,16 +316,22 @@ final class HelperMigrationManager {
     /// later launch (convergent migration) rather than permanently marking a broken helper
     /// "migrated". (MainActor-isolated via the enclosing class — the injected closures capture
     /// MainActor state.)
+    ///
+    /// `current` re-reads each tile at its turn: a batch can run for a minute, and a tile deleted
+    /// meanwhile must not be rebuilt (a helper with no config — an orphan nothing removes), nor an
+    /// edited one rebuilt from the copy taken when the batch began. No default on purpose.
     static func runRegenerationBatch(
         _ configs: [DockTileConfiguration],
+        current: (UUID) -> DockTileConfiguration?,
         regenerate: (DockTileConfiguration) async throws -> Void
     ) async -> BatchOutcome {
         var stamped: [UUID] = []
         var regenerated: [UUID] = []
 
         for config in configs {
+            guard let latest = current(config.id) else { continue }  // deleted: nothing to rebuild or stamp
             do {
-                try await regenerate(config)
+                try await regenerate(latest)
                 regenerated.append(config.id)
                 stamped.append(config.id)  // stamp ONLY on success
             } catch {

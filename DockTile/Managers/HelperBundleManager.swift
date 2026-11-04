@@ -220,7 +220,20 @@ final class HelperBundleManager {
     func uninstallHelper(for config: DockTileConfiguration) async throws {
         print("🗑️ Uninstalling helper for: \(config.name)")
 
-        // Find helper by bundle ID (handles renamed helpers)
+        // Wait out any Dock operation already running on this tile. The config is already gone (the
+        // caller removes it first), so refusing would leave an orphan just the same: a build would swap
+        // its new bundle into the folder deleted below and launch it, and a batch's post-verify relaunch
+        // would start the helper again — a pinned or running helper with no config. Unbounded on
+        // purpose: every set it reads is cleared by a `defer`, and proceeding early IS the orphan.
+        if isDockOperationInFlight(bundleId: config.bundleIdentifier) {
+            DiagnosticsLog.shared.log("dock", "Delete of \(config.diagnosticName) waiting for its in-flight Dock operation")
+            while isDockOperationInFlight(bundleId: config.bundleIdentifier) {
+                try await Task.sleep(nanoseconds: 250_000_000)
+            }
+        }
+
+        // Find helper by bundle ID (handles renamed helpers). After the wait: a build's swap can
+        // have moved the tile to a new folder.
         let helperPath = findExistingHelper(bundleId: config.bundleIdentifier)
 
         // Quit if running
@@ -239,6 +252,9 @@ final class HelperBundleManager {
         } else {
             print("   ✓ No helper bundle found to delete")
         }
+        // Quit AGAIN, as the staged rebuild does: a helper launched during the quit-sleep above (a
+        // just-built one not yet in `runningApplications`, or a relaunch) would outlive its bundle.
+        quitHelper(bundleId: config.bundleIdentifier)
 
         // Restart Dock after bundle is deleted to avoid "?" icon — but only if the Dock changed.
         // A removal that didn't stick is logged only: the config is already gone, and the caller
