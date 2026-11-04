@@ -50,6 +50,8 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `TileRebuildSignal` / `RebuildBarState` (bar never moves back, 30 s expiry, `eased` lands exactly so the animation timer stops) / `RebuildTileView.barRect` / `.shapeRect` (icon drawn at full bounds — no second icon-grid inset; `TileRebuildBarTests`),
 `HelperBundleManager.shouldPerformDockRemoval` / `.helperFolderName` (same-name tiles disambiguate to distinct folders) / `.dockFileLabel` (Dock tooltip = display name, never the folder stem) / `.helperIconsComplete` (bundle icon-integrity probe), `HelperMigrationManager.classifyHelperHealth` (self-heal targets pinned tiles only — drafts safe — whose bundle is broken OR whose Dock entry is stale by the shared predicate), `DiagnosticsLog.shouldRecord` (verbose dev/prod gate),
 `ConfigurationManager.canCreateNewTile` (sidebar + gate — never deadlock at zero tiles),
+`DockTileConfiguration.decodeTolerantly` (every config reader decodes per tile: one tile this build cannot read is skipped, never the whole list; a whole-file failure is flagged; `ConfigDecodeToleranceTests`),
+`AppEnvironment.isHelper(bundleId:)` (the one helper check — `main.swift` picks the delegate from it; `HelperDetectionTests`),
 `IconDepthMetrics` (glyph size-ratio cap + glass stroke + Liquid-Glass surface/glyph sheen + shadow + shading, per style, size-gated — shared by the baked `.icns` renderer and the live preview; `glyphSheen` covers symbols 0.55 and emoji 0.18),
 `ToneMap.fit` / `.contrastRatio` + `TilePalette.resolve` (+ `fillWasDeepened`) (every tile colour role derived with every drawn pair >= 3:1 — the Dark-glyph `#5F00FF` visibility case lives here; replaced `liftedForDarkGlyph`), `CustomiseTileView.colourRowState`, `DockTileIconPreview.displayStyle` (canonical forced previews), `HelperBundleManager.declarativeFillsP3`, + `TintColor.colors`/`.nsColors(for:iconType:background:)` (Dark splits SF Symbol vs emoji, guarded by `DarkGlyphTreatmentTests`) + `.badgeColors(for:tint:)` (Settings-badge mirror, lock-step guarded by `BadgeColorMappingTests`),
 `AppRelocation.classify` / `.blocksBundleGeneration` / `.requiresRelocation` (translocation → move-to-/Applications decision),
@@ -81,7 +83,7 @@ it, and unit-test the seam so a broken rule fails loudly. Existing seams: `resol
 `DockTileConfigurationView.inspectorSetterWrites(newValue:stored:selection:)` (the `.inspector` binding setter: nil = ignore a write-back of what is presented — our own echo, or `false` on a Settings pane, which must not clear the flag — else exactly `newValue`; `InspectorVisibilityTests`),
 `DockTileDetailView.heroForcedStyle(inspectorShown:colorScheme:followsAppearance:)` / `DockTileConfigurationView.inspectorCommandIsEnabled` (hero is canonical Default/Dark while the inspector is open, Dark only when `followsAppearance` — `IconPipeline.isDeclarative`, so never on macOS 15; ⌥⌘I enabled only for a tile row; `InspectorEntryPointTests`),
 `IconFace` tolerant decode + the two defaults (missing key → glyph, new tile → apps; unknown value → glyph; `IconFaceTests`),
-`MacOSFloorGuardTests` (the deployment target ↔ appcast floor ↔ macOS 15 CI leg ↔ website requirement claims — read from the files, so the macOS 15 leg cannot be dropped while 15 is supported, and must be once it is not).
+`MacOSFloorGuardTests` (the deployment target ↔ appcast floor ↔ macOS 15 CI leg ↔ website and README requirement claims — read from the files, so the macOS 15 leg cannot be dropped while 15 is supported, and must be once it is not).
 
 Assertion rules: prefer `#require` over `if`-guarded `#expect`; assert exact values/magnitudes,
 not `!=nil` / `.isValid` / `a>b`; never write `UserDefaults.standard` in tests — use
@@ -111,6 +113,12 @@ from the thing under test (`== IconPipeline.isDeclarative`) cannot catch that th
 keep one independent pin beside it. And a check script's argument parsing is part of the guard:
 a missing or malformed value must be a usage error, never a silently skipped check
 (`dock-measure.swift --expect-apps abc` passed, exit 0, until it was made to exit 2).
+
+**A negative control on code the app runs at launch must not break the test host (2026-11-04).**
+The host IS the dev app: breaking `AppEnvironment.isHelper`'s rule would have launched it as a
+helper. Break only the seam under test and pin the launch path to the correct value for that run.
+A fixture meant to fail must really fail: `LayoutMode`, `TileBackground`, `IconFace` and
+`AppsGridBackground` decode unknown values to a default; `IconType` and the v1 keys throw.
 
 ## Coverage Targets
 

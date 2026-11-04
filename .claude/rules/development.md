@@ -24,6 +24,13 @@ When adding fields to `DockTileConfiguration`:
 
 Old configs must always load — never break backward compatibility.
 
+**Reading the config is per tile (`decodeTolerantly`, 2026-11-04).** A tile this build cannot read is
+skipped and the rest load; the main app first copies the file aside as
+`<name>.unreadable-<UTC>.json`, logs and records a `config_decode` non-fatal. The whole-array decode
+it replaced emptied the list on one bad tile, and the launch-time save then wrote that over every
+tile. Any new reader of the config file goes through the seam. The v1 keys stay REQUIRED
+(`missingRequiredFieldThrows`): a half-built tile is skipped, never loaded.
+
 ## Shared Utilities
 
 | File | Use instead of |
@@ -67,6 +74,11 @@ The app product name is **"Dock Tile"** (with space), not "DockTile". File syste
 - **Don't rely on a SwiftUI layer filter for what a test or a bake checks.** `.saturation(0)` on
   the App Grid minis was skipped by the CI runner's renderer and by `cacheDisplay` (2026-10-20), so
   the preview looked right on one Mac only. Transform the bitmap itself (`IconGenerator.desaturated`).
+- **CI's Xcode is older than the local one: a long `+` chain of array expressions can fail CI only.**
+  Five `matches(of:).map { … }` results joined by `+` compiled locally and failed CI's Xcode 26.2 with
+  "unable to type-check this expression in reasonable time" (2026-11-04) — the test target never
+  built. Build such lists with `var x: [T] = []` and `x += …` per term. A local green build does not
+  prove CI compiles it; run the branch through CI (ci-release.md).
 - **Never block a thread waiting for work queued on `DispatchQueue.global` (critical).** Draining a
   `Process`'s pipes in global-queue blocks while the caller `DispatchGroup.wait()`s deadlocked when
   every pool thread was itself blocked in that wait: CI's 3-core runner hung six hours with three
