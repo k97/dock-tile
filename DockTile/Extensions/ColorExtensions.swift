@@ -41,7 +41,7 @@ extension Color {
     /// Used for the glyph's dimensional shading (top → bottom fill) in the icon depth
     /// treatment, mirrored by `NSColor.darkened(by:)` in the baked renderer.
     func darkened(by fraction: CGFloat) -> Color {
-        Color(NSColor(self).darkened(by: fraction))
+        Color(nsColor: NSColor(self).darkened(by: fraction))
     }
 }
 

@@ -72,7 +72,7 @@ can't be recoloured, so it keeps the darkened shade of the tile's own tint as it
 
 ### `liftedForDarkGlyph(minLuminance:)` — the contrast floor
 
-Added to **both** colour spaces (`NSColor` in [AppearanceManager.swift](../DockTile/Managers/AppearanceManager.swift),
+Added to **both** colour spaces (`NSColor` in `AppearanceManager.swift` (since deleted),
 `Color` in [ColorExtensions.swift](../DockTile/Extensions/ColorExtensions.swift)), mirroring the
 `darkenedForDarkMode` pair. It reads device-RGB, computes perceived luminance
 `L = 0.299R + 0.587G + 0.114B`, and — only if `L` is below the floor — blends the colour toward
@@ -98,7 +98,7 @@ while staying calm. Tunable in one place.
 ## Implementation
 
 - **`darkenedForDarkMode(maxBrightness:)`** — on both `NSColor`
-  ([AppearanceManager.swift](../DockTile/Managers/AppearanceManager.swift)) and `Color`
+  (`AppearanceManager.swift` (since deleted)) and `Color`
   ([ColorExtensions.swift](../DockTile/Extensions/ColorExtensions.swift)). Converts to
   `.deviceRGB` HSB, preserves hue and saturation, returns the colour with
   `brightness = min(brightness, maxBrightness)` at full opacity. Still used for the **Dark + emoji**

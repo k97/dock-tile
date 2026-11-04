@@ -262,6 +262,12 @@ struct HelperFolderNameTests {
             .sorted()
 
         #expect(listed == [".app", "Dev.app"])
+
+        // Adopted as the tile's existing folder, the legacy `.app` is what the rebuild removes once
+        // the bundle has moved to `<shortId>.app`.
+        let legacy = dir.appendingPathComponent(".app")
+        let moved = dir.appendingPathComponent("B4EF96A2.app")
+        #expect(HelperBundleManager.oldFolderToRemove(existing: legacy, final: moved) == legacy)
     }
 }
 

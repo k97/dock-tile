@@ -146,6 +146,8 @@ final class AnalyticsService {
     /// Persist a new consent value, apply it live, and tell running helpers to re-apply it.
     func setConsent(_ enabled: Bool) {
         sharedDefaults?.set(enabled, forKey: UserDefaultsKeys.analyticsEnabled)
+        // Flush before telling helpers, or one can re-read the OLD value and keep collecting.
+        CFPreferencesAppSynchronize(UserDefaultsKeys.sharedSuiteName as CFString)
         applyCollectionState()
         DistributedNotificationCenter.default().postNotificationName(
             Self.consentDidChange, object: nil, userInfo: nil, deliverImmediately: true)
