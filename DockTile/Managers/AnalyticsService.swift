@@ -70,14 +70,23 @@ final class AnalyticsService {
     /// Whether data is actually being collected right now.
     private(set) var collectionEnabled = false
 
+    /// Helpers only: the `consentDidChange` observer, kept for the process's lifetime.
+    private var consentObserver: NSObjectProtocol?
+
     private init() {}
 
     // MARK: - Consent
 
-    /// Opt-out: defaults to ON when the key has never been set.
+    /// Opt-out: defaults to ON when the key has never been set. Synchronize-first: another process
+    /// (the main app) writes this key, and a cfprefsd cache split once made a cross-process read stale.
     var consentGranted: Bool {
-        Self.resolveConsent(storedValue: sharedDefaults?.object(forKey: UserDefaultsKeys.analyticsEnabled) as? Bool)
+        CFPreferencesAppSynchronize(UserDefaultsKeys.sharedSuiteName as CFString)
+        return Self.resolveConsent(storedValue: sharedDefaults?.object(forKey: UserDefaultsKeys.analyticsEnabled) as? Bool)
     }
+
+    /// Posted by the main app when the user changes consent, so running helpers re-apply it at once.
+    /// Any local process can post it; the worst it does is make a helper re-read the real setting.
+    nonisolated static let consentDidChange = Notification.Name("com.docktile.analyticsConsentChanged")
 
     /// Whether the build/environment is allowed to collect at all (Release only).
     private var environmentAllowsCollection: Bool { AppEnvironment.isRelease }
@@ -122,12 +131,27 @@ final class AnalyticsService {
         Analytics.setUserProperty(AppEnvironment.appRole, forName: "app_role")
 
         applyCollectionState()
+
+        // A helper applies consent at launch only; without this, one started at login kept
+        // collecting after the user opted out, until it was rebuilt (2026-11-04 audit).
+        if AppEnvironment.isHelper {
+            consentObserver = DistributedNotificationCenter.default().addObserver(
+                forName: Self.consentDidChange, object: nil, queue: .main
+            ) { _ in
+                MainActor.assumeIsolated {
+                    AnalyticsService.shared.applyCollectionState()
+                    DiagnosticsLog.shared.log("analytics", "consent re-applied (consent=\(AnalyticsService.shared.consentGranted))")
+                }
+            }
+        }
     }
 
-    /// Persist a new consent value and apply it live.
+    /// Persist a new consent value, apply it live, and tell running helpers to re-apply it.
     func setConsent(_ enabled: Bool) {
         sharedDefaults?.set(enabled, forKey: UserDefaultsKeys.analyticsEnabled)
         applyCollectionState()
+        DistributedNotificationCenter.default().postNotificationName(
+            Self.consentDidChange, object: nil, userInfo: nil, deliverImmediately: true)
     }
 
     private func applyCollectionState() {
