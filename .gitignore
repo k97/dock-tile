@@ -109,3 +109,6 @@ __pycache__/
 
 # User feedback (emails, screenshots, reply drafts) — personal data, never committed to this public repo
 docs/feedback/
+
+# graphify knowledge-graph output (local analysis, regenerated on demand)
+graphify-out/
