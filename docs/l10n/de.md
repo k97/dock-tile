@@ -165,6 +165,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `menu.openDockTile` | Open Dock Tile… | Dock Tile öffnen … | machine | Menu bar and Dock menu item that opens Dock Tile's main window |
 | `menu.openInFinder` | Open in Finder | Im Finder öffnen | machine | Menu item to open in Finder |
 | `menu.options` | Options | Optionen | machine | Section divider in menu |
+| `menu.quitDockTile` | Quit Dock Tile | Dock Tile beenden | machine | Menu bar icon's menu: quits Dock Tile (tiles already in the Dock keep working) |
 | `menu.settings` | Settings… | Einstellungen … | machine | App menu item that opens the inline Settings pane (⌘,) |
 | `menu.showInspector` | Show Inspector | Inspektor einblenden | machine | View menu item (Show Inspector, ⌥⌘I) that opens the Customise Tile inspector |
 | `popover.option.animation.default` | Default | Standard | machine | Animation tier — default |
@@ -202,6 +203,9 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.general` | General | Allgemein | machine | Title of the General settings pane |
 | `settings.login.registrationFailed` | Couldn’t turn this on — macOS refused the registration. %@ | Konnte nicht aktiviert werden – macOS hat die Registrierung abgelehnt. %@ | machine | Shown under the Start tiles at login toggle when SMAppService registration failed; %@ is the system error |
 | `settings.login.requiresApproval` | Approve Dock Tile in Login Items to finish enabling this. | Erlaube Dock Tile unter „Anmeldeobjekte“, um die Aktivierung abzuschließen. | machine | Shown when macOS is holding the login item for user approval |
+| `settings.menuBar` | Menu Bar | Menüleiste | machine | General: section holding the menu bar icon toggle |
+| `settings.menuBar.toggle` | Show Dock Tile in the menu bar | Dock Tile in der Menüleiste anzeigen | machine | General: toggle that adds Dock Tile's icon to the menu bar, listing the tiles and their apps |
+| `settings.menuBar.toggleDescription` | Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on. | Listet die Kacheln in deinem Dock und ihre Apps auf. Solange dies aktiv ist, läuft Dock Tile im Hintergrund weiter. | machine | General: caption under the menu bar icon toggle |
 | `settings.popover` | Popover | Popover | machine | Section header and pane title for popover appearance settings |
 | `settings.popover.configure` | Configure | Konfigurieren | machine | Label for the Grid/List panel switcher in popover settings |
 | `settings.popover.configure.subtitle` | Each layout's settings are saved independently | Die Einstellungen jedes Layouts werden separat gesichert | machine | Subtitle explaining that Grid and List popover settings are stored separately |

@@ -42,6 +42,10 @@ struct GeneralSettingsView: View {
     @AppStorage(UserDefaultsKeys.smartAddEnabled)
     private var smartAddEnabled = true
 
+    /// The menu bar icon (#13). Seeded at launch (`MenuBarController.initialEnabled`); absent = OFF.
+    @AppStorage(UserDefaultsKeys.menuBarEnabled)
+    private var menuBarEnabled = false
+
     var body: some View {
         Form {
             // All general preferences live in a single grouped container (System Settings style):
@@ -52,6 +56,10 @@ struct GeneralSettingsView: View {
                 missingAppsRow
 
                 analyticsRow
+            }
+
+            Section(AppStrings.Settings.menuBar) {
+                menuBarRow
             }
 
             // Adding Tiles — the Smart Add toggle only. An "Add a Tile…" link once sat below it
@@ -162,6 +170,23 @@ struct GeneralSettingsView: View {
         .onChange(of: smartAddEnabled) { _, enabled in
             AnalyticsService.shared.log(.settingChanged, ["setting": "smart_add", "enabled": enabled])
             DiagnosticsLog.shared.log("settings", "Smart Add toggled \(enabled ? "ON" : "OFF")")
+        }
+    }
+
+    /// Adds or removes the menu bar icon at once. Turning it off brings the Dock icon back (the
+    /// window is open while toggling); the app then quits on close again unless Dock Lock is on.
+    private var menuBarRow: some View {
+        Toggle(isOn: $menuBarEnabled) {
+            Text(AppStrings.Settings.menuBarToggle)
+            Text(AppStrings.Settings.menuBarToggleDescription)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .onChange(of: menuBarEnabled) { _, enabled in
+            MenuBarController.shared.apply(enabled: enabled)
+            if !enabled { NSApp.setActivationPolicy(.regular) }
+            AnalyticsService.shared.log(.settingChanged, ["setting": "menu_bar", "enabled": enabled])
+            DiagnosticsLog.shared.log("settings", "Menu bar icon toggled \(enabled ? "ON" : "OFF")")
         }
     }
 

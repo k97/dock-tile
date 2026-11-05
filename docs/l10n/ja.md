@@ -165,6 +165,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `menu.openDockTile` | Open Dock Tile… | Dock Tileを開く… | machine | Menu bar and Dock menu item that opens Dock Tile's main window |
 | `menu.openInFinder` | Open in Finder | Finderで開く | machine | Menu item to open in Finder |
 | `menu.options` | Options | オプション | machine | Section divider in menu |
+| `menu.quitDockTile` | Quit Dock Tile | Dock Tileを終了 | machine | Menu bar icon's menu: quits Dock Tile (tiles already in the Dock keep working) |
 | `menu.settings` | Settings… | 設定… | machine | App menu item that opens the inline Settings pane (⌘,) |
 | `menu.showInspector` | Show Inspector | インスペクタを表示 | machine | View menu item (Show Inspector, ⌥⌘I) that opens the Customise Tile inspector |
 | `popover.option.animation.default` | Default | デフォルト | machine | Animation tier — default |
@@ -202,6 +203,9 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.general` | General | 一般 | machine | Title of the General settings pane |
 | `settings.login.registrationFailed` | Couldn’t turn this on — macOS refused the registration. %@ | オンにできませんでした。macOSが登録を拒否しました。%@ | machine | Shown under the Start tiles at login toggle when SMAppService registration failed; %@ is the system error |
 | `settings.login.requiresApproval` | Approve Dock Tile in Login Items to finish enabling this. | この設定を有効にするには、ログイン項目でDock Tileを承認してください。 | machine | Shown when macOS is holding the login item for user approval |
+| `settings.menuBar` | Menu Bar | メニューバー | machine | General: section holding the menu bar icon toggle |
+| `settings.menuBar.toggle` | Show Dock Tile in the menu bar | メニューバーにDock Tileを表示 | machine | General: toggle that adds Dock Tile's icon to the menu bar, listing the tiles and their apps |
+| `settings.menuBar.toggleDescription` | Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on. | Dockにあるタイルとそのアプリを一覧表示します。オンのあいだ、Dock Tileはバックグラウンドで実行され続けます。 | machine | General: caption under the menu bar icon toggle |
 | `settings.popover` | Popover | ポップオーバー | machine | Section header and pane title for popover appearance settings |
 | `settings.popover.configure` | Configure | 設定対象 | machine | Label for the Grid/List panel switcher in popover settings |
 | `settings.popover.configure.subtitle` | Each layout's settings are saved independently | 各レイアウトの設定は個別に保存されます | machine | Subtitle explaining that Grid and List popover settings are stored separately |

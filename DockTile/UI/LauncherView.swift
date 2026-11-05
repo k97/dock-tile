@@ -22,6 +22,8 @@ extension Notification.Name {
     /// Posted by the `docktile://configure` deep link (a tile's Configure gear) to select that tile
     /// with Customise open in the main window. `object` is the tile's `UUID`.
     static let revealTile = Notification.Name("revealTile")
+    /// The menu bar icon's "Add a Tile…" (zero tiles): runs the sidebar +'s Add flow.
+    static let openAddTile = Notification.Name("openAddTile")
 }
 
 // MARK: - Launcher View (Layout Mode Router)

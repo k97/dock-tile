@@ -165,6 +165,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `menu.openDockTile` | Open Dock Tile… | 打开Dock Tile… | machine | Menu bar and Dock menu item that opens Dock Tile's main window |
 | `menu.openInFinder` | Open in Finder | 在访达中打开 | machine | Menu item to open in Finder |
 | `menu.options` | Options | 选项 | machine | Section divider in menu |
+| `menu.quitDockTile` | Quit Dock Tile | 退出Dock Tile | machine | Menu bar icon's menu: quits Dock Tile (tiles already in the Dock keep working) |
 | `menu.settings` | Settings… | 设置… | machine | App menu item that opens the inline Settings pane (⌘,) |
 | `menu.showInspector` | Show Inspector | 显示检查器 | machine | View menu item (Show Inspector, ⌥⌘I) that opens the Customise Tile inspector |
 | `popover.option.animation.default` | Default | 默认 | machine | Animation tier — default |
@@ -202,6 +203,9 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.general` | General | 通用 | machine | Title of the General settings pane |
 | `settings.login.registrationFailed` | Couldn’t turn this on — macOS refused the registration. %@ | 无法打开此功能——macOS拒绝了注册。%@ | machine | Shown under the Start tiles at login toggle when SMAppService registration failed; %@ is the system error |
 | `settings.login.requiresApproval` | Approve Dock Tile in Login Items to finish enabling this. | 在“登录项”中批准Dock Tile以完成启用。 | machine | Shown when macOS is holding the login item for user approval |
+| `settings.menuBar` | Menu Bar | 菜单栏 | machine | General: section holding the menu bar icon toggle |
+| `settings.menuBar.toggle` | Show Dock Tile in the menu bar | 在菜单栏中显示Dock Tile | machine | General: toggle that adds Dock Tile's icon to the menu bar, listing the tiles and their apps |
+| `settings.menuBar.toggleDescription` | Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on. | 列出程序坞中的磁贴及其应用。开启后，Dock Tile会在后台持续运行。 | machine | General: caption under the menu bar icon toggle |
 | `settings.popover` | Popover | 弹出面板 | machine | Section header and pane title for popover appearance settings |
 | `settings.popover.configure` | Configure | 配置 | machine | Label for the Grid/List panel switcher in popover settings |
 | `settings.popover.configure.subtitle` | Each layout's settings are saved independently | 每种布局的设置分别存储 | machine | Subtitle explaining that Grid and List popover settings are stored separately |

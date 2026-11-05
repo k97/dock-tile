@@ -35,6 +35,11 @@ enum UserDefaultsKeys {
     /// so helper bundles never read it. When OFF, + always creates a blank tile.
     static let smartAddEnabled = "smartAddEnabled"
 
+    /// The menu bar icon listing the tiles (issue #13). Main-app domain. Written once at launch:
+    /// ON for a new install, OFF for an existing user (`MenuBarController.initialEnabled`). Any
+    /// reader that runs before the main app ever has (the login spawner) treats ABSENT as OFF.
+    static let menuBarEnabled = "menuBarEnabled"
+
     // "Start tiles at login" is ON by default (opt-out). SMAppService is the source of truth for
     // the *current* status, but a Sparkle update replaces the app bundle and can silently demote
     // the registration. We persist the user's opt-out below so the main app can re-assert

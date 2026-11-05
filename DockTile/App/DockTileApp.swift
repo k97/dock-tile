@@ -16,8 +16,17 @@ import Sparkle
 /// Called from main.swift when running as main app
 struct DockTileApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var configManager = ConfigurationManager()
+    @StateObject private var configManager: ConfigurationManager
     @StateObject private var updateController = UpdateController()
+
+    /// Created here, not on the first body pass, so the menu bar icon has the tiles before (or
+    /// without) a window — the window's `onAppear` hands it to `AppDelegate` as before.
+    init() {
+        let manager = ConfigurationManager()
+        _configManager = StateObject(wrappedValue: manager)
+        MenuBarController.shared.configManager = manager
+        DiagnosticsLog.shared.log("lifecycle", "ConfigurationManager created in DockTileApp.init", verbose: true)
+    }
 
     // Default window size (width resizable within AppDelegate.minWindowWidth…maxWindowWidth)
     private let windowWidth: CGFloat = AppDelegate.minWindowWidth

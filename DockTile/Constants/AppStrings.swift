@@ -700,6 +700,24 @@ enum AppStrings {
             comment: "General: section holding the Smart Add toggle and the Add a Tile row"
         )
 
+        static let menuBar = NSLocalizedString(
+            "settings.menuBar",
+            value: "Menu Bar",
+            comment: "General: section holding the menu bar icon toggle"
+        )
+
+        static let menuBarToggle = NSLocalizedString(
+            "settings.menuBar.toggle",
+            value: "Show Dock Tile in the menu bar",
+            comment: "General: toggle that adds Dock Tile's icon to the menu bar, listing the tiles and their apps"
+        )
+
+        static let menuBarToggleDescription = NSLocalizedString(
+            "settings.menuBar.toggleDescription",
+            value: "Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on.",
+            comment: "General: caption under the menu bar icon toggle"
+        )
+
         static let dockLock = NSLocalizedString(
             "settings.dockLock",
             value: "Dock Lock",
@@ -1138,6 +1156,12 @@ enum AppStrings {
             "menu.openDockTile",
             value: "Open Dock Tile…",
             comment: "Menu bar and Dock menu item that opens Dock Tile's main window"
+        )
+
+        static let quitDockTile = NSLocalizedString(
+            "menu.quitDockTile",
+            value: "Quit Dock Tile",
+            comment: "Menu bar icon's menu: quits Dock Tile (tiles already in the Dock keep working)"
         )
 
         static let aboutDockTile = NSLocalizedString(

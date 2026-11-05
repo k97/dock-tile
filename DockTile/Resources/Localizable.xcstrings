@@ -8533,6 +8533,60 @@
         }
       }
     },
+    "menu.quitDockTile": {
+      "comment": "Menu bar icon's menu: quits Dock Tile (tiles already in the Dock keep working)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dock Tile beenden"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Dock Tile"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Dock Tile"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit Dock Tile"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Quitter Dock Tile"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dock Tileを終了"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Завершить Dock Tile"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "退出Dock Tile"
+          }
+        }
+      }
+    },
     "menu.settings": {
       "comment": "App menu item that opens the inline Settings pane (⌘,)",
       "extractionState": "manual",
@@ -10527,6 +10581,168 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "在“登录项”中批准Dock Tile以完成启用。"
+          }
+        }
+      }
+    },
+    "settings.menuBar": {
+      "comment": "General: section holding the menu bar icon toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Menüleiste"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu Bar"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu Bar"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu Bar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Barre des menus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メニューバー"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Строка меню"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "菜单栏"
+          }
+        }
+      }
+    },
+    "settings.menuBar.toggle": {
+      "comment": "General: toggle that adds Dock Tile's icon to the menu bar, listing the tiles and their apps",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dock Tile in der Menüleiste anzeigen"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Dock Tile in the menu bar"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Dock Tile in the menu bar"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Dock Tile in the menu bar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher Dock Tile dans la barre des menus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メニューバーにDock Tileを表示"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Показывать Dock Tile в строке меню"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在菜单栏中显示Dock Tile"
+          }
+        }
+      }
+    },
+    "settings.menuBar.toggleDescription": {
+      "comment": "General: caption under the menu bar icon toggle",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Listet die Kacheln in deinem Dock und ihre Apps auf. Solange dies aktiv ist, läuft Dock Tile im Hintergrund weiter."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on."
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Liste les tuiles de votre Dock et leurs apps. Dock Tile reste ouvert en arrière-plan tant que cette option est activée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dockにあるタイルとそのアプリを一覧表示します。オンのあいだ、Dock Tileはバックグラウンドで実行され続けます。"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Показывает плитки в Dock и их приложения. Пока параметр включен, Dock Tile продолжает работать в фоновом режиме."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "列出程序坞中的磁贴及其应用。开启后，Dock Tile会在后台持续运行。"
           }
         }
       }

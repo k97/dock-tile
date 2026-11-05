@@ -59,6 +59,7 @@
 		AALAR02 /* com.docktile.app.tilelauncher.plist in Copy Login Item Launcher */ = {isa = PBXBuildFile; fileRef = AALAR01 /* com.docktile.app.tilelauncher.plist */; };
 		AALGN01 /* LoginItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AALGN02 /* LoginItemManager.swift */; };
 		AALTS01 /* LoginTileSpawner.swift in Sources */ = {isa = PBXBuildFile; fileRef = AALTS02 /* LoginTileSpawner.swift */; };
+		AAMBC001 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAMBC002 /* MenuBarController.swift */; };
 		AAMAIN01 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAMAIN02 /* main.swift */; };
 		AANBV01 /* NativeBackgroundViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AANBV02 /* NativeBackgroundViews.swift */; };
 		AANPV01 /* NativePopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AANPV02 /* NativePopoverViews.swift */; };
@@ -169,6 +170,7 @@
 		AALAR01 /* com.docktile.app.tilelauncher.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.docktile.app.tilelauncher.plist; sourceTree = "<group>"; };
 		AALGN02 /* LoginItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemManager.swift; sourceTree = "<group>"; };
 		AALTS02 /* LoginTileSpawner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginTileSpawner.swift; sourceTree = "<group>"; };
+		AAMBC002 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 		AAMAIN02 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		AANBV02 /* NativeBackgroundViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBackgroundViews.swift; sourceTree = "<group>"; };
 		AANPV02 /* NativePopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePopoverViews.swift; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 				AA0004 /* AppDelegate.swift */,
 				AAHELP02 /* HelperAppDelegate.swift */,
 				AALTS02 /* LoginTileSpawner.swift */,
+				AAMBC002 /* MenuBarController.swift */,
 				AAENV001 /* Environment.swift */,
 				AAUPC002 /* UpdateController.swift */,
 			);
@@ -677,6 +680,7 @@
 				AAPAM01 /* PopoverAppearance.swift in Sources */,
 				AAPAV01 /* PopoverAppearanceView.swift in Sources */,
 				AALTS01 /* LoginTileSpawner.swift in Sources */,
+				AAMBC001 /* MenuBarController.swift in Sources */,
 				AA2B0DD5 /* DockLockManager.swift in Sources */,
 				AA218BB9 /* DockLockSettingsView.swift in Sources */,
 				AAA2155B /* DiagnosticsLog.swift in Sources */,

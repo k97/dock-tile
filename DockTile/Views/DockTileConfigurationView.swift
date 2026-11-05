@@ -201,6 +201,9 @@ struct DockTileConfigurationView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openSettingsPane)) { note in
             selection = .settings((note.object as? SettingsPane) ?? .general)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .openAddTile)) { _ in
+            handleAddTapped(source: .menuBar)
+        }
         // A tile's Configure gear lands on that tile with Customise open, from any pane (#31).
         .onReceive(NotificationCenter.default.publisher(for: .revealTile)) { note in
             guard let id = note.object as? UUID else { return }
@@ -258,6 +261,7 @@ struct DockTileConfigurationView: View {
     enum AddSource: String {
         case toolbarPlus = "+ button"
         case emptyState = "empty state"
+        case menuBar = "menu bar"
     }
 
     /// The inspector shows only while a tile row is selected; the stored flag survives Settings.

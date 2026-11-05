@@ -88,6 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         print("   Bundle ID: \(AppEnvironment.mainAppBundleId)")
 
         Self.instance = self
+        DiagnosticsLog.shared.log("lifecycle", "didFinishLaunching", verbose: true)
         configureAsMainApp()
 
         print(AppStrings.Log.ready)
@@ -158,6 +159,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Check if first launch
         let hasLaunchedBefore = UserDefaults.standard.bool(forKey: "HasLaunchedBefore")
 
+        // Menu bar icon (#13): seeded once, before HasLaunchedBefore is written — ON for a new
+        // install, OFF for an existing user.
+        if UserDefaults.standard.object(forKey: UserDefaultsKeys.menuBarEnabled) == nil {
+            UserDefaults.standard.set(MenuBarController.initialEnabled(hasLaunchedBefore: hasLaunchedBefore),
+                                      forKey: UserDefaultsKeys.menuBarEnabled)
+        }
+        MenuBarController.shared.apply(enabled: MenuBarController.isEnabled)
+
         if !hasLaunchedBefore {
             print("🎉 First launch detected - showing configuration window")
             UserDefaults.standard.set(true, forKey: "HasLaunchedBefore")
@@ -201,6 +210,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     // MARK: - NSWindowDelegate
 
+    /// With the menu bar icon on, Dock Tile's own Dock icon shows only while its window is open (#13).
+    /// Only the configuration window has this delegate (`WindowAccessor`).
+    func windowWillClose(_ notification: Notification) {
+        guard MenuBarController.isEnabled else { return }
+        NSApp.setActivationPolicy(.accessory)
+    }
+
     func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
         // Clamp width into the allowed range during resize
         let inspectorShown = UserDefaults.standard.bool(forKey: UserDefaultsKeys.inspectorShown)
@@ -224,6 +240,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// so their pane notification has a window to land in — with Dock Lock on, the app stays
     /// resident with no window, and posting alone did nothing (nobody was observing).
     func showConfigurationWindow() {
+        // The window brings the Dock icon back while the menu bar icon has it hidden (#13).
+        if NSApp.activationPolicy() != .regular { NSApp.setActivationPolicy(.regular) }
         // Activate app and show configuration window
         NSApp.activate(ignoringOtherApps: true)
 
@@ -308,9 +326,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        // Stay resident while Dock Lock is active so the event tap keeps
-        // running in the background with the window closed.
-        return !DockLockManager.shared.isEnabled
+        !Self.staysResident(dockLock: DockLockManager.shared.isEnabled, menuBar: MenuBarController.isEnabled)
+    }
+
+    /// Keeps running with the window closed while Dock Lock's event tap or the menu bar icon needs
+    /// the process (`MenuBarDefaultTests`).
+    nonisolated static func staysResident(dockLock: Bool, menuBar: Bool) -> Bool {
+        dockLock || menuBar
     }
 
     // MARK: - Dock Icon Click Handler
@@ -330,7 +352,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(NSMenuItem(title: AppStrings.Menu.openDockTile, action: #selector(openConfigurator), keyEquivalent: ""))
 
         let tiles = DiagnosticsLog.shared.measure("Build Dock menu", category: "menu") {
-            TileMenu.tileItems(for: configManager?.configurations ?? [], target: self,
+            // The window's `onAppear` may never have run (a launch that restores no window); the
+            // manager exists from `DockTileApp.init`.
+            TileMenu.tileItems(for: (configManager ?? MenuBarController.shared.configManager)?.configurations ?? [], target: self,
                                launch: #selector(launchApp(_:)), configure: #selector(configureTile(_:)))
         }
         if !tiles.isEmpty {
@@ -352,10 +376,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         AppLauncher.launch(appItem, source: "main_dock_menu")
     }
 
-    /// "Configure Tile…": the same path as a tile's gear link (select, show, reveal with Customise).
     @objc private func configureTile(_ sender: NSMenuItem) {
-        guard let id = sender.representedObject as? UUID,
-              let url = URL(string: "docktile://configure?id=\(id.uuidString)") else { return }
+        guard let id = sender.representedObject as? UUID else { return }
+        revealTile(id: id)
+    }
+
+    /// "Configure Tile…" in the Dock and menu bar menus: the same path as a tile's gear link
+    /// (select, show, reveal with Customise).
+    func revealTile(id: UUID) {
+        guard let url = URL(string: "docktile://configure?id=\(id.uuidString)") else { return }
         handleDeepLink(url)
     }
 }
