@@ -393,6 +393,8 @@ struct DockTileDetailView: View {
                 }
                 Text(actionButtonText)
             }
+            // The toolbar capsule gives a label 6–7 pt a side; +6 matches a native push button's ~12 (Popover Save too).
+            .padding(.horizontal, 6)
         }
         .disabled(!Self.dockActionIsEnabled(action: currentDockAction, isDirty: isDirty, isProcessing: isProcessing))
         if Self.actionIsProminent(action: currentDockAction, isCurrentlyInDock: isCurrentlyInDock,

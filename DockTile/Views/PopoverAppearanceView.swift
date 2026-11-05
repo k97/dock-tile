@@ -169,15 +169,19 @@ struct PopoverAppearanceView: View {
     /// Save's label and shortcut; its tint (accent vs neutral) is chosen in the toolbar.
     private var saveButton: some View {
         Button(action: save) {
-            if isApplying {
-                // Loading state while rebuilding the tiles: spinner + "Applying…".
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.small)
-                    Text(AppStrings.Button.saving)
+            Group {
+                if isApplying {
+                    // Loading state while rebuilding the tiles: spinner + "Applying…".
+                    HStack(spacing: 6) {
+                        ProgressView().controlSize(.small)
+                        Text(AppStrings.Button.saving)
+                    }
+                } else {
+                    Text(AppStrings.Button.save)
                 }
-            } else {
-                Text(AppStrings.Button.save)
             }
+            // Same toolbar-capsule padding as Tile Detail's action button.
+            .padding(.horizontal, 6)
         }
         .keyboardShortcut("s", modifiers: .command)
     }
