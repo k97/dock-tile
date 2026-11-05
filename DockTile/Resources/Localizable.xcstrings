@@ -8047,6 +8047,60 @@
         }
       }
     },
+    "menu.configureTileItem": {
+      "comment": "Tile submenu item in the menu bar and Dock menus: opens that tile in Dock Tile's window",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kachel konfigurieren …"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure Tile…"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure Tile…"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure Tile…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Configurer la tuile…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "タイルを設定…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Настроить плитку…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "配置磁贴…"
+          }
+        }
+      }
+    },
     "menu.copyDiagnostics": {
       "comment": "File menu item that copies recent diagnostic logs to the clipboard",
       "extractionState": "manual",
@@ -8313,6 +8367,60 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "无配置"
+          }
+        }
+      }
+    },
+    "menu.openDockTile": {
+      "comment": "Menu bar and Dock menu item that opens Dock Tile's main window",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dock Tile öffnen …"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Dock Tile…"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Dock Tile…"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Dock Tile…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ouvrir Dock Tile…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dock Tileを開く…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Открыть Dock Tile…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "打开Dock Tile…"
           }
         }
       }

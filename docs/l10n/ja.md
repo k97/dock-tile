@@ -156,11 +156,13 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `itemMenu.showInFinder` | Show in Finder | Finderに表示 | machine | Popover item context menu: reveal the item in Finder |
 | `menu.configure` | Configure... | タイルを設定… | machine | Menu item to configure tile (opens main app) |
 | `menu.configureTile` | Configure Tile | タイルを設定 | machine | Tooltip for gear icon in popover |
+| `menu.configureTileItem` | Configure Tile… | タイルを設定… | machine | Tile submenu item in the menu bar and Dock menus: opens that tile in Dock Tile's window |
 | `menu.copyDiagnostics` | Copy Diagnostics | 診断情報をコピー | machine | File menu item that copies recent diagnostic logs to the clipboard |
 | `menu.hideInspector` | Hide Inspector | インスペクタを非表示 | machine | View menu item (Hide Inspector, ⌥⌘I) that closes the Customise Tile inspector |
 | `menu.newTile` | New Tile | 新規タイル | machine | Menu item to create a new tile |
 | `menu.noAppsConfigured` | No apps configured | アプリが設定されていません | machine | Dock menu: disabled row when the tile has no apps |
 | `menu.noConfiguration` | No configuration | 設定が見つかりません | machine | Dock menu: disabled row when the tile's config cannot be found |
+| `menu.openDockTile` | Open Dock Tile… | Dock Tileを開く… | machine | Menu bar and Dock menu item that opens Dock Tile's main window |
 | `menu.openInFinder` | Open in Finder | Finderで開く | machine | Menu item to open in Finder |
 | `menu.options` | Options | オプション | machine | Section divider in menu |
 | `menu.settings` | Settings… | 設定… | machine | App menu item that opens the inline Settings pane (⌘,) |

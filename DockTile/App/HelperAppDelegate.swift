@@ -358,28 +358,9 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Add app list from current configuration
+        // Add app list from current configuration (rows shared with the menu bar icon: `TileMenu`)
         if let config = getCurrentConfiguration() {
-            if config.appItems.isEmpty {
-                let item = NSMenuItem(
-                    title: AppStrings.Empty.noApps,
-                    action: nil,
-                    keyEquivalent: ""
-                )
-                item.isEnabled = false
-                menu.addItem(item)
-            } else {
-                for appItem in config.appItems {
-                    let item = NSMenuItem(
-                        title: appItem.name,
-                        action: #selector(launchApp(_:)),
-                        keyEquivalent: ""
-                    )
-                    item.representedObject = appItem
-                    item.target = self
-                    menu.addItem(item)
-                }
-            }
+            TileMenu.appItems(for: config, target: self, action: #selector(launchApp(_:))).forEach(menu.addItem)
         } else {
             let item = NSMenuItem(
                 title: AppStrings.Menu.noConfiguration,

@@ -1128,6 +1128,18 @@ enum AppStrings {
             comment: "Tooltip for gear icon in popover"
         )
 
+        static let configureTileItem = NSLocalizedString(
+            "menu.configureTileItem",
+            value: "Configure Tile…",
+            comment: "Tile submenu item in the menu bar and Dock menus: opens that tile in Dock Tile's window"
+        )
+
+        static let openDockTile = NSLocalizedString(
+            "menu.openDockTile",
+            value: "Open Dock Tile…",
+            comment: "Menu bar and Dock menu item that opens Dock Tile's main window"
+        )
+
         static let aboutDockTile = NSLocalizedString(
             "menu.aboutDockTile",
             value: "About Dock Tile",

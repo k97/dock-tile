@@ -108,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
 
         // Dock Lock: resume the dock-pinning engine if it was previously enabled.
-        // Controls live in the Settings window (⌘,).
+        // Controls live in the main window's Dock Lock settings pane.
         DockLockManager.shared.startIfEnabled()
 
         // Live icon-style tracking for the window's previews: a read-only KVO subscription that
@@ -309,7 +309,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         // Stay resident while Dock Lock is active so the event tap keeps
-        // running in the background (controlled from the menu-bar item).
+        // running in the background with the window closed.
         return !DockLockManager.shared.isEnabled
     }
 
@@ -323,51 +323,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     // MARK: - Context Menu (Right-Click)
 
+    /// Every tile with a submenu of its apps (`TileMenu`, shared with the menu bar icon). It used to
+    /// list only the sidebar's selected tile, flat and unnamed.
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
         let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: AppStrings.Menu.openDockTile, action: #selector(openConfigurator), keyEquivalent: ""))
 
-        // "Configure..." option (brings the configuration window to front)
-        menu.addItem(NSMenuItem(
-            title: AppStrings.Menu.configure,
-            action: #selector(openConfigurator),
-            keyEquivalent: ""
-        ))
-
-        menu.addItem(NSMenuItem.separator())
-
-        // Add app list from current configuration
-        if let config = getCurrentConfiguration() {
-            if config.appItems.isEmpty {
-                let item = NSMenuItem(
-                    title: AppStrings.Menu.noAppsConfigured,
-                    action: nil,
-                    keyEquivalent: ""
-                )
-                item.isEnabled = false
-                menu.addItem(item)
-            } else {
-                for appItem in config.appItems {
-                    let item = NSMenuItem(
-                        title: appItem.name,
-                        action: #selector(launchApp(_:)),
-                        keyEquivalent: ""
-                    )
-                    item.representedObject = appItem
-                    item.target = self
-                    menu.addItem(item)
-                }
-            }
-        } else {
-            // No configuration found
-            let item = NSMenuItem(
-                title: AppStrings.Menu.noConfiguration,
-                action: nil,
-                keyEquivalent: ""
-            )
-            item.isEnabled = false
-            menu.addItem(item)
+        let tiles = DiagnosticsLog.shared.measure("Build Dock menu", category: "menu") {
+            TileMenu.tileItems(for: configManager?.configurations ?? [], target: self,
+                               launch: #selector(launchApp(_:)), configure: #selector(configureTile(_:)))
         }
-
+        if !tiles.isEmpty {
+            menu.addItem(.separator())
+            tiles.forEach(menu.addItem)
+        }
         return menu
     }
 
@@ -383,11 +352,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         AppLauncher.launch(appItem, source: "main_dock_menu")
     }
 
-    // MARK: - Configuration Access
-
-    private func getCurrentConfiguration() -> DockTileConfiguration? {
-        guard let configManager = configManager else { return nil }
-        // Selected configuration, or the first if none is selected
-        return configManager.selectedConfiguration ?? configManager.configurations.first
+    /// "Configure Tile…": the same path as a tile's gear link (select, show, reveal with Customise).
+    @objc private func configureTile(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? UUID,
+              let url = URL(string: "docktile://configure?id=\(id.uuidString)") else { return }
+        handleDeepLink(url)
     }
 }

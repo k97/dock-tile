@@ -13,6 +13,7 @@
 		AA0900 /* PopoverItemMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0901 /* PopoverItemMenu.swift */; };
 		AA0910 /* TileRebuildBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0911 /* TileRebuildBar.swift */; };
 		AA0022 /* LauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0023 /* LauncherView.swift */; };
+		AATMN001 /* TileMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = AATMN002 /* TileMenu.swift */; };
 		AA09AE0F /* ConfigurationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACFE26F /* ConfigurationModels.swift */; };
 		AA0E9A37 /* DockTileIconPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA547156 /* DockTileIconPreview.swift */; };
 		AA218BB9 /* DockLockSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4AC606 /* DockLockSettingsView.swift */; };
@@ -115,6 +116,7 @@
 		AA0901 /* PopoverItemMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverItemMenu.swift; sourceTree = "<group>"; };
 		AA0911 /* TileRebuildBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileRebuildBar.swift; sourceTree = "<group>"; };
 		AA0023 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
+		AATMN002 /* TileMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileMenu.swift; sourceTree = "<group>"; };
 		AA05B3C0 /* DockTileSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileSidebarView.swift; sourceTree = "<group>"; };
 		AA0D6A16 /* ConfigurationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationModels.swift; sourceTree = "<group>"; };
 		AA12D329 /* DockTileConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockTileConfigurationView.swift; sourceTree = "<group>"; };
@@ -269,6 +271,7 @@
 			children = (
 				AA0021 /* FloatingPanel.swift */,
 				AA0023 /* LauncherView.swift */,
+				AATMN002 /* TileMenu.swift */,
 				AANPV02 /* NativePopoverViews.swift */,
 				AA0901 /* PopoverItemMenu.swift */,
 				AA0911 /* TileRebuildBar.swift */,
@@ -636,6 +639,7 @@
 				AA0900 /* PopoverItemMenu.swift in Sources */,
 				AA0910 /* TileRebuildBar.swift in Sources */,
 				AA0022 /* LauncherView.swift in Sources */,
+				AATMN001 /* TileMenu.swift in Sources */,
 				AANPV01 /* NativePopoverViews.swift in Sources */,
 				AAU00001 /* IconGenerator.swift in Sources */,
 				AAIDM001 /* IconDepthMetrics.swift in Sources */,

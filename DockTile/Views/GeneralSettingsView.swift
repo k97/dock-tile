@@ -2,7 +2,7 @@
 //  GeneralSettingsView.swift
 //  DockTile
 //
-//  The "General" pane of the native macOS Settings window (⌘,).
+//  The "General" pane of the main window's inline Settings (⌘, opens it).
 //  Hosts the global "Start tiles at login" toggle, backed by a single SMAppService
 //  launcher agent (see LoginItemManager).
 //
