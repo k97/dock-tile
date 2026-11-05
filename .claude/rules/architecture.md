@@ -330,6 +330,15 @@ Popover, Dock Lock) · Dock Tile (About)** — the old accordion `@AppStorage` e
 - **Window widths: 700 closed, 960 open, 1200 max** (`AppDelegate.minWindowWidth` / `inspectorWidth` 260 /
   `maxWindowWidth`; `DockTileApp`, `DockTileConfigurationView` and `WindowAccessor` read them). The pure
   `AppDelegate.clampedWindowWidth(_:inspectorShown:)` clamps `windowWillResize` and a restored saved
+- **A labelled title-band button pads its label `.padding(.horizontal, 6)` (2026-11-05)**: the macOS 26
+  toolbar capsule (36 pt tall) gives a text label only 6–7 pt a side, half a native push button's ~12
+  (measured from window-ID captures; owner called it "too tight"). Tile Detail's action button and
+  Popover's Save carry it; a NEW labelled title-band button needs it too. Icon-only items don't.
+- **Adding or removing a title-band item with `if` is fine; swapping an item's style is not.** The
+  inspector toggle and Revert both come and go cleanly (checked by eye 2026-11-05). The Tahoe quirk
+  (Popover Appearance, "first-built look") is about changing a live item's button style or swapping
+  two items, so change values there, never structure.
+
   frame; `windowFrame(forInspectorShown:from:visibleFrame:)` is the frame rule. Guarded by `MainWindowWidthTests`.
   **The split view's own minimum must fit inside those (critical).** With the inspector open the split
   view counts it TWICE: the SwiftUI hosting view's fitting size includes the inspector (its safe-area
