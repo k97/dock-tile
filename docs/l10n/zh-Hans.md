@@ -25,6 +25,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `alert.restartDock.checkbox` | Don't show this again | 不再显示 | machine | Checkbox label to suppress future Dock restart alerts |
 | `alert.restartDock.message` | Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected. | Dock Tile会重新启动程序坞以应用更改。每次添加、更新或移除磁贴时都会如此。程序坞中现有的项目不受影响。 | machine | Alert message explaining Dock restart |
 | `alert.restartDock.title` | Dock Restart Required | 需要重新启动程序坞 | machine | Alert title when Dock restart is required |
+| `alert.revertToDock.message` | Your changes will be replaced by the version in the Dock. | 你的更改将被程序坞中的版本替换。 | machine | Revert to Dock Version confirmation message: the tile's unapplied edits are discarded and the version its Dock icon was built from comes back |
 | `app.name` | Dock Tile | Dock Tile | machine | App display name |
 | `button.add` | Add | 添加 | machine | Add button label in file picker |
 | `button.addToDock` | Add to Dock | 添加到程序坞 | machine | Button to add tile to Dock |
@@ -48,6 +49,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.removeAll` | Remove All | 全部移除 | machine | Button to remove all missing apps from tiles at once |
 | `button.removeFromDock` | Remove from Dock | 从程序坞中移除 | machine | Button to remove tile from Dock |
 | `button.resetToDefaults` | Reset to Defaults | 恢复默认设置 | machine | Button that restores popover appearance settings to their defaults |
+| `button.revert` | Revert | 复原 | machine | Confirm button of the Revert to Dock Version alert |
 | `button.reviewInTiles` | Review in Tiles | 在磁贴中查看 | machine | Button that navigates to the first tile containing a missing app |
 | `button.save` | Save | 保存 | machine | Primary toolbar button that commits the popover appearance settings |
 | `button.saving` | Applying… | 正在应用… | machine | Loading label on the Save button while applying settings to Dock tiles |
@@ -263,6 +265,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `tab.symbol` | Symbol | 符号 | machine | Symbol tab label |
 | `title.customiseTile` | Customise Tile | 自定义磁贴 | machine | Title of the Customise Tile inspector beside Tile Detail |
 | `title.deleteTile` | Delete Tile | 删除磁贴 | machine | Alert title for delete confirmation |
+| `title.revertToDock` | Revert to Dock Version? | 要复原为程序坞中的版本吗？ | machine | Alert title: discard the tile's unapplied edits and go back to the version in the Dock |
 | `tooltip.createNewTile` | Create new tile | 新建磁贴 | machine | Tooltip when add button is enabled |
 | `tooltip.editFirst` | Edit current tile before creating another | 请先编辑当前磁贴，再创建新的磁贴 | machine | Tooltip when add button is disabled |
 | `button.addATile` | Add a Tile… | 添加磁贴… | machine | Sidebar + / empty state: opens the Add a Tile dialog |
@@ -298,6 +301,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `about.diagnosticsTitle` | Diagnostics | 诊断信息 | machine | About: Copy Diagnostics row label. |
 | `button.copy` | Copy | 拷贝 | machine | Generic Copy button label. |
 | `tooltip.openSettings` | Settings | 设置 | machine | Tooltip for the settings toolbar button |
+| `tooltip.revertToDock` | Revert to Dock Version | 复原为程序坞中的版本 | machine | Tile Detail: revert button tooltip and accessibility label, and the File menu item — discards unapplied edits, restoring the version the tile's Dock icon was built from |
 | `tooltip.toggleCustomiseTile` | Toggle Customise Tile | 显示/隐藏“自定义磁贴” | machine | Tooltip and accessibility label of the toolbar button that opens or closes the Customise Tile inspector |
 | `tooltip.toggleCustomiser` | Toggle Customiser | 显示/隐藏自定义面板 | machine | Tooltip and accessibility label of the Tile Detail icon, which opens or closes the Customise Tile inspector when clicked |
 | `translation.helpImprove` | Help Improve… | 帮助改进… | machine | Button: opens the language's review sheet on GitHub |

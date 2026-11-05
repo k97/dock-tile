@@ -45,6 +45,10 @@ struct DockTileDetailView: View {
     /// `dockSignature` stamped into the tile's helper — what the Dock shows now (nil: no helper, or
     /// built before the stamp). Read with the Dock state, never per render.
     @State private var builtDockSignature: String?
+    /// The config the helper on disk was built from (`HelperBundleManager.builtState`) — Revert to
+    /// Dock Version's source; nil without a helper or for one built before the copy existed.
+    @State private var dockSnapshot: DockTileConfiguration?
+    @State private var showRevertConfirmation = false
     @FocusState private var isNameFieldFocused: Bool  // Track focus for commit-on-blur
     /// The embedded popover panel renders per icon style — observe so it re-renders on a switch.
     @ObservedObject private var iconStyleManager = IconStyleManager.shared
@@ -151,6 +155,15 @@ struct DockTileDetailView: View {
         )
     }
 
+    /// Revert restores the helper's sealed copy. Never while a build or removal of this tile runs —
+    /// a batch (launch migration, Popover Apply) may be replacing the copy this view read.
+    private var canRevert: Bool {
+        guard !isProcessing,
+              !HelperBundleManager.shared.isDockOperationInFlight(bundleId: editedConfig.bundleIdentifier),
+              let dockSnapshot else { return false }
+        return editedConfig.revertingContent(to: dockSnapshot) != editedConfig
+    }
+
     private var isDirty: Bool {
         Self.contentSignature(of: editedConfig) != appliedContentSignature
     }
@@ -206,6 +219,11 @@ struct DockTileDetailView: View {
             // every state.
             ToolbarItem(placement: .primaryAction) { deleteButton }
             if #available(macOS 26.0, *) { ToolbarSpacer(.fixed, placement: .primaryAction) }
+            // Only while there are edits the Dock doesn't show (owner, 2026-11-05).
+            if canRevert {
+                ToolbarItem(placement: .primaryAction) { revertButton }
+                if #available(macOS 26.0, *) { ToolbarSpacer(.fixed, placement: .primaryAction) }
+            }
             ToolbarItem(placement: .primaryAction) { actionButton }
             // The one inspector toggle: here while closed, in the inspector's band while open.
             if !inspectorShown {
@@ -224,6 +242,21 @@ struct DockTileDetailView: View {
         } message: {
             Text(AppStrings.Alert.deleteTileMessage)
         }
+        .alert(AppStrings.Title.revertToDock, isPresented: $showRevertConfirmation) {
+            Button(AppStrings.Button.cancel, role: .cancel) {
+                DiagnosticsLog.shared.ui("Revert confirmation → Cancel '\(editedConfig.name)'")
+            }
+            Button(AppStrings.Button.revert, role: .destructive) {
+                DiagnosticsLog.shared.ui("Revert confirmation → Revert '\(editedConfig.name)'")
+                revertToDockVersion()
+            }
+        } message: {
+            Text(AppStrings.Alert.revertToDockMessage)
+        }
+        .focusedSceneValue(\.revertCommand, RevertCommand(isEnabled: canRevert) {
+            DiagnosticsLog.shared.ui("Menu → Revert to Dock Version '\(editedConfig.name)' (shows confirmation)")
+            showRevertConfirmation = true
+        })
         .onChange(of: showDockRestartConsent) { _, newValue in
             if newValue {
                 // Defer alert presentation to avoid SwiftUI transaction warning
@@ -323,6 +356,18 @@ struct DockTileDetailView: View {
         .buttonStyle(.bordered)
         .help(AppStrings.Tooltip.deleteTile)
         .accessibilityLabel(AppStrings.Title.deleteTile)
+    }
+
+    private var revertButton: some View {
+        Button {
+            DiagnosticsLog.shared.ui("Tile Detail → Revert pressed '\(editedConfig.name)' (shows confirmation)")
+            showRevertConfirmation = true
+        } label: {
+            Image(systemName: "arrow.uturn.backward")
+        }
+        .buttonStyle(.bordered)
+        .help(AppStrings.Tooltip.revertToDock)
+        .accessibilityLabel(AppStrings.Tooltip.revertToDock)
     }
 
     private var inspectorToggleButton: some View {
@@ -598,7 +643,28 @@ struct DockTileDetailView: View {
     /// Check if tile is currently in Dock and update state
     private func updateDockState() {
         isCurrentlyInDock = HelperBundleManager.shared.findInDock(bundleId: editedConfig.bundleIdentifier) != nil
-        builtDockSignature = HelperBundleManager.shared.builtDockSignature(for: editedConfig)
+        let built = HelperBundleManager.shared.builtState(for: editedConfig)
+        builtDockSignature = built.dockSignature
+        dockSnapshot = built.snapshot
+    }
+
+    /// Replace the draft's content with the helper's sealed copy, saved at once. Re-reads the copy
+    /// first: a batch may have rebuilt the tile since this view read it, and Revert must restore
+    /// what the Dock shows NOW. No undo — the confirmation alert is the guard.
+    private func revertToDockVersion() {
+        updateDockState()
+        guard canRevert, let dockSnapshot else {
+            DiagnosticsLog.shared.log("tile", "Revert skipped for \(editedConfig.diagnosticName) — nothing to revert now")
+            return
+        }
+        editedConfig = editedConfig.revertingContent(to: dockSnapshot)
+        tileName = editedConfig.name
+        // The onChange that follows saves the same config once more after the debounce — harmless.
+        persistEdits()
+        appliedContentSignature = Self.contentSignature(of: editedConfig)
+        configManager.commitDisplayName(for: editedConfig.id)
+        AnalyticsService.shared.log(.tileReverted)
+        DiagnosticsLog.shared.log("tile", "Reverted \(editedConfig.diagnosticName) to its Dock version")
     }
 
     /// Persist the editor's content edits (name, layout, icon, app list…). Visibility is owned

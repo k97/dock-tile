@@ -25,6 +25,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `alert.restartDock.checkbox` | Don't show this again | 今後このメッセージを表示しない | machine | Checkbox label to suppress future Dock restart alerts |
 | `alert.restartDock.message` | Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected. | Dock Tileは変更を適用するためにDockを再起動します。これはタイルを追加、更新、または削除するたびに行われます。現在のDockの項目には影響しません。 | machine | Alert message explaining Dock restart |
 | `alert.restartDock.title` | Dock Restart Required | Dockの再起動が必要です | machine | Alert title when Dock restart is required |
+| `alert.revertToDock.message` | Your changes will be replaced by the version in the Dock. | 変更内容はDockのバージョンに置き換えられます。 | machine | Revert to Dock Version confirmation message: the tile's unapplied edits are discarded and the version its Dock icon was built from comes back |
 | `app.name` | Dock Tile | Dock Tile | machine | App display name |
 | `button.add` | Add | 追加 | machine | Add button label in file picker |
 | `button.addToDock` | Add to Dock | Dockに追加 | machine | Button to add tile to Dock |
@@ -48,6 +49,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.removeAll` | Remove All | すべて取り除く | machine | Button to remove all missing apps from tiles at once |
 | `button.removeFromDock` | Remove from Dock | Dockから削除 | machine | Button to remove tile from Dock |
 | `button.resetToDefaults` | Reset to Defaults | デフォルトに戻す | machine | Button that restores popover appearance settings to their defaults |
+| `button.revert` | Revert | 戻す | machine | Confirm button of the Revert to Dock Version alert |
 | `button.reviewInTiles` | Review in Tiles | タイルで確認 | machine | Button that navigates to the first tile containing a missing app |
 | `button.save` | Save | 保存 | machine | Primary toolbar button that commits the popover appearance settings |
 | `button.saving` | Applying… | 適用中… | machine | Loading label on the Save button while applying settings to Dock tiles |
@@ -263,6 +265,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `tab.symbol` | Symbol | シンボル | machine | Symbol tab label |
 | `title.customiseTile` | Customise Tile | タイルをカスタマイズ | machine | Title of the Customise Tile inspector beside Tile Detail |
 | `title.deleteTile` | Delete Tile | タイルを削除 | machine | Alert title for delete confirmation |
+| `title.revertToDock` | Revert to Dock Version? | Dockのバージョンに戻しますか？ | machine | Alert title: discard the tile's unapplied edits and go back to the version in the Dock |
 | `tooltip.createNewTile` | Create new tile | 新規タイルを作成 | machine | Tooltip when add button is enabled |
 | `tooltip.editFirst` | Edit current tile before creating another | 別のタイルを作成する前に、現在のタイルを編集してください | machine | Tooltip when add button is disabled |
 | `button.addATile` | Add a Tile… | タイルを追加… | machine | Sidebar + / empty state: opens the Add a Tile dialog |
@@ -298,6 +301,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `about.diagnosticsTitle` | Diagnostics | 診断情報 | machine | About: Copy Diagnostics row label. |
 | `button.copy` | Copy | コピー | machine | Generic Copy button label. |
 | `tooltip.openSettings` | Settings | 設定 | machine | Tooltip for the settings toolbar button |
+| `tooltip.revertToDock` | Revert to Dock Version | Dockのバージョンに戻す | machine | Tile Detail: revert button tooltip and accessibility label, and the File menu item — discards unapplied edits, restoring the version the tile's Dock icon was built from |
 | `tooltip.toggleCustomiseTile` | Toggle Customise Tile | 「タイルをカスタマイズ」の表示/非表示を切り替え | machine | Tooltip and accessibility label of the toolbar button that opens or closes the Customise Tile inspector |
 | `tooltip.toggleCustomiser` | Toggle Customiser | カスタマイズパネルの表示/非表示を切り替え | machine | Tooltip and accessibility label of the Tile Detail icon, which opens or closes the Customise Tile inspector when clicked |
 | `translation.helpImprove` | Help Improve… | 改善に協力… | machine | Button: opens the language's review sheet on GitHub |

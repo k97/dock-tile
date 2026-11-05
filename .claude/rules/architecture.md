@@ -236,6 +236,20 @@ Detail compares it on appear and after an action (`builtDockSignature`). A helpe
 reads as pending until its next Update or migration. Pure seam `DockTileDetailView.actionIsProminent`,
 guarded by `DockSignatureTests`.
 
+**Revert to Dock Version (2026-11-05)**: edits autosave, so the only copy of "what the Dock shows" is
+the helper itself. Every build writes the config it was built from into the STAGED bundle as
+`Contents/Resources/DTDockSnapshot.json`, before signing (`writeDockSnapshot`, in `buildAndSwap`'s copy
+step; never after the seal). Tile Detail reads it together with `DTDockSignature` through ONE
+helper-folder scan (`HelperBundleManager.builtState`). The icon-only Revert button before Update is
+SHOWN, and File ▸ Revert to Dock Version (`CommandGroup(after: .saveItem)`: `replacing:` would drop
+Close ⌘W) enabled, only when a copy exists, no Dock operation runs for the tile, and the tile differs from it by full struct
+equality, so `savedSymbol` / `savedEmoji` count. Confirm re-reads the copy (a Popover Apply or migration may have rebuilt the
+tile since it appeared), then `revertingContent(to:)` takes every content field from the copy and keeps
+the bookkeeping (`bundleIdentifier`, `isVisibleInDock`, `lastDockIndex`, `helperAppVersion`). No undo.
+Limits, accepted: a helper built before this has no copy until its next build; a never-added draft never
+has one; a background rebuild (migration, self-heal, Popover Apply) builds from the CURRENT config, so it
+publishes unsaved edits and the copy moves with it. Guarded by `DockSnapshotRevertTests`.
+
 ## Dock Position Preservation
 
 `lastDockIndex` (v5 field) persists tile position across show/hide toggles. `findDockIndex(bundleId:)` saves position before removal; `addToDock(at:atIndex:)` restores it.

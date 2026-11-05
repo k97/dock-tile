@@ -25,6 +25,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `alert.restartDock.checkbox` | Don't show this again | Ne plus afficher ce message | machine | Checkbox label to suppress future Dock restart alerts |
 | `alert.restartDock.message` | Dock Tile restarts the Dock to apply changes. This happens whenever you add, update, or remove tiles. Your current Dock items won't be affected. | Dock Tile redémarre le Dock pour appliquer les modifications. Cela se produit chaque fois que vous ajoutez, mettez à jour ou supprimez des tuiles. Vos éléments du Dock actuels ne seront pas modifiés. | machine | Alert message explaining Dock restart |
 | `alert.restartDock.title` | Dock Restart Required | Redémarrage du Dock nécessaire | machine | Alert title when Dock restart is required |
+| `alert.revertToDock.message` | Your changes will be replaced by the version in the Dock. | Vos modifications seront remplacées par la version du Dock. | machine | Revert to Dock Version confirmation message: the tile's unapplied edits are discarded and the version its Dock icon was built from comes back |
 | `app.name` | Dock Tile | Dock Tile | machine | App display name |
 | `button.add` | Add | Ajouter | machine | Add button label in file picker |
 | `button.addToDock` | Add to Dock | Ajouter au Dock | machine | Button to add tile to Dock |
@@ -48,6 +49,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.removeAll` | Remove All | Tout retirer | machine | Button to remove all missing apps from tiles at once |
 | `button.removeFromDock` | Remove from Dock | Supprimer du Dock | machine | Button to remove tile from Dock |
 | `button.resetToDefaults` | Reset to Defaults | Rétablir les valeurs par défaut | machine | Button that restores popover appearance settings to their defaults |
+| `button.revert` | Revert | Revenir | machine | Confirm button of the Revert to Dock Version alert |
 | `button.reviewInTiles` | Review in Tiles | Vérifier dans les tuiles | machine | Button that navigates to the first tile containing a missing app |
 | `button.save` | Save | Enregistrer | machine | Primary toolbar button that commits the popover appearance settings |
 | `button.saving` | Applying… | Mise à jour… | machine | Loading label on the Save button while applying settings to Dock tiles |
@@ -263,6 +265,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `tab.symbol` | Symbol | Symbole | machine | Symbol tab label |
 | `title.customiseTile` | Customise Tile | Personnaliser la tuile | machine | Title of the Customise Tile inspector beside Tile Detail |
 | `title.deleteTile` | Delete Tile | Supprimer la tuile | machine | Alert title for delete confirmation |
+| `title.revertToDock` | Revert to Dock Version? | Revenir à la version du Dock ? | machine | Alert title: discard the tile's unapplied edits and go back to the version in the Dock |
 | `tooltip.createNewTile` | Create new tile | Créer une tuile | machine | Tooltip when add button is enabled |
 | `tooltip.editFirst` | Edit current tile before creating another | Modifiez la tuile actuelle avant d’en créer une autre | machine | Tooltip when add button is disabled |
 | `button.addATile` | Add a Tile… | Ajouter une tuile… | machine | Sidebar + / empty state: opens the Add a Tile dialog |
@@ -298,6 +301,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `about.diagnosticsTitle` | Diagnostics | Diagnostics | machine | About: Copy Diagnostics row label. |
 | `button.copy` | Copy | Copier | machine | Generic Copy button label. |
 | `tooltip.openSettings` | Settings | Réglages | machine | Tooltip for the settings toolbar button |
+| `tooltip.revertToDock` | Revert to Dock Version | Revenir à la version du Dock | machine | Tile Detail: revert button tooltip and accessibility label, and the File menu item — discards unapplied edits, restoring the version the tile's Dock icon was built from |
 | `tooltip.toggleCustomiseTile` | Toggle Customise Tile | Afficher/masquer « Personnaliser la tuile » | machine | Tooltip and accessibility label of the toolbar button that opens or closes the Customise Tile inspector |
 | `tooltip.toggleCustomiser` | Toggle Customiser | Afficher/masquer la personnalisation | machine | Tooltip and accessibility label of the Tile Detail icon, which opens or closes the Customise Tile inspector when clicked |
 | `translation.helpImprove` | Help Improve… | Aider à améliorer… | machine | Button: opens the language's review sheet on GitHub |

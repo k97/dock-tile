@@ -32,6 +32,7 @@ enum AnalyticsEvent: String, CaseIterable {
     case tileUpdated = "tile_updated"
     case tileRemoved = "tile_removed"
     case tileHidden = "tile_hidden"
+    case tileReverted = "tile_reverted"
     case iconStyleChanged = "icon_style_changed"
     case popoverOpened = "popover_opened"
     case appLaunchedFromTile = "app_launched_from_tile"

@@ -83,6 +83,22 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         appItems.prefix(AppsFaceGrid.maxItems).map { $0.isFolder ? ($0.folderPath ?? $0.name) : $0.bundleIdentifier }
     }
 
+    // MARK: - Revert to Dock Version
+
+    /// This tile with every content field taken from `snapshot` — the copy sealed into its helper at
+    /// build time (`HelperBundleManager.readDockSnapshot`) — and the Dock bookkeeping kept from `self`.
+    /// Starts FROM the snapshot so a content field added later reverts without editing this. Another
+    /// tile's copy changes nothing. Guarded by `DockSnapshotRevertTests`.
+    func revertingContent(to snapshot: DockTileConfiguration) -> DockTileConfiguration {
+        guard snapshot.id == id else { return self }
+        var reverted = snapshot
+        reverted.bundleIdentifier = bundleIdentifier
+        reverted.isVisibleInDock = isVisibleInDock
+        reverted.lastDockIndex = lastDockIndex
+        reverted.helperAppVersion = helperAppVersion
+        return reverted
+    }
+
     // MARK: - Duplicate
 
     /// A copy that looks exactly like this tile. Only identity and Dock bookkeeping are new: a fresh

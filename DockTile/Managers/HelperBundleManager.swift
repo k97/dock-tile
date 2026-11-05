@@ -288,13 +288,30 @@ final class HelperBundleManager {
     /// Info.plist key holding `DockTileConfiguration.dockSignature` of the tile a helper was built from.
     nonisolated static let dockSignatureKey = "DTDockSignature"
 
-    /// `DockTileConfiguration.dockSignature` of the tile the helper on disk was built from; `nil` when
-    /// no helper exists or it was built before the stamp. Scans the helper folder (one plist read per
-    /// helper), so Tile Detail reads it on appear and after an action only.
-    func builtDockSignature(for config: DockTileConfiguration) -> String? {
-        guard let path = findExistingHelper(bundleId: config.bundleIdentifier) else { return nil }
+    /// The config a helper was built from, sealed into `Contents/Resources` — Revert to Dock Version's
+    /// source. Written in staging before signing, so it is swapped and deleted with its helper.
+    nonisolated static let dockSnapshotFile = "DTDockSnapshot.json"
+
+    nonisolated static func writeDockSnapshot(_ config: DockTileConfiguration, inBundle bundle: URL) throws {
+        let url = bundle.appendingPathComponent("Contents/Resources/\(dockSnapshotFile)")
+        try JSONEncoder().encode(config).write(to: url, options: .atomic)
+    }
+
+    /// nil: no file (built before Revert existed) or unreadable (e.g. written by a newer schema).
+    nonisolated static func readDockSnapshot(inBundle bundle: URL) -> DockTileConfiguration? {
+        let url = bundle.appendingPathComponent("Contents/Resources/\(dockSnapshotFile)")
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(DockTileConfiguration.self, from: data)
+    }
+
+    /// What the helper on disk was built from: its sealed config copy and its stamped
+    /// `DockTileConfiguration.dockSignature`; each `nil` when no helper exists or it predates that
+    /// stamp. Scans the helper folder, so Tile Detail reads it on appear, after an action and when
+    /// Revert is confirmed only.
+    func builtState(for config: DockTileConfiguration) -> (snapshot: DockTileConfiguration?, dockSignature: String?) {
+        guard let path = findExistingHelper(bundleId: config.bundleIdentifier) else { return (nil, nil) }
         let plist = NSDictionary(contentsOf: path.appendingPathComponent("Contents/Info.plist"))
-        return plist?[Self.dockSignatureKey] as? String
+        return (Self.readDockSnapshot(inBundle: path), plist?[Self.dockSignatureKey] as? String)
     }
 
     /// Check if a helper bundle exists for the given configuration (by bundle ID)
@@ -1127,7 +1144,7 @@ final class HelperBundleManager {
     ///   • Strip Sparkle keys — helpers must never self-update; only the main app does.
     ///   • Strip `CFBundleURLTypes` — only the main app handles `docktile://` deep links.
     ///   • Record the look the icon is built from (`iconSignatureKey`) — see `builtIconSignature` —
-    ///     and everything the helper shows (`dockSignatureKey`) — see `builtDockSignature`.
+    ///     and everything the helper shows (`dockSignatureKey`) — see `builtState`.
     nonisolated static func helperInfoPlist(
         from base: [String: Any],
         bundleId: String,
@@ -1931,6 +1948,7 @@ final class HelperBundleManager {
                     appName: config.name, bundleId: bundleId, helperPath: staged,
                     showInAppSwitcher: config.showInAppSwitcher, iconSignature: config.iconSignature,
                     dockSignature: config.dockSignature)
+                try Self.writeDockSnapshot(config, inBundle: staged)
             },
             buildIcons: { try await self.installTileIcons(for: config, at: staged) },
             sign: { try await self.codesignHelper(at: staged) },

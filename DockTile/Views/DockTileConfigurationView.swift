@@ -46,6 +46,33 @@ extension FocusedValues {
     }
 }
 
+/// What File ▸ Revert to Dock Version reads from the focused tile's detail view.
+struct RevertCommand {
+    let isEnabled: Bool
+    let revert: () -> Void
+}
+
+private struct RevertCommandKey: FocusedValueKey {
+    typealias Value = RevertCommand
+}
+
+extension FocusedValues {
+    var revertCommand: RevertCommand? {
+        get { self[RevertCommandKey.self] }
+        set { self[RevertCommandKey.self] = newValue }
+    }
+}
+
+/// File ▸ Revert to Dock Version. Disabled without a focused tile or with nothing to revert.
+struct RevertMenuItem: View {
+    @FocusedValue(\.revertCommand) private var command
+
+    var body: some View {
+        Button(AppStrings.Tooltip.revertToDock) { command?.revert() }
+            .disabled(command?.isEnabled != true)
+    }
+}
+
 /// View ▸ Show/Hide Inspector (⌥⌘I). Disabled when no window is focused or no tile row is selected.
 struct InspectorMenuItem: View {
     @FocusedValue(\.inspectorCommand) private var command
