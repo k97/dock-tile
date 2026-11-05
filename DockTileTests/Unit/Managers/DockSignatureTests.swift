@@ -2,8 +2,8 @@ import Foundation
 import Testing
 @testable import Dock_Tile
 
-/// Guards "a bright Update means the Dock is behind". A helper reads its config once at launch, so
-/// the Dock shows a tile as of its last build; the build stamps `dockSignature` into the helper and
+/// Guards "a bright Update means the Dock is behind". A helper shows the copy sealed with its build
+/// (`dockVersion`), so the Dock shows a tile as of its last build; the build stamps `dockSignature` into the helper and
 /// Tile Detail paints Update prominent only while the tile differs from that stamp. Failing values:
 /// an edit the helper shows (name, layout, app list, mode, icon) that leaves the signature alone, so
 /// Update stays quiet with the Dock out of date; bookkeeping that moves it, so Update lights up after

@@ -96,6 +96,25 @@ struct DockSnapshotRevertTests {
         #expect(unchanged.revertingContent(to: Self.snapshot) == unchanged)
     }
 
+    @Test("A healed path stays live; an item only in the copy keeps its own")
+    func revertKeepsTheLivePathPerItem() throws {
+        let kept = UUID(), removed = UUID()
+        var copy = Self.snapshot
+        copy.appItems = [
+            AppItem(id: kept, bundleIdentifier: "com.apple.TV", name: "TV", lastKnownPath: "/Applications/Old/TV.app"),
+            AppItem(id: removed, bundleIdentifier: "com.apple.Music", name: "Music", lastKnownPath: "/System/Applications/Music.app"),
+        ]
+        var live = Self.draft
+        // The missing-app scan healed TV's path; the draft also renamed it and dropped Music.
+        live.appItems = [AppItem(id: kept, bundleIdentifier: "com.apple.TV", name: "Renamed", lastKnownPath: "/Applications/TV.app")]
+
+        let items = live.revertingContent(to: copy).appItems
+        try #require(items.count == 2)
+        #expect(items[0].lastKnownPath == "/Applications/TV.app")  // bookkeeping: live
+        #expect(items[0].name == "TV")                             // content: the copy
+        #expect(items[1].lastKnownPath == "/System/Applications/Music.app")
+    }
+
     @Test("The copy round-trips through the helper bundle")
     func snapshotRoundTripsThroughTheBundleFile() throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent("DockSnapshotRevertTests-\(UUID().uuidString)")

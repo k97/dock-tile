@@ -32,6 +32,11 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
     /// Configuration manager - created once at launch
     private var configManager: ConfigurationManager?
 
+    /// The config this helper was built from (`DTDockSnapshot.json`), read once at launch: the tile
+    /// shows it, not the main app's unsaved draft (`DockTileConfiguration.dockVersion`). nil for a
+    /// helper built before copies existed — it follows the live config, as before.
+    private var dockCopy: DockTileConfiguration?
+
     /// Track if popover was shown due to app activation (Cmd+Tab)
     private var showedPopoverOnActivation = false
 
@@ -100,8 +105,9 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
         //   - We use .regular activation policy here
         //   - Result: Dock icon visible, visible in Cmd+Tab, context menu works
         //
-        // Read the config to determine which mode to use
-        let showInAppSwitcher = readShowInAppSwitcherFromDisk()
+        // Read the config to determine which mode to use — the Dock copy first, before anything else.
+        dockCopy = HelperBundleManager.readDockSnapshot(inBundle: Bundle.main.bundleURL)
+        let showInAppSwitcher = dockCopy?.showInAppSwitcher ?? readShowInAppSwitcherFromDisk()
 
         if showInAppSwitcher {
             // MODE B: App Mode - full Dock integration with context menu
@@ -125,6 +131,9 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
             // Tag this process in the shared diagnostics log with the tile name.
             DiagnosticsLog.shared.setLabel("helper:\(config.name) (\(config.shortId))")
             DiagnosticsLog.shared.log("helper", "Ready — \(config.appItems.count) app(s), mode=\(config.showInAppSwitcher ? "app" : "ghost"), bundle=\(currentBundleId)")
+            if dockCopy == nil {
+                DiagnosticsLog.shared.log("helper", "No Dock copy — popover follows the live config until the next build")
+            }
         } else {
             print("⚠️ No configuration found for bundle ID: \(currentBundleId)")
             DiagnosticsLog.shared.log("helper", "No configuration found for bundle \(currentBundleId)")
@@ -508,7 +517,8 @@ final class HelperAppDelegate: NSObject, NSApplicationDelegate {
 
     private func getCurrentConfiguration() -> DockTileConfiguration? {
         guard let configManager = configManager else { return nil }
-        return configManager.configuration(forBundleId: currentBundleId)
+        return DockTileConfiguration.dockVersion(live: configManager.configuration(forBundleId: currentBundleId),
+                                                 snapshot: dockCopy)
     }
 
     /// Read showInAppSwitcher directly from disk (for early initialization)

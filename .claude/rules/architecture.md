@@ -229,8 +229,8 @@ grouped beside a separate Done; spike-verified 2026-10-21). **A bright Update me
 Dock is behind (2026-10-21)**: Add to Dock is always `.borderedProminent`; Update is prominent only while
 the tile differs from what its helper was built from, else `.bordered` (still enabled — it is also the
 manual rebuild that refreshes an App Grid face after an app's icon or install state changed);
-remove/saveOnly are always `.bordered`. A helper reads its config once at launch, so the Dock shows the
-tile as of its last build: every build stamps `DockTileConfiguration.dockSignature` (icon signature,
+remove/saveOnly are always `.bordered`. A helper shows the copy sealed with its build (below), so the
+Dock shows the tile as of its last build: every build stamps `DockTileConfiguration.dockSignature` (icon signature,
 name, layout, Ghost/App mode, app list) into the helper's Info.plist as `DTDockSignature`, and Tile
 Detail compares it on appear and after an action (`builtDockSignature`). A helper built before the stamp
 reads as pending until its next Update or migration. Pure seam `DockTileDetailView.actionIsProminent`,
@@ -245,10 +245,22 @@ SHOWN, and File ▸ Revert to Dock Version (`CommandGroup(after: .saveItem)`: `r
 Close ⌘W) enabled, only when a copy exists, no Dock operation runs for the tile, and the tile differs from it by full struct
 equality, so `savedSymbol` / `savedEmoji` count. Confirm re-reads the copy (a Popover Apply or migration may have rebuilt the
 tile since it appeared), then `revertingContent(to:)` takes every content field from the copy and keeps
-the bookkeeping (`bundleIdentifier`, `isVisibleInDock`, `lastDockIndex`, `helperAppVersion`). No undo.
-Limits, accepted: a helper built before this has no copy until its next build; a never-added draft never
-has one; a background rebuild (migration, self-heal, Popover Apply) builds from the CURRENT config, so it
-publishes unsaved edits and the copy moves with it. Guarded by `DockSnapshotRevertTests`.
+the bookkeeping (`bundleIdentifier`, `isVisibleInDock`, `lastDockIndex`, `helperAppVersion`, and each
+item's `lastKnownPath`, matched by item id — the missing-app scan heals it, so it must never make a
+tile look edited or be undone by Revert). No undo. Guarded by `DockSnapshotRevertTests`.
+
+**The Dock shows the Dock version, never the draft (critical, 2026-11-05)**: outside the editor every
+reader goes through `DockTileConfiguration.dockVersion(live:snapshot:)` — content from the copy,
+bookkeeping from live; no live config → nil (deleted); no copy → live. Background rebuilds (migration,
+self-heal, Popover Apply) take it in `regenerateBatch`'s `current:`, so they never publish a draft. A
+helper reads its own copy ONCE in `applicationWillFinishLaunching` (before the Ghost/App decision) and
+its popover, Dock menu and App mode follow it, not the shared config file; it used to load the live
+file, so every relaunch (login, reboot, a rebuild) showed unsaved edits. Only Add to Dock / Update
+(`installHelper`) publish. The missing-app alert's Remove is an EDIT like any other (Update goes
+accent, the Dock keeps the placeholder until Update). Limits, accepted: a helper built before copies
+existed follows the live config until its next build (the first migration after the release that ships
+this builds from the draft once, logged per tile); a never-added draft has no copy. Guarded by `DockVersionTests`. Menu bar
+/ Dock Tile's Dock menu (#13) must read tiles through `dockVersion` too.
 
 ## Dock Position Preservation
 
@@ -318,6 +330,15 @@ Popover, Dock Lock) · Dock Tile (About)** — the old accordion `@AppStorage` e
   band. It lives on only as the leading badge icon for the Settings/About rows in
   `DockTileSidebarView` (`PaneIcon.general` / `.popover` / `.dockLock` / `.about`).
 
+- **A labelled title-band button pads its label `.padding(.horizontal, 6)` (2026-11-05)**: the macOS 26
+  toolbar capsule (36 pt tall) gives a text label only 6–7 pt a side, half a native push button's ~12
+  (measured from window-ID captures; owner called it "too tight"). Tile Detail's action button and
+  Popover's Save carry it; a NEW labelled title-band button needs it too. Icon-only items don't.
+- **Adding or removing a title-band item with `if` is fine; swapping an item's style is not.** The
+  inspector toggle and Revert both come and go cleanly (checked by eye 2026-11-05). The Tahoe quirk
+  (Popover Appearance, "first-built look") is about changing a live item's button style or swapping
+  two items, so change values there, never structure.
+
 - **One switch size app-wide — 36×16 (`.controlSize(.mini)`)**. Measured, not guessed: `.small`
   renders 44×20 and stood out against every Settings pane. It is encoded two ways **on purpose**:
   a labels-hidden toggle in a hand-built row (Tile Detail, Popover) uses the shared
@@ -330,15 +351,6 @@ Popover, Dock Lock) · Dock Tile (About)** — the old accordion `@AppStorage` e
 - **Window widths: 700 closed, 960 open, 1200 max** (`AppDelegate.minWindowWidth` / `inspectorWidth` 260 /
   `maxWindowWidth`; `DockTileApp`, `DockTileConfigurationView` and `WindowAccessor` read them). The pure
   `AppDelegate.clampedWindowWidth(_:inspectorShown:)` clamps `windowWillResize` and a restored saved
-- **A labelled title-band button pads its label `.padding(.horizontal, 6)` (2026-11-05)**: the macOS 26
-  toolbar capsule (36 pt tall) gives a text label only 6–7 pt a side, half a native push button's ~12
-  (measured from window-ID captures; owner called it "too tight"). Tile Detail's action button and
-  Popover's Save carry it; a NEW labelled title-band button needs it too. Icon-only items don't.
-- **Adding or removing a title-band item with `if` is fine; swapping an item's style is not.** The
-  inspector toggle and Revert both come and go cleanly (checked by eye 2026-11-05). The Tahoe quirk
-  (Popover Appearance, "first-built look") is about changing a live item's button style or swapping
-  two items, so change values there, never structure.
-
   frame; `windowFrame(forInspectorShown:from:visibleFrame:)` is the frame rule. Guarded by `MainWindowWidthTests`.
   **The split view's own minimum must fit inside those (critical).** With the inspector open the split
   view counts it TWICE: the SwiftUI hosting view's fitting size includes the inspector (its safe-area

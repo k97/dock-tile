@@ -146,9 +146,10 @@ struct HelperMigrationBatchTests {
         #expect(outcome.regeneratedIds == [kept.id])
     }
 
-    /// A tile edited (here: renamed) while the batch runs is rebuilt from its CURRENT config, not
-    /// the copy taken when the batch began. Failing value: the build sees "before".
-    @Test("A tile edited mid-batch is rebuilt from its current config")
+    /// A tile that changed (here: renamed, e.g. by an Update) while the batch runs is rebuilt from
+    /// what `current` returns AT its turn — in the app, its Dock version (`dockVersion`) — not from
+    /// what the batch read when it began. Failing value: the build sees "before".
+    @Test("A tile changed mid-batch is rebuilt from what current returns at its turn")
     func editedMidBatchUsesCurrent() async {
         let original = DockTileConfiguration(name: "before")
         var edited = original
