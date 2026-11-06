@@ -82,6 +82,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     // MARK: - Application Lifecycle
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // A quiet launch (#13) has no Dock icon; set before any can draw, as helpers do.
+        if AppEnvironment.isQuietLaunch { NSApp.setActivationPolicy(.accessory) }
+    }
+
+    /// A quiet launch still creates the scene's window, so its `onAppear` hands over the manager and
+    /// `openWindow` and its `.task` runs launch maintenance. SwiftUI has ordered it in by
+    /// `didFinishLaunching` (with and without a window to restore) but not drawn it yet: hiding it
+    /// here showed no frame in a 2 ms window-server probe (2026-11-06). Shown again at full alpha by
+    /// `showConfigurationWindow`.
+    private func hideQuietLaunchWindow() {
+        guard AppEnvironment.isQuietLaunch else { return }
+        guard let window = NSApp.windows.first(where: { $0.contentViewController != nil }) else {
+            DiagnosticsLog.shared.log("lifecycle", "Quiet launch: no window at didFinishLaunching to hide")
+            return
+        }
+        window.alphaValue = 0
+        window.orderOut(nil)
+        DiagnosticsLog.shared.log("lifecycle", "Quiet launch: window hidden", verbose: true)
+    }
+
     // Main app only: `main.swift` gives a helper bundle `HelperAppDelegate` instead (`AppEnvironment.isHelper`).
     func applicationDidFinishLaunching(_ notification: Notification) {
         print(AppStrings.Log.launching)
@@ -89,14 +110,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         Self.instance = self
         DiagnosticsLog.shared.log("lifecycle", "didFinishLaunching", verbose: true)
+        hideQuietLaunchWindow()
         configureAsMainApp()
 
         print(AppStrings.Log.ready)
     }
 
     private func configureAsMainApp() {
-        // Main app: Use regular mode to show dock icon
-        NSApp.setActivationPolicy(.regular)
+        // Main app: Use regular mode to show dock icon (not on a quiet launch: menu bar only)
+        if !AppEnvironment.isQuietLaunch { NSApp.setActivationPolicy(.regular) }
 
         // Under a test host the app launches against the user's LIVE dev data. Stay inert — none of
         // the launch side effects below (Dock Lock tap, login-item registration, Smart Add
@@ -145,6 +167,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Configure window sizing after a brief delay to ensure window exists
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [self] in
             configureMainWindowSizing()
+
+            // A quiet launch at login shows no alert; both wait for the next time the user opens Dock Tile.
+            guard !AppEnvironment.isQuietLaunch else { return }
 
             // Nudge to /Applications if the app is translocated or running from Downloads etc.,
             // where it can't copy itself to build helper tiles. Deferred so a window exists to sit
@@ -250,9 +275,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // stayed resident for Dock Lock). The reuse rule lives in the testable seam above.
         let identifiers = NSApp.windows.map { $0.identifier?.rawValue }
         if Self.shouldReuseConfigurationWindow(openWindowIdentifiers: identifiers) {
-            NSApp.windows
-                .first { $0.identifier?.rawValue == Self.configurationWindowID }?
-                .makeKeyAndOrderFront(nil)
+            let window = NSApp.windows.first { $0.identifier?.rawValue == Self.configurationWindowID }
+            window?.alphaValue = 1  // a quiet launch hid it at 0
+            window?.makeKeyAndOrderFront(nil)
         } else {
             openConfigurationWindow?()
         }

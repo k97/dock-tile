@@ -44,6 +44,24 @@ if CommandLine.arguments.contains(LoginTileSpawner.flag) {
     // Main app: Use SwiftUI
     print("🚀 Starting as main app (SwiftUI)")
 
+    // One main app at a time (#13): the login spawner starts a new instance on purpose, and "Reopen
+    // windows when logging back in" can start another at the same moment; both would write the
+    // config and the Dock plist. Held for the process's life. The loser waits up to 5 s first, because
+    // the move to /Applications launches the new copy before the old one quits.
+    let mainAppLock: TileBuildLock? = AppEnvironment.isRunningTests ? nil : {
+        for _ in 0..<50 {
+            if let lock = TileBuildLock.acquire(bundleId: "main-app", stagingDirectory: AppEnvironment.supportURL) {
+                return lock
+            }
+            usleep(100_000)
+        }
+        return nil
+    }()
+    if !AppEnvironment.isRunningTests && mainAppLock == nil {
+        DiagnosticsLog.shared.log("lifecycle", "Another Dock Tile is running — exiting (quiet: \(AppEnvironment.isQuietLaunch))")
+        exit(0)
+    }
+
     // Analytics/Crashlytics — configure before SwiftUI spins up.
     AnalyticsService.shared.configure()
     AnalyticsService.shared.log(.appLaunched)
@@ -54,5 +72,14 @@ if CommandLine.arguments.contains(LoginTileSpawner.flag) {
         DiagnosticsLog.shared.log("lifecycle", "Main app launched — v\(AppEnvironment.appVersion) (\(AppEnvironment.current))")
     }
 
-    DockTileApp.main()
+    // Never restore AppKit window state: after an unclean exit (crash, Force Quit) it records "no
+    // windows", SwiftUI then creates none — even with `.defaultLaunchBehavior(.presented)` — and
+    // without it `onAppear` (the Open Dock Tile… handle) and the launch-maintenance `.task` never run
+    // (#13, measured 2026-11-06). The frame is kept apart, under `NSWindow Frame …`.
+    UserDefaults.standard.register(defaults: ["ApplePersistenceIgnoreState": true])
+
+    // An optimised build may release a local after its last use; the lock must outlive the run loop.
+    withExtendedLifetime(mainAppLock) {
+        DockTileApp.main()
+    }
 }

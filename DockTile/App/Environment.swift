@@ -64,6 +64,11 @@ enum AppEnvironment {
             || NSClassFromString("XCTestCase") != nil
     }()
 
+    /// Started by the login spawner to sit in the menu bar with no window and no Dock icon (#13).
+    /// Latched once at process start.
+    static let quietLaunchFlag = "--quiet-launch"
+    static let isQuietLaunch: Bool = CommandLine.arguments.contains(quietLaunchFlag)
+
     /// Marketing version string (e.g., "1.2.1").
     static let appVersion: String = {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"

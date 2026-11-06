@@ -6,8 +6,9 @@
 //  launched with `--login-spawn-tiles` by the SMAppService launcher agent (see
 //  LoginItemManager + the bundled Contents/Library/LaunchAgents plist).
 //
-//  It launches every visible tile's helper bundle in the background and then exits.
-//  It NEVER creates an NSApplication, so no Dock icon or window appears at login —
+//  It launches every visible tile's helper bundle in the background, then — while the menu bar
+//  icon is on (#13) — the main app with `--quiet-launch` (no window, no Dock icon), and exits.
+//  It NEVER creates an NSApplication itself, so no Dock icon or window appears at login —
 //  the user just sees their tiles become responsive.
 //
 //  Deliberately self-contained: it does NOT touch ConfigurationManager (whose init
@@ -30,13 +31,18 @@ enum LoginTileSpawner {
     static func run() -> Never {
         NSLog("🌅 LoginTileSpawner: warming visible tiles at login")
 
-        let configs = loadVisibleConfigs()
-        guard !configs.isEmpty else {
-            NSLog("🌅 LoginTileSpawner: no visible tiles to warm — exiting")
-            exit(0)
-        }
+        let runningApps = NSWorkspace.shared.runningApplications
+        let running = Set(runningApps.compactMap { $0.bundleIdentifier })
+        // Decided before the no-tiles exit: every tile hidden + the menu bar icon is a real setup.
+        let launchesMain = launchesMainApp(
+            menuBarEnabled: UserDefaults.standard.bool(forKey: UserDefaultsKeys.menuBarEnabled),
+            mainAppPids: runningApps.filter { $0.bundleIdentifier == AppEnvironment.mainAppBundleId }
+                .map(\.processIdentifier),
+            ownPid: ProcessInfo.processInfo.processIdentifier)
 
-        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier })
+        let configs = loadVisibleConfigs()
+        if configs.isEmpty { NSLog("🌅 LoginTileSpawner: no visible tiles to warm") }
+
         let group = DispatchGroup()
 
         for config in configs {
@@ -64,10 +70,33 @@ enum LoginTileSpawner {
             }
         }
 
-        // Wait for the launches to be acknowledged, with a safety timeout, then exit.
+        // Wait for the launches to be acknowledged, with a safety timeout.
         _ = group.wait(timeout: .now() + 15)
+
+        // After the helpers: the main app's launch maintenance may rebuild them.
+        if launchesMain {
+            let openConfig = NSWorkspace.OpenConfiguration()
+            openConfig.activates = false
+            openConfig.addsToRecentItems = false
+            openConfig.createsNewApplicationInstance = true  // this process already has the bundle id
+            openConfig.arguments = [AppEnvironment.quietLaunchFlag]
+            let launched = DispatchGroup()
+            launched.enter()
+            NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: openConfig) { _, error in
+                // On failure the icon appears the next time the user opens Dock Tile.
+                if let error { NSLog("🌅 LoginTileSpawner: failed to launch the main app: %@", error.localizedDescription) }
+                launched.leave()
+            }
+            _ = launched.wait(timeout: .now() + 15)
+        }
         NSLog("🌅 LoginTileSpawner: done — exiting")
         exit(0)
+    }
+
+    /// The main app sits in the menu bar from login only while the icon is on and no other copy runs.
+    /// This process shares the main app's bundle id, so its own pid never counts (`LoginSpawnPlanTests`).
+    static func launchesMainApp(menuBarEnabled: Bool, mainAppPids: [pid_t], ownPid: pid_t) -> Bool {
+        menuBarEnabled && !mainAppPids.contains { $0 != ownPid }
     }
 
     // MARK: - Self-contained helpers

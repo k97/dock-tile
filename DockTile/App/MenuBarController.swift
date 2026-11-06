@@ -50,7 +50,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             menu.delegate = self
             item.menu = menu
             statusItem = item
-            DiagnosticsLog.shared.log("menu", "Status item added (glyph: \(item.button?.image != nil), visible: \(item.isVisible))")        } else if !enabled, let item = statusItem {
+            DiagnosticsLog.shared.log("menu", "Status item added (glyph: \(item.button?.image != nil), visible: \(item.isVisible))")
+        } else if !enabled, let item = statusItem {
             NSStatusBar.system.removeStatusItem(item)
             statusItem = nil
         }
