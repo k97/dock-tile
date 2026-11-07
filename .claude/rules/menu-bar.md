@@ -77,7 +77,10 @@ Tiles". Analytics: `setting_changed` with `setting: "menu_bar"`; no new event.
   because the move to /Applications launches the new copy before the old one quits. Then
   `MainAppLock.outcome` (`MainAppLockTests`, incl. a real two-open test): only `EWOULDBLOCK` is "another
   copy" — any other open error runs WITHOUT the lock, never refuses to open; a user's launch hands off
-  (opens the running copy, which reopens and shows its window — its Dock icon may be hidden) and exits;
+  (posts `AppDelegate.showWindowRequest`, a per-environment distributed notification the running copy
+  answers with `showConfigurationWindow` — its Dock icon may be hidden) and exits. NOT Launch Services:
+  `openApplication(at:)` from the losing process reopened that process itself, and nothing appeared
+  (reproduced 2026-11-07). The window shows; macOS 14+ may keep another app in front;
   a quiet loser just exits. It reads the argument, not `isQuietLaunch`, which would clear the idle-install
   flag. Skipped under the test host (it runs beside the dev app).
 

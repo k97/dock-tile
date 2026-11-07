@@ -70,20 +70,12 @@ if CommandLine.arguments.contains(LoginTileSpawner.flag) {
             DiagnosticsLog.shared.log("lifecycle", "Another Dock Tile is running — quiet launch exiting")
             exit(0)
         case .handOff:
-            // Open the running copy, which reopens and shows its window (its Dock icon may be hidden
-            // behind the menu bar icon), so a double-click never does nothing.
-            DiagnosticsLog.shared.log("lifecycle", "Another Dock Tile is running — handing off to it and exiting")
-            let ownPid = ProcessInfo.processInfo.processIdentifier
-            if let running = NSWorkspace.shared.runningApplications.first(where: {
-                $0.bundleIdentifier == AppEnvironment.mainAppBundleId && $0.processIdentifier != ownPid
-            }), let url = running.bundleURL {
-                let opened = DispatchSemaphore(value: 0)
-                NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration()) { _, error in
-                    if let error { NSLog("Hand-off to the running Dock Tile failed: %@", error.localizedDescription) }
-                    opened.signal()
-                }
-                _ = opened.wait(timeout: .now() + 5)
-            }
+            // Ask the running copy to show its window (its Dock icon may be hidden behind the menu bar
+            // icon), so a second launch never ends with nothing on screen. Not Launch Services: opening
+            // the app from this process reopened this process itself (2026-11-07).
+            DiagnosticsLog.shared.log("lifecycle", "Another Dock Tile is running — asking it for its window and exiting")
+            DistributedNotificationCenter.default().postNotificationName(
+                AppDelegate.showWindowRequest, object: nil, userInfo: nil, deliverImmediately: true)
             exit(0)
         }
     }

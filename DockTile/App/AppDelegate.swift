@@ -29,6 +29,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// `nonisolated` so the pure `shouldReuseConfigurationWindow` seam can read it off the actor.
     nonisolated static let configurationWindowID = "com.docktile.configuration"
 
+    /// Posted by a second launch that lost the main-app lock (`main.swift`), so this copy shows its
+    /// window (#13). Asking Launch Services to open this app from that process reopened the caller
+    /// itself, and nothing appeared (2026-11-07). Per environment, so dev and release never cross.
+    nonisolated static let showWindowRequest = Notification.Name("\(AppEnvironment.mainAppBundleId).showWindow")
+
     /// SwiftUI's `openWindow` action, captured by the scene. Used to recreate the configuration
     /// window when it has been fully closed while the app stayed resident (e.g. Dock Lock on).
     var openConfigurationWindow: (() -> Void)?
@@ -163,6 +168,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // re-assert it after a Sparkle update demotes the SMAppService agent — unless the user
         // explicitly turned it off in Settings.
         LoginItemManager.shared.reconcileOnLaunch()
+
+        // A second launch asks for the window instead of running beside us (main-app lock).
+        DistributedNotificationCenter.default().addObserver(forName: Self.showWindowRequest, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated {
+                DiagnosticsLog.shared.ui("Second launch → show window")
+                AppDelegate.instance?.showConfigurationWindow()
+            }
+        }
 
         // Smart Add: begin building the on-device app-usage signal (launch history + Spotlight).
         // Main app only; stays entirely on device (independent of the analytics toggle).
