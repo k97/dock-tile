@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-11-07
+
+### Added
+
+- **menu bar:** Add an optional menu bar icon listing the tiles in the Dock, each with its apps and folders, Configure Tile…, Open Dock Tile… and Quit; a "Menu Bar" toggle in Settings › General turns it off (on for new installs, off for existing users) (#13) ([1036298](https://github.com/k97/dock-tile/commit/1036298), [7c72309](https://github.com/k97/dock-tile/commit/7c72309))
+- **menu bar:** Keep Dock Tile running with its window closed while the icon is on, showing its own Dock icon only while the window is open, and start it quietly in the menu bar at login (#13) ([293f987](https://github.com/k97/dock-tile/commit/293f987), [0240204](https://github.com/k97/dock-tile/commit/0240204), [42f44d6](https://github.com/k97/dock-tile/commit/42f44d6))
+- **dock:** List every tile and its apps in Dock Tile's own Dock menu, not just the selected tile's apps (#13) ([63f0179](https://github.com/k97/dock-tile/commit/63f0179))
+- **tiles:** Add Revert to Dock Version, which undoes edits to a tile that haven't been added to the Dock ([ae4480b](https://github.com/k97/dock-tile/commit/ae4480b))
+
+### Changed
+
+- **dock lock:** Start Dock Tile quietly at login for Dock Lock, only when the display the Dock is locked to is connected beside another ([87d681c](https://github.com/k97/dock-tile/commit/87d681c))
+- **dock lock:** Pull the Dock back to the chosen display after another display is plugged in or removed ([87d681c](https://github.com/k97/dock-tile/commit/87d681c), [d0996b0](https://github.com/k97/dock-tile/commit/d0996b0))
+- **updates:** Install updates while Dock Tile stays running for the menu bar icon or Dock Lock, after ten minutes away with its window closed, then reopen quietly (#13) ([6271f97](https://github.com/k97/dock-tile/commit/6271f97))
+- **ui:** Give labelled title-bar buttons such as Update and Save more room around their labels ([7d6422d](https://github.com/k97/dock-tile/commit/7d6422d))
+
+### Fixed
+
+- **tiles:** Stop edits that haven't been added to the Dock showing in a tile's popover after a restart or a background rebuild ([7189a0f](https://github.com/k97/dock-tile/commit/7189a0f))
+
 ## [2.6.4] - 2026-11-04
 
 ### Changed
@@ -181,7 +201,9 @@ so every fix below reaches them without any action from you.
 - **customise:** Fix Customise overwriting a tile's Dock visibility with the value from when the editor was opened ([eaa93c6](https://github.com/k97/dock-tile/commit/eaa93c6))
 - **diagnostics:** Fix multi-line entries in Copy Diagnostics surviving the one-hour trim forever ([1e5a6a9](https://github.com/k97/dock-tile/commit/1e5a6a9))
 
-[Unreleased]: https://github.com/k97/dock-tile/compare/v2.6.3...HEAD
+[Unreleased]: https://github.com/k97/dock-tile/compare/v2.7.0...HEAD
+[2.7.0]: https://github.com/k97/dock-tile/compare/v2.6.4...v2.7.0
+[2.6.4]: https://github.com/k97/dock-tile/compare/v2.6.3...v2.6.4
 [2.6.3]: https://github.com/k97/dock-tile/compare/v2.6.2...v2.6.3
 [2.6.2]: https://github.com/k97/dock-tile/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/k97/dock-tile/compare/v2.6.0...v2.6.1
