@@ -21,24 +21,16 @@ enum TileMenu {
         let enabled: Bool
     }
 
-    struct Tile: Equatable {
-        let config: DockTileConfiguration
-        let rows: [AppRow]
-    }
-
     /// The tiles a menu lists: those shown in the Dock, in the order given (the sidebar's). A tile with
     /// Show Tile off is hidden from the menus too (owner, 2026-11-05).
     nonisolated static func menuTiles(_ configs: [DockTileConfiguration]) -> [DockTileConfiguration] {
         configs.filter(\.isVisibleInDock)
     }
 
-    /// Tiles in the order given, each with its apps and folders in tile order. A missing app or
-    /// folder stays listed but disabled, like the popover's "Not installed" row.
-    nonisolated static func entries(for configs: [DockTileConfiguration],
-                                    isInstalled: (AppItem) -> Bool) -> [Tile] {
-        configs.map { config in
-            Tile(config: config, rows: config.appItems.map { AppRow(item: $0, enabled: isInstalled($0)) })
-        }
+    /// A tile's apps and folders in tile order. A missing one stays listed but disabled, like the
+    /// popover's "Not installed" row.
+    nonisolated static func rows(for config: DockTileConfiguration, isInstalled: (AppItem) -> Bool) -> [AppRow] {
+        config.appItems.map { AppRow(item: $0, enabled: isInstalled($0)) }
     }
 
     // MARK: - Menu items
@@ -48,13 +40,13 @@ enum TileMenu {
     /// One item per app or folder (`representedObject` = the `AppItem`), or one disabled
     /// "No apps configured" row for an empty tile.
     static func appItems(for config: DockTileConfiguration, target: AnyObject, action: Selector) -> [NSMenuItem] {
-        guard let tile = entries(for: [config], isInstalled: AppInstallChecker.isInstalled).first,
-              !tile.rows.isEmpty else {
+        let rows = Self.rows(for: config, isInstalled: AppInstallChecker.isInstalled)
+        guard !rows.isEmpty else {
             let empty = NSMenuItem(title: AppStrings.Menu.noAppsConfigured, action: nil, keyEquivalent: "")
             empty.isEnabled = false
             return [empty]
         }
-        return tile.rows.map { row in
+        return rows.map { row in
             let item = NSMenuItem(title: row.item.name, action: row.enabled ? action : nil, keyEquivalent: "")
             item.target = target
             item.representedObject = row.item
@@ -84,7 +76,7 @@ enum TileMenu {
         }
     }
 
-    /// A tile's app submenu, built the first time it opens. Its own delegate, so the parent
+    /// A tile's app submenu, filled each time it opens. Its own delegate, so the parent
     /// item's `submenu` keeps it alive (`NSMenu.delegate` is weak).
     private final class TileSubmenu: NSMenu, NSMenuDelegate {
         private let config: DockTileConfiguration

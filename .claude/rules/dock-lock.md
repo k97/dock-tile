@@ -38,6 +38,12 @@ via `didBecomeActive` + the `com.apple.accessibility.api` notification + the pan
 - The main app stays resident while the lock is enabled so the tap survives closing the window: the
   rule `AppDelegate.staysResident(dockLock:menuBar:)`, shared with the menu bar icon (menu-bar.md), drives
   `applicationShouldTerminateAfterLastWindowClosed`. A resident app installs updates while idle.
+- **At login** the spawner starts the main app quietly for Dock Lock only when the stored anchor display
+  is connected beside another and Accessibility is granted (`DockLockManager.anchorIsActionable`,
+  menu-bar.md). It used to start nothing, so Dock Lock waited for the user to open Dock Tile.
+- **A display change with the anchor unchanged** (docking a MacBook whose own screen is the anchor)
+  schedules one re-check 1.5 s later, cancelled by the next change, only while anchored with 2+ displays
+  (`scheduleMoveAfterDisplayChange`); the anchor reconnecting moves at once, as before.
 - **Anchor persisted by display UUID** (`dockLockAnchorUUID`, via `CGDisplayCreateUUIDFromDisplayID`),
   NOT the raw `CGDirectDisplayID` — IDs reshuffle across reboot/sleep/replug. `anchorDisplayID` is
   the live resolved value (`private(set)`, `0` when the chosen display is absent); the stored UUID

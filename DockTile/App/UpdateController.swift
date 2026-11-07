@@ -121,7 +121,8 @@ final class IdleInstaller {
             CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: $0)
         } ?? 0
         let windowVisible = NSApp.windows.contains {
-            $0.identifier?.rawValue == AppDelegate.configurationWindowID && $0.isVisible
+            // A minimised window is in use too: the quiet relaunch would not bring it back.
+            $0.identifier?.rawValue == AppDelegate.configurationWindowID && ($0.isVisible || $0.isMiniaturized)
         }
         let dockBusy = HelperBundleManager.shared.isAnyDockOperationInFlight
         guard IdleInstall.shouldInstall(windowVisible: windowVisible, secondsSinceInput: idle, dockBusy: dockBusy) else {

@@ -44,10 +44,18 @@ Tiles". Analytics: `setting_changed` with `setting: "menu_bar"`; no new event.
 - `LoginTileSpawner` launches the helpers, then — after their launches are acknowledged, because the main
   app's migration may rebuild them — the main app with `--quiet-launch`, `createsNewApplicationInstance`
   (the spawner already has the bundle id), not activated. Decided BEFORE the no-visible-tiles exit (every
-  tile hidden + the icon is a real setup), by `launchesMainApp(menuBarEnabled:mainAppPids:ownPid:)`: the
-  spawner's own pid never counts as a running main app (`LoginSpawnPlanTests`).
+  tile hidden + the icon is a real setup), by `launchesMainApp(menuBarEnabled:dockLockReady:mainAppPids:ownPid:)`:
+  the spawner's own pid never counts as a running main app (`LoginSpawnPlanTests`). It logs
+  `main app starts|stays closed (menu bar N, Dock Lock ready N)`.
+- **Dock Lock starts it too, but only with its display to hold (owner, 2026-11-07: "contextual, only the
+  last configured display")**: enabled, Accessibility granted (`AXIsProcessTrusted()`, never a prompt) and
+  `DockLockManager.anchorIsActionable` — the stored anchor UUID among the connected displays
+  (`connectedDisplayUUIDs`, CoreGraphics so it works without an `NSApplication`, a mirror counted once)
+  and not the only one (`DockLockReadinessTests`). Before 2026-11-07 nothing started the main app at login
+  for Dock Lock: it ran only once the user opened Dock Tile.
 - `AppEnvironment.isQuietLaunch` (latched): the argument, or the idle-install relaunch flag (below).
-  `.accessory` in `applicationWillFinishLaunching`; the relocation nudge and the translation invitation
+  `.accessory` in `applicationWillFinishLaunching` ONLY while the menu bar icon is on — a Dock Lock-only
+  quiet launch keeps its Dock icon, or nothing would show Dock Tile is running; the relocation nudge and the translation invitation
   wait for a normal launch; launch maintenance DOES run (owner: at most one Dock restart, first login
   after an update).
 - **The window is created, then hidden — never suppressed (critical).** Its `onAppear` hands over the
@@ -65,17 +73,21 @@ Tiles". Analytics: `setting_changed` with `setting: "menu_bar"`; no new event.
   never `kill`.
 - **One main app at a time**: `main.swift` holds `TileBuildLock` on `<support>/main-app.lock` for the
   process's life (`withExtendedLifetime`; an optimised build may release a local early). The spawner's
-  new instance and "Reopen windows when logging back in" can start together. A loser waits up to 5 s
-  before exiting, because the move to /Applications launches the new copy before the old one quits.
-  Skipped under the test host (it runs beside the dev app).
+  new instance and "Reopen windows when logging back in" can start together. A loser waits up to 5 s,
+  because the move to /Applications launches the new copy before the old one quits. Then
+  `MainAppLock.outcome` (`MainAppLockTests`, incl. a real two-open test): only `EWOULDBLOCK` is "another
+  copy" — any other open error runs WITHOUT the lock, never refuses to open; a user's launch hands off
+  (opens the running copy, which reopens and shows its window — its Dock icon may be hidden) and exits;
+  a quiet loser just exits. It reads the argument, not `isQuietLaunch`, which would clear the idle-install
+  flag. Skipped under the test host (it runs beside the dev app).
 
 ## Install updates while idle
 
 Sparkle installs a silently downloaded update at quit, and a resident Dock Tile rarely quits. While
 `staysResident`, `updater(_:willInstallUpdateOnQuit:immediateInstallationBlock:)` returns YES and
 `IdleInstaller` holds the handler, checking every 60 s ONLY while one is held. It installs when
-`IdleInstall.shouldInstall` holds: the configuration window not `isVisible` (a hidden quiet-launch
-window still exists), no Dock operation in flight for any tile, ≥ 600 s without input
+`IdleInstall.shouldInstall` holds: the configuration window neither `isVisible` (a hidden quiet-launch
+window still exists) nor minimised, no Dock operation in flight for any tile, ≥ 600 s without input
 (`kCGAnyInputEventType` = `CGEventType(rawValue: ~0)`; `.null` is event 0 and reads far older). It writes
 `relaunchQuietlyAt` first; the relaunch is quiet only if the flag is under 120 s old, and clears it
 (`IdleInstallTests`). Not resident: NO, unchanged.

@@ -60,8 +60,9 @@ Guarded by `SmartAddEngineTests`.
 
 ## The + flow (v3: the dialog opens only while Smart Add is ON)
 
-Every add entry point — sidebar `+` and the zero-tiles button (General's *Add a Tile…* row was a
-third until 2026-09-02, removed as a duplicate of the sidebar `+`) — calls the SAME `handleAddTapped`.
+Every add entry point — sidebar `+`, the zero-tiles button, and the menu bar icon's *Add a Tile…*
+(shown with zero tiles; source `menu bar`, menu-bar.md) — calls the SAME `handleAddTapped` (General's
+*Add a Tile…* row was one until 2026-09-02, removed as a duplicate of the sidebar `+`).
 **Smart Add ON** → it presents `SmartAddSheet` via `.sheet(item:)`, showing suggestions when the
 engine has some, else the blank-first row + "No suggestions yet". **Smart Add OFF** → no dialog at
 all: the + creates the blank tile directly (a sheet holding only the blank row was a pointless

@@ -7,7 +7,8 @@
 //  LoginItemManager + the bundled Contents/Library/LaunchAgents plist).
 //
 //  It launches every visible tile's helper bundle in the background, then — while the menu bar
-//  icon is on (#13) — the main app with `--quiet-launch` (no window, no Dock icon), and exits.
+//  icon is on, or Dock Lock has its display to hold (#13) — the main app with `--quiet-launch`
+//  (no window), and exits.
 //  It NEVER creates an NSApplication itself, so no Dock icon or window appears at login —
 //  the user just sees their tiles become responsive.
 //
@@ -34,11 +35,24 @@ enum LoginTileSpawner {
         let runningApps = NSWorkspace.shared.runningApplications
         let running = Set(runningApps.compactMap { $0.bundleIdentifier })
         // Decided before the no-tiles exit: every tile hidden + the menu bar icon is a real setup.
+        let defaults = UserDefaults.standard
+        let menuBarEnabled = defaults.bool(forKey: UserDefaultsKeys.menuBarEnabled)
+        // Dock Lock runs in the main app; it is worth starting only for the display last picked,
+        // connected beside another, with Accessibility granted (no prompt: options are not passed).
+        let dockLockReady = defaults.bool(forKey: UserDefaultsKeys.dockLockEnabled)
+            && AXIsProcessTrusted()
+            && DockLockManager.anchorIsActionable(
+                anchorUUID: defaults.string(forKey: UserDefaultsKeys.dockLockAnchorUUID),
+                connectedUUIDs: DockLockManager.connectedDisplayUUIDs())
         let launchesMain = launchesMainApp(
-            menuBarEnabled: UserDefaults.standard.bool(forKey: UserDefaultsKeys.menuBarEnabled),
+            menuBarEnabled: menuBarEnabled,
+            dockLockReady: dockLockReady,
             mainAppPids: runningApps.filter { $0.bundleIdentifier == AppEnvironment.mainAppBundleId }
                 .map(\.processIdentifier),
             ownPid: ProcessInfo.processInfo.processIdentifier)
+        NSLog("🌅 LoginTileSpawner: main app %@ (menu bar %d, Dock Lock ready %d)",
+              launchesMain ? "starts" : "stays closed",
+              menuBarEnabled ? 1 : 0, dockLockReady ? 1 : 0)
 
         let configs = loadVisibleConfigs()
         if configs.isEmpty { NSLog("🌅 LoginTileSpawner: no visible tiles to warm") }
@@ -93,10 +107,11 @@ enum LoginTileSpawner {
         exit(0)
     }
 
-    /// The main app sits in the menu bar from login only while the icon is on and no other copy runs.
-    /// This process shares the main app's bundle id, so its own pid never counts (`LoginSpawnPlanTests`).
-    static func launchesMainApp(menuBarEnabled: Bool, mainAppPids: [pid_t], ownPid: pid_t) -> Bool {
-        menuBarEnabled && !mainAppPids.contains { $0 != ownPid }
+    /// The main app starts at login only when it has a job — the menu bar icon, or Dock Lock with its
+    /// display to hold — and no other copy runs. This process shares the main app's bundle id, so its
+    /// own pid never counts (`LoginSpawnPlanTests`).
+    static func launchesMainApp(menuBarEnabled: Bool, dockLockReady: Bool, mainAppPids: [pid_t], ownPid: pid_t) -> Bool {
+        (menuBarEnabled || dockLockReady) && !mainAppPids.contains { $0 != ownPid }
     }
 
     // MARK: - Self-contained helpers

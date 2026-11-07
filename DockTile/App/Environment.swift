@@ -108,3 +108,24 @@ enum AppEnvironment {
             .appendingPathComponent("Library/Application Support/\(supportFolderName)")
     }
 }
+
+/// What a starting main app does about the one-instance lock (#13, `MainAppLockTests`).
+enum MainAppLock {
+    enum Outcome: Equatable {
+        /// Took the lock: the only main app.
+        case run
+        /// The lock could not be made (an unwritable support folder, …): not another copy, so run
+        /// unguarded rather than never open.
+        case runUnlocked
+        /// Another copy holds it and this launch was the user's: bring that copy forward, then exit.
+        case handOff
+        /// Another copy holds it and this launch was the login spawner's: exit quietly.
+        case exit
+    }
+
+    static func outcome(acquired: Bool, busy: Bool, quiet: Bool) -> Outcome {
+        if acquired { return .run }
+        guard busy else { return .runUnlocked }
+        return quiet ? .exit : .handOff
+    }
+}

@@ -168,6 +168,9 @@ final class DockLockManager: ObservableObject {
     /// In-flight Dock relocation, cancelled when a newer request supersedes it.
     private var moveTask: Task<Void, Never>?
 
+    /// The pending re-check after a display change (`scheduleMoveAfterDisplayChange`).
+    private var displayChangeTask: Task<Void, Never>?
+
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
 
@@ -702,8 +705,12 @@ final class DockLockManager: ObservableObject {
         let resolved = persistedAnchorID() ?? 0
         guard resolved != anchorDisplayID else {
             recomputeZones()
+            // Another display came or went while the anchor stayed (a MacBook anchored to its own
+            // screen, docked to a monitor set as main): macOS may have moved the Dock there.
+            scheduleMoveAfterDisplayChange()
             return
         }
+        displayChangeTask?.cancel()
         let wasAbsent = anchorDisplayID == 0
         anchorDisplayID = resolved
         recomputeZones()
@@ -716,6 +723,42 @@ final class DockLockManager: ObservableObject {
             // The anchored display just came back — pull the Dock onto it again.
             requestDockMove(reason: "display_reconnected")
         }
+    }
+
+    /// One re-check per burst of display changes (plugging in posts several), after the same settle the
+    /// wake path uses. Only when an anchor is connected beside another display; `requestDockMove`
+    /// re-checks that when it fires and skips the warp when the Dock is already home.
+    private func scheduleMoveAfterDisplayChange() {
+        displayChangeTask?.cancel()
+        guard isEnabled, anchorDisplayID != 0, isMultiDisplay else { return }
+        displayChangeTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            guard !Task.isCancelled else { return }
+            self?.requestDockMove(reason: "displays_changed")
+        }
+    }
+
+    // MARK: Is there anything to hold? (shared with the login spawner)
+
+    /// Dock Lock can act only when the display the user last picked (stored by UUID) is connected and
+    /// is not the only one. Without it there is nothing to hold, so nothing should start or move for
+    /// Dock Lock (`DockLockReadinessTests`).
+    nonisolated static func anchorIsActionable(anchorUUID: String?, connectedUUIDs: [String]) -> Bool {
+        guard let anchorUUID else { return false }
+        return connectedUUIDs.count > 1 && connectedUUIDs.contains(anchorUUID)
+    }
+
+    /// UUIDs of the displays in use, read from CoreGraphics so it works before an `NSApplication`
+    /// exists (the login spawner). A display mirroring another is one surface, as `refreshDisplays`
+    /// counts it.
+    nonisolated static func connectedDisplayUUIDs() -> [String] {
+        var count: UInt32 = 0
+        guard CGGetActiveDisplayList(0, nil, &count) == .success, count > 0 else { return [] }
+        var ids = [CGDirectDisplayID](repeating: 0, count: Int(count))
+        guard CGGetActiveDisplayList(count, &ids, &count) == .success else { return [] }
+        return ids.prefix(Int(count))
+            .filter { CGDisplayMirrorsDisplay($0) == kCGNullDirectDisplay }
+            .compactMap(displayUUID)
     }
 
     // MARK: Anchor persistence (stable across reboots/reconnects)
@@ -732,7 +775,7 @@ final class DockLockManager: ObservableObject {
     /// Save the current anchor by its stable UUID (or clear it for "Default").
     private func persistAnchor() {
         let defaults = UserDefaults.standard
-        if anchorDisplayID != 0, let uuid = displayUUID(anchorDisplayID) {
+        if anchorDisplayID != 0, let uuid = Self.displayUUID(anchorDisplayID) {
             defaults.set(uuid, forKey: UserDefaultsKeys.dockLockAnchorUUID)
         } else {
             defaults.removeObject(forKey: UserDefaultsKeys.dockLockAnchorUUID)
@@ -749,12 +792,12 @@ final class DockLockManager: ObservableObject {
         // raw ID is meaningless and we start from "Default".
         guard legacy > 0,
               displays.contains(where: { $0.id == CGDirectDisplayID(legacy) }),
-              let uuid = displayUUID(CGDirectDisplayID(legacy)) else { return }
+              let uuid = Self.displayUUID(CGDirectDisplayID(legacy)) else { return }
         defaults.set(uuid, forKey: UserDefaultsKeys.dockLockAnchorUUID)
     }
 
     /// Stable UUID string for a display, via `CGDisplayCreateUUIDFromDisplayID`.
-    private func displayUUID(_ id: CGDirectDisplayID) -> String? {
+    nonisolated private static func displayUUID(_ id: CGDirectDisplayID) -> String? {
         guard let cf = CGDisplayCreateUUIDFromDisplayID(id)?.takeRetainedValue() else { return nil }
         return CFUUIDCreateString(nil, cf) as String?
     }

@@ -2,7 +2,7 @@ import Testing
 @testable import Dock_Tile
 
 /// The tile menu shared by the menu bar icon and the Dock menus (issue #13). Failing value: a
-/// missing app listed as launchable, or tiles out of sidebar order.
+/// missing app listed as launchable, apps out of tile order, or a hidden tile in the menus.
 @Suite("Tile menu entries")
 struct TileMenuTests {
 
@@ -15,31 +15,17 @@ struct TileMenuTests {
         return config
     }
 
-    @Test("Tiles keep the order they are given; apps keep tile order")
-    func orderIsKept() {
-        let entries = TileMenu.entries(for: [tile("Work", [mail, gone]), tile("Dev", [])],
-                                       isInstalled: { _ in true })
-        #expect(entries.map(\.config.name) == ["Work", "Dev"])
-        #expect(entries[0].rows.map(\.item.name) == ["Mail", "Gone"])
-    }
-
-    @Test("A missing app stays listed but disabled")
-    func missingAppIsDisabled() throws {
-        let entries = TileMenu.entries(for: [tile("Work", [mail, gone])],
-                                       isInstalled: { $0.bundleIdentifier != "com.example.gone" })
-        let rows = try #require(entries.first).rows
+    @Test("Apps keep tile order; a missing app stays listed but disabled")
+    func missingAppIsDisabled() {
+        let rows = TileMenu.rows(for: tile("Work", [mail, gone]),
+                                 isInstalled: { $0.bundleIdentifier != "com.example.gone" })
+        #expect(rows.map(\.item.name) == ["Mail", "Gone"])
         #expect(rows.map(\.enabled) == [true, false])
     }
 
     @Test("An empty tile has no rows")
-    func emptyTileHasNoRows() throws {
-        let entries = TileMenu.entries(for: [tile("Empty", [])], isInstalled: { _ in true })
-        #expect(try #require(entries.first).rows.isEmpty)
-    }
-
-    @Test("No tiles, no entries")
-    func noTiles() {
-        #expect(TileMenu.entries(for: [], isInstalled: { _ in true }).isEmpty)
+    func emptyTileHasNoRows() {
+        #expect(TileMenu.rows(for: tile("Empty", []), isInstalled: { _ in true }).isEmpty)
     }
 
     @Test("A tile with Show Tile off is not in the menus; order is kept")

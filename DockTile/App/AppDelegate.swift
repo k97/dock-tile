@@ -82,9 +82,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     // MARK: - Application Lifecycle
 
+    /// A quiet launch (#13) drops the Dock icon only while the menu bar icon is there instead: a Dock
+    /// Lock-only user's quiet Dock Tile keeps its Dock icon, or nothing would show it is running.
+    private var quietLaunchHidesDockIcon: Bool { AppEnvironment.isQuietLaunch && MenuBarController.isEnabled }
+
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // A quiet launch (#13) has no Dock icon; set before any can draw, as helpers do.
-        if AppEnvironment.isQuietLaunch { NSApp.setActivationPolicy(.accessory) }
+        // Set before any Dock icon can draw, as helpers do.
+        if quietLaunchHidesDockIcon { NSApp.setActivationPolicy(.accessory) }
     }
 
     /// A quiet launch still creates the scene's window, so its `onAppear` hands over the manager and
@@ -117,8 +121,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func configureAsMainApp() {
-        // Main app: Use regular mode to show dock icon (not on a quiet launch: menu bar only)
-        if !AppEnvironment.isQuietLaunch { NSApp.setActivationPolicy(.regular) }
+        // Main app: Use regular mode to show dock icon (not on a quiet launch to the menu bar)
+        if !quietLaunchHidesDockIcon { NSApp.setActivationPolicy(.regular) }
 
         // Under a test host the app launches against the user's LIVE dev data. Stay inert — none of
         // the launch side effects below (Dock Lock tap, login-item registration, Smart Add
