@@ -40,12 +40,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     func apply(enabled: Bool) {
         if enabled, statusItem == nil {
             let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-            if let glyph = SFSymbolCatalog.brandGlyph?.copy() as? NSImage {
-                glyph.size = NSSize(width: 18, height: 18)
-                glyph.isTemplate = true
-                item.button?.image = glyph
-            }
-            item.button?.setAccessibilityLabel(AppStrings.appName)
+            item.button?.image = Self.statusGlyph()
+            item.button?.setAccessibilityLabel(Self.buildName)
             let menu = NSMenu()
             menu.delegate = self
             item.menu = menu
@@ -55,6 +51,30 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             NSStatusBar.system.removeStatusItem(item)
             statusItem = nil
         }
+    }
+
+    /// "Dock Tile" in a release build, "Dock Tile Dev" in a dev build (the bundle's own name).
+    private static let buildName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? AppStrings.appName
+
+    /// The brand glyph as an 18×18 template. A dev build adds a dot in the bottom-right corner, cut
+    /// clear of the sun, so it reads apart from the release build's icon next to it.
+    private static func statusGlyph() -> NSImage? {
+        guard let glyph = SFSymbolCatalog.brandGlyph?.copy() as? NSImage else { return nil }
+        glyph.size = NSSize(width: 18, height: 18)
+        glyph.isTemplate = true
+        guard AppEnvironment.isDev else { return glyph }
+        let badged = NSImage(size: glyph.size, flipped: false) { rect in
+            glyph.draw(in: rect)
+            let dot = NSRect(x: rect.maxX - 7, y: rect.minY, width: 7, height: 7)
+            NSColor.black.setFill()
+            NSGraphicsContext.current?.compositingOperation = .destinationOut
+            NSBezierPath(ovalIn: dot.insetBy(dx: -1.5, dy: -1.5)).fill()
+            NSGraphicsContext.current?.compositingOperation = .sourceOver
+            NSBezierPath(ovalIn: dot).fill()
+            return true
+        }
+        badged.isTemplate = true
+        return badged
     }
 
     /// Rebuilt on every open, so tiles, install status and icons are always current.
@@ -71,7 +91,9 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             tiles.forEach(menu.addItem)
         }
         if !menu.items.isEmpty { menu.addItem(.separator()) }
-        menu.addItem(item(AppStrings.Menu.openDockTile, #selector(openDockTile)))
+        // The dev build names itself, so its menu can't be mistaken for the release build's beside it.
+        menu.addItem(item(AppStrings.Menu.openDockTile.replacingOccurrences(of: AppStrings.appName, with: Self.buildName),
+                          #selector(openDockTile)))
         menu.addItem(item(AppStrings.Menu.quitDockTile, #selector(quit), key: "q"))
     }
 
