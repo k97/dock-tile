@@ -1672,6 +1672,11 @@ final class HelperBundleManager {
                                    removing: removingBundleIds, verifying: verifyingBundleIds)
     }
 
+    /// Any tile's Dock operation, for an idle-time update install that must not quit the app mid-build.
+    var isAnyDockOperationInFlight: Bool {
+        !buildingBundleIds.isEmpty || !removingBundleIds.isEmpty || !verifyingCounts.isEmpty
+    }
+
     /// Restart the Dock and verify `expectations`, retrying once (`runDockVerification`). Runs in
     /// an unstructured task on purpose: once the Dock is killed the verification must finish, and a
     /// cancelled caller (the main window's `.task`, closed mid-batch) would otherwise turn every

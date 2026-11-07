@@ -64,10 +64,18 @@ enum AppEnvironment {
             || NSClassFromString("XCTestCase") != nil
     }()
 
-    /// Started by the login spawner to sit in the menu bar with no window and no Dock icon (#13).
-    /// Latched once at process start.
+    /// Started by the login spawner, or relaunched by an idle-time update, to sit in the menu bar with
+    /// no window and no Dock icon (#13). Latched once, on first read (`applicationWillFinishLaunching`).
     static let quietLaunchFlag = "--quiet-launch"
-    static let isQuietLaunch: Bool = CommandLine.arguments.contains(quietLaunchFlag)
+    static let isQuietLaunch: Bool = {
+        if CommandLine.arguments.contains(quietLaunchFlag) { return true }
+        guard let flaggedAt = UserDefaults.standard.object(forKey: UserDefaultsKeys.relaunchQuietlyAt) as? Date else {
+            return false
+        }
+        // Cleared at once, so a failed install can't make a later normal launch silent.
+        UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.relaunchQuietlyAt)
+        return IdleInstall.isQuietRelaunch(flaggedAt: flaggedAt, now: Date())
+    }()
 
     /// Marketing version string (e.g., "1.2.1").
     static let appVersion: String = {

@@ -6,7 +6,7 @@
 //  Helper bundles must never instantiate this class.
 //
 
-import Foundation
+import AppKit
 import Combine
 import Sparkle
 
@@ -75,6 +75,68 @@ enum UpdateAnalytics {
     }
 }
 
+// MARK: - Install while idle (#13)
+
+/// Sparkle installs a silently downloaded update when the app quits, and with the menu bar icon or
+/// Dock Lock on Dock Tile rarely quits. So while it stays resident it installs once the user is away
+/// (`IdleInstallTests`).
+enum IdleInstall {
+    nonisolated static let idleThreshold: TimeInterval = 600
+    nonisolated static let quietRelaunchWindow: TimeInterval = 120
+
+    /// Never while the window is on screen (a hidden quiet-launch window still exists, so `isVisible`),
+    /// never mid-build or mid-Dock-restart, and only after ten minutes without any input.
+    nonisolated static func shouldInstall(windowVisible: Bool, secondsSinceInput: TimeInterval, dockBusy: Bool) -> Bool {
+        !windowVisible && !dockBusy && secondsSinceInput >= idleThreshold
+    }
+
+    /// The relaunch after an idle install starts quietly only if the flag was written moments ago.
+    nonisolated static func isQuietRelaunch(flaggedAt: Date, now: Date) -> Bool {
+        let age = now.timeIntervalSince(flaggedAt)
+        return age >= 0 && age < quietRelaunchWindow
+    }
+}
+
+/// Holds Sparkle's install handler and checks every 60 s, only while one is held. Holding it stalls
+/// Sparkle's update cycle until it runs or the app quits.
+@MainActor
+final class IdleInstaller {
+    static let shared = IdleInstaller()
+    private var install: (() -> Void)?
+    private var timer: Timer?
+
+    func hold(_ install: @escaping () -> Void, version: String) {
+        self.install = install
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
+            MainActor.assumeIsolated { IdleInstaller.shared.check() }
+        }
+        DiagnosticsLog.shared.log("update", "Update \(version) waits for an idle moment to install")
+    }
+
+    private func check() {
+        guard let install else { return }
+        // Any input event (kCGAnyInputEventType); `.null` is event 0 and reads far older.
+        let idle = CGEventType(rawValue: ~0).map {
+            CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: $0)
+        } ?? 0
+        let windowVisible = NSApp.windows.contains {
+            $0.identifier?.rawValue == AppDelegate.configurationWindowID && $0.isVisible
+        }
+        let dockBusy = HelperBundleManager.shared.isAnyDockOperationInFlight
+        guard IdleInstall.shouldInstall(windowVisible: windowVisible, secondsSinceInput: idle, dockBusy: dockBusy) else {
+            DiagnosticsLog.shared.log("update", "Idle check: \(Int(idle)) s idle, window \(windowVisible), Dock busy \(dockBusy)", verbose: true)
+            return
+        }
+        timer?.invalidate()
+        timer = nil
+        self.install = nil
+        UserDefaults.standard.set(Date(), forKey: UserDefaultsKeys.relaunchQuietlyAt)
+        DiagnosticsLog.shared.log("update", "Installing while idle after \(Int(idle)) s")
+        install()
+    }
+}
+
 // MARK: - Updater Delegate
 
 private final class UpdaterDelegate: NSObject, SPUUpdaterDelegate {
@@ -106,6 +168,18 @@ private final class UpdaterDelegate: NSObject, SPUUpdaterDelegate {
         let value = UpdateAnalytics.choiceValue(choice)
         DiagnosticsLog.shared.log("update", "User chose '\(value)' for \(updateItem.displayVersionString)")
         track(.updateChoice, ["choice": value])
+    }
+
+    /// Resident (menu bar icon or Dock Lock): take the install and run it while the user is away.
+    /// Otherwise NO, unchanged: Sparkle installs at the next quit.
+    func updater(_ updater: SPUUpdater, willInstallUpdateOnQuit item: SUAppcastItem,
+                 immediateInstallationBlock immediateInstallHandler: @escaping () -> Void) -> Bool {
+        MainActor.assumeIsolated {
+            guard AppDelegate.staysResident(dockLock: DockLockManager.shared.isEnabled,
+                                            menuBar: MenuBarController.isEnabled) else { return false }
+            IdleInstaller.shared.hold(immediateInstallHandler, version: item.displayVersionString)
+            return true
+        }
     }
 
     func updater(_ updater: SPUUpdater, willInstallUpdate item: SUAppcastItem) {

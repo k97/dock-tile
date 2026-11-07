@@ -40,6 +40,10 @@ enum UserDefaultsKeys {
     /// reader that runs before the main app ever has (the login spawner) treats ABSENT as OFF.
     static let menuBarEnabled = "menuBarEnabled"
 
+    /// When an update was installed while Dock Tile sat idle (#13). The relaunch Sparkle makes reads
+    /// it as a quiet launch only while it is fresh (`IdleInstall.isQuietRelaunch`), then removes it.
+    static let relaunchQuietlyAt = "relaunchQuietlyAt"
+
     // "Start tiles at login" is ON by default (opt-out). SMAppService is the source of truth for
     // the *current* status, but a Sparkle update replaces the app bundle and can silently demote
     // the registration. We persist the user's opt-out below so the main app can re-assert
