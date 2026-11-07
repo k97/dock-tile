@@ -6,9 +6,9 @@ export const siteConfig = {
   contactEmail: "hello@happymachines.company",
 
   // Download Links
-  downloadUrl: "https://github.com/k97/dock-tile/releases/download/v2.6.4/DockTile-2.6.4.dmg",
-  releaseNotesUrl: "https://github.com/k97/dock-tile/releases/tag/v2.6.4",
-  latestVersion: "2.6.4",
+  downloadUrl: "https://github.com/k97/dock-tile/releases/download/v2.7.0/DockTile-2.7.0.dmg",
+  releaseNotesUrl: "https://github.com/k97/dock-tile/releases/tag/v2.7.0",
+  latestVersion: "2.7.0",
 
   // Social & External Links
   githubUrl: "https://github.com/k97/dock-tile",

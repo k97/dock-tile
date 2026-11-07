@@ -6,6 +6,18 @@
     <description>Most recent changes with links to updates for DockTile.</description>
     <language>en</language>
     <item>
+      <title>Version 2.7.0</title>
+      <sparkle:version>46</sparkle:version>
+      <sparkle:shortVersionString>2.7.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <pubDate>Sat, 07 Nov 2026 03:47:58 +0000</pubDate>
+      <enclosure
+        url="https://github.com/k97/dock-tile/releases/download/v2.7.0/DockTile-2.7.0.dmg"
+        sparkle:edSignature="6yvTm6RJjFX5bSF07glc8V040rOMsHaqBMgqL4cMU0ZBDQ1ZhA7KkttLOEr5TGTgx0+49OtGLByv9u/T5/AnBA=="
+        length="8705641"
+        type="application/octet-stream" />
+    </item>
+    <item>
       <title>Version 2.6.4</title>
       <sparkle:version>45</sparkle:version>
       <sparkle:shortVersionString>2.6.4</sparkle:shortVersionString>
