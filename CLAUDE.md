@@ -36,6 +36,7 @@ Controlled via Info.plist variables (`DTEnvironment`, `DTHelperPrefix`, `DTPrefs
 - [Popover Appearance](/.claude/rules/popover-appearance.md) — Per-layout Grid/List popover settings, shared suite, apply-to-running-helpers
 - [Smart Add](/.claude/rules/smart-add.md) — On-device tile suggestions on +, pure ranking seams, opt-out toggle
 - [Dock Lock](/.claude/rules/dock-lock.md) — Pin Dock to one display, CGEvent tap, Accessibility permission
+- [Menu Bar Icon](/.claude/rules/menu-bar.md) — Optional status item listing tiles, shared Dock menu builder, stay-resident rule, quiet login launch (hidden window), one main app, install updates while idle
 - [Start at Login](/.claude/rules/login-items.md) — SMAppService launcher agent, opt-out default, reconcile-on-launch (Sparkle fix)
 - [App Relocation](/.claude/rules/app-relocation.md) — Move-to-/Applications nudge, translocation guard on helper generation, Release-only
 - [Development](/.claude/rules/development.md) — Code patterns, schema evolution, shared utilities

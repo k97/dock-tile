@@ -17,8 +17,9 @@ config field.
 ## Login spawn path (`LoginTileSpawner`)
 
 `run()` fires only when the binary is launched with `--login-spawn-tiles`. It launches every
-`isVisibleInDock` helper in the background then `exit(0)` — **never** creates an `NSApplication`
-(no Dock icon/window at login). Deliberately self-contained: does NOT touch ConfigurationManager
+`isVisibleInDock` helper in the background, then — while the menu bar icon is on and no other main
+app runs — the main app itself with `--quiet-launch` (no window, no Dock icon; menu-bar.md), then
+`exit(0)`. It **never** creates an `NSApplication` itself (no Dock icon/window at login). Deliberately self-contained: does NOT touch ConfigurationManager
 or HelperBundleManager (avoids DockPlistWatcher side effects + MainActor before the run loop).
 
 ## Opt-out model (ON by default)

@@ -11,8 +11,9 @@ import AppKit
 // Check before any SwiftUI initialization
 if CommandLine.arguments.contains(LoginTileSpawner.flag) {
     // Headless login path: the SMAppService launcher agent started us to warm the
-    // tiles. Launch the visible helpers and exit — never spins up an NSApplication,
-    // so no Dock icon or window appears at login.
+    // tiles. Launch the visible helpers (and, while the menu bar icon is on, the main app
+    // quietly) and exit — never spins up an NSApplication itself, so no Dock icon or window
+    // appears at login.
     LoginTileSpawner.run()
 } else if AppEnvironment.isHelper {
     // Helper app (bundle ID com.docktile.<UUID> / com.docktile.dev.<UUID>): Pure AppKit, no SwiftUI WindowGroup

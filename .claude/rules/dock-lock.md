@@ -35,8 +35,9 @@ via `didBecomeActive` + the `com.apple.accessibility.api` notification + the pan
   A `lock.fill` indicator confirms the locked display. No separate "Move Dock" button.
 - `apply()` re-asserts the Dock onto the anchor on enable / permission grant / **relaunch** (so a
   reboot that drifted the Dock self-heals); no-op for Default.
-- The main app stays resident while the lock is enabled (`AppDelegate`
-  `applicationShouldTerminateAfterLastWindowClosed`) so the tap survives closing the window.
+- The main app stays resident while the lock is enabled so the tap survives closing the window: the
+  rule `AppDelegate.staysResident(dockLock:menuBar:)`, shared with the menu bar icon (menu-bar.md), drives
+  `applicationShouldTerminateAfterLastWindowClosed`. A resident app installs updates while idle.
 - **Anchor persisted by display UUID** (`dockLockAnchorUUID`, via `CGDisplayCreateUUIDFromDisplayID`),
   NOT the raw `CGDirectDisplayID` — IDs reshuffle across reboot/sleep/replug. `anchorDisplayID` is
   the live resolved value (`private(set)`, `0` when the chosen display is absent); the stored UUID

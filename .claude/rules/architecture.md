@@ -482,6 +482,15 @@ helper's Dock-menu Configure… uses the same link.
 
 Helper bundles have `CFBundleURLTypes` stripped from Info.plist (prevents helpers from claiming the URL scheme).
 
+## Main app's Dock menu, menu bar icon, staying resident
+
+Moved to its own rule: [Menu Bar Icon](menu-bar.md). In short: the main app's Dock menu and the optional
+menu bar icon share one builder (`TileMenu`, every Dock-shown tile with its apps); the main app keeps
+running with its window closed while Dock Lock or the icon is on (`AppDelegate.staysResident`); at login
+it can start quietly (window created and hidden, so its `onAppear` and launch maintenance still run);
+only one main app runs at a time (`main-app.lock`); and AppKit window restoration is ignored, because
+after an unclean exit it left SwiftUI creating no window at all.
+
 ## Popover Item Context Menu (issue #17)
 
 Right-click / Control-click on an app or folder in the SHIPPED popover shows a native context menu

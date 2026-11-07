@@ -272,7 +272,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // With a single `Window` scene there is at most one configuration window. Reuse it if
         // it's open; otherwise ask SwiftUI to recreate it (it may have been closed while the app
-        // stayed resident for Dock Lock). The reuse rule lives in the testable seam above.
+        // stayed resident for Dock Lock or the menu bar icon). The reuse rule lives in the testable seam above.
         let identifiers = NSApp.windows.map { $0.identifier?.rawValue }
         if Self.shouldReuseConfigurationWindow(openWindowIdentifiers: identifiers) {
             let window = NSApp.windows.first { $0.identifier?.rawValue == Self.configurationWindowID }

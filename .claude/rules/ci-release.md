@@ -163,7 +163,8 @@ A stale artifact from an earlier build masks this perfectly — delete it before
   channel's), so text written into GitHub release notes reaches the website's changelog, never an
   existing user's update dialog. A plan once assumed otherwise; reach existing users in the app.
 - **Updates install silently** (`SUAutomaticallyUpdate` true since 2.3.1): Sparkle downloads in the
-  background and installs when the main app quits. Added because most actives sat on 1.8.x/2.0.x
+  background and installs when the main app quits — or, while it stays resident (menu bar icon or
+  Dock Lock), after 10 idle minutes with its window closed, relaunching quietly (menu-bar.md). Added because most actives sat on 1.8.x/2.0.x
   with every check enabled (GA4, 2026-10-18). Sparkle still runs only in the MAIN app, so a user
   who never reopens Dock Tile is still never checked. `update_check` (`result`: found/none/declined/error),
   `update_choice` (`choice`) and `update_installing` measure this; Sparkle also reports "no update"
