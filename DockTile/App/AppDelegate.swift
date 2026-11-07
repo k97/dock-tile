@@ -394,9 +394,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(NSMenuItem(title: AppStrings.Menu.openDockTile, action: #selector(openConfigurator), keyEquivalent: ""))
 
         let tiles = DiagnosticsLog.shared.measure("Build Dock menu", category: "menu") {
-            // The window's `onAppear` may never have run (a launch that restores no window); the
-            // manager exists from `DockTileApp.init`.
-            TileMenu.tileItems(for: (configManager ?? MenuBarController.shared.configManager)?.configurations ?? [], target: self,
+            TileMenu.tileItems(for: configManager?.configurations ?? [], target: self,
                                launch: #selector(launchApp(_:)), configure: #selector(configureTile(_:)))
         }
         if !tiles.isEmpty {

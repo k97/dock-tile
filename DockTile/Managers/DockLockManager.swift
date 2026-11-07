@@ -327,7 +327,10 @@ final class DockLockManager: ObservableObject {
         if currentDockDisplayID() == anchorDisplayID {
             moveState = .succeeded(displayName: name)
             AnalyticsService.shared.setBreadcrumb("already_on_anchor", for: "dock_lock_move")
-            AnalyticsService.shared.log(.dockLockMoveSucceeded, ["reason": reason, "already": true])
+            // A display-change re-check runs on every screen change; finding the Dock home is no event.
+            if reason != "displays_changed" {
+                AnalyticsService.shared.log(.dockLockMoveSucceeded, ["reason": reason, "already": true])
+            }
             NSLog("✓ DockLock move: Dock already on anchor \"\(name)\" (reason=\(reason))")
             return
         }

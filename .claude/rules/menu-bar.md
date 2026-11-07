@@ -18,9 +18,6 @@ only. Shipped as a native `NSMenu`; a Control Centre-style panel was mocked up a
 - Zero tiles → **Add a Tile…** (the sidebar `+` path, `handleAddTapped(source: .menuBar)`, posted on the
   next turn so a just-recreated window is subscribed). Always last: **Open Dock Tile…**, **Quit Dock
   Tile** (⌘Q).
-- The Dock menu reads `MenuBarController.shared.configManager` when `AppDelegate.configManager` is nil:
-  the manager is created in `DockTileApp.init()`, but the window's `onAppear` that hands it to
-  `AppDelegate` may never have run.
 
 ## Setting
 
