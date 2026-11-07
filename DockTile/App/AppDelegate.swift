@@ -94,6 +94,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Set before any Dock icon can draw, as helpers do.
         if quietLaunchHidesDockIcon { NSApp.setActivationPolicy(.accessory) }
+
+        // A second launch asks for the window instead of running beside us (main-app lock). Listening
+        // from the very start: at login the losing copy can ask while this one is still launching, and
+        // a distributed notification posted before the observer exists is dropped. Delivery on `.main`
+        // waits for the run loop, so it still lands after `didFinishLaunching`.
+        guard !AppEnvironment.isRunningTests else { return }
+        DistributedNotificationCenter.default().addObserver(forName: Self.showWindowRequest, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { AppDelegate.instance?.showWindowForSecondLaunch() }
+        }
+    }
+
+    /// A background app's `activate` is refused on macOS 14+, so the window opened behind the frontmost
+    /// app — which looked like nothing happened (measured 2026-11-07). `orderFrontRegardless` raises it
+    /// anyway; the next turn covers a window SwiftUI is recreating. Any local process can post the
+    /// request; the worst it can do is open this window.
+    private func showWindowForSecondLaunch() {
+        DiagnosticsLog.shared.ui("Second launch → show window")
+        showConfigurationWindow()
+        DispatchQueue.main.async {
+            NSApp.windows.first { $0.identifier?.rawValue == Self.configurationWindowID }?.orderFrontRegardless()
+        }
     }
 
     /// A quiet launch still creates the scene's window, so its `onAppear` hands over the manager and
@@ -168,14 +189,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // re-assert it after a Sparkle update demotes the SMAppService agent — unless the user
         // explicitly turned it off in Settings.
         LoginItemManager.shared.reconcileOnLaunch()
-
-        // A second launch asks for the window instead of running beside us (main-app lock).
-        DistributedNotificationCenter.default().addObserver(forName: Self.showWindowRequest, object: nil, queue: .main) { _ in
-            MainActor.assumeIsolated {
-                DiagnosticsLog.shared.ui("Second launch → show window")
-                AppDelegate.instance?.showConfigurationWindow()
-            }
-        }
 
         // Smart Add: begin building the on-device app-usage signal (launch history + Spotlight).
         // Main app only; stays entirely on device (independent of the analytics toggle).

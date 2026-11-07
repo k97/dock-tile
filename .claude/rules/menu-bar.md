@@ -77,7 +77,11 @@ Tiles". Analytics: `setting_changed` with `setting: "menu_bar"`; no new event.
   (posts `AppDelegate.showWindowRequest`, a per-environment distributed notification the running copy
   answers with `showConfigurationWindow` — its Dock icon may be hidden) and exits. NOT Launch Services:
   `openApplication(at:)` from the losing process reopened that process itself, and nothing appeared
-  (reproduced 2026-11-07). The window shows; macOS 14+ may keep another app in front;
+  (reproduced 2026-11-07). macOS 14+ refuses a background app's `activate`, so the window opened BEHIND
+  the frontmost app (window-order check, 2026-11-07): `showWindowForSecondLaunch` raises it with
+  `orderFrontRegardless` (focus stays put until the user clicks it). Observed from
+  `applicationWillFinishLaunching`, so a request during the login race is not dropped. Spoofable by any
+  local process; worst case the window opens;
   a quiet loser just exits. It reads the argument, not `isQuietLaunch`, which would clear the idle-install
   flag. Skipped under the test host (it runs beside the dev app).
 
@@ -114,5 +118,6 @@ window still exists) nor minimised, no Dock operation in flight for any tile, �
   `com.docktile.dev.app` by bundle id, and on 2026-11-07 a leftover worktree product started beside the
   current one (it predated the lock). Delete a worktree's DerivedData with the worktree
   (driving-the-dev-build.md).
-- Not measured: building the menu with 10+ tiles (3–6 ms with a handful). If it stalls, cache tile icons
-  by `iconSignature`.
+- Not measured: building the menu with 10+ tiles (3–6 ms with a handful; #39). If it stalls, cache tile
+  icons by `iconSignature`.
+- Not run on hardware: the display-change re-check (#38).
