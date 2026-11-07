@@ -9,6 +9,16 @@
 
 Both build on `macos-26` beta runners (ARM64 only); `ci.yml` additionally tests on `macos-15` (below). `paths-ignore` skips CI on website/docs-only changes. Vercel uses `ignoreCommand` in `vercel.json` to skip on Xcode-only changes. `ci.yml` also has `workflow_dispatch`, so any branch can be run on demand (`gh workflow run ci.yml --ref <branch>`).
 
+**`[skip ci]` for internal commits (owner, 2026-11-07).** Put `[skip ci]` in the message of a commit
+pushed to `main` that only changes dev-only behaviour, rules or docs — no release, no user-facing change
+(e.g. the dev build's menu bar badge). GitHub's built-in skip: no config, any of `[skip ci]` `[ci skip]`
+`[no ci]` `[skip actions]` `[actions skip]` in the NEWEST commit of a push (or a PR's head commit) runs
+no workflow for it; `workflow_dispatch` still runs on demand. Two limits:
+- **Never on a commit you will tag.** A tag push is a push of that commit, so `[skip ci]` in the version
+  bump would skip `release.yml` for the tag. The bump stays a plain `chore: Bump version to X.Y.Z`.
+- It is per commit, not per PR: only the newest commit's message counts, and app changes that ship still
+  need CI on both legs before merging (the "Run a feature branch through CI" rule below).
+
 **The project cannot be BUILT on a macOS 15 host (verified 2026-10-02).** The main app icon is
 an Icon Composer `.icon` document, and Xcode 26's `actool` crashes compiling it on macOS 15
 ("IBPlatformToolFailureException … AssetCatalogAgent closed the connection"), even with Xcode 26.2
