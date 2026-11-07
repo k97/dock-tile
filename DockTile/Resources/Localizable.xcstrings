@@ -973,6 +973,60 @@
         }
       }
     },
+    "alert.revertToDock.message": {
+      "comment": "Revert to Dock Version confirmation message: the tile's unapplied edits are discarded and the version its Dock icon was built from comes back",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Deine Änderungen werden durch die Version im Dock ersetzt."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your changes will be replaced by the version in the Dock."
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your changes will be replaced by the version in the Dock."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your changes will be replaced by the version in the Dock."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vos modifications seront remplacées par la version du Dock."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "変更内容はDockのバージョンに置き換えられます。"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ваши изменения будут заменены версией из Dock."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "你的更改将被程序坞中的版本替换。"
+          }
+        }
+      }
+    },
     "app.name": {
       "comment": "App display name",
       "extractionState": "manual",
@@ -2211,6 +2265,60 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "恢复默认设置"
+          }
+        }
+      }
+    },
+    "button.revert": {
+      "comment": "Confirm button of the Revert to Dock Version alert",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zurücksetzen"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revenir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "戻す"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Вернуть"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "复原"
           }
         }
       }
@@ -14149,6 +14257,60 @@
         }
       }
     },
+    "title.revertToDock": {
+      "comment": "Alert title: discard the tile's unapplied edits and go back to the version in the Dock",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Auf Dock-Version zurücksetzen?"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert to Dock Version?"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert to Dock Version?"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert to Dock Version?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revenir à la version du Dock ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dockのバージョンに戻しますか？"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Вернуть версию из Dock?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "要复原为程序坞中的版本吗？"
+          }
+        }
+      }
+    },
     "tooltip.createNewTile": {
       "comment": "Tooltip when add button is enabled",
       "extractionState": "manual",
@@ -16035,6 +16197,60 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "设置"
+          }
+        }
+      }
+    },
+    "tooltip.revertToDock": {
+      "comment": "Tile Detail: revert button tooltip and accessibility label, and the File menu item — discards unapplied edits, restoring the version the tile's Dock icon was built from",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Auf Dock-Version zurücksetzen"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert to Dock Version"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert to Dock Version"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert to Dock Version"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Revenir à la version du Dock"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dockのバージョンに戻す"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Вернуть версию из Dock"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "复原为程序坞中的版本"
           }
         }
       }

@@ -68,6 +68,11 @@ enum AppStrings {
             value: "This will permanently delete the tile and remove it from the dock.",
             comment: "Delete-tile confirmation message"
         )
+        static let revertToDockMessage = NSLocalizedString(
+            "alert.revertToDock.message",
+            value: "Your changes will be replaced by the version in the Dock.",
+            comment: "Revert to Dock Version confirmation message: the tile's unapplied edits are discarded and the version its Dock icon was built from comes back"
+        )
         static let restartDockTitle = NSLocalizedString(
             "alert.restartDock.title",
             value: "Dock Restart Required",
@@ -290,6 +295,12 @@ enum AppStrings {
             "button.update",
             value: "Update",
             comment: "Update button when tile is already in Dock"
+        )
+
+        static let revert = NSLocalizedString(
+            "button.revert",
+            value: "Revert",
+            comment: "Confirm button of the Revert to Dock Version alert"
         )
 
         static let openLoginItems = NSLocalizedString(
@@ -1391,6 +1402,11 @@ enum AppStrings {
             value: "Delete Tile",
             comment: "Alert title for delete confirmation"
         )
+        static let revertToDock = NSLocalizedString(
+            "title.revertToDock",
+            value: "Revert to Dock Version?",
+            comment: "Alert title: discard the tile's unapplied edits and go back to the version in the Dock"
+        )
         static let customiseTile = NSLocalizedString(
             "title.customiseTile",
             value: "Customise Tile",
@@ -1423,6 +1439,12 @@ enum AppStrings {
             "tooltip.deleteTile",
             value: "Delete Tile",
             comment: "Tile Detail: trash button tooltip"
+        )
+
+        static let revertToDock = NSLocalizedString(
+            "tooltip.revertToDock",
+            value: "Revert to Dock Version",
+            comment: "Tile Detail: revert button tooltip and accessibility label, and the File menu item — discards unapplied edits, restoring the version the tile's Dock icon was built from"
         )
 
         static let toggleCustomiseTile = NSLocalizedString(

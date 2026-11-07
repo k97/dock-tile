@@ -138,6 +138,10 @@ struct DockTileApp: App {
                 .keyboardShortcut("n", modifiers: .command)
                 .disabled(!configManager.selectedConfigHasBeenEdited)
             }
+            // `after:`, never `replacing:` — the save group also holds File ▸ Close (⌘W).
+            CommandGroup(after: .saveItem) {
+                RevertMenuItem()
+            }
             CommandGroup(after: .sidebar) {
                 InspectorMenuItem()
             }

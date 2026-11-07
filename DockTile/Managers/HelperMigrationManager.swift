@@ -242,7 +242,15 @@ final class HelperMigrationManager {
         // quit, swapped and relaunched by regenerateHelperBundle — so its bar clears at its own swap.
         let outcome = await Self.runRegenerationBatch(
             configs,
-            current: { self.configManager.configuration(for: $0) },
+            // The Dock version, never the draft: a background rebuild must not publish unsaved edits.
+            current: { id in
+                guard let live = self.configManager.configuration(for: id) else { return nil }
+                let snapshot = helperManager.builtState(for: live).snapshot
+                if snapshot == nil {
+                    DiagnosticsLog.shared.log("migration", "\(live.diagnosticName) built from the live config — no Dock copy yet")
+                }
+                return DockTileConfiguration.dockVersion(live: live, snapshot: snapshot)
+            },
             regenerate: { config in
                 do {
                     try await helperManager.regenerateHelperBundle(for: config)
@@ -320,8 +328,9 @@ final class HelperMigrationManager {
     /// MainActor state.)
     ///
     /// `current` re-reads each tile at its turn: a batch can run for a minute, and a tile deleted
-    /// meanwhile must not be rebuilt (a helper with no config — an orphan nothing removes), nor an
-    /// edited one rebuilt from the copy taken when the batch began. No default on purpose.
+    /// meanwhile must not be rebuilt (a helper with no config — an orphan nothing removes), nor one
+    /// Updated meanwhile rebuilt from what the batch read when it began. The caller supplies the
+    /// tile's Dock version (`DockTileConfiguration.dockVersion`), never its draft. No default on purpose.
     static func runRegenerationBatch(
         _ configs: [DockTileConfiguration],
         current: (UUID) -> DockTileConfiguration?,

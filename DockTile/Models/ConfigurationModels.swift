@@ -68,8 +68,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
 
     /// Fingerprint of everything the tile's helper shows — its icon, name, popover layout, app list
     /// and Ghost/App mode — stamped into the helper's Info.plist when it is built
-    /// (`HelperBundleManager.dockSignatureKey`). A helper reads its config once at launch, so until
-    /// Update rebuilds and relaunches it, the Dock shows the tile as of this stamp; Tile Detail
+    /// (`HelperBundleManager.dockSignatureKey`). A helper shows the copy sealed with this build
+    /// (`dockVersion`), so until Update rebuilds it, the Dock shows the tile as of this stamp; Tile Detail
     /// compares the two to decide whether Update has anything to apply. A plain string, like
     /// `iconSignature`, because it is compared across launches.
     var dockSignature: String {
@@ -81,6 +81,39 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     /// Identities of the first `AppsFaceGrid.maxItems` items as the Apps face would draw them.
     var appsFaceIdentities: [String] {
         appItems.prefix(AppsFaceGrid.maxItems).map { $0.isFolder ? ($0.folderPath ?? $0.name) : $0.bundleIdentifier }
+    }
+
+    // MARK: - Revert to Dock Version
+
+    /// This tile with every content field taken from `snapshot` — the copy sealed into its helper at
+    /// build time (`HelperBundleManager.readDockSnapshot`) — and the Dock bookkeeping kept from `self`.
+    /// Starts FROM the snapshot so a content field added later reverts without editing this. Another
+    /// tile's copy changes nothing. An item's `lastKnownPath` is bookkeeping too (the missing-app scan
+    /// heals it), so it stays live per item id. Guarded by `DockSnapshotRevertTests`.
+    func revertingContent(to snapshot: DockTileConfiguration) -> DockTileConfiguration {
+        guard snapshot.id == id else { return self }
+        var reverted = snapshot
+        reverted.bundleIdentifier = bundleIdentifier
+        reverted.isVisibleInDock = isVisibleInDock
+        reverted.lastDockIndex = lastDockIndex
+        reverted.helperAppVersion = helperAppVersion
+        let livePaths = Dictionary(appItems.map { ($0.id, $0.lastKnownPath) }, uniquingKeysWith: { first, _ in first })
+        for index in reverted.appItems.indices {
+            if let livePath = livePaths[reverted.appItems[index].id] {
+                reverted.appItems[index].lastKnownPath = livePath
+            }
+        }
+        return reverted
+    }
+
+    /// What the Dock shows for a tile, outside the editor: content from its helper's sealed copy,
+    /// bookkeeping from the live config. No live config → nil (a deleted tile is never rebuilt or
+    /// shown); no copy (built before copies existed, or unreadable) → the live config. Used by
+    /// background rebuilds and by the helper itself. Guarded by `DockVersionTests`.
+    static func dockVersion(live: DockTileConfiguration?, snapshot: DockTileConfiguration?) -> DockTileConfiguration? {
+        guard let live else { return nil }
+        guard let snapshot else { return live }
+        return live.revertingContent(to: snapshot)
     }
 
     // MARK: - Duplicate

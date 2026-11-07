@@ -124,6 +124,16 @@ launching or handing over a dev build: rebuild **without** that flag and gate on
 codesign --verify "$APP" || echo "UNSIGNED — do not launch"
 ```
 
+## Two sessions at once: a worktree each, and take turns on the dev app
+
+- **Never cut a branch in a checkout another session is editing.** `git switch -c` carries that
+  session's uncommitted files onto the new branch (2026-11-05, menu bar work). Use
+  `git worktree add ../dock-tile-<topic> -b <branch> main` and copy the gitignored
+  `Vendor/actool/target/release/docktile-actool` in, or the build fails.
+- **Both worktrees build the SAME dev app** (bundle id `com.docktile.dev.app`, the same dev config, Dock
+  and helpers). A test run in one quits the other's instance, and launching one replaces the other.
+  Ask the owner whose turn it is, and tell the other session to relaunch its own build afterwards.
+
 ## Delete a worktree's DerivedData when you delete the worktree
 
 Every git worktree gets its own `DockTile-<hash>` DerivedData, and a leftover product is live
