@@ -15,8 +15,7 @@ Single `@MainActor` `ObservableObject` singleton — the only access point.
 - **Exposed-segment detection**: only clamps edge segments not backed by an adjacent display,
   so the cursor can still cross between monitors (matters for side-by-side layouts).
 - Recomputes trigger zones live via `DockPlistWatcher` (orientation change) and
-  `didChangeScreenParameters` (display reconfig). Falls back to the main display if the
-  anchor is unplugged.
+  `didChangeScreenParameters` (display reconfig), which re-resolves the setup's anchor (below).
 
 ## Accessibility permission (TCC)
 
@@ -47,7 +46,7 @@ via `didBecomeActive` + the `com.apple.accessibility.api` notification + the pan
   `dockLockSetupAnchors` maps setup key → anchor UUID, `""` = Default picked there. The picker sets the
   CURRENT setup's entry only (`remembered(_:picking:connected:)`); there is no setups list (owner).
   `resolveAnchor` (`DockLockSetupTests`): one display → nothing; own entry wins (`""` included); else the
-  pre-#37 single anchor (`dockLockAnchorUUID`, read-only, never written or removed) when connected — so
+  pre-#37 single anchor (`dockLockAnchorUUID`; written only by the one-time raw-ID migration, never removed) when connected — so
   nothing changed on update; else **unknown setup → leave the Dock alone**, even with another setup's
   anchor connected. Reader and writer build the key from `connectedDisplayUUIDs()`, never `displays`
   (NSScreen), which can disagree mid-burst.

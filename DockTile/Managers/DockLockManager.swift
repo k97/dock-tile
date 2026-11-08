@@ -187,7 +187,7 @@ final class DockLockManager: ObservableObject {
 
         refreshDisplays()
         migrateLegacyAnchorIfNeeded()
-        // Resolve the persisted UUID to a live display ID (0 if that screen isn't connected).
+        // The current display setup's anchor as a live display ID (0 = nothing to hold).
         self.anchorDisplayID = persistedAnchorID() ?? 0
 
         NotificationCenter.default.addObserver(
@@ -707,14 +707,13 @@ final class DockLockManager: ObservableObject {
     private func resolveAnchorFromPersisted() {
         let resolved = persistedAnchorID() ?? 0
         if resolved != anchorDisplayID {
+            // A move toward the old anchor (or none) no longer applies; the settled move below, if any,
+            // takes the new one.
+            moveTask?.cancel()
+            moveState = .idle
             anchorDisplayID = resolved
             DiagnosticsLog.shared.log("docklock",
                 "Setup of \(displays.count) displays → anchor \(anchorDisplay?.name ?? "none")")
-            if resolved == 0 {
-                // No anchor for this setup: forget any in-flight move and let macOS own the Dock.
-                moveTask?.cancel()
-                moveState = .idle
-            }
         }
         recomputeZones()
         // Also when the anchor stayed (a MacBook anchored to its own screen, docked to a monitor set

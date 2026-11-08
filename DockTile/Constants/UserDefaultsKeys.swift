@@ -57,8 +57,9 @@ enum UserDefaultsKeys {
     /// Legacy: anchor stored as a raw CGDirectDisplayID. Unstable across reboots/reconnects —
     /// migrated to `dockLockAnchorUUID` on first launch. Read once for migration, then unused.
     static let dockLockAnchorDisplay = "dockLockAnchorDisplay"
-    /// The single anchor display (by UUID) from before per-setup anchors (#37). Never written now:
-    /// a read-only fallback for any display setup that includes it and has no entry of its own.
+    /// The single anchor display (by UUID) from before per-setup anchors (#37). Written only by the
+    /// one-time raw-ID migration; otherwise a read-only fallback for any display setup that includes
+    /// it and has no entry of its own.
     static let dockLockAnchorUUID = "dockLockAnchorUUID"
     /// `[setup key: anchor UUID]`, one entry per set of connected displays the user picked on (#37);
     /// `""` = Default chosen there. Setup key = the connected display UUIDs, sorted, joined with ",".

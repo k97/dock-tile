@@ -59,9 +59,12 @@ struct DockLockSettingsView: View {
 
                         moveStatusRow
                     } footer: {
-                        Text("\(AppStrings.Settings.dockLockPerSetupNote) \(AppStrings.Settings.dockLockNote)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(AppStrings.Settings.dockLockPerSetupNote)
+                            Text(AppStrings.Settings.dockLockNote)
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     }
                 } else {
                     Section {
