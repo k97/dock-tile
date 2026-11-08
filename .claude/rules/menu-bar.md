@@ -118,6 +118,9 @@ window still exists) nor minimised, no Dock operation in flight for any tile, �
   `com.docktile.dev.app` by bundle id, and on 2026-11-07 a leftover worktree product started beside the
   current one (it predated the lock). Delete a worktree's DerivedData with the worktree
   (driving-the-dev-build.md).
-- Not measured: building the menu with 10+ tiles (3–6 ms with a handful; #39). If it stalls, cache tile
-  icons by `iconSignature`.
+- Menu build cost (#39, Debug test host, 2026-11-08): 12 tiles (App Grid / Symbol / Emoji, 9 apps
+  each) build in 14 ms the first time and 7 ms after; a 9-app submenu fills in 1 ms. The first
+  `ImageRenderer` use in a process costs ~50–200 ms once, which the window's sidebar has normally
+  paid already. Under the 50 ms bar, so no icon cache; add one keyed by `iconSignature` only if a
+  `✔ Build … menu` line says otherwise.
 - Not run on hardware: the display-change re-check (#38).
