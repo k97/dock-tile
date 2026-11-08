@@ -858,6 +858,12 @@ enum AppStrings {
             comment: "Button that opens the Accessibility pane in System Settings"
         )
 
+        static let dockLockPerSetupNote = NSLocalizedString(
+            "settings.dockLock.perSetupNote",
+            value: "Each set of connected displays remembers its own choice.",
+            comment: "Footnote under the Dock Lock display picker: the chosen display is remembered separately for each combination of connected displays (home, work…)"
+        )
+
         static let dockLockNote = NSLocalizedString(
             "settings.dockLock.note",
             value: "Works with the Dock at the bottom, left, or right. Keeping it on a screen reserves a few pixels at that edge on your other displays.",

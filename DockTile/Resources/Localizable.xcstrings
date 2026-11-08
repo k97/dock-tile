@@ -10099,6 +10099,60 @@
         }
       }
     },
+    "settings.dockLock.perSetupNote": {
+      "comment": "Footnote under the Dock Lock display picker: the chosen display is remembered separately for each combination of connected displays (home, work…)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Jede Kombination angeschlossener Bildschirme merkt sich ihre eigene Auswahl."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each set of connected displays remembers its own choice."
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each set of connected displays remembers its own choice."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each set of connected displays remembers its own choice."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chaque ensemble d’écrans connectés mémorise son propre choix."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続しているディスプレイの組み合わせごとに、選択が記憶されます。"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Для каждого набора подключенных дисплеев запоминается свой выбор."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "每组已连接的显示器都会记住各自的选择。"
+          }
+        }
+      }
+    },
     "settings.dockLock.primer.body": {
       "comment": "Explanation in the permission primer",
       "extractionState": "manual",

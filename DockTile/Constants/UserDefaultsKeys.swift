@@ -57,9 +57,12 @@ enum UserDefaultsKeys {
     /// Legacy: anchor stored as a raw CGDirectDisplayID. Unstable across reboots/reconnects —
     /// migrated to `dockLockAnchorUUID` on first launch. Read once for migration, then unused.
     static let dockLockAnchorDisplay = "dockLockAnchorDisplay"
-    /// Anchor display persisted by its stable UUID (`CGDisplayCreateUUIDFromDisplayID`) so the
-    /// user's choice survives reboots, sleep/wake, and unplug/replug. Absent = "Default".
+    /// The single anchor display (by UUID) from before per-setup anchors (#37). Never written now:
+    /// a read-only fallback for any display setup that includes it and has no entry of its own.
     static let dockLockAnchorUUID = "dockLockAnchorUUID"
+    /// `[setup key: anchor UUID]`, one entry per set of connected displays the user picked on (#37);
+    /// `""` = Default chosen there. Setup key = the connected display UUIDs, sorted, joined with ",".
+    static let dockLockSetupAnchors = "dockLockSetupAnchors"
     /// HELPER domain: where this tile was last clicked in the Dock, `[x, y]` in screen points. A ⌘Tab
     /// popover anchors here, and it must outlive the helper process (login, Update) — issue #15.
     static let lastDockClickPoint = "lastDockClickPoint"

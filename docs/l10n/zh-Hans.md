@@ -194,6 +194,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.dockLock.moving` | Moving Dock to %@… | 正在将程序坞移到%@… | machine | Progress message shown while the Dock is being relocated |
 | `settings.dockLock.note` | Works with the Dock at the bottom, left, or right. Keeping it on a screen reserves a few pixels at that edge on your other displays. | 适用于位于底部、左侧或右侧的程序坞。将程序坞保持在一个屏幕上时，其他显示器的对应边缘会预留几个像素。 | machine | Footnote describing Dock Lock behaviour and trade-off |
 | `settings.dockLock.openSettings` | Open System Settings… | 打开系统设置… | machine | Button that opens the Accessibility pane in System Settings |
+| `settings.dockLock.perSetupNote` | Each set of connected displays remembers its own choice. | 每组已连接的显示器都会记住各自的选择。 | machine | Footnote under the Dock Lock display picker: the chosen display is remembered separately for each combination of connected displays (home, work…) |
 | `settings.dockLock.primer.body` | Dock Lock keeps the Dock on the display you choose. To do that, Dock Tile needs Accessibility access so it can stop macOS from moving the Dock to your other screens. | “程序坞锁定”会让程序坞停留在你选择的显示器上。为此，Dock Tile需要无障碍访问权限，以阻止macOS将程序坞移到其他屏幕。 | machine | Explanation in the permission primer |
 | `settings.dockLock.primer.continue` | Continue | 继续 | machine | Primary button in the permission primer that triggers the macOS dialog |
 | `settings.dockLock.primer.notNow` | Not Now | 以后 | machine | Secondary button in the permission primer that cancels enabling Dock Lock |

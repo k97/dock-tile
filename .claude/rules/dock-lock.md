@@ -38,15 +38,27 @@ via `didBecomeActive` + the `com.apple.accessibility.api` notification + the pan
 - The main app stays resident while the lock is enabled so the tap survives closing the window: the
   rule `AppDelegate.staysResident(dockLock:menuBar:)`, shared with the menu bar icon (menu-bar.md), drives
   `applicationShouldTerminateAfterLastWindowClosed`. A resident app installs updates while idle.
-- **At login** the spawner starts the main app quietly for Dock Lock only when the stored anchor display
-  is connected beside another and Accessibility is granted (`DockLockManager.anchorIsActionable`,
-  menu-bar.md). It used to start nothing, so Dock Lock waited for the user to open Dock Tile.
-- **A display change with the anchor unchanged** (docking a MacBook whose own screen is the anchor)
-  schedules one re-check 1.5 s later, cancelled by the next change, only while anchored with 2+ displays
-  (`scheduleMoveAfterDisplayChange`); the anchor reconnecting moves at once, as before.
-- **Anchor persisted by display UUID** (`dockLockAnchorUUID`, via `CGDisplayCreateUUIDFromDisplayID`),
-  NOT the raw `CGDirectDisplayID` — IDs reshuffle across reboot/sleep/replug. `anchorDisplayID` is
-  the live resolved value (`private(set)`, `0` when the chosen display is absent); the stored UUID
-  is the durable intent. Legacy `dockLockAnchorDisplay` int is migrated once then dropped.
-  `resolveAnchorFromPersisted()` re-derives the live ID on `didChangeScreenParameters` without
-  forgetting the choice — unplug → Default, replug → re-anchors and re-nudges.
+- **At login** the spawner starts the main app quietly for Dock Lock only when the connected displays
+  have an anchor to hold (`DockLockManager.storedAnchor`, the same rule as the engine) and Accessibility
+  is granted (menu-bar.md). It used to start nothing, so Dock Lock waited for the user to open Dock Tile.
+  Accepted risk: a display not yet enumerated when the spawner runs makes a known setup read as unknown.
+- **One anchor per display setup (#37, 2026-11-08).** A setup = the EXACT set of connected displays
+  (`connectedDisplayUUIDs()`: CoreGraphics, mirrors once), keyed by `setupKey` (UUIDs sorted, joined).
+  `dockLockSetupAnchors` maps setup key → anchor UUID, `""` = Default picked there. The picker sets the
+  CURRENT setup's entry only (`remembered(_:picking:connected:)`); there is no setups list (owner).
+  `resolveAnchor` (`DockLockSetupTests`): one display → nothing; own entry wins (`""` included); else the
+  pre-#37 single anchor (`dockLockAnchorUUID`, read-only, never written or removed) when connected — so
+  nothing changed on update; else **unknown setup → leave the Dock alone**, even with another setup's
+  anchor connected. Reader and writer build the key from `connectedDisplayUUIDs()`, never `displays`
+  (NSScreen), which can disagree mid-burst.
+- **Every display change moves at most once, after it settles**: the live anchor and clamp zones change
+  at once (`resolveAnchorFromPersisted`), the Dock moves 1.5 s after the last change of a burst
+  (`scheduleMoveAfterDisplayChange`, reason `displays_changed`), only while an anchor is connected beside
+  another display. A dock adds displays one at a time and each in-between set is its own setup, so an
+  immediate move warped the cursor once per step (plan gate, 2026-11-08); the old instant
+  `display_reconnected` move is gone.
+- **Anchors are stored by display UUID** (`CGDisplayCreateUUIDFromDisplayID`), NOT the raw
+  `CGDirectDisplayID` — IDs reshuffle across reboot/sleep/replug. `anchorDisplayID` is the live resolved
+  value (`private(set)`, `0` = nothing to hold here). Legacy `dockLockAnchorDisplay` int is migrated
+  once into `dockLockAnchorUUID`, then dropped. Identical monitors without serial numbers can share a
+  UUID; AirPlay/Sidecar displays may not keep one (unmeasured) — such a setup can read as unknown.

@@ -700,35 +700,29 @@ final class DockLockManager: ObservableObject {
         resolveAnchorFromPersisted()
     }
 
-    /// Re-derive the live anchor ID from the persisted UUID after a display reconfig.
-    /// The user's *choice* (the stored UUID) is never touched here — only the live ID it maps
-    /// to. Unplugging the anchor display drops to "Default" (0) without forgetting the choice;
-    /// plugging it back in restores the anchor and nudges the Dock home.
+    /// Re-derive the live anchor after a display reconfig: the anchor the CURRENT set of displays
+    /// remembers (#37). Stored choices are never touched here. The live ID and the clamp zones change
+    /// at once; the Dock moves once, after the burst settles (a dock adds displays one at a time, and
+    /// each in-between set is its own setup).
     private func resolveAnchorFromPersisted() {
         let resolved = persistedAnchorID() ?? 0
-        guard resolved != anchorDisplayID else {
-            recomputeZones()
-            // Another display came or went while the anchor stayed (a MacBook anchored to its own
-            // screen, docked to a monitor set as main): macOS may have moved the Dock there.
-            scheduleMoveAfterDisplayChange()
-            return
+        if resolved != anchorDisplayID {
+            anchorDisplayID = resolved
+            DiagnosticsLog.shared.log("docklock",
+                "Setup of \(displays.count) displays → anchor \(anchorDisplay?.name ?? "none")")
+            if resolved == 0 {
+                // No anchor for this setup: forget any in-flight move and let macOS own the Dock.
+                moveTask?.cancel()
+                moveState = .idle
+            }
         }
-        displayChangeTask?.cancel()
-        let wasAbsent = anchorDisplayID == 0
-        anchorDisplayID = resolved
         recomputeZones()
-        if resolved == 0 {
-            // The anchored display was unplugged (or we dropped to a single screen): forget any
-            // in-flight move and let macOS own the Dock again.
-            moveTask?.cancel()
-            moveState = .idle
-        } else if wasAbsent {
-            // The anchored display just came back — pull the Dock onto it again.
-            requestDockMove(reason: "display_reconnected")
-        }
+        // Also when the anchor stayed (a MacBook anchored to its own screen, docked to a monitor set
+        // as main): macOS may have moved the Dock.
+        scheduleMoveAfterDisplayChange()
     }
 
-    /// One re-check per burst of display changes (plugging in posts several), after the same settle the
+    /// One move per burst of display changes (plugging in posts several), after the same settle the
     /// wake path uses. Only when an anchor is connected beside another display; `requestDockMove`
     /// re-checks that when it fires and skips the warp when the Dock is already home.
     private func scheduleMoveAfterDisplayChange() {
@@ -743,12 +737,41 @@ final class DockLockManager: ObservableObject {
 
     // MARK: Is there anything to hold? (shared with the login spawner)
 
-    /// Dock Lock can act only when the display the user last picked (stored by UUID) is connected and
-    /// is not the only one. Without it there is nothing to hold, so nothing should start or move for
-    /// Dock Lock (`DockLockReadinessTests`).
-    nonisolated static func anchorIsActionable(anchorUUID: String?, connectedUUIDs: [String]) -> Bool {
-        guard let anchorUUID else { return false }
-        return connectedUUIDs.count > 1 && connectedUUIDs.contains(anchorUUID)
+    /// A display setup's identity: exactly the displays connected, in any order (#37).
+    nonisolated static func setupKey(_ connected: [String]) -> String {
+        connected.sorted().joined(separator: ",")
+    }
+
+    /// The anchor UUID Dock Lock holds for the connected displays, or nil = leave the Dock alone
+    /// (`DockLockSetupTests`). Nothing to hold on one display. A setup with its own entry uses it
+    /// (`""` = Default). A setup without one falls back to the pre-#37 single anchor when that
+    /// display is connected, else it is unknown → nil (owner, 2026-11-08). The login spawner uses
+    /// the same rule, so nothing starts for Dock Lock on a setup that has nothing to hold.
+    nonisolated static func resolveAnchor(connected: [String], remembered: [String: String],
+                                          legacy: String?) -> String? {
+        guard connected.count > 1 else { return nil }
+        let anchor = remembered[setupKey(connected)] ?? legacy
+        guard let anchor, connected.contains(anchor) else { return nil }
+        return anchor
+    }
+
+    /// `remembered` after the user picks `anchor` (nil = Default) on the connected setup. Only that
+    /// setup's entry changes; Default is stored as `""` so the pre-#37 anchor can't re-apply there.
+    nonisolated static func remembered(_ remembered: [String: String], picking anchor: String?,
+                                       connected: [String]) -> [String: String] {
+        var result = remembered
+        result[setupKey(connected)] = anchor ?? ""
+        return result
+    }
+
+    /// `resolveAnchor` over what is stored: the one reader for the engine and the login spawner.
+    nonisolated static func storedAnchor(_ defaults: UserDefaults, connected: [String]) -> String? {
+        resolveAnchor(connected: connected, remembered: setupAnchors(defaults),
+                      legacy: defaults.string(forKey: UserDefaultsKeys.dockLockAnchorUUID))
+    }
+
+    nonisolated private static func setupAnchors(_ defaults: UserDefaults) -> [String: String] {
+        defaults.dictionary(forKey: UserDefaultsKeys.dockLockSetupAnchors) as? [String: String] ?? [:]
     }
 
     /// UUIDs of the displays in use, read from CoreGraphics so it works before an `NSApplication`
@@ -766,23 +789,18 @@ final class DockLockManager: ObservableObject {
 
     // MARK: Anchor persistence (stable across reboots/reconnects)
 
-    /// The persisted anchor resolved to a currently-connected display ID, or nil if the stored
-    /// UUID is absent ("Default") or its display isn't attached right now.
+    /// The current setup's anchor resolved to a live display ID, or nil = leave the Dock alone.
     private func persistedAnchorID() -> CGDirectDisplayID? {
-        guard let uuid = UserDefaults.standard.string(forKey: UserDefaultsKeys.dockLockAnchorUUID) else {
-            return nil
-        }
+        guard let uuid = Self.storedAnchor(.standard, connected: Self.connectedDisplayUUIDs()) else { return nil }
         return displayID(forUUID: uuid)
     }
 
-    /// Save the current anchor by its stable UUID (or clear it for "Default").
+    /// Save the current anchor (or Default) for the current setup only.
     private func persistAnchor() {
         let defaults = UserDefaults.standard
-        if anchorDisplayID != 0, let uuid = Self.displayUUID(anchorDisplayID) {
-            defaults.set(uuid, forKey: UserDefaultsKeys.dockLockAnchorUUID)
-        } else {
-            defaults.removeObject(forKey: UserDefaultsKeys.dockLockAnchorUUID)
-        }
+        let uuid = anchorDisplayID == 0 ? nil : Self.displayUUID(anchorDisplayID)
+        defaults.set(Self.remembered(Self.setupAnchors(defaults), picking: uuid, connected: Self.connectedDisplayUUIDs()),
+                     forKey: UserDefaultsKeys.dockLockSetupAnchors)
     }
 
     /// One-time migration from the legacy raw-display-ID key to UUID-based storage.

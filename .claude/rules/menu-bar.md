@@ -45,10 +45,10 @@ Tiles". Analytics: `setting_changed` with `setting: "menu_bar"`; no new event.
   the spawner's own pid never counts as a running main app (`LoginSpawnPlanTests`). It logs
   `main app starts|stays closed (menu bar N, Dock Lock ready N)`.
 - **Dock Lock starts it too, but only with its display to hold (owner, 2026-11-07: "contextual, only the
-  last configured display")**: enabled, Accessibility granted (`AXIsProcessTrusted()`, never a prompt) and
-  `DockLockManager.anchorIsActionable` — the stored anchor UUID among the connected displays
-  (`connectedDisplayUUIDs`, CoreGraphics so it works without an `NSApplication`, a mirror counted once)
-  and not the only one (`DockLockReadinessTests`). Before 2026-11-07 nothing started the main app at login
+  last configured display"; per display setup since #37)**: enabled, Accessibility granted
+  (`AXIsProcessTrusted()`, never a prompt) and `DockLockManager.storedAnchor` — the anchor the connected
+  displays' setup holds (`connectedDisplayUUIDs`, CoreGraphics so it works without an `NSApplication`, a
+  mirror counted once), never on one display (`DockLockSetupTests`, dock-lock.md). Before 2026-11-07 nothing started the main app at login
   for Dock Lock: it ran only once the user opened Dock Tile.
 - `AppEnvironment.isQuietLaunch` (latched): the argument, or the idle-install relaunch flag (below).
   `.accessory` in `applicationWillFinishLaunching` ONLY while the menu bar icon is on — a Dock Lock-only

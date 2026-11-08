@@ -37,13 +37,11 @@ enum LoginTileSpawner {
         // Decided before the no-tiles exit: every tile hidden + the menu bar icon is a real setup.
         let defaults = UserDefaults.standard
         let menuBarEnabled = defaults.bool(forKey: UserDefaultsKeys.menuBarEnabled)
-        // Dock Lock runs in the main app; it is worth starting only for the display last picked,
-        // connected beside another, with Accessibility granted (no prompt: options are not passed).
+        // Dock Lock runs in the main app; it is worth starting only when the connected displays have
+        // an anchor to hold (#37), with Accessibility granted (no prompt: options are not passed).
         let dockLockReady = defaults.bool(forKey: UserDefaultsKeys.dockLockEnabled)
             && AXIsProcessTrusted()
-            && DockLockManager.anchorIsActionable(
-                anchorUUID: defaults.string(forKey: UserDefaultsKeys.dockLockAnchorUUID),
-                connectedUUIDs: DockLockManager.connectedDisplayUUIDs())
+            && DockLockManager.storedAnchor(defaults, connected: DockLockManager.connectedDisplayUUIDs()) != nil
         let launchesMain = launchesMainApp(
             menuBarEnabled: menuBarEnabled,
             dockLockReady: dockLockReady,
