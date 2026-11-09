@@ -3,12 +3,14 @@
 ## Page structure
 
 - Single-page marketing site: `Hero → CustomTilesStory (id="features") → DetailsSection →
-  DockLockStory → PowerUserSection → ClosingBand` + Footer. `DetailsSection` ("More than a tile in your Dock", formerly eyebrowed "Hidden in plain
+  PowerUserSection → ClosingBand` + Footer. `DetailsSection` ("More than a tile in your Dock", formerly eyebrowed "Hidden in plain
   sight", 2026-11-09): the two BIGGEST features as big cards
   (an interactive tile customiser, the menu bar), then a row of one-line features (Grid or list
   is one) — each claim checked against the app. The power-user bento then holds Smart Add ·
-  Right-click · Ghost mode (owner picked this combo 2026-11-09 over Smart Add + menu bar as the
-  big two). The standalone `/features` route was deliberately
+  Dock Lock · Ghost mode (owner picked this combo 2026-11-09 over Smart Add + menu bar as the
+  big two). Dock Lock was its own dark full-width section until 2026-11-09, when the owner
+  moved it into the bento in place of the right-click card ("Hide or quit, right from the
+  tile"), which was cut — it is in git history. The standalone `/features` route was deliberately
   deleted — nav "Features" scrolls to `/#features`. Don't recreate the page.
 - Nav order: **Features · Privacy · FAQ** + Download (Download is `md`+ only — see
   design-system.md "Adaptive nav").

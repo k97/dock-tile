@@ -39,7 +39,7 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
 - `next-themes`, class attribute, system default. The **footer `ThemeSwitcher` must stay** — it
   was dropped once during a consolidation and explicitly demanded back.
 - **Signature-dark bands stay dark in BOTH themes** (they simulate macOS chrome or are brand
-  moments): hero, Dock Lock story, the closing band, Ghost Mode card, and the dark page headers on
+  moments): hero, the closing band, Ghost Mode card, and the dark page headers on
   FAQ/release-notes/legal. Only neutral surfaces theme-flip.
 - **Anything visible at load themes via CSS (`dark:` variants / `.dark` rules), NEVER a
   `mounted && resolvedTheme` guard** (one exception, next bullet) — next-themes sets `.dark` on `<html>` before first paint, so
@@ -103,7 +103,7 @@ includes the `#hash`, so the old `pathname.startsWith("/#features")` left Featur
 and the footer had no current state at all. Route links use `isActiveRoute` (exact or a `/`
 sub-path); section links (Features) are current on `/` while a `data-nav-section="features"`
 section crosses 40% of the viewport, read by the header's existing scroll sampler (no second
-listener). Tagged: the custom-tiles story, Dock Lock, the power-user cards, the details section — never the
+listener). Tagged: the custom-tiles story, the power-user cards, the details section — never the
 hero or the closing band. Current links carry `aria-current` ("page" / "location").
 
 **The pill's ends are concentric.** The Download button sits 7px from the pill's edge on every
@@ -223,6 +223,12 @@ re-apply per component unless overriding.
 
 ## CSS / tooling gotchas (each cost real debugging time)
 
+- **Every homepage section heading carries one tilted tile mid-line** — `InlineTile` in
+  home-sections.tsx, any face as its child (owner 2026-11-09): "Pick a look. ▦ Done." an App Grid
+  of media apps (nowrap with "Done.", and "Pick a look." nbsp-bound so the break falls after
+  "apps."); "More than ✦ a tile…" purple sparkles; "Built for the ⚡ power user." an orange bolt —
+  a colour and glyph no hero Dock tile uses (owner: don't repeat a Dock tile). Tilts alternate.
+  Split the string into A/B keys around the tile.
 - **An icon set inline in a heading needs `inline-block overflow-hidden`** to centre by
   `vertical-align`: without `overflow`, the box's baseline is synthesised from its content (a
   flex face with an SVG) and the "More than" tile hung 12 px low. With it, the baseline is the

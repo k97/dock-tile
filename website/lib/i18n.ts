@@ -23,7 +23,8 @@ const marketingBase = {
   heroSub:
     "iOS-style folders for the Mac. Group apps into beautiful tiles and launch anything in one click.",
   tryIt: "Try it — click a tile",
-  tilesTitle: "Pick your apps. Pick a look. Done.",
+  tilesTitleA: "Pick your apps. Pick a look.", // nbsp: break after "apps.", never strand "Pick"
+  tilesTitleB: "Done.",
   tilesBody:
     "Arrange them right in the popover your tile opens, so what you see is what you get. Then show the tile as a grid of its apps, or give it a symbol or an emoji, in colour or mono.",
   tilesAlt: "Dock Tile editing a tile: its popover in the middle, Customise Tile on the right.",
@@ -50,7 +51,9 @@ const marketingBase = {
   dockLockTitle: "The Dock stays put.",
   dockLockBody:
     "Stop the Dock from jumping between screens on multi-display setups. Choose a display for each set of screens you use, and the Dock stays on it.",
-  bentoTitle: "Built for the power user.",
+  dockLockTip: "Remembers your pick for every display setup.",
+  bentoTitleA: "Built for the",
+  bentoTitleB: "power user.",
   // "Hidden in plain sight" — the features nobody finds until they look
   detailsTitleA: "More than",
   detailsTitleB: "a tile in your Dock.", // nbsp: never strand "a" at a line end
@@ -65,10 +68,6 @@ const marketingBase = {
   menuBarLead: "On from the first launch.",
   menuBarBody:
     "The tiles in your Dock and their apps, listed in the menu bar, ready even when the Dock is hidden. Turn it off in Settings any time.",
-  itemMenuTitle: "Hide or quit, right from the tile.",
-  itemMenuBody:
-    "Right-click any app in a popover to open, hide or quit it. Folders get Show in Finder, Quick Look and Share.",
-  itemMenuTip: "Hold Option to force quit.",
   // The row of small features: a plain name, then one calm sentence.
   details: [
     { lead: "Keyboard friendly", body: "Arrow keys move through a popover. Return opens, Esc closes." },

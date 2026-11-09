@@ -194,15 +194,6 @@
   mix-blend-mode: overlay;
 }
 
-/* Glass recipes — every glass element carries the 1px white/10 edge.
-   NOTE: write only the standard `backdrop-filter`; the build (Lightning CSS)
-   adds vendor prefixes. Hand-writing `-webkit-backdrop-filter` made the
-   compiler drop the unprefixed property, so Chrome rendered no blur. */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
 /* Adaptive floating nav — contrasts with whatever section is behind it.
    Gentle blur; the pill flips light/dark based on the backdrop tone.
    The 300ms tone cross-fade only arms AFTER hydration ([data-ready], set in an

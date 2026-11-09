@@ -119,3 +119,9 @@ file or a commit message. Describe the report instead ("a macOS 15.6 user report
 The author is named only by GitHub username, **`k97`**, in every tracked file (LICENSE, copyright
 strings, docs, release notes). Never a personal name: an unrecognised surname sat in
 `InfoPlist.xcstrings` from 2026-02-05 until 2026-10-17 and nearly propagated into the LICENSE.
+
+**Never store the name of a reference (owner, 2026-11-09).** A site, app or product used as design
+inspiration or measured for values is never named in a tracked file — code comments, rules, docs,
+i18n — nor in a commit message or PR. State the value and its reason ("44 px, 1.1 leading — a
+two-line heading reads as one shape"), never "matches <site>". Cleaning names out after the fact
+cost a history rewrite and a force push to `main`; keep them in the conversation only.

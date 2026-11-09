@@ -28,6 +28,7 @@ npx tsc --noEmit
 - All user-facing copy goes through `lib/i18n.ts` (en-AU default) — never hardcode marketing strings.
 - Changed a static asset but kept its filename? Bump its `?v=N` query param or caches serve the old file.
 - Assets load from the R2 CDN in prod (one bucket — never S3), `public/` in dev — route every `/assets/…` ref through `asset()` (`lib/assets.ts`); see assets-cdn rule. New/changed files must also be uploaded to R2.
+- **Never name a design reference** (a site or app the look was taken from) in code, rules or commit messages — state the value and its reason; see development.md "Never store the name of a reference".
 - Dead code, imported nowhere: `components/{features,screenshot,support,faq,theme-toggle}.tsx`.
 
 ## Rules

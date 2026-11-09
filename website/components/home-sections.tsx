@@ -13,7 +13,6 @@ import {
   LayoutGrid,
   Lock,
   LockOpen,
-  Option,
   Palette,
   PanelTop,
   Search,
@@ -102,7 +101,15 @@ export function CustomTilesStory() {
           full content width to read — text centred above, screenshot below. */}
       <Reveal className="mx-auto mb-12 max-w-180 text-center md:mb-13">
         <h2 className="mx-auto mb-6 max-w-132 text-section text-foreground">
-          {m.tilesTitle}
+          {/* The tile is the result of the picking: an App Grid of its own apps.
+              nowrap keeps it with "Done." so it never ends a line alone. */}
+          {m.tilesTitleA}{" "}
+          <span className="whitespace-nowrap">
+            <InlineTile tilt="-rotate-6">
+              <AppGridFace icons={mediaAppIcons} />
+            </InlineTile>{" "}
+            {m.tilesTitleB}
+          </span>
         </h2>
         <p className="mx-auto max-w-150 text-lead text-muted-foreground">
           {m.tilesBody}
@@ -117,7 +124,7 @@ export function CustomTilesStory() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Built for the power user — Grid/List + Smart Add + Ghost, one bento */
+/* Built for the power user — Smart Add + Dock Lock + Ghost, one bento */
 /* ------------------------------------------------------------------ */
 
 export function PowerUserSection() {
@@ -125,16 +132,22 @@ export function PowerUserSection() {
   const m = content.marketing;
 
   return (
-    <section data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-50">
+    // No top padding: it follows the light details section, whose bottom padding is the gap.
+    <section data-nav-section="features" className="mx-auto max-w-400 px-4 pb-24 sm:px-6 md:px-10 md:pb-50">
       <Reveal className="mb-12 text-center md:mb-13">
         <h2 className="mx-auto max-w-132 text-section text-foreground">
-          {m.bentoTitle}
+          {/* Orange + bolt: a colour and glyph no hero Dock tile uses. */}
+          {m.bentoTitleA}{" "}
+          <InlineTile tilt="rotate-6">
+            <TileFace gradient="linear-gradient(to bottom, #FFB547, #F97316)" darkGlyph="#FFB547" glyph="bolt" shaded />
+          </InlineTile>{" "}
+          {m.bentoTitleB}
         </h2>
       </Reveal>
 
       {/* 3-across only from xl up. Below that the row collapses to one column so
           each card is wide enough to hold its illustration at a FIXED, roomy
-          native size (the Smart Add sheet and the right-click popover never
+          native size (the Smart Add sheet and the Dock Lock displays never
           reflow per breakpoint — they'd only cramp in a narrow 3-col card). */}
       <div className="grid gap-6 xl:grid-cols-3">
         {/* Smart Add — white card; the "Add a Tile" sheet + on-device note */}
@@ -152,17 +165,17 @@ export function PowerUserSection() {
           </div>
         </Reveal>
 
-        {/* Right-click — white card; the popover with an app's item menu */}
+        {/* Dock Lock — white card; the Dock roams between two displays, then locks */}
         <Reveal delay={80} className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 md:p-10 xl:max-w-none">
           <div>
-            <h3 className="mb-3 text-title-sm text-foreground">{m.itemMenuTitle}</h3>
-            <p className="max-w-md text-lead text-muted-foreground">{m.itemMenuBody}</p>
+            <h3 className="mb-3 text-title-sm text-foreground">{m.dockLockTitle}</h3>
+            <p className="max-w-md text-lead text-muted-foreground">{m.dockLockBody}</p>
           </div>
-          <ItemMenuMock />
+          <DockLockMock />
           {/* Plain icon + text row, the same flush footnote as the Ghost card's. */}
           <div className="mx-auto flex w-fit items-center gap-3">
-            <Option className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400" />
-            <p className="text-[13px] font-medium text-zinc-600 dark:text-white/80">{m.itemMenuTip}</p>
+            <Lock className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400" />
+            <p className="text-[13px] font-medium text-zinc-600 dark:text-white/80">{m.dockLockTip}</p>
           </div>
         </Reveal>
 
@@ -286,6 +299,20 @@ const menuSep = "mx-2 my-1 border-t border-black/10 dark:border-white/10";
 // A highlighted menu row is the system accent with white text, as on a real Mac.
 const menuHighlight = "bg-[#007AFF] text-white! dark:bg-[#0A84FF]";
 
+/* A tilted tile set into a section heading's line.
+   overflow-hidden pins the inline-block's baseline to its bottom edge
+   (otherwise it is synthesised from the face inside and the tile hung
+   12px low), so the offset is exact: -0.19em centres the 1.1em tile on
+   Open Runde's cap height, 0.727/2 - 1.1/2. The face is inset, so the
+   clip never cuts it; the shadow is a filter on this span, not clipped. */
+function InlineTile({ tilt, children }: { tilt: "rotate-6" | "-rotate-6"; children: React.ReactNode }) {
+  return (
+    <span className={`mx-0.5 inline-block h-[1.1em] w-[1.1em] overflow-hidden ${tilt} align-[-0.19em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]`} aria-hidden>
+      {children}
+    </span>
+  );
+}
+
 function AppIcon({ src, size }: { src: string; size: number }) {
   return (
     <Image src={asset(src)} alt="" width={size} height={size} unoptimized draggable={false} style={{ width: size, height: size }} />
@@ -350,61 +377,25 @@ function MenuBarMock() {
   );
 }
 
-/* A tile's popover with an app's right-click menu (PopoverItemMenu):
-   Open · Hide · Quit for a running app. Fixed 330×170 px. As in macOS,
-   holding Option while the pointer is over it turns Quit into Force Quit. */
-function ItemMenuMock() {
-  const [hover, setHover] = React.useState(false);
-  const [option, setOption] = React.useState(false);
-  React.useEffect(() => {
-    if (!hover) return;
-    const sync = (e: KeyboardEvent) => setOption(e.altKey);
-    const clear = () => setOption(false); // an Option release can land in another window
-    window.addEventListener("keydown", sync);
-    window.addEventListener("keyup", sync);
-    window.addEventListener("blur", clear);
-    return () => {
-      window.removeEventListener("keydown", sync);
-      window.removeEventListener("keyup", sync);
-      window.removeEventListener("blur", clear);
-    };
-  }, [hover]);
-  const forceQuit = hover && option;
-
+/* Dock Lock: two displays; the Dock (pill) roams between them (blue,
+   unlocked), then locks onto the anchor and turns green. Fixed 330×170 px
+   so the pill's 25% / 75% keyframe positions land on each screen's centre.
+   Base classes are the locked resting state (reduced motion). */
+function DockLockMock() {
   return (
-    <div
-      className="rounded-2xl bg-muted p-5"
-      onPointerEnter={(e) => {
-        setHover(true);
-        setOption(e.altKey);
-      }}
-      onPointerMove={(e) => setOption(e.altKey)}
-      onPointerLeave={() => setHover(false)}
-    >
+    <div className="rounded-2xl bg-muted p-5">
       <ScaleToFit>
-        <div className="relative h-42.5 w-82.5">
-          <div className="popover-surface w-60 rounded-2xl p-3 pt-0">
-            <p className="flex h-9 items-center justify-center text-[13px] font-medium text-zinc-800 dark:text-zinc-100">
-              Dev Apps
-            </p>
-            <div className="grid grid-cols-3">
-              {devApps.slice(0, 3).map((app) => (
-                <span
-                  key={app.name}
-                  className={`flex flex-col items-center gap-1.5 rounded-lg p-1.5 ${app.name === "GitHub" ? "bg-black/5 dark:bg-white/10" : ""}`}
-                >
-                  <AppIcon src={app.src} size={48} />
-                  <span className="text-[11px] leading-none text-zinc-600 dark:text-zinc-300">{app.name}</span>
-                </span>
-              ))}
-            </div>
+        <div className="relative grid h-42.5 w-82.5 grid-cols-2 items-center">
+          <div className="px-3">
+            <div className="h-32 rounded-lg border border-white/10 bg-zinc-900" />
           </div>
-          <div className="popover-surface absolute left-31.5 top-19 w-40 rounded-xl p-1.5">
-            <div className={menuRow}>Open</div>
-            <div className={menuSep} />
-            <div className={menuRow}>Hide</div>
-            <div className={`${menuRow} ${menuHighlight}`}>{forceQuit ? "Force Quit" : "Quit"}</div>
+          <div className="px-3">
+            <div className="dock-lock-anchor h-32 rounded-lg border border-emerald-400/30 bg-zinc-900" />
           </div>
+          <span className="dock-lock-pill absolute bottom-9.25 left-[calc(75%-40px)] flex h-6 w-20 items-center justify-center rounded-full border border-emerald-400/60 bg-emerald-400/25 shadow-[0_0_14px_rgba(52,211,153,0.45)]">
+            <LockOpen className="dock-lock-open h-3.5 w-3.5 text-sky-300" />
+            <Lock className="dock-lock-closed absolute h-3.5 w-3.5 text-emerald-300" />
+          </span>
         </div>
       </ScaleToFit>
     </div>
@@ -482,6 +473,7 @@ const customTints: (Tint & { name: string })[] = [
   { name: "Orange", top: "#FFB561", bottom: "#F97316" },
   { name: "Graphite", top: "#A1A1AA", bottom: "#52525B" },
 ];
+const mediaAppIcons = ["appletv", "netflix", "music", "podcasts"].map((n) => `/assets/app-icons/${n}.png`);
 const aiAppIcons = ["claude", "chatgpt", "gemini", "granola"].map((n) => `/assets/app-icons/${n}.png`);
 type FaceStyle = "apps" | "symbol" | "emoji";
 
@@ -764,15 +756,9 @@ export function DetailsSection() {
       <Reveal className="mx-auto mb-12 max-w-180 text-center md:mb-13">
         <h2 className="mx-auto max-w-132 text-section text-foreground">
           {m.detailsTitleA}{" "}
-          {/* A tilted tile set into the line. */}
-          {/* overflow-hidden pins the inline-block's baseline to its bottom edge
-              (otherwise it is synthesised from the face inside and the tile hung
-              12px low), so the offset is exact: -0.19em centres the 1.1em tile on
-              Open Runde's cap height, 0.727/2 - 1.1/2. The face is inset, so the
-              clip never cuts it; the shadow is a filter on this span, not clipped. */}
-          <span className="mx-0.5 inline-block h-[1.1em] w-[1.1em] overflow-hidden -rotate-6 align-[-0.19em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" aria-hidden>
+          <InlineTile tilt="-rotate-6">
             <TileFace gradient={menuTiles[0].gradient} darkGlyph={menuTiles[0].dark} glyph="sparkles" shaded />
-          </span>{" "}
+          </InlineTile>{" "}
           {m.detailsTitleB}
         </h2>
       </Reveal>
@@ -802,61 +788,6 @@ export function DetailsSection() {
           );
         })}
       </ul>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Dock Lock — dark story                                              */
-/* ------------------------------------------------------------------ */
-
-export function DockLockStory() {
-  const { content } = useLocale();
-  const m = content.marketing;
-
-  return (
-    <section data-nav-tone="dark" data-nav-section="features" className="relative mx-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 md:mx-4">
-      <div className="grain" />
-      <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-950/40" />
-      <div className="relative mx-auto grid max-w-400 items-center gap-12 px-6 py-24 md:grid-cols-2 md:gap-20 md:px-10 md:py-32">
-        <Reveal className="order-2 md:order-1">
-          <div className="relative flex h-64 items-center justify-center rounded-2xl border border-white/5 bg-zinc-950 px-6">
-            {/* bounded track = the pill's positioning context. Two equal grid
-                columns with symmetric padding put each screen's centre exactly
-                at 25% / 75%, so the Dock locks dead-centre at any width. */}
-            <div className="relative grid w-full max-w-sm grid-cols-2 items-center">
-              {/* non-anchor display */}
-              <div className="px-3">
-                <div className="h-32 rounded-lg border border-white/10 bg-zinc-900" />
-              </div>
-              {/* anchor display — frame tints blue while unlocked, green once locked */}
-              <div className="px-3">
-                <div className="dock-lock-anchor h-32 rounded-lg border border-emerald-400/30 bg-zinc-900" />
-              </div>
-
-              {/* the Dock — roams between screens (blue, unlocked), then locks
-                  onto the anchor and turns green. Base classes are the green
-                  locked resting state (used when motion is reduced). */}
-              <span className="dock-lock-pill absolute bottom-4 left-[calc(75%-40px)] flex h-6 w-20 items-center justify-center rounded-full border border-emerald-400/60 bg-emerald-400/25 shadow-[0_0_14px_rgba(52,211,153,0.45)]">
-                <LockOpen className="dock-lock-open h-3.5 w-3.5 text-sky-300" />
-                <Lock className="dock-lock-closed absolute h-3.5 w-3.5 text-emerald-300" />
-              </span>
-            </div>
-
-            <span className="glass absolute top-6 left-1/2 -translate-x-1/2 rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white">
-              Dock Lock active
-            </span>
-          </div>
-        </Reveal>
-        <Reveal delay={120} className="order-1 md:order-2">
-          <h2 className="mb-6 text-section text-white">
-            {m.dockLockTitle}
-          </h2>
-          <p className="max-w-lg text-lead text-white/60">
-            {m.dockLockBody}
-          </p>
-        </Reveal>
-      </div>
     </section>
   );
 }

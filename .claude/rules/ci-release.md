@@ -81,6 +81,11 @@ script phases), fix on top of the contributor's commit, push the branch to origi
   other five are repo-level. Never re-add a signing secret at repo level.
 - **Rulesets**: "Release tags" — only an admin can create, move or delete `v*` tags; "Protect main" —
   no force push, no deletion (normal pushes, including the pipeline's own commit, still work).
+  A history rewrite on `main` (done once, 2026-11-09, to reword commit messages) needs the owner's
+  explicit OK, then: `gh api -X PUT repos/k97/dock-tile/rulesets/26006334 -f enforcement=disabled`,
+  `git push --force-with-lease=main:<old sha>`, the same call with `enforcement=active`, and a
+  `gh api …/rulesets/26006334` read to confirm it is active again. `git filter-branch` keeps the old
+  messages in `refs/original/` — `git update-ref -d` it afterwards.
 - **Every action is pinned to a full commit SHA** with the version as a trailing comment; Dependabot
   (`.github/dependabot.yml`, 7-day cooldown, each major its own PR) proposes bumps. A new `uses:` must
   be pinned the same way — the repo's Actions policy requires it.
