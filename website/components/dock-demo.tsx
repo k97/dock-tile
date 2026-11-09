@@ -16,7 +16,8 @@ import { anchorPopover } from "@/lib/dock-popover";
  * clicked tile, anchored to that icon (the app's carefully-tuned effect).
  */
 
-type DemoApp = { name: string; src: string };
+// darkSrc: the app's own Dark icon-style rendition, shown in dark theme (CSS swap, right on frame 1).
+type DemoApp = { name: string; src: string; darkSrc?: string };
 
 type DemoTile = {
   id: string;
@@ -93,7 +94,7 @@ const TILES: DemoTile[] = [
     darkGlyph: "#FF7AAE",
     layout: "list",
     apps: [
-      { name: "Music", src: "/assets/app-icons/music.png" },
+      { name: "Music", src: "/assets/app-icons/music.png?v=2", darkSrc: "/assets/app-icons/music-dark.png?v=1" },
       { name: "Podcasts", src: "/assets/app-icons/podcasts.png" },
       { name: "Netflix", src: "/assets/app-icons/netflix.png" },
       { name: "Apple TV", src: "/assets/app-icons/appletv.png" },
@@ -456,18 +457,21 @@ export function DockDemo({ className = "" }: { className?: string }) {
                         animationDelay: `${i * 30}ms`,
                       }}
                     >
-                      <Image
-                        src={asset(app.src)}
-                        alt=""
-                        width={24}
-                        height={24}
-                        priority
-                        unoptimized
-                        className={`h-6 w-6 transition-transform duration-200 ${
-                          isLaunching ? "scale-90" : ""
-                        }`}
-                        draggable={false}
-                      />
+                      {(app.darkSrc ? [app.src, app.darkSrc] : [app.src]).map((src, v) => (
+                        <Image
+                          key={src}
+                          src={asset(src)}
+                          alt=""
+                          width={24}
+                          height={24}
+                          priority
+                          unoptimized
+                          className={`h-6 w-6 transition-transform duration-200 ${isLaunching ? "scale-90" : ""} ${
+                            app.darkSrc ? (v === 0 ? "dark:hidden" : "hidden dark:block") : ""
+                          }`}
+                          draggable={false}
+                        />
+                      ))}
                       <span className="truncate text-[13px] text-zinc-800 dark:text-zinc-100">
                         {app.name}
                       </span>
@@ -521,18 +525,21 @@ export function DockDemo({ className = "" }: { className?: string }) {
                         animationDelay: `${i * 35}ms`,
                       }}
                     >
-                      <Image
-                        src={asset(app.src)}
-                        alt=""
-                        width={48}
-                        height={48}
-                        priority
-                        unoptimized
-                        className={`h-12 w-12 transition-transform duration-200 ${
-                          isLaunching ? "scale-90" : ""
-                        }`}
-                        draggable={false}
-                      />
+                      {(app.darkSrc ? [app.src, app.darkSrc] : [app.src]).map((src, v) => (
+                        <Image
+                          key={src}
+                          src={asset(src)}
+                          alt=""
+                          width={48}
+                          height={48}
+                          priority
+                          unoptimized
+                          className={`h-12 w-12 transition-transform duration-200 ${isLaunching ? "scale-90" : ""} ${
+                            app.darkSrc ? (v === 0 ? "dark:hidden" : "hidden dark:block") : ""
+                          }`}
+                          draggable={false}
+                        />
+                      ))}
                       <span className="max-w-full truncate text-[11px] leading-none text-zinc-600 dark:text-zinc-300">
                         {app.name}
                       </span>

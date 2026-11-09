@@ -161,7 +161,12 @@ pieces rather than copying them — keep it that way:
 
 - Real icons extracted from installed apps (Swift `NSWorkspace` script → 128px PNG; `sips` for
   `.icns`). Lowercase-hyphen names; `-dark` suffix only where macOS ships a dark rendition
-  (finder, settings — official dark Finder source: `docs/website/Finder_Dark_macOS_27_icon-*.icns`).
+  (finder, settings, music — official dark Finder source: `docs/website/Finder_Dark_macOS_27_icon-*.icns`).
+  A popover app takes its dark one through `darkSrc` (`DemoApp` in dock-demo.tsx; the Ghost card's
+  switcher the same way); the App Grid faces still show the light icon in both themes.
+  Apple-grid downloads (shape = 206/256 of the canvas) are normalised by scaling the whole canvas
+  by 116/206 and centre-cropping to 128 — a trim-then-resize caught the shadow halo and came out
+  ~110 px.
 - **The size-parity law (the most recurring bug):** every icon must hold ~90.6% content on its
   canvas (116×116 in 128px) — real macOS icon art always carries ~9% transparent bleed. Full-bleed
   icons render visibly oversized next to their neighbours; custom tile faces are inset to

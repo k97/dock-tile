@@ -74,8 +74,8 @@ function ScaleToFit({ children }: { children: React.ReactNode }) {
 
 /* Ghost Mode — the Cmd+Tab switcher line-up. The `ghost` slot is where a
    Dock Tile tile would sit; it stays hidden, so the selection skips it.
-   Finder ships a bespoke Dark icon-style rendition (`darkSrc`); third-party
-   icons without one (Code/Slack/Music) get macOS's generic fallback instead —
+   Finder and Music ship a bespoke Dark icon-style rendition (`darkSrc`);
+   third-party icons without one (Code/Slack) get macOS's generic fallback instead —
    the regular icon inset in a dark box — rather than staying unstyled. */
 // Order is load-bearing: the `app-switch-sel` keyframes (globals.css) and the
 // name delays in the Ghost card ([0, 4.4, 0, 3.3, 2.2]) index these slots.
@@ -84,7 +84,7 @@ const switcherApps = [
   { name: "Code", src: "/assets/app-icons/vscode.png" },
   { ghost: true as const },
   { name: "Slack", src: "/assets/app-icons/slack.png" },
-  { name: "Music", src: "/assets/app-icons/music.png" },
+  { name: "Music", src: "/assets/app-icons/music.png?v=2", darkSrc: "/assets/app-icons/music-dark.png?v=1" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -473,7 +473,7 @@ const customTints: (Tint & { name: string })[] = [
   { name: "Orange", top: "#FFB561", bottom: "#F97316" },
   { name: "Graphite", top: "#A1A1AA", bottom: "#52525B" },
 ];
-const mediaAppIcons = ["appletv", "netflix", "music", "podcasts"].map((n) => `/assets/app-icons/${n}.png`);
+const mediaAppIcons = ["appletv.png", "netflix.png", "music.png?v=2", "podcasts.png"].map((n) => `/assets/app-icons/${n}`);
 const aiAppIcons = ["claude", "chatgpt", "gemini", "granola"].map((n) => `/assets/app-icons/${n}.png`);
 type FaceStyle = "apps" | "symbol" | "emoji";
 
