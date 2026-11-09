@@ -17,8 +17,8 @@ const inter = Inter({
   display: "swap",
 });
 
-// The site's face: Open Runde (OFL-1.1, a rounded Inter — letters.app sets all
-// its text in it). Latin subsets of the four weights in use; the licence ships
+// The site's face: Open Runde (OFL-1.1, a rounded Inter) for all text.
+// Latin subsets of the four weights in use; the licence ships
 // beside the files. Inter stays for the macOS mocks (globals.css --font-ui).
 const openRunde = localFont({
   variable: "--font-open-runde",

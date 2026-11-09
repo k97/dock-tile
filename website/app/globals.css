@@ -6,13 +6,13 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* All text in Open Runde, as letters.app; Inter stands in until it loads. */
+  /* All text in Open Runde; Inter stands in until it loads. */
   --font-sans: var(--font-open-runde), var(--font-inter), system-ui, sans-serif;
   /* macOS mocks (popovers, menus, the inspector, the menu bar): Inter, the
      closest web stand-in for SF — a rounded face would read less like a Mac. */
   --font-ui: var(--font-inter), system-ui, sans-serif;
 
-  /* Type scale, from letters.app's ratios (measured 2026-11-09): one size per
+  /* Type scale (2026-11-09): one size per
      role, so every section heading matches. Section: 44 px at desktop, 1.1
      leading, -0.04em — tight enough that a two-line heading reads as one
      shape; fluid down to 32 px on phones. */
@@ -29,7 +29,7 @@
   --text-title-sm--line-height: 1.25;
   --text-title-sm--letter-spacing: -0.025em;
   --text-title-sm--font-weight: 500;
-  /* Lead: every section and card body — letters.app's 18 px / 1.4 / -0.01em. */
+  /* Lead: every section and card body — 18 px / 1.4 / -0.01em. */
   --text-lead: 1.125rem;
   --text-lead--line-height: 1.4;
   --text-lead--letter-spacing: -0.01em;
@@ -86,7 +86,7 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.967 0.001 286.375); /* zinc-100 */
-  /* letters.app's body grey #60606C — zinc's hue, darker: 6.2:1 on white vs zinc-500's 4.8:1 */
+  /* Body grey #60606C — zinc's hue, darker: 6.2:1 on white vs zinc-500's 4.8:1 */
   --muted-foreground: oklch(0.493 0.019 285.7);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
@@ -357,8 +357,8 @@
   }
 }
 
-/* Display headings (hero, closing band, subpage headers): letters.app's h1, but
-   1.05 leading — its 0.9 overlapped our 48 px hero lines (design-system.md). */
+/* Display headings (hero, closing band, subpage headers): 600, -0.04em,
+   1.05 leading — 0.9 overlapped the 48 px hero lines (design-system.md). */
 @utility heading-display {
   font-weight: 600;
   /* text-5xl etc. set line-height through --tw-leading; set it too or they win */

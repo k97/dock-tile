@@ -15,15 +15,14 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
   macOS mocks copy the app's proportions — the customiser's Background cards `rounded-sm` (6 px on
   32 px), Style cards `rounded-lg` (10 px on 69 px); `rounded-lg` on the short Background card
   read far rounder than the app (owner, 2026-11-09).
-- **One spacing rhythm, letters.app-style (measured side by side 2026-11-09):** 200px
+- **One spacing rhythm (2026-11-09):** 200px
   (`md:py-50`; 96 px on phones) from a section's last content to the next heading, everywhere —
-  128 px read cramped once the type grew to letters' 44 / 18 px (owner, 2026-11-09); section headings
-  `text-section` (see Typography); heading → cards 52 px (`mb-12 md:mb-13`, letters' value);
+  128 px read cramped once the type grew to 44 / 18 px (owner, 2026-11-09); section headings
+  `text-section` (see Typography); heading → cards 52 px (`mb-12 md:mb-13`);
   card padding 40 px (`p-6 md:p-10`); big-card pill: 14 px semibold, `h-8 pl-3 pr-3.5 gap-1.5`,
-  16 px icon, `mb-5` = 20 px to the title (letters' 18 px pill read too loud — owner 2026-11-09,
+  16 px icon, `mb-5` = 20 px to the title (an 18 px pill read too loud — owner 2026-11-09,
   "reduce the font size of tags"); gutters
-  `px-4 sm:px-6 md:px-10`. Deliberate differences: our cards are white with a hairline on the
-  zinc-100 page (theirs: flat #F5F5F5 cards on white, borderless white pills) — the pill keeps
+  `px-4 sm:px-6 md:px-10`. Cards are white with a hairline on the zinc-100 page; the pill keeps
   its border because it sits on white.
   Two light sections back to back: the second takes no top padding (the first's bottom is the
   gap). Re-measure after moving sections — the swap that put two light sections together left a
@@ -127,8 +126,7 @@ Back/Forward still restore their position.
 
 ## Typography
 
-- **All text: Open Runde, as letters.app** (owner, 2026-11-09: headings first, then "our font
-  treatment doesn't look the same" — letters sets its BODY in Open Runde too). OFL-1.1, licence
+- **All text: Open Runde** (owner, 2026-11-09: headings first, then the body too). OFL-1.1, licence
   beside the files. `app/fonts/open-runde/` holds LATIN SUBSETS of Regular / Medium / Semibold /
   Bold (~28 KB each; full files are 160 KB each — re-subset with fontTools `pyftsubset
   --layout-features='*'`, keeping ⌘ ⌥ ⇥ and typographic punctuation), loaded by `next/font/local`
@@ -139,7 +137,7 @@ Back/Forward still restore their position.
   inline`, which is not emitted as a CSS variable (the headings silently stayed Inter once).
   The display font (Special Gothic Expanded One) is still loaded but unused; Haskoy was
   trialled and reverted — don't re-suggest it.
-- **Type scale tokens (globals.css `@theme`, measured from letters.app — every value matches):**
+- **Type scale tokens (globals.css `@theme`):**
   `text-section` (section h2: fluid 32→44 px, 1.1, −0.04em, 600; centred ones also `mx-auto
   max-w-132` so they wrap as a balanced two-line block), `text-title` (big-card title 28 px,
   1.2, medium), `text-title-sm` (bento title 22 px medium), `text-lead` (every section and card
@@ -151,14 +149,13 @@ Back/Forward still restore their position.
   Eight 18 px bold run-ins read "busy" and "shouty"; with four items and the name on its own
   line the full size reads fine (owner, 2026-11-09). Copy: titles keep their voice, slogans
   toned down ~15% — a full flattening to plain nouns went "too far".
-  Light-theme `--muted-foreground` is letters' body grey #60606C (oklch 0.493 0.019 285.7,
+  Light-theme `--muted-foreground` is body grey #60606C (oklch 0.493 0.019 285.7,
   6.2:1 on white). Use the token, never restate size/leading/tracking. Card titles carry no
   `max-w-*`: a capped title broke into an awkward two lines in a card wide enough for one. **Never name a text token after a colour token** — `text-card`
   collided with shadcn's `--color-card` and rendered the title in the card's own white.
   **Display headings** (hero h1, closing band, FAQ / Release Notes / legal h1s) use the
-  `heading-display` utility — letters' h1 treatment (600, −0.04em) but line-height **1.05**, not
-  its 0.9 — and keep their own sizes (owner: "footer and hero are okay"). 0.9 works at letters'
-  80 px; at our 48 px the hero's lines overlapped ("apps." descender 1.5 px into "Declutter"'s
+  `heading-display` utility — 600, −0.04em, line-height **1.05** — and keep their own sizes
+  (owner: "footer and hero are okay"). At 0.9 the 48 px hero's lines overlapped ("apps." descender 1.5 px into "Declutter"'s
   caps, measured with canvas glyph bounds); 1.05 leaves ~6 px (owner, 2026-11-09). The utility
   sets `--tw-leading` as well: `text-5xl` applies its line-height through that variable and
   otherwise wins (it came out 1.0).
@@ -170,9 +167,8 @@ Back/Forward still restore their position.
   tracking read "too scattered" in lower case, and 12px was too small. Tracked caps
   (`uppercase tracking-[0.2em]`) remain only on small badges and labels inside components
   (release-timeline "Latest", group headings).
-- Section headings were raised to letters.app's 44 px on 2026-11-09 (owner asked for its
-  section-heading style; this supersedes the older "stepped down a notch" note). Don't change the
-  scale ad hoc — change the token.
+- Section headings were raised to 44 px on 2026-11-09 (this supersedes the older "stepped down
+  a notch" note). Don't change the scale ad hoc — change the token.
 - **Closer-look hotspots pulse** (`.hotspot-pulse`, owner 2026-11-09): a copy of the outer ring
   grows to 1.7× and fades over 2.8 s, staggered 0.7 s per marker; off while a card is open and
   under reduced motion.

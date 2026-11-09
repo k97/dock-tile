@@ -4,7 +4,7 @@
 
 - Single-page marketing site: `Hero → CustomTilesStory (id="features") → DetailsSection →
   DockLockStory → PowerUserSection → ClosingBand` + Footer. `DetailsSection` ("More than a tile in your Dock", formerly eyebrowed "Hidden in plain
-  sight", 2026-11-09) follows letters.app's feature block: the two BIGGEST features as big cards
+  sight", 2026-11-09): the two BIGGEST features as big cards
   (an interactive tile customiser, the menu bar), then a row of one-line features (Grid or list
   is one) — each claim checked against the app. The power-user bento then holds Smart Add ·
   Right-click · Ghost mode (owner picked this combo 2026-11-09 over Smart Add + menu bar as the

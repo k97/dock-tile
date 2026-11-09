@@ -260,7 +260,7 @@ export function PowerUserSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Hidden in plain sight — letters.app-style: two big cards + a row    */
+/* Hidden in plain sight — two big cards + a row of small features    */
 /* ------------------------------------------------------------------ */
 
 // Hero tiles reused so the menu mock lists the same tiles as the Dock above.
@@ -764,7 +764,7 @@ export function DetailsSection() {
       <Reveal className="mx-auto mb-12 max-w-180 text-center md:mb-13">
         <h2 className="mx-auto max-w-132 text-section text-foreground">
           {m.detailsTitleA}{" "}
-          {/* A tilted tile set into the line, as letters.app sets its logo. */}
+          {/* A tilted tile set into the line. */}
           {/* overflow-hidden pins the inline-block's baseline to its bottom edge
               (otherwise it is synthesised from the face inside and the tile hung
               12px low), so the offset is exact: -0.19em centres the 1.1em tile on
