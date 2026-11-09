@@ -38,8 +38,8 @@ export default function Home() {
         <JsonLd data={softwareApplicationSchema} />
         <Hero />
         <CustomTilesStory />
-        <DockLockStory />
         <DetailsSection />
+        <DockLockStory />
         <PowerUserSection />
         <ClosingBand />
         <Footer />

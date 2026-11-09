@@ -12,10 +12,13 @@ import { Footer } from "@/components/footer";
 import { Reveal } from "@/components/reveal";
 import { useLocale } from "@/components/locale-provider";
 import { slugify } from "@/lib/i18n";
-import { trackFaqOpen } from "@/lib/analytics";
+import { trackExternalLinkClick, trackFaqOpen } from "@/lib/analytics";
+import { bugReportUrl, featureRequestUrl } from "@/lib/feedback";
+import { ArrowUpRight, Bug, Lightbulb } from "lucide-react";
 
 export function FaqContent() {
   const { content } = useLocale();
+  const m = content.marketing;
   const [openItem, setOpenItem] = React.useState<string | undefined>(undefined);
 
   // Handle initial hash on mount and hash changes
@@ -76,13 +79,13 @@ export function FaqContent() {
         <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-900/60" />
         <div className="relative z-10">
           <span
-            className="reveal mb-3 block text-[12px] font-bold uppercase tracking-[0.2em] text-white/60"
+            className="reveal mb-3 block text-[14px] font-semibold tracking-[0.01em] text-white/75"
             style={{ "--reveal-delay": "0ms" } as React.CSSProperties}
           >
             FAQ
           </span>
           <h1
-            className="reveal text-3xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-5xl"
+            className="reveal text-3xl heading-display text-white md:text-5xl"
             style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
           >
             Questions,
@@ -120,7 +123,7 @@ export function FaqContent() {
                   <AccordionTrigger className="px-6 py-5 text-left text-[15px] font-semibold text-balance text-foreground hover:no-underline [&>svg]:text-muted-foreground">
                     {item.question}
                   </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-6 text-[15px] font-light leading-relaxed text-pretty text-muted-foreground">
+                  <AccordionContent className="px-6 pb-6 text-[15px] leading-relaxed text-pretty text-muted-foreground">
                     {item.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -128,6 +131,45 @@ export function FaqContent() {
             );
           })}
         </Accordion>
+
+        {/* Reached the end without an answer: ask for it, or report what broke.
+            Same card surface as the questions above, so it reads as their
+            continuation rather than an ad. */}
+        <Reveal className="mt-16">
+          <h2 className="mb-4 text-lg font-semibold tracking-[-0.02em] text-foreground">{m.feedbackTitle}</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              { href: featureRequestUrl, Icon: Lightbulb, title: m.featureRequest, body: m.featureRequestBody },
+              { href: bugReportUrl, Icon: Bug, title: m.bugReport, body: m.bugReportBody },
+            ].map(({ href, Icon, title, body }) => (
+              <a
+                key={title}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackExternalLinkClick(href, "faq")}
+                className="group pressable flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03),0_4px_12px_-6px_rgba(0,0,0,0.06)] transition-[border-color,box-shadow,scale] duration-300 hover:border-zinc-300 hover:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_28px_-12px_rgba(0,0,0,0.14)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:hover:border-zinc-700"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-foreground/6 text-foreground">
+                  <Icon strokeWidth={1.5} className="h-4.5 w-4.5" />
+                </span>
+                <span className="flex-1">
+                  <span className="flex items-center gap-1 text-[15px] font-semibold text-foreground">
+                    {title}
+                    {/* the arrow nudges toward where the link goes; a child moves, not the card */}
+                    <ArrowUpRight
+                      aria-hidden
+                      className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-300 group-hover:-translate-y-px group-hover:translate-x-px motion-reduce:transition-none"
+                    />
+                  </span>
+                  <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">{body}</span>
+                  <span className="sr-only"> {m.opensInNewTab}</span>
+                </span>
+              </a>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">{m.feedbackNote}</p>
+        </Reveal>
       </section>
 
       {/* Compact dark CTA band */}

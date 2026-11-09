@@ -26,7 +26,7 @@ type Box = readonly [x0: number, y0: number, x1: number, y1: number];
 // cropped to the same box). `dot` is where the + sits — a region corner,
 // never over content.
 const REGIONS: readonly { box: Box; dot: readonly [number, number] }[] = [
-  { box: [0.264, 0.29, 0.707, 0.636], dot: [0.707, 0.337] }, // In This Tile
+  { box: [0.264, 0.29, 0.707, 0.636], dot: [0.264, 0.357] }, // In This Tile (left edge, below its caption)
   { box: [0.736, 0.113, 0.944, 0.202], dot: [0.736, 0.114] }, // Style
   { box: [0.736, 0.22, 0.944, 0.326], dot: [0.944, 0.22] }, // Background
   { box: [0.264, 0.123, 0.371, 0.263], dot: [0.371, 0.123] }, // Your tile
@@ -43,10 +43,11 @@ function Plus() {
   );
 }
 
-function Chevron({ up }: { up?: boolean }) {
+// Previous ← / Next →, drawn in the same stroke as the + and ✕ beside them.
+function Arrow({ back }: { back?: boolean }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="h-3.5 w-3.5">
-      <path d={up ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} />
+      <path d={back ? "M19 12H5M11 6l-6 6 6 6" : "M5 12h14M13 6l6 6-6 6"} />
     </svg>
   );
 }
@@ -174,13 +175,17 @@ export function CloserLook() {
       <p className="text-[15px] leading-relaxed text-muted-foreground">
         <b className="font-semibold text-foreground">{items[active].label}.</b> {items[active].body}
       </p>
-      <div className="mt-3 flex justify-end gap-1.5">
-        <CardButton label={m.tilesSpotPrevious} onClick={() => step(-1)}>
-          <Chevron up />
-        </CardButton>
-        <CardButton label={m.tilesSpotNext} onClick={() => step(1)}>
-          <Chevron />
-        </CardButton>
+      {/* The arrows move within the tour (left); close leaves it, so it sits
+          apart at the far right rather than grouped with them. */}
+      <div className="mt-3 flex items-center justify-between">
+        <div className="flex gap-1.5">
+          <CardButton label={m.tilesSpotPrevious} onClick={() => step(-1)}>
+            <Arrow back />
+          </CardButton>
+          <CardButton label={m.tilesSpotNext} onClick={() => step(1)}>
+            <Arrow />
+          </CardButton>
+        </div>
         <CardButton label={m.tilesSpotClose} onClick={close}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" aria-hidden className="h-3.5 w-3.5">
             <path d="M6 6l12 12M18 6L6 18" />
@@ -222,8 +227,14 @@ export function CloserLook() {
                 aria-controls={active === i ? cardId : undefined}
                 tabIndex={open && active !== i ? -1 : undefined}
                 onClick={() => toggle(i)}
-                className={`absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-foreground p-1.25 text-background shadow-md ring-2 ring-foreground/15 transition-[opacity,scale] duration-300 hover:scale-108 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-500 motion-reduce:transition-none sm:h-7 sm:w-7 sm:p-1.75 sm:ring-4 ${open && active !== i ? "pointer-events-none opacity-0" : ""}`}
-                style={{ left: `${r.dot[0] * 100}%`, top: `${r.dot[1] * 100}%` }}
+                className={`absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-foreground p-1.25 text-background shadow-md ring-2 ring-foreground/15 transition-[opacity,scale] duration-300 hover:scale-108 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-500 motion-reduce:transition-none sm:h-7 sm:w-7 sm:p-1.75 sm:ring-4 ${open && active !== i ? "pointer-events-none opacity-0" : ""} ${open ? "" : "hotspot-pulse"}`}
+                style={
+                  {
+                    left: `${r.dot[0] * 100}%`,
+                    top: `${r.dot[1] * 100}%`,
+                    "--pulse-delay": `${i * 0.7}s`,
+                  } as React.CSSProperties
+                }
               >
                 <span className={`block h-full w-full transition-transform duration-300 motion-reduce:transition-none ${active === i ? "rotate-45" : ""}`}>
                   <Plus />

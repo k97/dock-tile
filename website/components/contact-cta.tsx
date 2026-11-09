@@ -23,7 +23,7 @@ export function ContactCta({ title, subtitle }: { title: string; subtitle: strin
           <h2 className="mb-2 text-xl font-semibold tracking-[-0.05em] leading-[1.05] text-white md:text-2xl">
             {title}
           </h2>
-          <p className="text-sm font-light text-white/50">{subtitle}</p>
+          <p className="text-sm text-white/50">{subtitle}</p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <a

@@ -1,7 +1,9 @@
 # Design System & Theming
 
 Visual language: dark editorial shells + light feature sections, glass, grain, **emerald as the
-only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock."
+only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock." **Exception:
+macOS mocks use the Mac's system accent blue** for their selection (#007AFF, Dark #0A84FF) — a
+Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customiser card).
 
 ## Tokens
 
@@ -9,6 +11,19 @@ only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock."
   blocks `#18181B`; light background `#F4F4F5` (zinc-100).
 - Grain overlay at 15% on every dark section (prevents banding).
 - Radii: 2.5rem on major section wrappers (the site's rhythm — keep it); internal cards 16–24px.
+- **One spacing rhythm, letters.app-style (measured side by side 2026-11-09):** 200px
+  (`md:py-50`; 96 px on phones) from a section's last content to the next heading, everywhere —
+  128 px read cramped once the type grew to letters' 44 / 18 px (owner, 2026-11-09); section headings
+  `text-section` (see Typography); heading → cards 52 px (`mb-12 md:mb-13`, letters' value);
+  card padding 40 px (`p-6 md:p-10`); big-card pill: 14 px semibold, `h-8 pl-3 pr-3.5 gap-1.5`,
+  16 px icon, `mb-5` = 20 px to the title (letters' 18 px pill read too loud — owner 2026-11-09,
+  "reduce the font size of tags"); gutters
+  `px-4 sm:px-6 md:px-10`. Deliberate differences: our cards are white with a hairline on the
+  zinc-100 page (theirs: flat #F5F5F5 cards on white, borderless white pills) — the pill keeps
+  its border because it sits on white.
+  Two light sections back to back: the second takes no top padding (the first's bottom is the
+  gap). Re-measure after moving sections — the swap that put two light sections together left a
+  160px gap.
 - The power-user bento is 3-across only from `xl`; below that the cards stack in a centred
   `max-w-md` column — a narrow 3-col card can't hold the fixed-size mocks
   (see hero-dock-demo.md "Card mocks").
@@ -85,7 +100,7 @@ includes the `#hash`, so the old `pathname.startsWith("/#features")` left Featur
 and the footer had no current state at all. Route links use `isActiveRoute` (exact or a `/`
 sub-path); section links (Features) are current on `/` while a `data-nav-section="features"`
 section crosses 40% of the viewport, read by the header's existing scroll sampler (no second
-listener). Tagged: Features / 01, Dock Lock, the power-user cards, the hidden-features section — never the
+listener). Tagged: the custom-tiles story, Dock Lock, the power-user cards, the details section — never the
 hero or the closing band. Current links carry `aria-current` ("page" / "location").
 
 **The pill's ends are concentric.** The Download button sits 7px from the pill's edge on every
@@ -108,16 +123,51 @@ Back/Forward still restore their position.
 
 ## Typography
 
-- Headings: **Inter**, 600–700, `tracking -0.05em`, `leading 1.05`. The display font (Special
-  Gothic Expanded One) is still loaded in `layout.tsx` but unused in rendered pages — only
-  orphaned components reference `font-display`. Haskoy was trialled and reverted (sources in
-  `docs/website/haskoy/`) — don't re-suggest it.
-- Caption canon: `text-[12px] font-bold uppercase tracking-[0.2em]` at ~60% foreground. Reuse it;
-  don't invent new caption styles. **Exception: the hero eyebrow (`heroEyebrow`) is in its written
-  case, not uppercase: `text-[14px] font-semibold tracking-[0.01em] text-white/75`** (owner,
-  2026-11-09: the all-caps line "screams AI touch"; in lower case 0.2em tracking read "too
-  scattered" and 12px at 60% was too small for "macOS 15+" to read on the wallpaper).
-- The heading scale was deliberately stepped down a notch site-wide — don't "fix" headings bigger.
+- **All text: Open Runde, as letters.app** (owner, 2026-11-09: headings first, then "our font
+  treatment doesn't look the same" — letters sets its BODY in Open Runde too). OFL-1.1, licence
+  beside the files. `app/fonts/open-runde/` holds LATIN SUBSETS of Regular / Medium / Semibold /
+  Bold (~28 KB each; full files are 160 KB each — re-subset with fontTools `pyftsubset
+  --layout-features='*'`, keeping ⌘ ⌥ ⇥ and typographic punctuation), loaded by `next/font/local`
+  as `--font-open-runde` and set as `--font-sans`. It has no Light weight: never use
+  `font-light` (it silently renders Regular). **macOS mocks stay Inter** (SF's stand-in; rounded
+  reads un-Mac): `.popover-surface` sets it in CSS, other mock surfaces take `font-ui`. In custom
+  CSS reference the next/font variable (`var(--font-inter)`), never a token from `@theme
+  inline`, which is not emitted as a CSS variable (the headings silently stayed Inter once).
+  The display font (Special Gothic Expanded One) is still loaded but unused; Haskoy was
+  trialled and reverted — don't re-suggest it.
+- **Type scale tokens (globals.css `@theme`, measured from letters.app — every value matches):**
+  `text-section` (section h2: fluid 32→44 px, 1.1, −0.04em, 600; centred ones also `mx-auto
+  max-w-132` so they wrap as a balanced two-line block), `text-title` (big-card title 28 px,
+  1.2, medium), `text-title-sm` (bento title 22 px medium), `text-lead` (every section and card
+  body: 18 px / 1.4 / −0.01em, Regular; a bold lead-in is `font-semibold text-foreground`).
+  **The row of small features** under the big cards: FOUR items (Keyboard, Folders, Grid or
+  list, Languages — the obvious ones were cut: login, updates, revert, missing apps), each a
+  `text-lead` medium name on its own line + one `text-lead` muted sentence, 36 px icon chip.
+  Eight 18 px bold run-ins read "busy" and "shouty"; with four items and the name on its own
+  line the full size reads fine (owner, 2026-11-09). Copy: titles keep their voice, slogans
+  toned down ~15% — a full flattening to plain nouns went "too far".
+  Light-theme `--muted-foreground` is letters' body grey #60606C (oklch 0.493 0.019 285.7,
+  6.2:1 on white). Use the token, never restate size/leading/tracking. Card titles carry no
+  `max-w-*`: a capped title broke into an awkward two lines in a card wide enough for one. **Never name a text token after a colour token** — `text-card`
+  collided with shadcn's `--color-card` and rendered the title in the card's own white.
+  **Display headings** (hero h1, closing band, FAQ / Release Notes / legal h1s) use the
+  `heading-display` utility — letters' h1 treatment: 600, line-height 0.9, −0.04em — and keep
+  their own sizes (owner: "footer and hero are okay"). The utility sets `--tw-leading` as well:
+  `text-5xl` applies its line-height through that variable and otherwise wins (it came out 1.0).
+- **The homepage has NO eyebrows, hero included** (owner, 2026-11-09: "its not of any use" —
+  the "Features / 01"-style labels went, then the hero's requirements line, which the
+  `DownloadMeta` line under the Download button already states; don't re-add one). Eyebrows
+  survive only on the dark subpage headers (FAQ, Release Notes, Privacy, Terms). Their style: written case, `text-[14px] font-semibold
+  tracking-[0.01em] text-white/75` — the tracked all-caps version "screams AI touch", 0.2em
+  tracking read "too scattered" in lower case, and 12px was too small. Tracked caps
+  (`uppercase tracking-[0.2em]`) remain only on small badges and labels inside components
+  (release-timeline "Latest", group headings).
+- Section headings were raised to letters.app's 44 px on 2026-11-09 (owner asked for its
+  section-heading style; this supersedes the older "stepped down a notch" note). Don't change the
+  scale ad hoc — change the token.
+- **Closer-look hotspots pulse** (`.hotspot-pulse`, owner 2026-11-09): a copy of the outer ring
+  grows to 1.7× and fades over 2.8 s, staggered 0.7 s per marker; off while a card is open and
+  under reduced motion.
 
 ## Motion
 
@@ -150,7 +200,7 @@ Two unlayered helpers, used instead of re-deriving them per component:
   expands vertically and stays inside the control's own horizontal edges, so adjacent targets
   (nav links, the 28px theme-switcher segments, footer links) can never overlap.
 
-**App screenshots are window captures, not framed crops (2026-10-31).** Features / 01 shows the
+**App screenshots are window captures, not framed crops (2026-10-31).** The custom-tiles story shows the
 window with its own corners and shadow on transparency (cropped to the alpha bounds, light and dark
 to ONE shared box so overlaid marks align) — no frame, no hairline; a box would cage a floating
 window. Its "take a closer look" hotspots (`closer-look.tsx`, Apple HomeView pattern) spotlight a
@@ -169,6 +219,11 @@ re-apply per component unless overriding.
 
 ## CSS / tooling gotchas (each cost real debugging time)
 
+- **An icon set inline in a heading needs `inline-block overflow-hidden`** to centre by
+  `vertical-align`: without `overflow`, the box's baseline is synthesised from its content (a
+  flex face with an SVG) and the "More than" tile hung 12 px low. With it, the baseline is the
+  bottom edge and `align-[(cap/2 − size/2)]` is exact (−0.19em for a 1.1em tile on Open Runde's
+  0.727em cap height). Verify with a baseline probe + canvas `actualBoundingBoxAscent`, not by eye.
 - **Never hand-write `-webkit-` prefixes.** Lightning CSS drops the standard unprefixed property
   when both are present — this silently killed `backdrop-filter` on every glass surface once.
   Let the toolchain prefix.

@@ -3,8 +3,8 @@
 import * as React from "react";
 import {
   BatteryFull,
+  Check,
   ChevronRight,
-  CircleDashed,
   EyeOff,
   FolderOpen,
   Ghost,
@@ -16,13 +16,10 @@ import {
   Option,
   Palette,
   PanelTop,
-  Power,
-  RefreshCw,
   Search,
   Plus,
   SlidersHorizontal,
   ShieldCheck,
-  Undo2,
   Wifi,
 } from "lucide-react";
 import Image from "next/image";
@@ -81,6 +78,8 @@ function ScaleToFit({ children }: { children: React.ReactNode }) {
    Finder ships a bespoke Dark icon-style rendition (`darkSrc`); third-party
    icons without one (Code/Slack/Music) get macOS's generic fallback instead —
    the regular icon inset in a dark box — rather than staying unstyled. */
+// Order is load-bearing: the `app-switch-sel` keyframes (globals.css) and the
+// name delays in the Ghost card ([0, 4.4, 0, 3.3, 2.2]) index these slots.
 const switcherApps = [
   { name: "Finder", src: "/assets/app-icons/finder.png", darkSrc: "/assets/app-icons/finder-dark.png?v=4" },
   { name: "Code", src: "/assets/app-icons/vscode.png" },
@@ -98,17 +97,14 @@ export function CustomTilesStory() {
   const m = content.marketing;
 
   return (
-    <section id="features" data-nav-section="features" className="mx-auto max-w-400 px-6 py-24 md:px-10 md:py-32">
+    <section id="features" data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-50">
       {/* Stacked, Apple-style: the window is a three-pane app, so it needs the
           full content width to read — text centred above, screenshot below. */}
-      <Reveal className="mx-auto mb-14 max-w-180 text-center md:mb-16">
-        <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-          {m.tilesEyebrow}
-        </span>
-        <h2 className="mb-6 text-3xl font-semibold tracking-[-0.05em] leading-[1.05] text-foreground md:text-4xl">
+      <Reveal className="mx-auto mb-12 max-w-180 text-center md:mb-13">
+        <h2 className="mx-auto mb-6 max-w-132 text-section text-foreground">
           {m.tilesTitle}
         </h2>
-        <p className="mx-auto max-w-150 text-lg font-light leading-relaxed text-muted-foreground">
+        <p className="mx-auto max-w-150 text-lead text-muted-foreground">
           {m.tilesBody}
         </p>
       </Reveal>
@@ -129,12 +125,9 @@ export function PowerUserSection() {
   const m = content.marketing;
 
   return (
-    <section data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-32">
-      <Reveal className="mb-14 text-center">
-        <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-          {m.powerUserEyebrow}
-        </span>
-        <h2 className="text-2xl font-semibold tracking-[-0.05em] leading-[1.05] text-foreground md:text-3xl">
+    <section data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-50">
+      <Reveal className="mb-12 text-center md:mb-13">
+        <h2 className="mx-auto max-w-132 text-section text-foreground">
           {m.bentoTitle}
         </h2>
       </Reveal>
@@ -145,10 +138,10 @@ export function PowerUserSection() {
           reflow per breakpoint — they'd only cramp in a narrow 3-col card). */}
       <div className="grid gap-6 xl:grid-cols-3">
         {/* Smart Add — white card; the "Add a Tile" sheet + on-device note */}
-        <Reveal className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 xl:max-w-none">
+        <Reveal className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 md:p-10 xl:max-w-none">
           <div>
-            <h3 className="mb-3 text-xl font-bold text-foreground">{m.smartAddTitle}</h3>
-            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{m.smartAddBody}</p>
+            <h3 className="mb-3 text-title-sm text-foreground">{m.smartAddTitle}</h3>
+            <p className="max-w-md text-lead text-muted-foreground">{m.smartAddBody}</p>
           </div>
           <div className="rounded-2xl bg-muted p-5">
             <SmartAddMock />
@@ -160,14 +153,12 @@ export function PowerUserSection() {
         </Reveal>
 
         {/* Right-click — white card; the popover with an app's item menu */}
-        <Reveal delay={80} className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 xl:max-w-none">
+        <Reveal delay={80} className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 md:p-10 xl:max-w-none">
           <div>
-            <h3 className="mb-3 text-xl font-bold text-foreground">{m.itemMenuTitle}</h3>
-            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{m.itemMenuBody}</p>
+            <h3 className="mb-3 text-title-sm text-foreground">{m.itemMenuTitle}</h3>
+            <p className="max-w-md text-lead text-muted-foreground">{m.itemMenuBody}</p>
           </div>
-          <div className="rounded-2xl bg-muted p-5">
-            <ItemMenuMock />
-          </div>
+          <ItemMenuMock />
           {/* Plain icon + text row, the same flush footnote as the Ghost card's. */}
           <div className="mx-auto flex w-fit items-center gap-3">
             <Option className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400" />
@@ -179,11 +170,11 @@ export function PowerUserSection() {
         {/* Ghost card runs a charcoal gradient (lighter than the flat zinc-900
             shells / pure-black CTA) so it reads as its OWN card and separates
             cleanly from the black Final CTA when they stack on mobile. */}
-        <Reveal delay={160} className="relative mx-auto flex w-full max-w-md flex-col justify-between gap-8 overflow-hidden rounded-3xl bg-linear-to-b from-zinc-800 to-zinc-900 p-6 text-white xl:max-w-none">
+        <Reveal delay={160} className="relative mx-auto flex w-full max-w-md flex-col justify-between gap-8 overflow-hidden rounded-3xl bg-linear-to-b from-zinc-800 to-zinc-900 p-6 text-white md:p-10 xl:max-w-none">
           <div className="grain" />
           <div className="relative">
-            <h3 className="mb-3 text-xl font-bold">{m.ghostTitle}</h3>
-            <p className="max-w-md text-sm leading-relaxed text-white/60">{m.ghostBody}</p>
+            <h3 className="mb-3 text-title-sm">{m.ghostTitle}</h3>
+            <p className="max-w-md text-lead text-white/60">{m.ghostBody}</p>
           </div>
           {/* Cmd+Tab app switcher — the selection tabs across real apps and
               skips the ghosted Dock Tile slot */}
@@ -191,7 +182,7 @@ export function PowerUserSection() {
             {/* Concentric: the 12px slot radius + the 12px `p-3` inset ⇒ a 24px
                 (rounded-3xl) shell. At rounded-2xl the shell's corners were
                 tighter than the icon slots tucked into them. */}
-            <div className="relative flex items-center gap-2 rounded-3xl border border-white/10 bg-white/[0.07] p-3 backdrop-blur-xl">
+            <div className="relative flex items-center gap-2 rounded-3xl border border-white/10 bg-white/[0.07] p-3 pb-8 backdrop-blur-xl">
               {/* moving selection highlight (sits behind the icons) */}
               <span className="app-switch-sel absolute left-3 top-3 h-12 w-12 rounded-xl bg-white/15 ring-1 ring-white/25" />
               {switcherApps.map((app, i) =>
@@ -233,6 +224,23 @@ export function PowerUserSection() {
                   </span>
                 ),
               )}
+              {/* The selected app's name, as macOS's switcher shows it. Each name fades
+                  in under its own slot on the highlight's 5.5 s clock (negative delays
+                  shift one keyframe to each slot's window); reduced motion rests on Finder. */}
+              {switcherApps.map((app, i) =>
+                app.ghost ? null : (
+                  <span
+                    key={`name-${app.name}`}
+                    aria-hidden
+                    className={`absolute bottom-2.5 -translate-x-1/2 whitespace-nowrap font-ui text-[12px] font-medium text-white/90 ${
+                      i === 0 ? "switch-name-first" : "switch-name opacity-0"
+                    }`}
+                    style={{ left: 36 + i * 56, animationDelay: i === 0 ? undefined : `${-[0, 4.4, 0, 3.3, 2.2][i]}s` }}
+                  >
+                    {app.name}
+                  </span>
+                ),
+              )}
             </div>
             <div className="flex items-center gap-1.5 text-white/40">
               <kbd className="rounded-md border border-white/15 bg-white/5 px-2 py-0.5 text-[11px] font-semibold">⌘</kbd>
@@ -271,10 +279,12 @@ const devApps = [
 ];
 
 // Paired with `marketing.details` in lib/i18n.ts by position — reorder both together.
-const detailIcons = [Keyboard, FolderOpen, LayoutGrid, Power, Undo2, CircleDashed, Languages, RefreshCw];
+const detailIcons = [Keyboard, FolderOpen, LayoutGrid, Languages];
 
 const menuRow = "flex h-5.5 items-center gap-2 rounded-md px-2 text-[13px] text-zinc-800 dark:text-zinc-100";
 const menuSep = "mx-2 my-1 border-t border-black/10 dark:border-white/10";
+// A highlighted menu row is the system accent with white text, as on a real Mac.
+const menuHighlight = "bg-[#007AFF] text-white! dark:bg-[#0A84FF]";
 
 function AppIcon({ src, size }: { src: string; size: number }) {
   return (
@@ -290,7 +300,7 @@ function MenuBarMock() {
   return (
     <ScaleToFit>
       <div className="h-49 w-115">
-        <div className="flex h-7 items-center justify-end gap-3.5 rounded-lg bg-white/80 px-2 text-[13px] text-zinc-800 shadow-sm dark:bg-white/10 dark:text-zinc-100">
+        <div className="flex h-7 font-ui items-center justify-end gap-3.5 rounded-lg bg-white/80 px-2 text-[13px] text-zinc-800 shadow-sm dark:bg-white/10 dark:text-zinc-100">
           <span className="relative flex h-5.5 items-center rounded-md bg-black/10 px-1.5 dark:bg-white/15">
             <Image
               src={asset("/assets/dock-tile-icon-only.svg")}
@@ -304,12 +314,12 @@ function MenuBarMock() {
                 submenu's first row level with "Dev Apps", overlapping the menu by 4px. */}
             <div className="popover-surface absolute left-0 top-6.75 w-52 rounded-xl p-1.5">
               {menuTiles.map((t) => (
-                <div key={t.name} className={`${menuRow} ${t.name === "Dev Apps" ? "bg-black/8 dark:bg-white/12" : ""}`}>
+                <div key={t.name} className={`${menuRow} ${t.name === "Dev Apps" ? menuHighlight : ""}`}>
                   <span className="flex h-4 w-4">
                     <TileFace gradient={t.gradient} darkGlyph={t.dark} glyph={t.glyph} shaded />
                   </span>
                   {t.name}
-                  <ChevronRight className="ml-auto h-3 w-3 text-zinc-400" />
+                  <ChevronRight className={`ml-auto h-3 w-3 ${t.name === "Dev Apps" ? "text-white/80" : "text-zinc-400"}`} />
                 </div>
               ))}
               <div className={menuSep} />
@@ -341,35 +351,63 @@ function MenuBarMock() {
 }
 
 /* A tile's popover with an app's right-click menu (PopoverItemMenu):
-   Open · Hide · Quit for a running app. Fixed 330×170 px. */
+   Open · Hide · Quit for a running app. Fixed 330×170 px. As in macOS,
+   holding Option while the pointer is over it turns Quit into Force Quit. */
 function ItemMenuMock() {
+  const [hover, setHover] = React.useState(false);
+  const [option, setOption] = React.useState(false);
+  React.useEffect(() => {
+    if (!hover) return;
+    const sync = (e: KeyboardEvent) => setOption(e.altKey);
+    const clear = () => setOption(false); // an Option release can land in another window
+    window.addEventListener("keydown", sync);
+    window.addEventListener("keyup", sync);
+    window.addEventListener("blur", clear);
+    return () => {
+      window.removeEventListener("keydown", sync);
+      window.removeEventListener("keyup", sync);
+      window.removeEventListener("blur", clear);
+    };
+  }, [hover]);
+  const forceQuit = hover && option;
+
   return (
-    <ScaleToFit>
-      <div className="relative h-42.5 w-82.5">
-        <div className="popover-surface w-60 rounded-2xl p-3 pt-0">
-          <p className="flex h-9 items-center justify-center text-[13px] font-medium text-zinc-800 dark:text-zinc-100">
-            Dev Apps
-          </p>
-          <div className="grid grid-cols-3">
-            {devApps.slice(0, 3).map((app) => (
-              <span
-                key={app.name}
-                className={`flex flex-col items-center gap-1.5 rounded-lg p-1.5 ${app.name === "GitHub" ? "bg-black/5 dark:bg-white/10" : ""}`}
-              >
-                <AppIcon src={app.src} size={48} />
-                <span className="text-[11px] leading-none text-zinc-600 dark:text-zinc-300">{app.name}</span>
-              </span>
-            ))}
+    <div
+      className="rounded-2xl bg-muted p-5"
+      onPointerEnter={(e) => {
+        setHover(true);
+        setOption(e.altKey);
+      }}
+      onPointerMove={(e) => setOption(e.altKey)}
+      onPointerLeave={() => setHover(false)}
+    >
+      <ScaleToFit>
+        <div className="relative h-42.5 w-82.5">
+          <div className="popover-surface w-60 rounded-2xl p-3 pt-0">
+            <p className="flex h-9 items-center justify-center text-[13px] font-medium text-zinc-800 dark:text-zinc-100">
+              Dev Apps
+            </p>
+            <div className="grid grid-cols-3">
+              {devApps.slice(0, 3).map((app) => (
+                <span
+                  key={app.name}
+                  className={`flex flex-col items-center gap-1.5 rounded-lg p-1.5 ${app.name === "GitHub" ? "bg-black/5 dark:bg-white/10" : ""}`}
+                >
+                  <AppIcon src={app.src} size={48} />
+                  <span className="text-[11px] leading-none text-zinc-600 dark:text-zinc-300">{app.name}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="popover-surface absolute left-31.5 top-19 w-40 rounded-xl p-1.5">
+            <div className={menuRow}>Open</div>
+            <div className={menuSep} />
+            <div className={menuRow}>Hide</div>
+            <div className={`${menuRow} ${menuHighlight}`}>{forceQuit ? "Force Quit" : "Quit"}</div>
           </div>
         </div>
-        <div className="popover-surface absolute left-31.5 top-19 w-40 rounded-xl p-1.5">
-          <div className={menuRow}>Open</div>
-          <div className={menuSep} />
-          <div className={menuRow}>Hide</div>
-          <div className={`${menuRow} bg-black/8 dark:bg-white/12`}>Quit</div>
-        </div>
-      </div>
-    </ScaleToFit>
+      </ScaleToFit>
+    </div>
   );
 }
 
@@ -461,8 +499,22 @@ function CustomFace({ style, mono, tint, emojiSize }: { style: FaceStyle; mono: 
   );
 }
 
+// Selection rings in this mock are macOS's system accent blue (#007AFF, Dark #0A84FF),
+// not the site's emerald: it is a Mac inspector, and the app's own selection is blue.
 const choice =
   "pressable cursor-pointer transition-[background-color,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500";
+
+// The idle walk-through: tints, Mono, Emoji, App Grid, back to the start.
+const customiserScript: { style: FaceStyle; mono: boolean; tint: number }[] = [
+  { style: "symbol", mono: false, tint: 0 },
+  { style: "symbol", mono: false, tint: 1 },
+  { style: "symbol", mono: false, tint: 2 },
+  { style: "symbol", mono: true, tint: 2 },
+  { style: "emoji", mono: true, tint: 2 },
+  { style: "emoji", mono: false, tint: 3 },
+  { style: "apps", mono: false, tint: 3 },
+  { style: "symbol", mono: false, tint: 4 },
+];
 
 function CustomiserDemo({ colourLabel }: { colourLabel: string }) {
   const [style, setStyle] = React.useState<FaceStyle>("symbol");
@@ -471,12 +523,53 @@ function CustomiserDemo({ colourLabel }: { colourLabel: string }) {
   const tint = customTints[tintIndex];
   const glyphRows = style !== "apps"; // App Grid has no tint or background to pick
 
+  // Idle walk-through, the Docks' ethos: plays while on screen, pauses on hover,
+  // and the first real click, tap or focus hands it over for good — resuming
+  // later would overwrite the visitor's own choices. Off under reduced motion.
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const stepRef = React.useRef(0);
+  const [inView, setInView] = React.useState(false);
+  const [hovered, setHovered] = React.useState(false);
+  const [handedOver, setHandedOver] = React.useState(false);
+  const [reduced, setReduced] = React.useState(true);
+  React.useEffect(() => {
+    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const root = rootRef.current;
+    if (!root) return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.6 });
+    io.observe(root);
+    return () => io.disconnect();
+  }, []);
+  React.useEffect(() => {
+    if (!inView || hovered || handedOver || reduced) return;
+    const t = window.setInterval(() => {
+      stepRef.current = (stepRef.current + 1) % customiserScript.length;
+      const s = customiserScript[stepRef.current];
+      setStyle(s.style);
+      setMono(s.mono);
+      setTintIndex(s.tint);
+    }, 1700);
+    return () => window.clearInterval(t);
+  }, [inView, hovered, handedOver, reduced]);
+
   const label = "mb-1.5 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400";
   return (
     <ScaleToFit>
-      <div className="flex w-125 items-center gap-6 text-zinc-800 dark:text-zinc-100">
+      <div
+        ref={rootRef}
+        className="flex w-125 font-ui items-center gap-6 text-zinc-800 dark:text-zinc-100"
+        onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        onPointerDownCapture={() => setHandedOver(true)}
+        onFocusCapture={() => setHandedOver(true)}
+      >
         <div className="flex flex-1 flex-col items-center gap-3">
-          <span className="flex h-32 w-32 drop-shadow-[0_2px_6px_rgba(0,0,0,0.25)]">
+          <span
+            // re-keyed per look so each change eases in rather than snapping
+            key={`${style}-${mono}-${tintIndex}`}
+            className="flex h-32 w-32 drop-shadow-[0_2px_6px_rgba(0,0,0,0.25)]"
+            style={reduced ? undefined : { animation: "face-swap 280ms cubic-bezier(0.16, 1, 0.3, 1)" }}
+          >
             <CustomFace style={style} mono={mono} tint={tint} emojiSize={64} />
           </span>
           <p className="text-[13px] font-semibold">AI Apps</p>
@@ -491,29 +584,38 @@ function CustomiserDemo({ colourLabel }: { colourLabel: string }) {
                   ["symbol", "Symbol"],
                   ["emoji", "Emoji"],
                 ] as const
-              ).map(([value, name]) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={style === value}
-                  onClick={() => setStyle(value)}
-                  className={`${choice} flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-medium ${
-                    style === value
-                      ? "bg-white shadow-sm ring-2 ring-emerald-500 dark:bg-white/12"
-                      : "bg-black/4 hover:bg-black/8 dark:bg-white/6 dark:hover:bg-white/10"
-                  }`}
-                >
-                  <span className="flex h-8 w-8">
-                    <CustomFace style={value} mono={mono} tint={tint} emojiSize={16} />
-                  </span>
-                  {name}
-                </button>
-              ))}
+              ).map(([value, name]) => {
+                const on = style === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setStyle(value)}
+                    className={`${choice} relative flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-medium ${
+                      on
+                        ? "bg-white shadow-sm ring-2 ring-[#007AFF] dark:bg-white/12 dark:ring-[#0A84FF]"
+                        : "bg-black/4 hover:bg-black/8 dark:bg-white/6 dark:hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="flex h-8 w-8">
+                      <CustomFace style={value} mono={mono} tint={tint} emojiSize={16} />
+                    </span>
+                    {name}
+                    {/* the app's selected-card badge: a blue ✓ on the corner */}
+                    {on && (
+                      <span className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#007AFF] ring-2 ring-white dark:bg-[#0A84FF] dark:ring-zinc-800">
+                        <Check strokeWidth={3.5} className="h-2.5 w-2.5 text-white" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className={`transition-opacity duration-200 ${glyphRows ? "" : "pointer-events-none opacity-35"}`} aria-disabled={!glyphRows}>
             <p className={label}>Background</p>
-            <div className="grid grid-cols-2 gap-1 rounded-lg bg-black/5 p-0.5 dark:bg-white/8" role="group" aria-label="Background">
+            <div className="grid grid-cols-2 gap-1.5" role="group" aria-label="Background">
               {(
                 [
                   [false, colourLabel],
@@ -526,10 +628,15 @@ function CustomiserDemo({ colourLabel }: { colourLabel: string }) {
                   disabled={!glyphRows}
                   aria-pressed={mono === value}
                   onClick={() => setMono(value)}
-                  className={`${choice} rounded-md py-1 text-[11px] font-medium ${
-                    mono === value ? "bg-white shadow-sm dark:bg-white/15" : "hover:bg-black/5 dark:hover:bg-white/8"
+                  className={`${choice} flex items-center gap-2 rounded-xl px-2 py-1.5 text-[11px] font-medium ${
+                    mono === value
+                      ? "bg-white shadow-sm ring-2 ring-[#007AFF] dark:bg-white/12 dark:ring-[#0A84FF]"
+                      : "bg-black/4 hover:bg-black/8 dark:bg-white/6 dark:hover:bg-white/10"
                   }`}
                 >
+                  <span className="flex h-5 w-5 shrink-0">
+                    <CustomFace style={style === "apps" ? "symbol" : style} mono={value} tint={tint} emojiSize={10} />
+                  </span>
                   {name}
                 </button>
               ))}
@@ -546,9 +653,11 @@ function CustomiserDemo({ colourLabel }: { colourLabel: string }) {
                   aria-label={t.name}
                   aria-pressed={tintIndex === i}
                   onClick={() => setTintIndex(i)}
-                  className={`${choice} h-5.5 w-5.5 rounded-full ${tintIndex === i ? "ring-2 ring-emerald-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-800" : ""}`}
+                  className={`${choice} flex h-5.5 w-5.5 items-center justify-center rounded-full`}
                   style={{ background: tintGradient(t) }}
-                />
+                >
+                  {tintIndex === i && <Check strokeWidth={3.5} className="h-3 w-3 text-white" />}
+                </button>
               ))}
             </div>
           </div>
@@ -629,16 +738,16 @@ function DetailCard({
   children: React.ReactNode;
 }) {
   return (
-    <Reveal delay={delay} className="flex flex-col gap-6 rounded-3xl border border-border bg-card p-6 md:p-8">
+    <Reveal delay={delay} className="flex flex-col gap-6 rounded-3xl border border-border bg-card p-6 md:p-10">
       <div>
-        <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-[13px] font-semibold text-foreground">
+        <span className="mb-5 inline-flex h-8 items-center gap-1.5 rounded-full border border-border pl-3 pr-3.5 text-sm font-semibold text-foreground">
           <Icon strokeWidth={1.75} className="h-4 w-4" />
           {pill}
         </span>
-        <h3 className="max-w-md text-2xl font-semibold leading-[1.15] tracking-[-0.03em] text-foreground">{title}</h3>
+        <h3 className="text-title text-foreground">{title}</h3>
       </div>
       <div className="flex flex-1 items-center justify-center rounded-2xl bg-muted px-5 py-8">{children}</div>
-      <p className="max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+      <p className="max-w-lg text-lead text-muted-foreground">
         <b className="font-semibold text-foreground">{lead}</b> {body}
       </p>
     </Reveal>
@@ -650,15 +759,18 @@ export function DetailsSection() {
   const m = content.marketing;
 
   return (
-    <section data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-32">
-      <Reveal className="mx-auto mb-14 max-w-180 text-center md:mb-16">
-        <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-          {m.detailsEyebrow}
-        </span>
-        <h2 className="text-3xl font-semibold leading-[1.05] tracking-[-0.05em] text-foreground md:text-4xl">
+    // Follows the light custom-tiles story: no top padding, its bottom padding is the gap.
+    <section data-nav-section="features" className="mx-auto max-w-400 px-4 pb-24 sm:px-6 md:px-10 md:pb-50">
+      <Reveal className="mx-auto mb-12 max-w-180 text-center md:mb-13">
+        <h2 className="mx-auto max-w-132 text-section text-foreground">
           {m.detailsTitleA}{" "}
           {/* A tilted tile set into the line, as letters.app sets its logo. */}
-          <span className="mx-0.5 inline-flex h-[1.1em] w-[1.1em] -rotate-6 align-[-0.2em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" aria-hidden>
+          {/* overflow-hidden pins the inline-block's baseline to its bottom edge
+              (otherwise it is synthesised from the face inside and the tile hung
+              12px low), so the offset is exact: -0.19em centres the 1.1em tile on
+              Open Runde's cap height, 0.727/2 - 1.1/2. The face is inset, so the
+              clip never cuts it; the shadow is a filter on this span, not clipped. */}
+          <span className="mx-0.5 inline-block h-[1.1em] w-[1.1em] overflow-hidden -rotate-6 align-[-0.19em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" aria-hidden>
             <TileFace gradient={menuTiles[0].gradient} darkGlyph={menuTiles[0].dark} glyph="sparkles" shaded />
           </span>{" "}
           {m.detailsTitleB}
@@ -678,13 +790,14 @@ export function DetailsSection() {
         {m.details.map((d, i) => {
           const Icon = detailIcons[i];
           return (
-            <Reveal as="li" key={d.lead} delay={(i % 4) * 60} className="flex flex-col gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground/6 text-foreground">
+            // Four short items under the big cards: the name on its own line, then
+            // one muted sentence, at the section body size (text-lead).
+            <Reveal as="li" key={d.lead} delay={i * 60} className="flex flex-col">
+              <span className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-foreground/6 text-foreground">
                 <Icon strokeWidth={1.5} className="h-4.5 w-4.5" />
               </span>
-              <p className="text-[15px] leading-relaxed text-muted-foreground">
-                <b className="font-semibold text-foreground">{d.lead}</b> {d.body}
-              </p>
+              <p className="text-lead font-medium text-foreground">{d.lead}</p>
+              <p className="mt-1 text-lead text-muted-foreground">{d.body}</p>
             </Reveal>
           );
         })}
@@ -736,13 +849,10 @@ export function DockLockStory() {
           </div>
         </Reveal>
         <Reveal delay={120} className="order-1 md:order-2">
-          <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
-            {m.dockLockEyebrow}
-          </span>
-          <h2 className="mb-6 text-3xl font-semibold tracking-[-0.05em] leading-[1.05] text-white md:text-4xl">
+          <h2 className="mb-6 text-section text-white">
             {m.dockLockTitle}
           </h2>
-          <p className="max-w-lg text-lg font-light leading-relaxed text-white/60">
+          <p className="max-w-lg text-lead text-white/60">
             {m.dockLockBody}
           </p>
         </Reveal>

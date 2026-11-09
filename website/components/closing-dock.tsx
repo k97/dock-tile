@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { MacOSDock, type DockApp } from "@/components/ui/mac-os-dock";
 import { ICON_CONTENT_RATIO, TileFace } from "@/components/dock-demo";
+import { DemoCursor, useDockShowcase } from "@/components/dock-showcase";
 import { HmcMark } from "@/components/hmc-mark";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
@@ -29,6 +30,8 @@ const POPOVER_WIDTH = 256;
 // larger box than the hero's 58% to fill the tile like a macOS 26 icon glyph.
 const GLYPH_SIZE = "70%";
 const STUDIO = "studio";
+// Tiles the idle showcase visits (the divider is not one).
+const SHOWCASE_IDS = ["github", "whats-new", "contact", STUDIO];
 
 const GITHUB_URL = siteConfig.githubUrl;
 const CONTACT_URL = `mailto:${siteConfig.contactEmail}`;
@@ -164,13 +167,49 @@ export function ClosingDock() {
     setOpen(true);
   };
 
-  // Outside pointer + Escape dismiss.
+  // Idle showcase, as in the hero (dock-showcase.tsx). The link tiles are only
+  // hovered — their tooltip shows, nothing navigates; Studio is clicked open.
+  const hoveredRef = React.useRef<Element | null>(null);
+  const clearHover = () => {
+    hoveredRef.current?.removeAttribute("data-demo-hover");
+    hoveredRef.current = null;
+  };
+  const lastPointerTypeRef = React.useRef("mouse");
+  const { stop, resume, ...demo } = useDockShowcase({
+    rootRef,
+    ids: SHOWCASE_IDS,
+    enabled: !reduced,
+    land: (id, el) => {
+      if (id === STUDIO) {
+        viaKeyboardRef.current = false;
+        openAt(el.getBoundingClientRect());
+        return true;
+      }
+      el.setAttribute("data-demo-hover", "");
+      hoveredRef.current = el;
+      return false;
+    },
+    release: () => {
+      if (hoveredRef.current) clearHover();
+      else close();
+    },
+    holdFor: (id) => (id === STUDIO ? 2600 : 1400),
+  });
+  // A user taking over mid-hover must not leave the demo's tooltip up.
+  const stopDemo = () => {
+    stop();
+    clearHover();
+  };
+
+  // Outside pointer + Escape dismiss. A touch dismiss re-arms the showcase (no
+  // pointerleave follows a finger).
   React.useEffect(() => {
     if (!open) return;
     const onPointerDown = (e: PointerEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) {
         viaKeyboardRef.current = false;
         close();
+        if (e.pointerType !== "mouse") resume();
       }
     };
     const onKeyDown = (e: KeyboardEvent) => {
@@ -185,7 +224,7 @@ export function ClosingDock() {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, close]);
+  }, [open, close, resume]);
 
   // Keyboard open → focus the first link, so Tab continues through the rows.
   React.useEffect(() => {
@@ -195,12 +234,16 @@ export function ClosingDock() {
   }, [open, closing]);
 
   const handleAppClick = (id: string, rect: DOMRect | null) => {
+    stopDemo(); // hard-stop the showcase so clicks never conflict
     if (id === "github") trackExternalLinkClick(GITHUB_URL, "closing_dock");
     else if (id === "whats-new") trackReleaseNotesClick();
     else if (id === "contact") trackContactClick();
     else if (id === STUDIO) {
-      if (open && !closing) close();
-      else openAt(rect);
+      if (open && !closing) {
+        close();
+        // A touch toggle-close: stop just swallowed the tap-up's resume.
+        if (lastPointerTypeRef.current !== "mouse") resume();
+      } else openAt(rect);
     }
   };
 
@@ -300,8 +343,21 @@ export function ClosingDock() {
     <div
       ref={rootRef}
       className="relative inline-block"
-      onPointerDownCapture={() => {
+      onPointerDownCapture={(e) => {
         viaKeyboardRef.current = false;
+        lastPointerTypeRef.current = e.pointerType;
+      }}
+      // Same resume model as the hero: a mouse resumes when it leaves, touch on
+      // tap-up / a cancelled tap (hero-dock-demo.md "Touch resume model").
+      onPointerEnter={stopDemo}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "mouse") resume();
+      }}
+      onPointerUp={(e) => {
+        if (e.pointerType !== "mouse") resume();
+      }}
+      onPointerCancel={(e) => {
+        if (e.pointerType !== "mouse") resume();
       }}
       onKeyDownCapture={(e) => {
         if (e.key === "Enter" || e.key === " ") viaKeyboardRef.current = true;
@@ -391,6 +447,8 @@ export function ClosingDock() {
           />
         </div>
       )}
+
+      <DemoCursor {...demo} />
     </div>
   );
 }

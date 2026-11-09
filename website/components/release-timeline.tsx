@@ -66,7 +66,7 @@ export function ReleaseTimeline({ releases }: { releases: Release[] }) {
                 </div>
 
                 {release.intro && (
-                  <p className="mb-6 text-[15px] font-light leading-relaxed text-muted-foreground">
+                  <p className="mb-6 text-[15px] leading-relaxed text-muted-foreground">
                     {localiseText(release.intro, locale)}
                   </p>
                 )}
@@ -81,7 +81,7 @@ export function ReleaseTimeline({ releases }: { releases: Release[] }) {
                         {group.items.map((item) => (
                           <li
                             key={item}
-                            className="relative pl-5 text-sm font-light leading-relaxed text-muted-foreground"
+                            className="relative pl-5 text-sm leading-relaxed text-muted-foreground"
                           >
                             <span className="absolute left-0 top-2.25 h-1.5 w-1.5 rounded-full bg-emerald-400/50" />
                             {localiseText(item, locale)}

@@ -6,7 +6,33 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), system-ui, sans-serif;
+  /* All text in Open Runde, as letters.app; Inter stands in until it loads. */
+  --font-sans: var(--font-open-runde), var(--font-inter), system-ui, sans-serif;
+  /* macOS mocks (popovers, menus, the inspector, the menu bar): Inter, the
+     closest web stand-in for SF — a rounded face would read less like a Mac. */
+  --font-ui: var(--font-inter), system-ui, sans-serif;
+
+  /* Type scale, from letters.app's ratios (measured 2026-11-09): one size per
+     role, so every section heading matches. Section: 44 px at desktop, 1.1
+     leading, -0.04em — tight enough that a two-line heading reads as one
+     shape; fluid down to 32 px on phones. */
+  --text-section: clamp(2rem, 1.35rem + 2.2vw, 2.75rem);
+  --text-section--line-height: 1.1;
+  --text-section--letter-spacing: -0.04em;
+  --text-section--font-weight: 600;
+  /* Card titles: medium, not semibold — the card's frame already carries weight. */
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.03em;
+  --text-title--font-weight: 500;
+  --text-title-sm: 1.375rem;
+  --text-title-sm--line-height: 1.25;
+  --text-title-sm--letter-spacing: -0.025em;
+  --text-title-sm--font-weight: 500;
+  /* Lead: every section and card body — letters.app's 18 px / 1.4 / -0.01em. */
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.4;
+  --text-lead--letter-spacing: -0.01em;
   --font-display: "Special Gothic Expanded One", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -60,7 +86,8 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.967 0.001 286.375); /* zinc-100 */
-  --muted-foreground: oklch(0.552 0.016 285.938); /* zinc-500 */
+  /* letters.app's body grey #60606C — zinc's hue, darker: 6.2:1 on white vs zinc-500's 4.8:1 */
+  --muted-foreground: oklch(0.493 0.019 285.7);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
@@ -281,6 +308,9 @@
    vibrancy follows the system's own light/dark appearance, so this flips with
    the site theme too — light vibrancy in light mode, dark vibrancy in dark. */
 .popover-surface {
+  /* macOS chrome reads in Inter (SF's stand-in), not the site's rounded face.
+     The next/font variable directly: `@theme inline` emits no --font-ui. */
+  font-family: var(--font-inter), system-ui, sans-serif;
   background: rgba(246, 246, 248, 0.82);
   backdrop-filter: blur(40px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.55);
@@ -294,6 +324,55 @@
   box-shadow:
     0 10px 22px rgba(0, 0, 0, 0.45),
     0 30px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Closer-look hotspots: a copy of the marker's outer ring grows and fades, a
+   quiet "press here". Staggered per marker (--pulse-delay) so four markers
+   never blink in unison; dropped while a card is open and under reduced
+   motion. Transform + opacity only. */
+.hotspot-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--foreground) 35%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  animation: hotspot-pulse 2.8s cubic-bezier(0.16, 1, 0.3, 1) var(--pulse-delay, 0s) infinite;
+}
+@keyframes hotspot-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hotspot-pulse::after {
+    animation: none;
+  }
+}
+
+/* Display headings (hero, closing band, subpage headers) — letters.app's h1
+   treatment: 600, 0.9 leading, -0.04em. Each keeps its own size. */
+@utility heading-display {
+  font-weight: 600;
+  /* text-5xl etc. set line-height through --tw-leading; set it too or they win */
+  --tw-leading: 0.9;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+/* Customiser demo: the big tile eases into each new look (opacity + scale). */
+@keyframes face-swap {
+  from {
+    opacity: 0.4;
+    transform: scale(0.96);
+  }
 }
 
 /* Entry reveal — fade-in-up, staggered via --reveal-delay */
@@ -811,6 +890,43 @@
 .app-switch-sel {
   animation: app-switch-sel 5.5s var(--ease-out-strong) infinite;
 }
+/* The selected app's name under the switcher, on the same 5.5 s clock. A slot
+   is held for 15% of the loop; Finder's window wraps (75% → 15%). The fades
+   take 2%, because the highlight's ease-out lands within ~2% of a 5% move. */
+@keyframes switch-name {
+  0%,
+  15% {
+    opacity: 1;
+  }
+  17%,
+  95% {
+    opacity: 0;
+  }
+  97%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes switch-name-first {
+  0%,
+  15% {
+    opacity: 1;
+  }
+  17%,
+  75% {
+    opacity: 0;
+  }
+  77%,
+  100% {
+    opacity: 1;
+  }
+}
+.switch-name {
+  animation: switch-name 5.5s linear infinite;
+}
+.switch-name-first {
+  animation: switch-name-first 5.5s linear infinite;
+}
 @keyframes ghost-phase {
   0%,
   100% {
@@ -868,7 +984,9 @@
     animation: none;
   }
   .app-switch-sel,
-  .ghost-phase {
+  .ghost-phase,
+  .switch-name,
+  .switch-name-first {
     animation: none;
   }
 }

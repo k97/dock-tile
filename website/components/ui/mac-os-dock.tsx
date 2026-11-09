@@ -339,7 +339,9 @@ const MacOSDock: React.FC<MacOSDockProps> = ({
             <>
               {app.content ? (
                 <div className="relative h-full w-full" style={{ filter: iconShadow }}>
-                  {app.content}
+                  {/* Pressed: darkens on mouse-down and back on release, instantly, as
+                      the macOS Dock does — feedback on the press, not on the click. */}
+                  <div className="h-full w-full group-active:brightness-[0.72]">{app.content}</div>
                 </div>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element -- generic URL-icon fallback; DockTile passes `content` nodes
@@ -360,7 +362,7 @@ const MacOSDock: React.FC<MacOSDockProps> = ({
               <span
                 aria-hidden
                 className={cn(
-                  "pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-white/10 bg-zinc-900/85 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100",
+                  "pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md font-ui border border-white/10 bg-zinc-900/85 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100 group-data-demo-hover:opacity-100",
                   app.label && "[@media(hover:none)]:hidden",
                 )}
               >

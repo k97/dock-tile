@@ -33,13 +33,13 @@ export function LegalShell({
         <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-900/60" />
         <div className="relative z-10">
           <span
-            className="reveal mb-3 block text-[12px] font-bold uppercase tracking-[0.2em] text-white/60"
+            className="reveal mb-3 block text-[14px] font-semibold tracking-[0.01em] text-white/75"
             style={{ "--reveal-delay": "0ms" } as CSSProperties}
           >
             {eyebrow}
           </span>
           <h1
-            className="reveal text-3xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-5xl"
+            className="reveal text-3xl heading-display text-white md:text-5xl"
             style={{ "--reveal-delay": "80ms" } as CSSProperties}
           >
             {title}
@@ -51,7 +51,7 @@ export function LegalShell({
             )}
           </h1>
           <p
-            className="reveal mt-4 text-sm font-light text-white/40"
+            className="reveal mt-4 text-sm text-white/40"
             style={{ "--reveal-delay": "160ms" } as CSSProperties}
           >
             {lastUpdated}

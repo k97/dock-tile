@@ -5,6 +5,7 @@ import { useLocale } from "@/components/locale-provider";
 import { Reveal } from "@/components/reveal";
 import { DownloadActionButton } from "@/components/action-button";
 import { ClosingDock } from "@/components/closing-dock";
+import { DownloadMeta } from "@/components/hero";
 import { asset } from "@/lib/assets";
 
 /**
@@ -46,12 +47,14 @@ export function ClosingBand() {
             aria-hidden
             className="pointer-events-none absolute -inset-x-8 -inset-y-8 -z-10 rounded-[2.5rem] bg-black/15 backdrop-blur-md mask-[radial-gradient(ellipse_at_center,black_20%,transparent_72%)]"
           />
-          <h2 className="text-3xl font-bold leading-[1.05] tracking-[-0.05em] text-white md:text-5xl">
+          <h2 className="text-3xl heading-display text-white md:text-5xl">
             {m.closingTitle}
           </h2>
         </div>
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col items-center gap-5">
           <DownloadActionButton tone="light" size="lg" label={m.ctaButton} />
+          {/* Open source (GitHub) · Apple silicon · macOS floor */}
+          <DownloadMeta variant="closing" />
         </div>
 
         {/* Popover zone — reserved so the Studio popover (opening upward from

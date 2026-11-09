@@ -43,14 +43,8 @@ export function Hero() {
           aria-hidden
           className="pointer-events-none absolute -inset-x-8 -inset-y-8 -z-10 rounded-[2.5rem] bg-black/15 backdrop-blur-md mask-[radial-gradient(ellipse_at_center,black_20%,transparent_72%)]"
         />
-        <span
-          className="reveal mb-3 block text-[14px] font-semibold tracking-[0.01em] text-white/75"
-          style={{ "--reveal-delay": "0ms" } as React.CSSProperties}
-        >
-          {m.heroEyebrow}
-        </span>
         <h1
-          className="reveal text-4xl font-bold tracking-[-0.05em] leading-[1.05] text-white md:text-5xl"
+          className="reveal text-4xl heading-display text-white md:text-5xl"
           style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
         >
           {m.heroHeadlineA}
@@ -58,7 +52,7 @@ export function Hero() {
           <span className="text-white/60 dark:text-white/40">{m.heroHeadlineB}</span>
         </h1>
         <p
-          className="reveal mx-auto mt-5 max-w-md text-xl text-white/90"
+          className="reveal mx-auto mt-5 max-w-md text-xl tracking-[-0.01em] text-white/90"
           style={{ "--reveal-delay": "160ms" } as React.CSSProperties}
         >
           {m.heroSub}
@@ -81,7 +75,31 @@ export function Hero() {
         style={{ "--reveal-delay": "440ms" } as React.CSSProperties}
       >
         <DownloadActionButton tone="light" size="lg" label={content.downloadButton} />
-        <p className="flex items-center gap-3 text-xs font-medium text-white/40">
+        <DownloadMeta />
+      </div>
+    </section>
+  );
+}
+
+/* The line under a Download button, shared by the hero and the closing band;
+   it lives here because MacOSFloorGuardTests reads this file for "macOS 15+".
+   Hero: version (→ release notes) · Open source (→ GitHub) · Apple silicon · macOS floor.
+   Closing: the same without the version (owner),
+   brighter, because it sits on the wallpaper's bright middle where the hero's
+   40% white (meant for its dark bottom) all but vanished. */
+export function DownloadMeta({ variant = "hero" }: { variant?: "hero" | "closing" }) {
+  const { content } = useLocale();
+  const closing = variant === "closing";
+  const dot = <span className="h-1 w-1 rounded-full bg-white/20" />;
+  return (
+    <p
+      // wraps (centred) on the narrowest phones: 4 items are ~326 px, a 360 px phone has ~304
+      className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs font-medium ${
+        closing ? "text-white/75 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]" : "text-white/40"
+      }`}
+    >
+      {!closing && (
+        <>
           <Link
             href="/release-notes"
             onClick={trackReleaseNotesClick}
@@ -89,19 +107,21 @@ export function Hero() {
           >
             v{siteConfig.latestVersion}
           </Link>
-          <span className="h-1 w-1 rounded-full bg-white/20" />
-          <a
-            href={siteConfig.githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hit-area transition-colors hover:text-white"
-          >
-            {m.ctaMetaOpenSource}
-          </a>
-          <span className="h-1 w-1 rounded-full bg-white/20" />
-          <span>macOS 15+</span>
-        </p>
-      </div>
-    </section>
+          {dot}
+        </>
+      )}
+      <a
+        href={siteConfig.githubUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hit-area transition-colors hover:text-white"
+      >
+        {content.marketing.ctaMetaOpenSource}
+      </a>
+      {dot}
+      <span>{content.marketing.ctaMetaAppleSilicon}</span>
+      {dot}
+      <span>macOS 15+</span>
+    </p>
   );
 }

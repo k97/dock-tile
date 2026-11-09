@@ -58,7 +58,13 @@ wrapper owns everything DockTile-specific. Behaviour rules — each was hard-won
   after ~2.8s away. The cursor glides to each tile's **resting** centre (live rects mid-glide
   chase the magnifying icons), then a two-step live "aim" + ±7px jitter lands the click;
   magnification is driven by synthesising `mousemove` at the fake cursor every frame. Fully
-  disabled under reduced motion.
+  disabled under reduced motion. **One implementation, two Docks** (2026-11-09):
+  `useDockShowcase` + `<DemoCursor>` in `dock-showcase.tsx` drive the hero AND the closing Dock;
+  each passes `land` (what landing does) and `release` (undo it). The walker runs only while its
+  Dock is ≥60% on screen (IntersectionObserver) — the hero's used to keep opening popovers off
+  screen, every frame. The closing Dock HOVERS its link tiles (shows the tooltip via
+  `data-demo-hover` → `group-data-demo-hover:opacity-100` in `MacOSDock`; nothing navigates) and
+  clicks Studio open.
 - **Touch resume model (critical — keeps the demo alive on phones)**: hover semantics don't exist
   on touch — a finger's `pointerleave` fires right after every tap-up, so resuming on leave (the
   mouse rule) would let the showcase barge back over a popover the user just opened, and *not*
@@ -82,6 +88,21 @@ Their labels mirror the app's strings (Add a Tile, Open Dock Tile…, Configure 
 them after an app release. The Grid/List popover clone that used to fill a bento card was removed
 on 2026-11-09 (Grid or list became a one-liner); it is in git history.
 
+- **Apple-design pass (2026-11-09) — keep these:** Dock icons darken on mouse-DOWN
+  (`group-active:brightness-[0.72]` on an inner wrapper — the outer one carries the shadow as
+  an inline `filter`), popover app icons too (`[&:active_img]`), launch still on click; menu
+  mocks highlight their row in the macOS accent (`menuHighlight`: #007AFF / #0A84FF, white
+  text, white chevron); the customiser copies the APP's controls (blue ✓ badge on the chosen
+  Style card, Background as two cards with mini tiles, a white ✓ inside the chosen swatch —
+  check the app screenshot before changing them); the ⌘Tab strip names the selected app under
+  its slot, CSS-synced to `app-switch-sel` (`switch-name` keyframes, negative delays; fades
+  take 2% because the highlight's ease-out lands within ~2% of a 5% move — sampled 61× with
+  0 mismatches).
+- **The customiser card plays itself until touched** (owner, 2026-11-09): while ≥60% on screen
+  it steps through `customiserScript` every 1.7 s (tints → Mono → Emoji → App Grid), pauses on
+  mouse hover, and the first click / tap / focus hands it over for good — unlike the Docks it
+  never resumes, which would overwrite the visitor's choice. Off under reduced motion; the big
+  tile eases in per change (`face-swap`, 280 ms).
 - **The customiser card is interactive** (`CustomiserDemo`): Style / Background / Colour drive a
   live tile under the app's own rules — App Grid ignores tint and background (those rows dim),
   a Mono symbol puts the tint on the glyph, a Colour emoji's Dark plate is the tint capped to
