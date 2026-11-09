@@ -55,7 +55,9 @@ via `didBecomeActive` + the `com.apple.accessibility.api` notification + the pan
   (`scheduleMoveAfterDisplayChange`, reason `displays_changed`), only while an anchor is connected beside
   another display. A dock adds displays one at a time and each in-between set is its own setup, so an
   immediate move warped the cursor once per step (plan gate, 2026-11-08); the old instant
-  `display_reconnected` move is gone.
+  `display_reconnected` move is gone. The `Setup of N displays → anchor X` log line fires only when the
+  anchor CHANGES, so a display change that keeps the anchor leaves no line: read the setup from
+  `defaults read com.docktile.dev.app dockLockSetupAnchors` (hands-on, 2026-11-08).
 - **Anchors are stored by display UUID** (`CGDisplayCreateUUIDFromDisplayID`), NOT the raw
   `CGDirectDisplayID` — IDs reshuffle across reboot/sleep/replug. `anchorDisplayID` is the live resolved
   value (`private(set)`, `0` = nothing to hold here). Legacy `dockLockAnchorDisplay` int is migrated

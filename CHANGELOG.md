@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.1] - 2026-11-09
+
+### Changed
+
+- **dock lock:** Remember a locked display for each set of connected displays, so home, work and a single laptop screen each keep their own choice; a set of displays you haven't chosen for leaves the Dock where macOS puts it, and your existing choice still applies wherever that display is connected (#37) ([4bc68c5](https://github.com/k97/dock-tile/commit/4bc68c5))
+- **dock lock:** Move the Dock once after a dock or hub finishes connecting its displays, instead of once per display (#37) ([4bc68c5](https://github.com/k97/dock-tile/commit/4bc68c5), [62b38ab](https://github.com/k97/dock-tile/commit/62b38ab))
+
 ## [2.7.0] - 2026-11-07
 
 ### Added

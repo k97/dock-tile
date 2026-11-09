@@ -84,6 +84,11 @@ windowless quit) presented the window (#29). Count windows by PID with `CGWindow
 
 ## Hands-on evidence comes from the dev log, not the owner's eyes
 
+- **`NSLog`-only lines are gone by the next day.** The unified log did not keep Dock Lock's
+  `✓ DockLock move: Dock already on anchor` line (the #37 hands-on, 2026-11-08), so one step could
+  not be confirmed. For an `NSLog` signal, run `/usr/bin/log stream --predicate 'eventMessage CONTAINS
+  "…"'` during the test; `diagnostics.log` keeps only what `DiagnosticsLog` writes.
+
 - **Follow a tile by its log tag, not its pid.** Any Update, Popover Apply or migration relaunches the
   helper (2026-11-04: a consent check spanned a Popover Apply and the helper's pid changed mid-check).
   Grep `helper:<name> (<shortId>)`. A timing window like "delete during Apply" is ~4 s for two tiles:
