@@ -592,7 +592,7 @@ function CustomiserDemo({ colourLabel }: { colourLabel: string }) {
                     type="button"
                     aria-pressed={on}
                     onClick={() => setStyle(value)}
-                    className={`${choice} relative flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-medium ${
+                    className={`${choice} relative flex flex-col items-center gap-1 rounded-lg py-2 text-[11px] font-medium ${
                       on
                         ? "bg-white shadow-sm ring-2 ring-[#007AFF] dark:bg-white/12 dark:ring-[#0A84FF]"
                         : "bg-black/4 hover:bg-black/8 dark:bg-white/6 dark:hover:bg-white/10"
@@ -628,7 +628,7 @@ function CustomiserDemo({ colourLabel }: { colourLabel: string }) {
                   disabled={!glyphRows}
                   aria-pressed={mono === value}
                   onClick={() => setMono(value)}
-                  className={`${choice} flex items-center gap-2 rounded-xl px-2 py-1.5 text-[11px] font-medium ${
+                  className={`${choice} flex items-center gap-2 rounded-sm px-2 py-1.5 text-[11px] font-medium ${
                     mono === value
                       ? "bg-white shadow-sm ring-2 ring-[#007AFF] dark:bg-white/12 dark:ring-[#0A84FF]"
                       : "bg-black/4 hover:bg-black/8 dark:bg-white/6 dark:hover:bg-white/10"

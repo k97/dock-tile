@@ -357,13 +357,13 @@
   }
 }
 
-/* Display headings (hero, closing band, subpage headers) — letters.app's h1
-   treatment: 600, 0.9 leading, -0.04em. Each keeps its own size. */
+/* Display headings (hero, closing band, subpage headers): letters.app's h1, but
+   1.05 leading — its 0.9 overlapped our 48 px hero lines (design-system.md). */
 @utility heading-display {
   font-weight: 600;
   /* text-5xl etc. set line-height through --tw-leading; set it too or they win */
-  --tw-leading: 0.9;
-  line-height: 0.9;
+  --tw-leading: 1.05;
+  line-height: 1.05;
   letter-spacing: -0.04em;
 }
 

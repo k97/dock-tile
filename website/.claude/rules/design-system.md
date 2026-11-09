@@ -11,6 +11,10 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
   blocks `#18181B`; light background `#F4F4F5` (zinc-100).
 - Grain overlay at 15% on every dark section (prevents banding).
 - Radii: 2.5rem on major section wrappers (the site's rhythm — keep it); internal cards 16–24px.
+  shadcn remaps the radius names: `rounded-sm` 6 px, `md` 8, `lg` 10 (not Tailwind v4's 4/6/8).
+  macOS mocks copy the app's proportions — the customiser's Background cards `rounded-sm` (6 px on
+  32 px), Style cards `rounded-lg` (10 px on 69 px); `rounded-lg` on the short Background card
+  read far rounder than the app (owner, 2026-11-09).
 - **One spacing rhythm, letters.app-style (measured side by side 2026-11-09):** 200px
   (`md:py-50`; 96 px on phones) from a section's last content to the next heading, everywhere —
   128 px read cramped once the type grew to letters' 44 / 18 px (owner, 2026-11-09); section headings
@@ -140,6 +144,7 @@ Back/Forward still restore their position.
   max-w-132` so they wrap as a balanced two-line block), `text-title` (big-card title 28 px,
   1.2, medium), `text-title-sm` (bento title 22 px medium), `text-lead` (every section and card
   body: 18 px / 1.4 / −0.01em, Regular; a bold lead-in is `font-semibold text-foreground`).
+  A 16 px body with titles 2 px smaller was tried and reverted the same day (owner, 2026-11-09).
   **The row of small features** under the big cards: FOUR items (Keyboard, Folders, Grid or
   list, Languages — the obvious ones were cut: login, updates, revert, missing apps), each a
   `text-lead` medium name on its own line + one `text-lead` muted sentence, 36 px icon chip.
@@ -151,9 +156,12 @@ Back/Forward still restore their position.
   `max-w-*`: a capped title broke into an awkward two lines in a card wide enough for one. **Never name a text token after a colour token** — `text-card`
   collided with shadcn's `--color-card` and rendered the title in the card's own white.
   **Display headings** (hero h1, closing band, FAQ / Release Notes / legal h1s) use the
-  `heading-display` utility — letters' h1 treatment: 600, line-height 0.9, −0.04em — and keep
-  their own sizes (owner: "footer and hero are okay"). The utility sets `--tw-leading` as well:
-  `text-5xl` applies its line-height through that variable and otherwise wins (it came out 1.0).
+  `heading-display` utility — letters' h1 treatment (600, −0.04em) but line-height **1.05**, not
+  its 0.9 — and keep their own sizes (owner: "footer and hero are okay"). 0.9 works at letters'
+  80 px; at our 48 px the hero's lines overlapped ("apps." descender 1.5 px into "Declutter"'s
+  caps, measured with canvas glyph bounds); 1.05 leaves ~6 px (owner, 2026-11-09). The utility
+  sets `--tw-leading` as well: `text-5xl` applies its line-height through that variable and
+  otherwise wins (it came out 1.0).
 - **The homepage has NO eyebrows, hero included** (owner, 2026-11-09: "its not of any use" —
   the "Features / 01"-style labels went, then the hero's requirements line, which the
   `DownloadMeta` line under the Download button already states; don't re-add one). Eyebrows
