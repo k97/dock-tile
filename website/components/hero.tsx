@@ -44,7 +44,7 @@ export function Hero() {
           className="pointer-events-none absolute -inset-x-8 -inset-y-8 -z-10 rounded-[2.5rem] bg-black/15 backdrop-blur-md mask-[radial-gradient(ellipse_at_center,black_20%,transparent_72%)]"
         />
         <span
-          className="reveal mb-3 block text-[12px] font-bold uppercase tracking-[0.2em] text-white/60"
+          className="reveal mb-3 block text-[14px] font-semibold tracking-[0.01em] text-white/75"
           style={{ "--reveal-delay": "0ms" } as React.CSSProperties}
         >
           {m.heroEyebrow}

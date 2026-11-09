@@ -3,7 +3,12 @@
 ## Page structure
 
 - Single-page marketing site: `Hero → CustomTilesStory (id="features") → DockLockStory →
-  PowerUserSection → ClosingBand` + Footer. The standalone `/features` route was deliberately
+  DetailsSection → PowerUserSection → ClosingBand` + Footer. `DetailsSection` ("Hidden in plain
+  sight", 2026-11-09) follows letters.app's feature block: the two BIGGEST features as big cards
+  (an interactive tile customiser, the menu bar), then a row of one-line features (Grid or list
+  is one) — each claim checked against the app. The power-user bento then holds Smart Add ·
+  Right-click · Ghost mode (owner picked this combo 2026-11-09 over Smart Add + menu bar as the
+  big two). The standalone `/features` route was deliberately
   deleted — nav "Features" scrolls to `/#features`. Don't recreate the page.
 - Nav order: **Features · Privacy · FAQ** + Download (Download is `md`+ only — see
   design-system.md "Adaptive nav").
@@ -26,6 +31,9 @@
   On 2026-10-31 three plausible lines were false: "Drag apps in" (the popover only reorders; adding
   is + Add), App Grid "size and weight" (Symbol only), and "the change applies immediately" (the
   Dock changes on Update). Copy describes the current app — re-read it after each app release.
+  **A visitor is a NEW install, so describe a new install's defaults** (2026-11-09: "Turn the menu
+  bar icon on in Settings" was false — `MenuBarController.initialEnabled` is ON for new installs,
+  OFF only for upgraders). Check the default-seeding code, not just the setting's existence.
 - The Privacy page is honesty-first about analytics: optional anonymous Firebase Analytics +
   Crashlytics, never sold/shared, opt-out via the app's real toggle ("Share anonymous usage data",
   Settings → General). Never reintroduce "collects nothing" claims.

@@ -10,8 +10,8 @@ only accent**. Narrative the site sells: "iOS-style folders for the Mac's Dock."
 - Grain overlay at 15% on every dark section (prevents banding).
 - Radii: 2.5rem on major section wrappers (the site's rhythm — keep it); internal cards 16–24px.
 - The power-user bento is 3-across only from `xl`; below that the cards stack in a centred
-  `max-w-md` column — a narrow 3-col card can't hold the fixed-size popover showcase
-  (see hero-dock-demo.md "Bento popover showcase").
+  `max-w-md` column — a narrow 3-col card can't hold the fixed-size mocks
+  (see hero-dock-demo.md "Card mocks").
 - Neutral chrome uses the shadcn tokens (`bg-background`, `bg-card`, `text-muted-foreground`,
   `border-border`), never literal `bg-white`/`bg-zinc-*`. The tokens are pinned to the exact
   Tailwind zinc oklch values, so the light theme is pixel-identical to the pre-token design.
@@ -85,8 +85,8 @@ includes the `#hash`, so the old `pathname.startsWith("/#features")` left Featur
 and the footer had no current state at all. Route links use `isActiveRoute` (exact or a `/`
 sub-path); section links (Features) are current on `/` while a `data-nav-section="features"`
 section crosses 40% of the viewport, read by the header's existing scroll sampler (no second
-listener). Tagged: Features / 01, Dock Lock, the power-user cards — never the hero or the closing
-band. Current links carry `aria-current` ("page" / "location").
+listener). Tagged: Features / 01, Dock Lock, the power-user cards, the hidden-features section — never the
+hero or the closing band. Current links carry `aria-current` ("page" / "location").
 
 **The pill's ends are concentric.** The Download button sits 7px from the pill's edge on every
 side, so the logo's hover pill does too (`px-1.5` on the pill, `pl-1.5` in the logo link → icon
@@ -112,8 +112,11 @@ Back/Forward still restore their position.
   Gothic Expanded One) is still loaded in `layout.tsx` but unused in rendered pages — only
   orphaned components reference `font-display`. Haskoy was trialled and reverted (sources in
   `docs/website/haskoy/`) — don't re-suggest it.
-- Caption canon: `text-[12px] font-bold uppercase tracking-[0.2em]` at ~60% foreground (the hero
-  eyebrow, `heroEyebrow` in `lib/i18n.ts`). Reuse it; don't invent new caption styles.
+- Caption canon: `text-[12px] font-bold uppercase tracking-[0.2em]` at ~60% foreground. Reuse it;
+  don't invent new caption styles. **Exception: the hero eyebrow (`heroEyebrow`) is in its written
+  case, not uppercase: `text-[14px] font-semibold tracking-[0.01em] text-white/75`** (owner,
+  2026-11-09: the all-caps line "screams AI touch"; in lower case 0.2em tracking read "too
+  scattered" and 12px at 60% was too small for "macOS 15+" to read on the wallpaper).
 - The heading scale was deliberately stepped down a notch site-wide — don't "fix" headings bigger.
 
 ## Motion

@@ -41,14 +41,10 @@ const marketingBase = {
   tilesSpotPrevious: "Previous",
   tilesSpotNext: "Next",
   tilesSpotClose: "Close",
-  popoverEyebrow: "Features / 02",
-  popoverTitle: "Grid or list. Sized your way.",
-  popoverBody:
-    "Each tile opens a native popover — an icon grid like an iOS folder, or a compact list. Tune size, spacing and labels, live.",
   powerUserEyebrow: "Power user",
   smartAddTitle: "Tiles that build themselves.",
   smartAddBody:
-    "Click +, and Dock Tile groups your recent apps into ready-made tiles to pick from — suggestions come from what you actually use.",
+    "Click +, and Dock Tile groups the apps you use most into ready-made tiles. Pick one and it opens ready to tweak; nothing reaches your Dock until you add it.",
   smartAddPrivacy: "Learned on your Mac. Never leaves your device.",
   ghostTitle: "Ghost mode.",
   ghostBody:
@@ -57,8 +53,37 @@ const marketingBase = {
   dockLockEyebrow: "Features / 02",
   dockLockTitle: "The Dock stays put.",
   dockLockBody:
-    "Stop the Dock from jumping between screens on multi-display setups. It stays on the display you choose — always.",
+    "Stop the Dock from jumping between screens on multi-display setups. Choose a display for each set of screens you use, and the Dock stays on it.",
   bentoTitle: "Built for the power user.",
+  // "Hidden in plain sight" — the features nobody finds until they look
+  detailsEyebrow: "Hidden in plain sight",
+  detailsTitleA: "More than",
+  detailsTitleB: "a folder in your Dock.",
+  customPill: "Style",
+  customTitle: "Make every tile yours.",
+  customLead: "Try it here.",
+  customBody:
+    "Show a grid of the tile's own apps, or a symbol or an emoji, in full colour or Mono. Your Dock picks up the new look when you press Update.",
+  customColour: "Colour", // the mock inspector's row label
+  menuBarPill: "Menu bar",
+  menuBarTitle: "Every tile, one click from the menu bar.",
+  menuBarLead: "On from the first launch.",
+  menuBarBody:
+    "The tiles in your Dock and their apps, listed in the menu bar, ready even when the Dock is hidden. Turn it off in Settings any time.",
+  itemMenuTitle: "Hide or quit, right from the tile.",
+  itemMenuBody:
+    "Right-click any app in a popover to open, hide or quit it. Folders get Show in Finder, Quick Look and Share.",
+  itemMenuTip: "Hold Option to force quit.",
+  details: [
+    { lead: "Keyboard friendly.", body: "Arrow keys move through a popover. Return opens, Esc closes." },
+    { lead: "Folders too.", body: "Add a folder beside your apps and open it in one click." },
+    { lead: "Grid or list.", body: "A tile opens as an icon grid like an iOS folder, or a compact list. Tune size, spacing and labels in Settings." },
+    { lead: "Ready at login.", body: "Tiles start with your Mac, so the first click is instant." },
+    { lead: "Revert to Dock Version.", body: "Edits save as you go. Changed your mind? Put the tile back the way your Dock shows it." },
+    { lead: "Nothing quietly vanishes.", body: "Uninstall an app and its tile marks it Not installed. Removing it is your call." },
+    { lead: "Speaks your language.", body: "English, 简体中文, 日本語, Deutsch, Русский and Français." },
+    { lead: "Updates itself.", body: "New versions install quietly in the background when you quit or step away." },
+  ],
   ctaButton: "Download Dock Tile",
   ctaMetaOpenSource: "Open source",
   // Closing band + closing Dock (the homepage's ending)
@@ -81,6 +106,9 @@ const marketingUS = {
     "Arrange them right in the popover your tile opens, so what you see is what you get. Then show the tile as a grid of its apps, or give it a symbol or an emoji, in color or mono.",
   tilesAlt: "Dock Tile editing a tile: its popover in the middle, Customize Tile on the right.",
   tilesSpotBackgroundBody: "Color fills the tile. Mono keeps it white in Light Mode and black in Dark Mode.",
+  customBody:
+    "Show a grid of the tile's own apps, or a symbol or an emoji, in full color or Mono. Your Dock picks up the new look when you press Update.",
+  customColour: "Color",
 } as const;
 
 // Legal pages — only spelling-sensitive strings vary by locale

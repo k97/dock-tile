@@ -72,15 +72,24 @@ wrapper owns everything DockTile-specific. Behaviour rules — each was hard-won
 - Reopening during the 200ms close animation is safe: the close timer lives in `closeTimerRef`
   and `open()` cancels it (a stale timeout used to shut the new popover the moment it appeared).
 
-## Bento popover showcase (`home-sections.tsx` PopoverShowcase)
+## Card mocks (`home-sections.tsx`: customiser, menu bar, Smart Add sheet, right-click)
 
-The "Grid or list" card's illustration is a **static 1:1 clone of this demo's popovers** — same
-markup, same product widths (grid 324 / list 240), interactivity stripped. Keep it in sync when
-the demo's popover rendering changes. **Illustrative macOS components never restyle responsively**
-(explicit owner mandate): they render at fixed natural size and `ScaleToFit` applies one uniform
-`transform: scale()` — an aspect-locked zoom, capped at 1:1 — to fit the card. Never let them
-stretch, squish, stack, or swap sizes per breakpoint; hand-drawn "roomy-ish" approximations were
-rejected twice before this.
+**Illustrative macOS components never restyle responsively** (explicit owner mandate): they
+render at a fixed natural size and `ScaleToFit` applies one uniform `transform: scale()` — an
+aspect-locked zoom, capped at 1:1 — to fit the card. Never let them stretch, squish, stack, or
+swap sizes per breakpoint; hand-drawn "roomy-ish" approximations were rejected twice before this.
+Their labels mirror the app's strings (Add a Tile, Open Dock Tile…, Configure Tile…) — re-check
+them after an app release. The Grid/List popover clone that used to fill a bento card was removed
+on 2026-11-09 (Grid or list became a one-liner); it is in git history.
+
+- **The customiser card is interactive** (`CustomiserDemo`): Style / Background / Colour drive a
+  live tile under the app's own rules — App Grid ignores tint and background (those rows dim),
+  a Mono symbol puts the tint on the glyph, a Colour emoji's Dark plate is the tint capped to
+  0.22 → 0.13 brightness (`capBrightness`), Mono emoji goes near-black.
+- **`TileGlyph`'s shading gradient id is per instance (`useId`).** A per-name id made every
+  same-named glyph paint in the FIRST instance's colour (`currentColor` resolves where the
+  gradient is defined): a pink Mono sparkles came out white, and in Dark every sparkles took the
+  hero's purple. Never share it again.
 
 ## Closing Dock (`closing-band.tsx` + `closing-dock.tsx`, 2026-10-30)
 

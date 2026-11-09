@@ -688,18 +688,6 @@
   }
 }
 
-@keyframes bounce-subtle {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-.animate-bounce-subtle {
-  animation: bounce-subtle 2s infinite ease-in-out;
-}
 
 /* Dock Lock demo — the Dock roams between the two screens, then locks
    onto the anchor. Three synced loops: horizontal travel, a snap-scale on
@@ -872,9 +860,6 @@
     opacity: 1;
     transform: none;
     transition: none;
-  }
-  .animate-bounce-subtle {
-    animation: none;
   }
   .dock-lock-pill,
   .dock-lock-anchor,

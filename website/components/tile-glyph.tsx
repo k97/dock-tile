@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useId, type CSSProperties } from "react";
 
 /**
  * Tile glyphs — filled, SF-Symbol-accurate shapes rendered as inline SVG.
@@ -108,8 +108,10 @@ export function TileGlyph({
   const def = (GLYPH_DEFS as Record<string, GlyphDef>)[name];
   const viewBox = def?.viewBox ?? "0 0 16 16";
   const paths = def?.paths ?? [(GLYPH_PATHS as Record<string, string>)[name]];
-  // Same id for every instance of a glyph — the definitions are identical.
-  const shadeId = `tile-glyph-shade-${name}`;
+  // One id per instance: the gradient's currentColor resolves where the
+  // gradient is defined, so a shared id painted every same-named glyph in
+  // the FIRST instance's colour (a Mono tint glyph came out white).
+  const shadeId = `tile-glyph-shade-${useId().replace(/[^\w-]/g, "")}`;
   const ink = shaded ? `url(#${shadeId})` : "currentColor";
   const paint = def?.stroke
     ? {

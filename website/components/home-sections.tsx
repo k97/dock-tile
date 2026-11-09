@@ -1,37 +1,36 @@
 "use client";
 
 import * as React from "react";
-import { Clock, EyeOff, Ghost, Lock, LockOpen, Settings2, ShieldCheck } from "lucide-react";
+import {
+  BatteryFull,
+  ChevronRight,
+  CircleDashed,
+  EyeOff,
+  FolderOpen,
+  Ghost,
+  Keyboard,
+  Languages,
+  LayoutGrid,
+  Lock,
+  LockOpen,
+  Option,
+  Palette,
+  PanelTop,
+  Power,
+  RefreshCw,
+  Search,
+  Plus,
+  SlidersHorizontal,
+  ShieldCheck,
+  Undo2,
+  Wifi,
+} from "lucide-react";
 import Image from "next/image";
 import { useLocale } from "@/components/locale-provider";
 import { asset } from "@/lib/assets";
 import { Reveal } from "@/components/reveal";
 import { CloserLook } from "@/components/closer-look";
-import { TileFace } from "@/components/dock-demo";
-
-/* Native app icons for the Grid/List popover mocks — same assets the
-   hero dock demo uses, so the popover previews read as real macOS icons. */
-const gridApps = [
-  { name: "Claude", src: "/assets/app-icons/claude.png" },
-  { name: "Code", src: "/assets/app-icons/vscode.png" },
-  { name: "Slack", src: "/assets/app-icons/slack.png" },
-  { name: "Music", src: "/assets/app-icons/music.png" },
-  { name: "Netflix", src: "/assets/app-icons/netflix.png" },
-  { name: "Messages", src: "/assets/app-icons/messages.png" },
-];
-
-const listApps = [
-  { name: "Music", src: "/assets/app-icons/music.png" },
-  { name: "Podcasts", src: "/assets/app-icons/podcasts.png" },
-  { name: "Kayo", src: "/assets/app-icons/kayo.png" },
-];
-
-/* Product-true popover dimensions — same constants as the hero dock demo
-   (dock-demo.tsx), which mirror the app: grid = 324px (5-col medium tier),
-   list = 240px (medium). The showcase renders at these EXACT sizes and is
-   only ever uniformly zoomed, never reflowed. */
-const POPOVER_GRID_WIDTH = 324;
-const POPOVER_LIST_WIDTH = 240;
+import { ICON_CONTENT_RATIO, TileFace } from "@/components/dock-demo";
 
 /* Uniform scale-to-fit: children render at their fixed natural size; the
    whole block is zoomed (transform scale, aspect ratio locked — like a
@@ -70,69 +69,6 @@ function ScaleToFit({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     </div>
-  );
-}
-
-/* Static 1:1 replicas of the hero dock demo's popovers (themselves lifted
-   from the app) — same surface, header-with-gear, 48px labelled icon grid,
-   28px list rows and Configure… entry. Only interactivity is removed. */
-function PopoverShowcase() {
-  return (
-    <ScaleToFit>
-      <div className="flex items-center gap-4">
-        <div className="popover-surface rounded-2xl p-3 pt-0" style={{ width: POPOVER_GRID_WIDTH }}>
-          <header className="flex h-9 items-center justify-between px-1">
-            <span className="w-7" />
-            <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">Grid</span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 dark:text-zinc-400">
-              <Settings2 className="h-3.5 w-3.5" />
-            </span>
-          </header>
-          <div className="grid grid-cols-4 gap-x-1 gap-y-3 px-1 pb-1 pt-1">
-            {gridApps.map((app) => (
-              <span key={app.name} className="flex flex-col items-center gap-1.5 rounded-lg p-1.5">
-                <Image
-                  src={asset(app.src)}
-                  alt={app.name}
-                  width={48}
-                  height={48}
-                  unoptimized
-                  draggable={false}
-                  className="h-12 w-12"
-                />
-                <span className="max-w-full truncate text-[11px] leading-none text-zinc-600 dark:text-zinc-300">
-                  {app.name}
-                </span>
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="popover-surface rounded-2xl p-2" style={{ width: POPOVER_LIST_WIDTH }}>
-          <p className="px-3 pb-1 pt-1.5 text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">List</p>
-          <div className="flex flex-col">
-            {listApps.map((app) => (
-              <span key={app.name} className="flex min-h-7 items-center gap-2.5 rounded px-3 py-1">
-                <Image
-                  src={asset(app.src)}
-                  alt=""
-                  width={24}
-                  height={24}
-                  unoptimized
-                  draggable={false}
-                  className="h-6 w-6"
-                />
-                <span className="truncate text-[13px] text-zinc-800 dark:text-zinc-100">{app.name}</span>
-              </span>
-            ))}
-          </div>
-          <div className="mx-3 my-1 border-t border-black/10 dark:border-white/10" />
-          <span className="flex items-center gap-2.5 rounded px-3 py-1 text-[13px] text-zinc-700 dark:text-zinc-300">
-            <Settings2 className="h-3 w-4 text-zinc-500 dark:text-zinc-400" />
-            Configure…
-          </span>
-        </div>
-      </div>
-    </ScaleToFit>
   );
 }
 
@@ -205,69 +141,37 @@ export function PowerUserSection() {
 
       {/* 3-across only from xl up. Below that the row collapses to one column so
           each card is wide enough to hold its illustration at a FIXED, roomy
-          native size (the Grid/List + Smart Add popovers never reflow per
-          breakpoint — they'd only cramp if squeezed into a narrow 3-col card). */}
+          native size (the Smart Add sheet and the right-click popover never
+          reflow per breakpoint — they'd only cramp in a narrow 3-col card). */}
       <div className="grid gap-6 xl:grid-cols-3">
-        {/* Grid or List — white card */}
+        {/* Smart Add — white card; the "Add a Tile" sheet + on-device note */}
         <Reveal className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 xl:max-w-none">
-          <div>
-            <h3 className="mb-3 text-xl font-bold text-foreground">{m.popoverTitle}</h3>
-            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{m.popoverBody}</p>
-          </div>
-          {/* EXACT product popovers (via the dock demo's markup + dimensions),
-              zoomed to fit the card — see PopoverShowcase / ScaleToFit. */}
-          <PopoverShowcase />
-          <div className="flex flex-wrap gap-2">
-            {["Popover size", "Tile size", "Spacing", "Labels", "Hover highlight", "Animation"].map((chip) => (
-              <span key={chip} className="rounded-full bg-muted px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                {chip}
-              </span>
-            ))}
-          </div>
-        </Reveal>
-
-        {/* Smart Add — white card */}
-        <Reveal delay={80} className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 xl:max-w-none">
           <div>
             <h3 className="mb-3 text-xl font-bold text-foreground">{m.smartAddTitle}</h3>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{m.smartAddBody}</p>
           </div>
-          {/* suggestion mock — AI Apps / Chat tiles at a FIXED width so they
-              never squish; per the design they stack one below the other and
-              stay centred at every viewport (no reflow, no full-width stretch). */}
-          <div className="flex flex-col items-center gap-4 rounded-2xl bg-muted p-5">
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex w-44 shrink-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
-                <span className="flex h-11 w-11 min-w-11 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
-                  <TileFace gradient="linear-gradient(to bottom, #A78BFF, #7C3AED)" darkGlyph="#A78BFF" glyph="sparkles" shaded />
-                </span>
-                <span>
-                  <p className="text-xs font-bold text-foreground">AI Apps</p>
-                  <p className="text-[10px] text-muted-foreground">6 apps</p>
-                </span>
-              </div>
-              <div className="flex w-44 shrink-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
-                <span className="flex h-11 w-11 min-w-11 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
-                  <TileFace gradient="linear-gradient(to bottom, #52DFA8, #10B981)" darkGlyph="#52DFA8" glyph="chat" shaded />
-                </span>
-                <span>
-                  <p className="text-xs font-bold text-foreground">Chat</p>
-                  <p className="text-[10px] text-muted-foreground">4 apps</p>
-                </span>
-              </div>
-            </div>
-            <span className="animate-bounce-subtle flex items-center gap-1.5 rounded-full bg-sky-300 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-950">
-              <Clock className="h-3 w-3" />
-              Most used this week
-            </span>
+          <div className="rounded-2xl bg-muted p-5">
+            <SmartAddMock />
           </div>
-          {/* Plain icon + text row — same flush treatment as the Ghost card's
-              tip so the two footnotes align identically. The Smart Add card
-              follows the theme (white in light mode), so colours are
-              theme-aware where the always-dark Ghost card hardcodes white. */}
           <div className="mx-auto flex w-fit items-center gap-3">
             <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400" />
             <p className="text-[13px] font-medium text-zinc-600 dark:text-white/80">{m.smartAddPrivacy}</p>
+          </div>
+        </Reveal>
+
+        {/* Right-click — white card; the popover with an app's item menu */}
+        <Reveal delay={80} className="mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 xl:max-w-none">
+          <div>
+            <h3 className="mb-3 text-xl font-bold text-foreground">{m.itemMenuTitle}</h3>
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{m.itemMenuBody}</p>
+          </div>
+          <div className="rounded-2xl bg-muted p-5">
+            <ItemMenuMock />
+          </div>
+          {/* Plain icon + text row, the same flush footnote as the Ghost card's. */}
+          <div className="mx-auto flex w-fit items-center gap-3">
+            <Option className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400" />
+            <p className="text-[13px] font-medium text-zinc-600 dark:text-white/80">{m.itemMenuTip}</p>
           </div>
         </Reveal>
 
@@ -343,6 +247,448 @@ export function PowerUserSection() {
           </div>
         </Reveal>
       </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Hidden in plain sight — letters.app-style: two big cards + a row    */
+/* ------------------------------------------------------------------ */
+
+// Hero tiles reused so the menu mock lists the same tiles as the Dock above.
+const menuTiles = [
+  { name: "AI Apps", glyph: "sparkles", gradient: "linear-gradient(to bottom, #A78BFF, #7C3AED)", dark: "#A78BFF" },
+  { name: "Dev Apps", glyph: "tools", gradient: "linear-gradient(to bottom, #4AA8FF, #0A6FE8)", dark: "#4AA8FF" },
+  { name: "Comms", glyph: "chat", gradient: "linear-gradient(to bottom, #52DFA8, #10B981)", dark: "#52DFA8" },
+  { name: "Media", glyph: "tv", gradient: "linear-gradient(to bottom, #FF7AAE, #EC3E7C)", dark: "#FF7AAE" },
+] as const;
+
+const devApps = [
+  { name: "Code", src: "/assets/app-icons/vscode.png" },
+  { name: "GitHub", src: "/assets/app-icons/github.png" },
+  { name: "Xcode", src: "/assets/app-icons/xcode.png" },
+  { name: "Warp", src: "/assets/app-icons/warp.png" },
+];
+
+// Paired with `marketing.details` in lib/i18n.ts by position — reorder both together.
+const detailIcons = [Keyboard, FolderOpen, LayoutGrid, Power, Undo2, CircleDashed, Languages, RefreshCw];
+
+const menuRow = "flex h-5.5 items-center gap-2 rounded-md px-2 text-[13px] text-zinc-800 dark:text-zinc-100";
+const menuSep = "mx-2 my-1 border-t border-black/10 dark:border-white/10";
+
+function AppIcon({ src, size }: { src: string; size: number }) {
+  return (
+    <Image src={asset(src)} alt="" width={size} height={size} unoptimized draggable={false} style={{ width: size, height: size }} />
+  );
+}
+
+/* The menu bar icon's menu (TileMenu in the app): tiles with submenus of
+   their apps, then Open Dock Tile… / Quit. Fixed 460×196 px, zoomed by
+   ScaleToFit like every illustrative macOS component on the page. Status
+   items sit right as on a real menu bar, so the submenu opens leftwards. */
+function MenuBarMock() {
+  return (
+    <ScaleToFit>
+      <div className="h-49 w-115">
+        <div className="flex h-7 items-center justify-end gap-3.5 rounded-lg bg-white/80 px-2 text-[13px] text-zinc-800 shadow-sm dark:bg-white/10 dark:text-zinc-100">
+          <span className="relative flex h-5.5 items-center rounded-md bg-black/10 px-1.5 dark:bg-white/15">
+            <Image
+              src={asset("/assets/dock-tile-icon-only.svg")}
+              alt=""
+              width={18}
+              height={18}
+              unoptimized
+              className="h-4.5 w-4.5 brightness-0 dark:invert"
+            />
+            {/* Hung from the status item: the menu's left edge under the item, the
+                submenu's first row level with "Dev Apps", overlapping the menu by 4px. */}
+            <div className="popover-surface absolute left-0 top-6.75 w-52 rounded-xl p-1.5">
+              {menuTiles.map((t) => (
+                <div key={t.name} className={`${menuRow} ${t.name === "Dev Apps" ? "bg-black/8 dark:bg-white/12" : ""}`}>
+                  <span className="flex h-4 w-4">
+                    <TileFace gradient={t.gradient} darkGlyph={t.dark} glyph={t.glyph} shaded />
+                  </span>
+                  {t.name}
+                  <ChevronRight className="ml-auto h-3 w-3 text-zinc-400" />
+                </div>
+              ))}
+              <div className={menuSep} />
+              <div className={menuRow}>Open Dock Tile…</div>
+              <div className={menuRow}>
+                Quit Dock Tile<span className="ml-auto text-zinc-400">⌘Q</span>
+              </div>
+            </div>
+            <div className="popover-surface absolute -left-43 top-12.25 w-44 rounded-xl p-1.5">
+              {devApps.map((app) => (
+                <div key={app.name} className={menuRow}>
+                  <AppIcon src={app.src} size={16} />
+                  {app.name}
+                </div>
+              ))}
+              <div className={menuSep} />
+              <div className={menuRow}>Configure Tile…</div>
+            </div>
+          </span>
+          <Wifi className="h-3.5 w-3.5" />
+          <BatteryFull className="h-4 w-4" />
+          <Search className="h-3.5 w-3.5" />
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          <span className="font-medium">Mon 9:41</span>
+        </div>
+      </div>
+    </ScaleToFit>
+  );
+}
+
+/* A tile's popover with an app's right-click menu (PopoverItemMenu):
+   Open · Hide · Quit for a running app. Fixed 330×170 px. */
+function ItemMenuMock() {
+  return (
+    <ScaleToFit>
+      <div className="relative h-42.5 w-82.5">
+        <div className="popover-surface w-60 rounded-2xl p-3 pt-0">
+          <p className="flex h-9 items-center justify-center text-[13px] font-medium text-zinc-800 dark:text-zinc-100">
+            Dev Apps
+          </p>
+          <div className="grid grid-cols-3">
+            {devApps.slice(0, 3).map((app) => (
+              <span
+                key={app.name}
+                className={`flex flex-col items-center gap-1.5 rounded-lg p-1.5 ${app.name === "GitHub" ? "bg-black/5 dark:bg-white/10" : ""}`}
+              >
+                <AppIcon src={app.src} size={48} />
+                <span className="text-[11px] leading-none text-zinc-600 dark:text-zinc-300">{app.name}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="popover-surface absolute left-31.5 top-19 w-40 rounded-xl p-1.5">
+          <div className={menuRow}>Open</div>
+          <div className={menuSep} />
+          <div className={menuRow}>Hide</div>
+          <div className={`${menuRow} bg-black/8 dark:bg-white/12`}>Quit</div>
+        </div>
+      </div>
+    </ScaleToFit>
+  );
+}
+
+/* App Grid face (the app's AppsFaceGrid): a 2×2 of the tile's own apps on
+   the system-gray plate (light 1.0 → 0.925, dark 0.192 → 0.078), block 80%
+   of the shape. Rows are definite 1fr tracks so the %-sized icons can't
+   blow their cells up. */
+function AppGridFace({ icons }: { icons: readonly string[] }) {
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <div
+        className="squircle grid grid-cols-2 grid-rows-2 gap-[3.5%] bg-linear-to-b from-white to-[#ECECEC] p-[10%] dark:from-[#313131] dark:to-[#141414]"
+        style={{ width: ICON_CONTENT_RATIO, height: ICON_CONTENT_RATIO }}
+      >
+        {icons.map((src) => (
+          <Image key={src} src={asset(src)} alt="" width={24} height={24} unoptimized draggable={false} className="h-full w-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* The tint at a fixed HSB brightness, hue and saturation kept — the app's
+   Dark-style plate for a Colour emoji tile (SRGB.cappingBrightness). */
+function capBrightness(hex: string, v: number) {
+  const n = parseInt(hex.slice(1), 16);
+  const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  const k = (v * 255) / (Math.max(...rgb) || 1);
+  return "#" + rgb.map((c) => Math.round(c * k).toString(16).padStart(2, "0")).join("");
+}
+
+type Tint = { top: string; bottom: string };
+const MONO_LIGHT = "linear-gradient(to bottom, #FFFFFF, #EFEFF1)";
+const MONO_DARK = "linear-gradient(to bottom, #2C2C2E, #1C1C1E)";
+const tintGradient = (t: Tint) => `linear-gradient(to bottom, ${t.top}, ${t.bottom})`;
+
+/* Emoji face. Light: the tint (Colour) or white (Mono). Dark: the tint
+   capped to 0.22 → 0.13 brightness (Colour) or near-black (Mono). Both
+   backgrounds ride CSS variables so the theme switch is pure CSS. */
+function EmojiFace({ emoji, tint, mono = false, fontSize = 28 }: { emoji: string; tint: Tint; mono?: boolean; fontSize?: number }) {
+  const dark = `linear-gradient(to bottom, ${capBrightness(tint.bottom, 0.22)}, ${capBrightness(tint.bottom, 0.13)})`;
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <div
+        className="squircle flex items-center justify-center leading-none [background:var(--face-light)] dark:[background:var(--face-dark)]"
+        style={
+          {
+            width: ICON_CONTENT_RATIO,
+            height: ICON_CONTENT_RATIO,
+            fontSize,
+            "--face-light": mono ? MONO_LIGHT : tintGradient(tint),
+            "--face-dark": mono ? MONO_DARK : dark,
+          } as React.CSSProperties
+        }
+      >
+        {emoji}
+      </div>
+    </div>
+  );
+}
+
+/* ---- Interactive customiser: the inspector's Style / Background / Colour
+   rows driving a live tile, in the app's own rules: App Grid ignores the
+   tint and the background (its plate is the system gray); a Mono symbol
+   puts the tint on the glyph. Fixed 500 px wide, zoomed by ScaleToFit. */
+
+const customTints: (Tint & { name: string })[] = [
+  { name: "Purple", top: "#A78BFF", bottom: "#7C3AED" },
+  { name: "Blue", top: "#4AA8FF", bottom: "#0A6FE8" },
+  { name: "Green", top: "#52DFA8", bottom: "#10B981" },
+  { name: "Pink", top: "#FF7AAE", bottom: "#EC3E7C" },
+  { name: "Orange", top: "#FFB561", bottom: "#F97316" },
+  { name: "Graphite", top: "#A1A1AA", bottom: "#52525B" },
+];
+const aiAppIcons = ["claude", "chatgpt", "gemini", "granola"].map((n) => `/assets/app-icons/${n}.png`);
+type FaceStyle = "apps" | "symbol" | "emoji";
+
+function CustomFace({ style, mono, tint, emojiSize }: { style: FaceStyle; mono: boolean; tint: Tint; emojiSize: number }) {
+  if (style === "apps") return <AppGridFace icons={aiAppIcons} />;
+  if (style === "emoji") return <EmojiFace emoji="✨" tint={tint} mono={mono} fontSize={emojiSize} />;
+  return (
+    <TileFace
+      gradient={mono ? MONO_LIGHT : tintGradient(tint)}
+      glyphColor={mono ? tint.bottom : "#ffffff"}
+      darkGlyph={tint.top}
+      glyph="sparkles"
+      shaded
+    />
+  );
+}
+
+const choice =
+  "pressable cursor-pointer transition-[background-color,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500";
+
+function CustomiserDemo({ colourLabel }: { colourLabel: string }) {
+  const [style, setStyle] = React.useState<FaceStyle>("symbol");
+  const [mono, setMono] = React.useState(false);
+  const [tintIndex, setTintIndex] = React.useState(0);
+  const tint = customTints[tintIndex];
+  const glyphRows = style !== "apps"; // App Grid has no tint or background to pick
+
+  const label = "mb-1.5 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400";
+  return (
+    <ScaleToFit>
+      <div className="flex w-125 items-center gap-6 text-zinc-800 dark:text-zinc-100">
+        <div className="flex flex-1 flex-col items-center gap-3">
+          <span className="flex h-32 w-32 drop-shadow-[0_2px_6px_rgba(0,0,0,0.25)]">
+            <CustomFace style={style} mono={mono} tint={tint} emojiSize={64} />
+          </span>
+          <p className="text-[13px] font-semibold">AI Apps</p>
+        </div>
+        <div className="popover-surface flex w-65 flex-col gap-3.5 rounded-2xl p-3.5">
+          <div>
+            <p className={label}>Style</p>
+            <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Style">
+              {(
+                [
+                  ["apps", "App Grid"],
+                  ["symbol", "Symbol"],
+                  ["emoji", "Emoji"],
+                ] as const
+              ).map(([value, name]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={style === value}
+                  onClick={() => setStyle(value)}
+                  className={`${choice} flex flex-col items-center gap-1 rounded-xl py-2 text-[11px] font-medium ${
+                    style === value
+                      ? "bg-white shadow-sm ring-2 ring-emerald-500 dark:bg-white/12"
+                      : "bg-black/4 hover:bg-black/8 dark:bg-white/6 dark:hover:bg-white/10"
+                  }`}
+                >
+                  <span className="flex h-8 w-8">
+                    <CustomFace style={value} mono={mono} tint={tint} emojiSize={16} />
+                  </span>
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={`transition-opacity duration-200 ${glyphRows ? "" : "pointer-events-none opacity-35"}`} aria-disabled={!glyphRows}>
+            <p className={label}>Background</p>
+            <div className="grid grid-cols-2 gap-1 rounded-lg bg-black/5 p-0.5 dark:bg-white/8" role="group" aria-label="Background">
+              {(
+                [
+                  [false, colourLabel],
+                  [true, "Mono"],
+                ] as const
+              ).map(([value, name]) => (
+                <button
+                  key={name}
+                  type="button"
+                  disabled={!glyphRows}
+                  aria-pressed={mono === value}
+                  onClick={() => setMono(value)}
+                  className={`${choice} rounded-md py-1 text-[11px] font-medium ${
+                    mono === value ? "bg-white shadow-sm dark:bg-white/15" : "hover:bg-black/5 dark:hover:bg-white/8"
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={`transition-opacity duration-200 ${glyphRows ? "" : "pointer-events-none opacity-35"}`} aria-disabled={!glyphRows}>
+            <p className={label}>{colourLabel}</p>
+            <div className="flex justify-between px-1" role="group" aria-label={colourLabel}>
+              {customTints.map((t, i) => (
+                <button
+                  key={t.name}
+                  type="button"
+                  disabled={!glyphRows}
+                  aria-label={t.name}
+                  aria-pressed={tintIndex === i}
+                  onClick={() => setTintIndex(i)}
+                  className={`${choice} h-5.5 w-5.5 rounded-full ${tintIndex === i ? "ring-2 ring-emerald-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-800" : ""}`}
+                  style={{ background: tintGradient(t) }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </ScaleToFit>
+  );
+}
+
+// One card per design, as the app deals them: App Grid, Symbol, Emoji.
+const suggestions = [
+  {
+    name: "Chat",
+    note: "Most used this week",
+    face: <AppGridFace icons={["messages", "slack", "whatsapp", "google-meet"].map((n) => `/assets/app-icons/${n}.png`)} />,
+  },
+  {
+    name: "Ship",
+    note: "5 apps",
+    face: <TileFace gradient="linear-gradient(to bottom, #818CF8, #4F46E5)" darkGlyph="#818CF8" glyph="code" shaded />,
+  },
+  { name: "Watch", note: "3 apps", face: <EmojiFace emoji="🍿" tint={{ top: "#FF7AAE", bottom: "#EC3E7C" }} /> },
+];
+
+/* The "Add a Tile" sheet Smart Add opens on +: blank row, the rule, the
+   suggestion cards (the privacy note is the card's footnote). 440 px wide. */
+function SmartAddMock() {
+  return (
+    <ScaleToFit>
+      <div className="popover-surface w-110 rounded-2xl p-4 text-zinc-800 dark:text-zinc-100">
+        <p className="mb-3 text-center text-[13px] font-semibold">Add a Tile</p>
+        <div className="flex items-center gap-3 rounded-xl bg-black/4 p-2.5 dark:bg-white/6">
+          <span className="squircle flex h-9 w-9 items-center justify-center bg-black/6 dark:bg-white/10">
+            <Plus className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+          </span>
+          <span>
+            <p className="text-[12px] font-semibold">Create a blank tile</p>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Name it, pick an icon and add apps yourself.</p>
+          </span>
+        </div>
+        <div className="my-3 flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+          <span className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+          or start from what you use
+          <span className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+        </div>
+        <div className="grid grid-cols-3 gap-2.5">
+          {suggestions.map((s) => (
+            <div
+              key={s.name}
+              className="flex flex-col items-center gap-1 rounded-xl bg-white/70 px-2 pb-2.5 pt-3 ring-1 ring-black/5 dark:bg-white/5 dark:ring-white/10"
+            >
+              <span className="mb-1 flex h-14 w-14 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">{s.face}</span>
+              <p className="text-[12px] font-semibold">{s.name}</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{s.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </ScaleToFit>
+  );
+}
+
+function DetailCard({
+  icon: Icon,
+  pill,
+  title,
+  lead,
+  body,
+  delay,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  pill: string;
+  title: string;
+  lead: string;
+  body: string;
+  delay: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <Reveal delay={delay} className="flex flex-col gap-6 rounded-3xl border border-border bg-card p-6 md:p-8">
+      <div>
+        <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-[13px] font-semibold text-foreground">
+          <Icon strokeWidth={1.75} className="h-4 w-4" />
+          {pill}
+        </span>
+        <h3 className="max-w-md text-2xl font-semibold leading-[1.15] tracking-[-0.03em] text-foreground">{title}</h3>
+      </div>
+      <div className="flex flex-1 items-center justify-center rounded-2xl bg-muted px-5 py-8">{children}</div>
+      <p className="max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+        <b className="font-semibold text-foreground">{lead}</b> {body}
+      </p>
+    </Reveal>
+  );
+}
+
+export function DetailsSection() {
+  const { content } = useLocale();
+  const m = content.marketing;
+
+  return (
+    <section data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-32">
+      <Reveal className="mx-auto mb-14 max-w-180 text-center md:mb-16">
+        <span className="mb-4 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+          {m.detailsEyebrow}
+        </span>
+        <h2 className="text-3xl font-semibold leading-[1.05] tracking-[-0.05em] text-foreground md:text-4xl">
+          {m.detailsTitleA}{" "}
+          {/* A tilted tile set into the line, as letters.app sets its logo. */}
+          <span className="mx-0.5 inline-flex h-[1.1em] w-[1.1em] -rotate-6 align-[-0.2em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]" aria-hidden>
+            <TileFace gradient={menuTiles[0].gradient} darkGlyph={menuTiles[0].dark} glyph="sparkles" shaded />
+          </span>{" "}
+          {m.detailsTitleB}
+        </h2>
+      </Reveal>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DetailCard icon={Palette} pill={m.customPill} title={m.customTitle} lead={m.customLead} body={m.customBody} delay={0}>
+          <CustomiserDemo colourLabel={m.customColour} />
+        </DetailCard>
+        <DetailCard icon={PanelTop} pill={m.menuBarPill} title={m.menuBarTitle} lead={m.menuBarLead} body={m.menuBarBody} delay={80}>
+          <MenuBarMock />
+        </DetailCard>
+      </div>
+
+      <ul className="mt-14 grid gap-x-8 gap-y-10 px-2 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
+        {m.details.map((d, i) => {
+          const Icon = detailIcons[i];
+          return (
+            <Reveal as="li" key={d.lead} delay={(i % 4) * 60} className="flex flex-col gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground/6 text-foreground">
+                <Icon strokeWidth={1.5} className="h-4.5 w-4.5" />
+              </span>
+              <p className="text-[15px] leading-relaxed text-muted-foreground">
+                <b className="font-semibold text-foreground">{d.lead}</b> {d.body}
+              </p>
+            </Reveal>
+          );
+        })}
+      </ul>
     </section>
   );
 }
