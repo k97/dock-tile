@@ -72,22 +72,22 @@ struct DockSignatureTests {
     func updateProminence() {
         let current = "sig-now"
         #expect(DockTileDetailView.actionIsProminent(action: .install, isCurrentlyInDock: true,
-                                                     builtDockSignature: current, dockSignature: current) == false)
+                                                     builtDockSignature: current, dockSignature: current, appIconsChanged: false) == false)
         #expect(DockTileDetailView.actionIsProminent(action: .install, isCurrentlyInDock: true,
-                                                     builtDockSignature: "sig-old", dockSignature: current) == true)
+                                                     builtDockSignature: "sig-old", dockSignature: current, appIconsChanged: false) == true)
         // Built before the stamp existed: unknown, so it reads as pending.
         #expect(DockTileDetailView.actionIsProminent(action: .install, isCurrentlyInDock: true,
-                                                     builtDockSignature: nil, dockSignature: current) == true)
+                                                     builtDockSignature: nil, dockSignature: current, appIconsChanged: false) == true)
     }
 
     @Test("Add to Dock is always prominent; Remove and Done never are")
     func otherActions() {
         #expect(DockTileDetailView.actionIsProminent(action: .install, isCurrentlyInDock: false,
-                                                     builtDockSignature: "s", dockSignature: "s") == true)
+                                                     builtDockSignature: "s", dockSignature: "s", appIconsChanged: false) == true)
         #expect(DockTileDetailView.actionIsProminent(action: .remove, isCurrentlyInDock: true,
-                                                     builtDockSignature: "old", dockSignature: "new") == false)
+                                                     builtDockSignature: "old", dockSignature: "new", appIconsChanged: false) == false)
         #expect(DockTileDetailView.actionIsProminent(action: .saveOnly, isCurrentlyInDock: false,
-                                                     builtDockSignature: nil, dockSignature: "new") == false)
+                                                     builtDockSignature: nil, dockSignature: "new", appIconsChanged: false) == false)
     }
 
     @Test("A quiet Update stays enabled — it is also the manual rebuild")

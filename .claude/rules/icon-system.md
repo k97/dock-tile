@@ -192,7 +192,11 @@ it is the Style picker in Customise (App Grid / Symbol / Emoji).
   on macOS 27, otherwise draws the alias badge). The desaturated minis are rasterised at the draw-box
   PIXEL size (rendering at the image's point size picked a low-res rep and blurred them).
 - **Staleness**: the face re-bakes only on Update and on the version-bump migration. An app's own icon
-  redesign, or a later install/uninstall, stays stale in the Dock until then.
+  redesign, a Finder-pasted icon, or a later install/uninstall stays stale in the Dock until then — but
+  since 2026-11-10 it lights Update: every build stamps `DTAppIconsSignature` (each drawn app's bundle
+  modification time, the raster cache's key) and Tile Detail compares it on appear
+  (`HelperBundleManager.appIconsSignature`, `AppIconsSignatureTests`). An in-place app update that
+  leaves the bundle folder's time alone goes unnoticed by this AND by the preview cache.
 - **One grid per style (critical, 2026-10-19)**: the `.icon` carries three grids, Default renders
   (light slot), Dark renders (dark slot) and Clear DARK renders (tinted slot), each app drawn by
   `AppIconStyleRenderer` (in `AppIconLoader.swift`). With ONE colour grid shared by every slot, the
@@ -218,7 +222,9 @@ it is the Style picker in Customise (App Grid / Symbol / Emoji).
     draws the bundle's OWN icon and ignores a pasted ("Get Info") icon, which Finder, the Dock and the
     preview all show: a Chrome web app with a pasted icon baked as its old one. Signal = the `Icon\r`
     file at the bundle's top level (`hasFinderCustomIcon`); `URLResourceKey.customIconKey` read nil there.
-    Cost: that mini doesn't follow Dark / Clear (a pasted icon is one image anyway).
+    What ships: the public render in the style the system is in AT BAKE TIME, in all three slots (the
+    tinted slot gets a colour image the system remaps). Default, Dark and Clear Dark: unverified in the
+    Dock (the owner checks it on the release build after 2.7.2).
   - The fallback `.icns` uses the Default renders, so a bake during Clear still gets a Default fallback.
   - `docktile-actool` honours a tinted-only `hidden-specializations` entry (Tintable stack shows only
     that layer — pinned end-to-end by `IconCompilerTests`). The three-way hiding is built in

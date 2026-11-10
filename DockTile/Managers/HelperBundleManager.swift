@@ -304,14 +304,47 @@ final class HelperBundleManager {
         return try? JSONDecoder().decode(DockTileConfiguration.self, from: data)
     }
 
-    /// What the helper on disk was built from: its sealed config copy and its stamped
-    /// `DockTileConfiguration.dockSignature`; each `nil` when no helper exists or it predates that
-    /// stamp. Scans the helper folder, so Tile Detail reads it on appear, after an action and when
-    /// Revert is confirmed only.
-    func builtState(for config: DockTileConfiguration) -> (snapshot: DockTileConfiguration?, dockSignature: String?) {
-        guard let path = findExistingHelper(bundleId: config.bundleIdentifier) else { return (nil, nil) }
+    /// Info.plist key holding `appIconsSignature` at build time: when each app an App Grid face draws
+    /// was last modified. An app's own icon is not part of the tile, so without it an app update or a
+    /// Finder-pasted icon left the Dock on the old icon while Update read "nothing pending".
+    nonisolated static let appIconsSignatureKey = "DTAppIconsSignature"
+
+    /// The modification time of each app an App Grid face draws; "" for a glyph face. shortcut: the
+    /// first `AppsFaceGrid.maxItems` items in tile order, not the installed ones the face shows — an
+    /// app a missing one pushes into view isn't watched; widen if that bites.
+    nonisolated static func appIconsSignature(for config: DockTileConfiguration,
+                                              modified: (AppItem) -> TimeInterval) -> String {
+        guard config.iconFace == .apps else { return "" }
+        return config.appItems.prefix(AppsFaceGrid.maxItems).filter { !$0.isFolder }
+            .map { "\($0.id.uuidString)=\(Int(modified($0)))" }
+            .joined(separator: ",")
+    }
+
+    /// The bundle time the bake draws and the preview's raster cache keys on — the path
+    /// `AppInstallChecker.resolve` finds (Launch Services first), never `lastKnownPath` alone — so
+    /// Update lights up exactly when the preview redraws.
+    static func drawnAppModified(_ item: AppItem) -> TimeInterval {
+        TileIconRasterCache.contentStamp(for: item, resolvedPath: AppInstallChecker.resolve(item).resolvedPath)
+    }
+
+    /// Stamps `signature` into a STAGED helper's Info.plist (before signing, like the config copy).
+    nonisolated static func stampAppIconsSignature(_ signature: String, inBundle bundle: URL) throws {
+        let url = bundle.appendingPathComponent("Contents/Info.plist")
+        guard let plist = NSMutableDictionary(contentsOf: url) else { throw HelperBundleError.infoPlistReadFailed }
+        plist[appIconsSignatureKey] = signature
+        guard plist.write(to: url, atomically: true) else { throw HelperBundleError.infoPlistWriteFailed }
+    }
+
+    /// What the helper on disk was built from: its sealed config copy, its stamped
+    /// `DockTileConfiguration.dockSignature` and its `appIconsSignature`; each `nil` when no helper
+    /// exists or it predates that stamp. Scans the helper folder, so Tile Detail reads it on appear,
+    /// after an action and when Revert is confirmed only.
+    func builtState(for config: DockTileConfiguration)
+        -> (snapshot: DockTileConfiguration?, dockSignature: String?, appIconsSignature: String?) {
+        guard let path = findExistingHelper(bundleId: config.bundleIdentifier) else { return (nil, nil, nil) }
         let plist = NSDictionary(contentsOf: path.appendingPathComponent("Contents/Info.plist"))
-        return (Self.readDockSnapshot(inBundle: path), plist?[Self.dockSignatureKey] as? String)
+        return (Self.readDockSnapshot(inBundle: path), plist?[Self.dockSignatureKey] as? String,
+                plist?[Self.appIconsSignatureKey] as? String)
     }
 
     /// Check if a helper bundle exists for the given configuration (by bundle ID)
@@ -1960,6 +1993,8 @@ final class HelperBundleManager {
                     showInAppSwitcher: config.showInAppSwitcher, iconSignature: config.iconSignature,
                     dockSignature: config.dockSignature)
                 try Self.writeDockSnapshot(config, inBundle: staged)
+                try Self.stampAppIconsSignature(
+                    Self.appIconsSignature(for: config, modified: Self.drawnAppModified), inBundle: staged)
             },
             buildIcons: { try await self.installTileIcons(for: config, at: staged) },
             sign: { try await self.codesignHelper(at: staged) },

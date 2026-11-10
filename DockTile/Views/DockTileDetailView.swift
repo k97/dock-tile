@@ -45,6 +45,9 @@ struct DockTileDetailView: View {
     /// `dockSignature` stamped into the tile's helper — what the Dock shows now (nil: no helper, or
     /// built before the stamp). Read with the Dock state, never per render.
     @State private var builtDockSignature: String?
+    /// An app the App Grid face draws changed on disk since the helper was built (its icon may be
+    /// new). Read with the Dock state, never per render; false for a helper built before the stamp.
+    @State private var appIconsChanged = false
     /// The config the helper on disk was built from (`HelperBundleManager.builtState`) — Revert to
     /// Dock Version's source; nil without a helper or for one built before the copy existed.
     @State private var dockSnapshot: DockTileConfiguration?
@@ -96,16 +99,17 @@ struct DockTileDetailView: View {
     }
 
     /// The install action is PROMINENT (accent) only when it would change what the Dock shows: Add
-    /// to Dock always; Update only while the tile differs from what its helper was built from (or the
-    /// helper predates the stamp, `nil`). An Update with nothing pending stays enabled — it is also
-    /// the manual rebuild that refreshes an App Grid face after an app's icon or install state
-    /// changed — but reads as a plain button, so a bright Update always means "the Dock is behind".
-    /// Remove and Done are never prominent.
+    /// to Dock always; Update while the tile differs from what its helper was built from (or the
+    /// helper predates the stamp, `nil`), or an app its App Grid face draws changed on disk since
+    /// (`appIconsChanged` — an app update or a Finder-pasted icon). An Update with nothing pending
+    /// stays enabled as a manual rebuild but reads as a plain button, so a bright Update always means
+    /// "the Dock is behind". Remove and Done are never prominent.
     nonisolated static func actionIsProminent(action: DockAction, isCurrentlyInDock: Bool,
-                                              builtDockSignature: String?, dockSignature: String) -> Bool {
+                                              builtDockSignature: String?, dockSignature: String,
+                                              appIconsChanged: Bool) -> Bool {
         guard action == .install else { return false }
         guard isCurrentlyInDock else { return true }
-        return builtDockSignature != dockSignature
+        return builtDockSignature != dockSignature || appIconsChanged
     }
 
     /// Parameters for `tile_added_to_dock` / `tile_updated`. Pure so the event's shape is guarded
@@ -398,7 +402,8 @@ struct DockTileDetailView: View {
         }
         .disabled(!Self.dockActionIsEnabled(action: currentDockAction, isDirty: isDirty, isProcessing: isProcessing))
         if Self.actionIsProminent(action: currentDockAction, isCurrentlyInDock: isCurrentlyInDock,
-                                  builtDockSignature: builtDockSignature, dockSignature: editedConfig.dockSignature) {
+                                  builtDockSignature: builtDockSignature, dockSignature: editedConfig.dockSignature,
+                                  appIconsChanged: appIconsChanged) {
             button.buttonStyle(.borderedProminent).foregroundStyle(.white)
         } else {
             button.buttonStyle(.bordered)
@@ -647,6 +652,9 @@ struct DockTileDetailView: View {
         isCurrentlyInDock = HelperBundleManager.shared.findInDock(bundleId: editedConfig.bundleIdentifier) != nil
         let built = HelperBundleManager.shared.builtState(for: editedConfig)
         builtDockSignature = built.dockSignature
+        appIconsChanged = built.appIconsSignature.map {
+            $0 != HelperBundleManager.appIconsSignature(for: editedConfig, modified: HelperBundleManager.drawnAppModified)
+        } ?? false
         dockSnapshot = built.snapshot
     }
 

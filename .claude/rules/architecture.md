@@ -233,8 +233,10 @@ remove/saveOnly are always `.bordered`. A helper shows the copy sealed with its 
 Dock shows the tile as of its last build: every build stamps `DockTileConfiguration.dockSignature` (icon signature,
 name, layout, Ghost/App mode, app list) into the helper's Info.plist as `DTDockSignature`, and Tile
 Detail compares it on appear and after an action (`builtDockSignature`). A helper built before the stamp
-reads as pending until its next Update or migration. Pure seam `DockTileDetailView.actionIsProminent`,
-guarded by `DockSignatureTests`.
+reads as pending until its next Update or migration. An App Grid also lights Update when an app it draws
+changed on disk since the build (`DTAppIconsSignature`, icon-system.md "Staleness"); a helper built before
+THAT stamp does not. Pure seam `DockTileDetailView.actionIsProminent`, guarded by `DockSignatureTests` +
+`AppIconsSignatureTests`.
 
 **Revert to Dock Version (2026-11-05)**: edits autosave, so the only copy of "what the Dock shows" is
 the helper itself. Every build writes the config it was built from into the STAGED bundle as
