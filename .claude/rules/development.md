@@ -88,6 +88,12 @@ The app product name is **"Dock Tile"** (with space), not "DockTile". File syste
   concurrent compile tests (2026-10-19); 15 compiles on a 14-core Mac reproduce it
   (`IconCompilerTests.concurrentCompilesFinish`). Read the one pipe you need on the calling thread
   and send the other stream to a file or `/dev/null`. A bounded `wait(timeout:)` is acceptable.
+- **Two paths that answer one question must share one function (2026-11-10, twice in a day).** Dock
+  Lock's clamp knew which stretches of a display's edge are free; its Dock move assumed the middle
+  was, and failed on every layout with a display under the middle. The App Grid bake drew icons
+  through a private render, the preview through the public one, and only the public one honours a
+  Finder-pasted icon. When a second path needs an answer the first already computes, call the first
+  (`exposedSegments`), or test both against the same input.
 - **"Same folder?" is a file-identity question, never a string compare (critical).** The boot volume is
   case-insensitive APFS: `utils.app` and `Utils.app` are one folder, and `contentsOfDirectory` vs
   `appendingPathComponent` spell paths differently. Before deleting or replacing by path, compare with

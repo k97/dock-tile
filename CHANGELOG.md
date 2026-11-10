@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.2] - 2026-11-10
+
+### Added
+
+- **tiles:** Light up Update on an App Grid tile when one of its apps changes after the tile was built — an app update, an icon pasted in Finder, or an app removed — so you know the Dock is showing an old icon ([44cf11b](https://github.com/k97/dock-tile/commit/44cf11b))
+
+### Fixed
+
+- **dock lock:** Move the Dock onto the chosen display when another display sits under part of its edge, such as a laptop under the middle of an ultrawide, by trying each stretch of the edge that leads off the screen ([fdad7a3](https://github.com/k97/dock-tile/commit/fdad7a3))
+- **dock lock:** Explain when macOS can't put the Dock on the chosen display — another display covers its whole edge, or "Displays have separate Spaces" is off — instead of failing with Try Again ([fdad7a3](https://github.com/k97/dock-tile/commit/fdad7a3))
+- **icons:** Show an app's Finder custom icon in an App Grid tile in the Dock, not the app's original icon ([7aa8ac0](https://github.com/k97/dock-tile/commit/7aa8ac0))
+
 ## [2.7.1] - 2026-11-09
 
 ### Changed
