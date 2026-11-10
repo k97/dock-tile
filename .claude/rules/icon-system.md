@@ -214,6 +214,11 @@ it is the Style picker in Customise (App Grid / Symbol / Emoji).
   - Every private call is runtime-resolved and `responds(to:)`-guarded (never `setValue(_:forKey:)` —
     an ObjC exception is uncatchable). Any miss → that mini uses the public icon, logged once per bake
     on `tile`. Folders always use the public icon (IconServices draws them alike in every style).
+  - **An app with a Finder custom icon uses the public icon (2026-11-10).** `ISBundleIcon initWithBundleURL:`
+    draws the bundle's OWN icon and ignores a pasted ("Get Info") icon, which Finder, the Dock and the
+    preview all show: a Chrome web app with a pasted icon baked as its old one. Signal = the `Icon\r`
+    file at the bundle's top level (`hasFinderCustomIcon`); `URLResourceKey.customIconKey` read nil there.
+    Cost: that mini doesn't follow Dark / Clear (a pasted icon is one image anyway).
   - The fallback `.icns` uses the Default renders, so a bake during Clear still gets a Default fallback.
   - `docktile-actool` honours a tinted-only `hidden-specializations` entry (Tintable stack shows only
     that layer — pinned end-to-end by `IconCompilerTests`). The three-way hiding is built in

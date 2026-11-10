@@ -938,8 +938,8 @@ final class HelperBundleManager {
 
     /// The minis for one `.icon` appearance slot: each app re-rendered in `style` through
     /// `AppIconStyleRenderer`, at its draw-box size on the 1024 canvas. Folders (IconServices draws
-    /// them the same in every style) keep the public image; so does an app the private renderer
-    /// cannot draw, counted in `fallbacks`.
+    /// them the same in every style) keep the public image, and so does an app with a Finder custom
+    /// icon; an app the private renderer cannot draw keeps it too, counted in `fallbacks`.
     static func styledAppsFaceMinis(_ entries: [AppsFaceEntry], style: AppIconRenderStyle)
         -> (minis: [IconGenerator.AppsFaceMini], fallbacks: Int) {
         guard let cell = AppsFaceGrid.cells(count: entries.count).first else { return ([], 0) }
@@ -947,9 +947,15 @@ final class HelperBundleManager {
         var fallbacks = 0
         let minis = entries.map { entry -> IconGenerator.AppsFaceMini in
             guard !entry.item.isFolder else { return .init(image: entry.image, isFolder: true) }
-            guard let path = AppInstallChecker.resolve(entry.item).resolvedPath,
-                  let rendered = AppIconStyleRenderer.render(
-                    appAt: URL(fileURLWithPath: path).resolvingSymlinksInPath(), pixelSize: pixelSize, style: style)
+            let appURL = AppInstallChecker.resolve(entry.item).resolvedPath
+                .map { URL(fileURLWithPath: $0).resolvingSymlinksInPath() }
+            // A Finder custom icon is what the Dock shows; IconServices' named-style render draws
+            // the bundle's own icon instead, so a pasted icon baked as the old one (2026-11-10).
+            if let appURL, AppIconStyleRenderer.hasFinderCustomIcon(appURL) {
+                return .init(image: entry.image, isFolder: false)
+            }
+            guard let appURL,
+                  let rendered = AppIconStyleRenderer.render(appAt: appURL, pixelSize: pixelSize, style: style)
             else {
                 fallbacks += 1
                 return .init(image: entry.image, isFolder: false)

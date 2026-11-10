@@ -75,6 +75,31 @@ struct AppIconStyleRendererTests {
         #expect(styled.minis[0].image.size.width == box.rounded(.up))
     }
 
+    @Test("An app with a Finder custom icon keeps its public image (the styled render draws the bundle's own icon)")
+    func finderCustomIconKeepsPublicImage() throws {
+        guard #available(macOS 26.0, *) else { return }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("CustomIcon-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = root.appendingPathComponent("Custom.app")
+        try FileManager.default.createDirectory(at: app.appendingPathComponent("Contents"), withIntermediateDirectories: true)
+        let bundleID = "com.docktile.tests.customicon"
+        let plist: [String: Any] = ["CFBundleIdentifier": bundleID, "CFBundlePackageType": "APPL", "CFBundleName": "Custom"]
+        try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+            .write(to: app.appendingPathComponent("Contents/Info.plist"))
+        let placeholder = NSImage(size: NSSize(width: 8, height: 8))
+        let entries = [HelperBundleManager.AppsFaceEntry(
+            item: AppItem(bundleIdentifier: bundleID, name: "Custom", lastKnownPath: app.path), image: placeholder)]
+
+        // Control: without Finder's file the app is re-rendered, so the check below can fail.
+        let plain = HelperBundleManager.styledAppsFaceMinis(entries, style: .standard)
+        #expect(plain.minis[0].image !== placeholder)
+
+        #expect(FileManager.default.createFile(atPath: app.appendingPathComponent("Icon\r").path, contents: Data()))
+        let custom = HelperBundleManager.styledAppsFaceMinis(entries, style: .standard)
+        #expect(custom.minis[0].image === placeholder)
+        #expect(custom.fallbacks == 0)
+    }
+
     // MARK: - Pixel helpers
 
     private static func bitmap(_ image: CGImage) -> NSBitmapImageRep {

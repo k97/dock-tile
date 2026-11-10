@@ -450,6 +450,14 @@ enum AppIconStyleRenderer {
         return imageFn(icon, imageSel, descriptor)?.takeUnretainedValue()
     }
 
+    /// Finder stores a pasted ("Get Info") icon for a bundle in an `Icon\r` file at its top level.
+    /// `URLResourceKey.customIconKey` reads nil for such a bundle (measured 2026-11-10), so the
+    /// file is the signal. A file left behind with the custom-icon flag cleared is harmless: the
+    /// caller then uses the public icon, which honours the flag.
+    nonisolated static func hasFinderCustomIcon(_ bundleURL: URL) -> Bool {
+        FileManager.default.fileExists(atPath: bundleURL.appendingPathComponent("Icon\r").path)
+    }
+
     private static func makeBundleIcon(_ url: URL) -> NSObject? {
         let initSel = NSSelectorFromString("initWithBundleURL:")
         guard let raw = allocate("ISBundleIcon"), raw.responds(to: initSel) else { return nil }
