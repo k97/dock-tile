@@ -58,6 +58,17 @@ via `didBecomeActive` + the `com.apple.accessibility.api` notification + the pan
   `display_reconnected` move is gone. The `Setup of N displays → anchor X` log line fires only when the
   anchor CHANGES, so a display change that keeps the anchor leaves no line: read the setup from
   `defaults read com.docktile.dev.app dockLockSetupAnchors` (hands-on, 2026-11-08).
+- **A move presses only where the edge leads off every screen (2026-11-10).** macOS calls up the Dock
+  through a stretch of the anchor's Dock edge that no other display touches; elsewhere the pointer just
+  crosses over. Pressing at the edge's middle failed every time with a laptop under the middle of an
+  ultrawide. `movePlan` (`DockLockEdgePointTests`, a layout matrix) shares `exposedSegments` with the
+  clamp zones and returns: press at the middle of each free stretch, widest first (~6 s on one, ~3 s
+  each on several); `.edgeCovered` (stacked equal displays, a wider one below — no pointer motion can
+  help, so no warp, no Try Again); `.spacesShared` ("Displays have separate Spaces" off and the anchor
+  isn't main — the Dock never leaves the main display). Not measured: the narrowest stretch macOS
+  accepts, the dwell it needs, side Docks on stacked displays. None of this is documented by Apple:
+  it rests on user reports and other tools' code (research, 2026-11-10). macOS 15.0 blocked even
+  partly free edges; 15.1 restored them.
 - **Anchors are stored by display UUID** (`CGDisplayCreateUUIDFromDisplayID`), NOT the raw
   `CGDirectDisplayID` — IDs reshuffle across reboot/sleep/replug. `anchorDisplayID` is the live resolved
   value (`private(set)`, `0` = nothing to hold here). Legacy `dockLockAnchorDisplay` int is migrated

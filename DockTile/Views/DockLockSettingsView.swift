@@ -100,8 +100,9 @@ struct DockLockSettingsView: View {
         }
     }
 
-    /// Live feedback for the relocation: spinner while moving, a green lock on success, and a
-    /// red warning with a retry button if the Dock didn't land where it was asked to.
+    /// Live feedback for the relocation: spinner while moving, a green lock on success, a red
+    /// warning with a retry button if the Dock didn't land where it was asked to, and an orange
+    /// note without one when the layout or a macOS setting makes the move impossible.
     @ViewBuilder
     private var moveStatusRow: some View {
         switch manager.moveState {
@@ -137,6 +138,13 @@ struct DockLockSettingsView: View {
                 }
             }
 
+        // No Try Again: only a new arrangement or setting helps, and either change re-runs the move.
+        case .edgeCovered(let name):
+            blockedLabel(AppStrings.Settings.dockLockEdgeCovered(name))
+
+        case .spacesShared(let name):
+            blockedLabel(AppStrings.Settings.dockLockSpacesShared(name))
+
         case .idle:
             // Anchor chosen but no move in flight (e.g. Default) — fall back to a static label.
             if let anchor = manager.anchorDisplay {
@@ -149,6 +157,16 @@ struct DockLockSettingsView: View {
                 .font(.caption)
             }
         }
+    }
+
+    private func blockedLabel(_ text: String) -> some View {
+        Label {
+            Text(text)
+        } icon: {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+        }
+        .font(.caption)
     }
 
     /// Shown inline while the lock is on but permission is missing. Re-opens the primer rather

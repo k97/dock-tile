@@ -188,9 +188,10 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.dockLock.anchor` | Keep Dock on | 将程序坞固定在 | machine | Label for the anchor display picker |
 | `settings.dockLock.defaultDisplay` | Default (follow macOS) | 默认（跟随macOS） | machine | First option in the anchor picker — no lock, macOS default behaviour |
 | `settings.dockLock.description` | Stop the Dock from jumping between screens on multi-display setups. It stays on the display you choose. | 防止程序坞在多显示器环境下于屏幕之间跳动。它会停留在你选择的显示器上。 | machine | Explanation under the Dock Lock toggle |
+| `settings.dockLock.edgeCovered` | Another display touches the whole Dock edge of %@, so macOS can't move the Dock there. Shift one display in System Settings so part of that edge is free, or pick another display. | 另一台显示器贴住了%@放置程序坞的整条边，因此macOS无法将程序坞移到那里。请在“系统设置”中移动一台显示器，让这条边空出一部分，或选择其他显示器。 | machine | Shown when another display is arranged along the entire edge where the Dock sits (e.g. two equal displays stacked), which macOS never lets the Dock move onto |
 | `settings.dockLock.lockedTo` | Dock is locked to %@ | 程序坞已锁定到%@ | machine | Indicator confirming the display the Dock is pinned to |
 | `settings.dockLock.mainDisplay` | Main | 主显示器 | machine | Suffix marking the main display in the anchor picker |
-| `settings.dockLock.moveFailed` | Couldn't move the Dock to %@. Make sure that display isn't mirrored, then try again. | 无法将程序坞移到%@。请确认该显示器未设为镜像，然后重试。 | machine | Error shown when the Dock could not be relocated |
+| `settings.dockLock.moveFailed` | Couldn't move the Dock to %@. Try again in a moment. | 无法将程序坞移到%@。请稍后再试。 | machine | Error shown when the Dock could not be relocated; a Try Again button follows |
 | `settings.dockLock.moving` | Moving Dock to %@… | 正在将程序坞移到%@… | machine | Progress message shown while the Dock is being relocated |
 | `settings.dockLock.note` | Works with the Dock at the bottom, left, or right. Keeping it on a screen reserves a few pixels at that edge on your other displays. | 适用于位于底部、左侧或右侧的程序坞。将程序坞保持在一个屏幕上时，其他显示器的对应边缘会预留几个像素。 | machine | Footnote describing Dock Lock behaviour and trade-off |
 | `settings.dockLock.openSettings` | Open System Settings… | 打开系统设置… | machine | Button that opens the Accessibility pane in System Settings |
@@ -202,6 +203,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.dockLock.primer.title` | Allow Accessibility Access | 允许无障碍访问 | machine | Title of the permission primer shown before requesting Accessibility |
 | `settings.dockLock.retry` | Try Again | 重试 | machine | Button to retry a failed Dock relocation |
 | `settings.dockLock.singleDisplay` | Connect a second display to use Dock Lock. With one screen the Dock stays exactly where macOS puts it. | 连接第二台显示器即可使用“程序坞锁定”。只有一个屏幕时，程序坞会停留在macOS放置的位置。 | machine | Note shown when only one display is connected |
+| `settings.dockLock.spacesShared` | macOS keeps the Dock on the main display while “Displays have separate Spaces” is off, so it can't move to %@. Turn that option on in System Settings, then log out and back in. | 关闭“显示器具有单独空间”时，macOS会将程序坞保留在主显示器上，因此无法移到%@。请在“系统设置”中打开此选项，然后退出登录并重新登录。 | machine | Shown when the macOS option “Displays have separate Spaces” (Desktop & Dock settings) is off; use Apple's own name for that option in your language |
 | `settings.dockLock.toggle` | Lock Dock to one display | 将程序坞锁定到一台显示器 | machine | Label for the Dock Lock enable toggle |
 | `settings.general` | General | 通用 | machine | Title of the General settings pane |
 | `settings.login.registrationFailed` | Couldn’t turn this on — macOS refused the registration. %@ | 无法打开此功能——macOS拒绝了注册。%@ | machine | Shown under the Start tiles at login toggle when SMAppService registration failed; %@ is the system error |

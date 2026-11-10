@@ -790,12 +790,34 @@ enum AppStrings {
         /// Format string; `%@` is the display name. Shown when the relocation didn't take.
         static let dockLockMoveFailedFormat = NSLocalizedString(
             "settings.dockLock.moveFailed",
-            value: "Couldn't move the Dock to %@. Make sure that display isn't mirrored, then try again.",
-            comment: "Error shown when the Dock could not be relocated"
+            value: "Couldn't move the Dock to %@. Try again in a moment.",
+            comment: "Error shown when the Dock could not be relocated; a Try Again button follows"
         )
 
         static func dockLockMoveFailed(_ name: String) -> String {
             String(format: dockLockMoveFailedFormat, name)
+        }
+
+        /// Format string; `%@` is the display name. The layout itself blocks the move.
+        static let dockLockEdgeCoveredFormat = NSLocalizedString(
+            "settings.dockLock.edgeCovered",
+            value: "Another display touches the whole Dock edge of %@, so macOS can't move the Dock there. Shift one display in System Settings so part of that edge is free, or pick another display.",
+            comment: "Shown when another display is arranged along the entire edge where the Dock sits (e.g. two equal displays stacked), which macOS never lets the Dock move onto"
+        )
+
+        static func dockLockEdgeCovered(_ name: String) -> String {
+            String(format: dockLockEdgeCoveredFormat, name)
+        }
+
+        /// Format string; `%@` is the display name. macOS pins the Dock to the main display.
+        static let dockLockSpacesSharedFormat = NSLocalizedString(
+            "settings.dockLock.spacesShared",
+            value: "macOS keeps the Dock on the main display while “Displays have separate Spaces” is off, so it can't move to %@. Turn that option on in System Settings, then log out and back in.",
+            comment: "Shown when the macOS option “Displays have separate Spaces” (Desktop & Dock settings) is off; use Apple's own name for that option in your language"
+        )
+
+        static func dockLockSpacesShared(_ name: String) -> String {
+            String(format: dockLockSpacesSharedFormat, name)
         }
 
         static let dockLockRetry = NSLocalizedString(

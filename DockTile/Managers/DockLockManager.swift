@@ -152,6 +152,10 @@ final class DockLockManager: ObservableObject {
         case moving(displayName: String)
         case succeeded(displayName: String)
         case failed(displayName: String)
+        /// Another display touches the anchor's whole Dock edge; no retry can help.
+        case edgeCovered(displayName: String)
+        /// "Displays have separate Spaces" is off, so the Dock can't leave the main display.
+        case spacesShared(displayName: String)
     }
     @Published private(set) var moveState: MoveState = .idle
 
@@ -335,6 +339,23 @@ final class DockLockManager: ObservableObject {
             return
         }
 
+        // A layout macOS cannot move the Dock into: say why, and never warp the pointer for nothing.
+        let others = displays.filter { $0.id != anchorDisplayID }.map { CGDisplayBounds($0.id) }
+        let edgePoints: [CGPoint]
+        switch Self.movePlan(anchor: bounds, anchorIsMain: target.isMain, others: others,
+                             edge: edge, separateSpaces: NSScreen.screensHaveSeparateSpaces) {
+        case .push(let points):
+            edgePoints = points
+        case .edgeCovered:
+            moveState = .edgeCovered(displayName: name)
+            DiagnosticsLog.shared.log("docklock", "Can't move Dock onto '\(name)': another display covers its whole \(edge) edge (reason: \(reason))")
+            return
+        case .spacesShared:
+            moveState = .spacesShared(displayName: name)
+            DiagnosticsLog.shared.log("docklock", "Can't move Dock onto '\(name)': Displays have separate Spaces is off (reason: \(reason))")
+            return
+        }
+
         moveState = .moving(displayName: name)
         AnalyticsService.shared.setBreadcrumb("moving", for: "dock_lock_move")
         AnalyticsService.shared.log(.dockLockMoveStarted, ["reason": reason, "edge": "\(edge)"])
@@ -343,7 +364,6 @@ final class DockLockManager: ObservableObject {
         // thread warping the cursor.
         try? await Task.sleep(nanoseconds: 50_000_000)
 
-        let edgePoint = dockEdgePoint(for: bounds, edge: edge)
         let origin = CGEvent(source: nil)?.location
 
         // Suspend our own clamp tap for the duration: it sits at the head of the session tap and
@@ -357,32 +377,37 @@ final class DockLockManager: ObservableObject {
         }
 
         let push = edgePushDelta(edge)
+        // ~6 s on a single free stretch; ~3 s each when there are several, so a stretch macOS
+        // ignores (a sliver, an odd corner) doesn't end the move before the next one is tried.
+        let holdTicks = edgePoints.count == 1 ? 75 : 40
 
-        // Glide IN from just inside the display down onto the edge first. macOS triggers the
-        // relocation off continuous inbound motion that overshoots the edge — teleporting straight
-        // onto the edge is unreliable (works ~1-in-3), which is why a first attempt often failed
-        // and only "Try Again" took. The glide makes the first attempt land.
-        let approach = approachStart(from: edgePoint, edge: edge, inset: 80)
-        CGWarpMouseCursorPosition(approach)
-        for step in 1...8 {
-            if Task.isCancelled { return }
-            let t = CGFloat(step) / 8
-            let p = CGPoint(x: approach.x + (edgePoint.x - approach.x) * t,
-                            y: approach.y + (edgePoint.y - approach.y) * t)
-            postEdgePush(to: p, push: push)
-            try? await Task.sleep(nanoseconds: 16_000_000)
-        }
-
-        // Then hold against the edge with sustained pressure, polling until the Dock lands.
-        // Each tick re-warps to the edge (so a stray hardware nudge self-corrects) and posts a
-        // real HID mouseMoved carrying a delta shoving toward the edge, jittered 1pt along it so
-        // no two events are identical. ~6s budget.
         var moved = false
-        for tick in 0..<75 {
-            if Task.isCancelled { return }
-            postEdgePush(to: jittered(edgePoint, edge: edge, even: tick % 2 == 0), push: push)
-            try? await Task.sleep(nanoseconds: 80_000_000) // 0.08s
-            if currentDockDisplayID() == anchorDisplayID { moved = true; break }
+        for edgePoint in edgePoints where !moved {
+            // Glide IN from just inside the display down onto the edge first. macOS triggers the
+            // relocation off continuous inbound motion that overshoots the edge — teleporting straight
+            // onto the edge is unreliable (works ~1-in-3), which is why a first attempt often failed
+            // and only "Try Again" took. The glide makes the first attempt land.
+            let approach = approachStart(from: edgePoint, edge: edge, inset: 80)
+            CGWarpMouseCursorPosition(approach)
+            for step in 1...8 {
+                if Task.isCancelled { return }
+                let t = CGFloat(step) / 8
+                let p = CGPoint(x: approach.x + (edgePoint.x - approach.x) * t,
+                                y: approach.y + (edgePoint.y - approach.y) * t)
+                postEdgePush(to: p, push: push)
+                try? await Task.sleep(nanoseconds: 16_000_000)
+            }
+
+            // Then hold against the edge with sustained pressure, polling until the Dock lands.
+            // Each tick re-warps to the edge (so a stray hardware nudge self-corrects) and posts a
+            // real HID mouseMoved carrying a delta shoving toward the edge, jittered 1pt along it so
+            // no two events are identical.
+            for tick in 0..<holdTicks {
+                if Task.isCancelled { return }
+                postEdgePush(to: jittered(edgePoint, edge: edge, even: tick % 2 == 0), push: push)
+                try? await Task.sleep(nanoseconds: 80_000_000) // 0.08s
+                if currentDockDisplayID() == anchorDisplayID { moved = true; break }
+            }
         }
 
         // The Dock animates in; give it a beat then re-check, so a relocation that lands right at
@@ -394,8 +419,10 @@ final class DockLockManager: ObservableObject {
 
         if Task.isCancelled { return }
 
-        // Return the pointer to where the user left it.
-        if let origin { CGWarpMouseCursorPosition(origin) }
+        // Return the pointer to where the user left it, with one posted move away from the edge: a
+        // bare warp sends no event, so the Dock never sees the pointer leave and can stay magnified
+        // (and a zero-delta event is ignored, see `jittered`).
+        if let origin { postEdgePush(to: origin, push: (-push.dx, -push.dy)) }
 
         if moved {
             moveState = .succeeded(displayName: name)
@@ -412,14 +439,33 @@ final class DockLockManager: ObservableObject {
         }
     }
 
-    /// The point to hold the cursor at to trigger a Dock relocation onto `bounds`, in CG global
-    /// coordinates (top-left origin), pressed flush against the Dock edge.
-    private func dockEdgePoint(for bounds: CGRect, edge: DockEdge) -> CGPoint {
-        switch edge {
-        case .bottom: return CGPoint(x: bounds.midX, y: bounds.maxY - 1)
-        case .left:   return CGPoint(x: bounds.minX + 1, y: bounds.midY)
-        case .right:  return CGPoint(x: bounds.maxX - 1, y: bounds.midY)
-        }
+    /// What a move onto the anchor can do, decided from the layout alone.
+    enum MovePlan: Equatable {
+        /// Press at these points in turn (CG global, flush against the Dock edge), widest free stretch first.
+        case push([CGPoint])
+        /// Another display touches the whole Dock edge: macOS cannot bring the Dock there.
+        case edgeCovered
+        /// "Displays have separate Spaces" is off: the Dock stays on the main display.
+        case spacesShared
+    }
+
+    /// The pointer only calls up the Dock where the edge leads off every screen, so the plan presses
+    /// at the middle of each such stretch. The edge's own middle failed every time with a laptop
+    /// under the middle of an ultrawide (2026-11-10): the pointer crossed onto the laptop.
+    nonisolated static func movePlan(anchor: CGRect, anchorIsMain: Bool, others: [CGRect],
+                                     edge: DockEdge, separateSpaces: Bool) -> MovePlan {
+        if !separateSpaces && !anchorIsMain { return .spacesShared }
+        let stretches = exposedSegments(of: anchor, edge: edge, others: others)
+            .sorted { $0.1 - $0.0 > $1.1 - $1.0 }
+        guard !stretches.isEmpty else { return .edgeCovered }
+        return .push(stretches.map { stretch in
+            let along = (stretch.0 + stretch.1) / 2
+            switch edge {
+            case .bottom: return CGPoint(x: along, y: anchor.maxY - 1)
+            case .left:   return CGPoint(x: anchor.minX + 1, y: along)
+            case .right:  return CGPoint(x: anchor.maxX - 1, y: along)
+            }
+        })
     }
 
     /// A mouse delta that shoves *toward* the Dock edge — the sustained pressure macOS reads as
@@ -638,39 +684,48 @@ final class DockLockManager: ObservableObject {
     /// display. Clamping a shared edge would otherwise wall off the cursor from
     /// crossing between monitors.
     private func triggerZones(for bounds: CGRect, edge: DockEdge, others: [CGRect]) -> [TriggerZone] {
-        let eps: CGFloat = 1.0
         let clamp: CGFloat
+        switch edge {
+        case .bottom: clamp = bounds.maxY - bandHeight
+        case .left:   clamp = bounds.minX + bandHeight
+        case .right:  clamp = bounds.maxX - bandHeight
+        }
+        return Self.exposedSegments(of: bounds, edge: edge, others: others)
+            .map { TriggerZone(edge: edge, rangeMin: $0.0, rangeMax: $0.1, clamp: clamp) }
+    }
+
+    /// The stretches of `bounds`' Dock edge that no other display touches, as ranges along the edge
+    /// (x for a bottom Dock, y for a side Dock). Only there can the pointer press past the edge and
+    /// call up the Dock; elsewhere it just crosses onto the neighbouring display.
+    nonisolated static func exposedSegments(of bounds: CGRect, edge: DockEdge,
+                                            others: [CGRect]) -> [(CGFloat, CGFloat)] {
+        let eps: CGFloat = 1.0
         let span: (CGFloat, CGFloat)
         let covered: [(CGFloat, CGFloat)]
 
         switch edge {
         case .bottom:
-            clamp = bounds.maxY - bandHeight
             span = (bounds.minX, bounds.maxX)
             covered = others
                 .filter { abs($0.minY - bounds.maxY) <= eps }
                 .map { (max($0.minX, bounds.minX), min($0.maxX, bounds.maxX)) }
         case .left:
-            clamp = bounds.minX + bandHeight
             span = (bounds.minY, bounds.maxY)
             covered = others
                 .filter { abs($0.maxX - bounds.minX) <= eps }
                 .map { (max($0.minY, bounds.minY), min($0.maxY, bounds.maxY)) }
         case .right:
-            clamp = bounds.maxX - bandHeight
             span = (bounds.minY, bounds.maxY)
             covered = others
                 .filter { abs($0.minX - bounds.maxX) <= eps }
                 .map { (max($0.minY, bounds.minY), min($0.maxY, bounds.maxY)) }
         }
 
-        return subtract(span: span, covered: covered)
-            .filter { $0.1 - $0.0 > 1 }
-            .map { TriggerZone(edge: edge, rangeMin: $0.0, rangeMax: $0.1, clamp: clamp) }
+        return subtract(span: span, covered: covered).filter { $0.1 - $0.0 > 1 }
     }
 
     /// Subtract `covered` sub-intervals from `span`, returning the gaps.
-    private func subtract(span: (CGFloat, CGFloat), covered: [(CGFloat, CGFloat)]) -> [(CGFloat, CGFloat)] {
+    nonisolated private static func subtract(span: (CGFloat, CGFloat), covered: [(CGFloat, CGFloat)]) -> [(CGFloat, CGFloat)] {
         var result = [span]
         for cut in covered where cut.1 > cut.0 {
             var next: [(CGFloat, CGFloat)] = []

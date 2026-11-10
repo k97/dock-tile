@@ -9775,6 +9775,60 @@
         }
       }
     },
+    "settings.dockLock.edgeCovered": {
+      "comment": "Shown when another display is arranged along the entire edge where the Dock sits (e.g. two equal displays stacked), which macOS never lets the Dock move onto",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ein anderer Bildschirm grenzt an den ganzen Dock-Rand von %@, daher kann macOS das Dock nicht dorthin bewegen. Verschiebe in den Systemeinstellungen einen Bildschirm, sodass ein Teil dieses Rands frei ist, oder wähle einen anderen Bildschirm."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another display touches the whole Dock edge of %@, so macOS can't move the Dock there. Shift one display in System Settings so part of that edge is free, or pick another display."
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another display touches the whole Dock edge of %@, so macOS can't move the Dock there. Shift one display in System Settings so part of that edge is free, or pick another display."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another display touches the whole Dock edge of %@, so macOS can't move the Dock there. Shift one display in System Settings so part of that edge is free, or pick another display."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Un autre écran borde tout le côté du Dock de %@ : macOS ne peut donc pas y déplacer le Dock. Dans Réglages Système, décalez un écran pour libérer une partie de ce bord, ou choisissez un autre écran."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "別のディスプレイが%@のDock側の辺全体に接しているため、macOSはDockをそこに移動できません。システム設定でディスプレイをずらしてその辺の一部を空けるか、別のディスプレイを選んでください。"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Другой дисплей примыкает ко всему краю Dock на дисплее %@, поэтому macOS не может переместить туда Dock. Сдвиньте один из дисплеев в Системных настройках, чтобы часть этого края освободилась, или выберите другой дисплей."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "另一台显示器贴住了%@放置程序坞的整条边，因此macOS无法将程序坞移到那里。请在“系统设置”中移动一台显示器，让这条边空出一部分，或选择其他显示器。"
+          }
+        }
+      }
+    },
     "settings.dockLock.lockedTo": {
       "comment": "Indicator confirming the display the Dock is pinned to",
       "extractionState": "manual",
@@ -9884,55 +9938,55 @@
       }
     },
     "settings.dockLock.moveFailed": {
-      "comment": "Error shown when the Dock could not be relocated",
+      "comment": "Error shown when the Dock could not be relocated; a Try Again button follows",
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Das Dock konnte nicht auf %@ bewegt werden. Stelle sicher, dass dieser Bildschirm nicht gespiegelt wird, und versuche es erneut."
+            "value": "Das Dock konnte nicht auf %@ bewegt werden. Versuche es gleich noch einmal."
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't move the Dock to %@. Make sure that display isn't mirrored, then try again."
+            "value": "Couldn't move the Dock to %@. Try again in a moment."
           }
         },
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't move the Dock to %@. Make sure that display isn't mirrored, then try again."
+            "value": "Couldn't move the Dock to %@. Try again in a moment."
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't move the Dock to %@. Make sure that display isn't mirrored, then try again."
+            "value": "Couldn't move the Dock to %@. Try again in a moment."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Impossible de déplacer le Dock vers %@. Assurez-vous que cet écran n’est pas en recopie vidéo, puis réessayez."
+            "value": "Impossible de déplacer le Dock vers %@. Réessayez dans un instant."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dockを%@に移動できませんでした。そのディスプレイがミラーリングされていないことを確認してから、もう一度お試しください。"
+            "value": "Dockを%@に移動できませんでした。しばらくしてからもう一度お試しください。"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Не удалось переместить Dock на дисплей %@. Убедитесь, что для этого дисплея не включен видеоповтор, и повторите попытку."
+            "value": "Не удалось переместить Dock на дисплей %@. Повторите попытку чуть позже."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "无法将程序坞移到%@。请确认该显示器未设为镜像，然后重试。"
+            "value": "无法将程序坞移到%@。请稍后再试。"
           }
         }
       }
@@ -10527,6 +10581,60 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "连接第二台显示器即可使用“程序坞锁定”。只有一个屏幕时，程序坞会停留在macOS放置的位置。"
+          }
+        }
+      }
+    },
+    "settings.dockLock.spacesShared": {
+      "comment": "Shown when the macOS option “Displays have separate Spaces” (Desktop & Dock settings) is off; use Apple's own name for that option in your language",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Solange „Monitore verwenden verschiedene Spaces“ deaktiviert ist, behält macOS das Dock auf dem Hauptbildschirm, daher kann es nicht auf %@ wechseln. Aktiviere diese Option in den Systemeinstellungen und melde dich dann ab und wieder an."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS keeps the Dock on the main display while “Displays have separate Spaces” is off, so it can't move to %@. Turn that option on in System Settings, then log out and back in."
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS keeps the Dock on the main display while “Displays have separate Spaces” is off, so it can't move to %@. Turn that option on in System Settings, then log out and back in."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS keeps the Dock on the main display while “Displays have separate Spaces” is off, so it can't move to %@. Turn that option on in System Settings, then log out and back in."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tant que l’option « Les écrans disposent de Spaces distincts » est désactivée, macOS garde le Dock sur l’écran principal : il ne peut donc pas aller sur %@. Activez cette option dans Réglages Système, puis fermez votre session et rouvrez-la."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "“ディスプレイごとに個別の操作スペース”がオフのあいだ、macOSはDockをメインディスプレイに固定するため、%@に移動できません。システム設定でこのオプションをオンにしてから、ログアウトしてもう一度ログインしてください。"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Пока параметр «Дисплеи с разными рабочими пространствами Spaces» выключен, macOS держит Dock на основном дисплее, поэтому он не может переместиться на дисплей %@. Включите этот параметр в Системных настройках, затем выйдите из системы и снова войдите."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "关闭“显示器具有单独空间”时，macOS会将程序坞保留在主显示器上，因此无法移到%@。请在“系统设置”中打开此选项，然后退出登录并重新登录。"
           }
         }
       }
