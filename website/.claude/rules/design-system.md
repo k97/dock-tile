@@ -126,13 +126,15 @@ Back/Forward still restore their position.
 
 ## Typography
 
-- **All text: Open Runde** (owner, 2026-11-09: headings first, then the body too). OFL-1.1, licence
-  beside the files. `app/fonts/open-runde/` holds LATIN SUBSETS of Regular / Medium / Semibold /
-  Bold (~28 KB each; full files are 160 KB each — re-subset with fontTools `pyftsubset
-  --layout-features='*'`, keeping ⌘ ⌥ ⇥ and typographic punctuation), loaded by `next/font/local`
-  as `--font-open-runde` and set as `--font-sans`. It has no Light weight: never use
-  `font-light` (it silently renders Regular). **macOS mocks stay Inter** (SF's stand-in; rounded
-  reads un-Mac): `.popover-surface` sets it in CSS, other mock surfaces take `font-ui`. In custom
+- **All text: Allo** (owner, 2026-11-18; Open Runde before it, 2026-11-09 — its files are in git
+  history). OFL-1.1, `OFL.txt` beside the files. `app/fonts/allo/` holds LATIN SUBSETS of the
+  static Regular / Medium / SemiBold / Bold (Text optical size; ~28 KB each, the full webfonts
+  ~48 KB) — re-subset with fontTools, `layout_features=['*']`, to the 293-codepoint set the Open
+  Runde subsets carried (⌘ ⌥ ⇥ ↗ included; 59 rare punctuation marks Allo lacks fall back to
+  Inter). Loaded by `next/font/local` as `--font-allo` and set as `--font-sans`. Only those four
+  weights ship: `font-light` / `font-black` would be synthesised. The variable font (447 KB) has a
+  Display optical size for headlines — not used; try it only if the big headings read off.
+  **macOS mocks stay Inter** (SF's stand-in; a friendly sans reads un-Mac): `.popover-surface` sets it in CSS, other mock surfaces take `font-ui`. In custom
   CSS reference the next/font variable (`var(--font-inter)`), never a token from `@theme
   inline`, which is not emitted as a CSS variable (the headings silently stayed Inter once).
   The display font (Special Gothic Expanded One) is still loaded but unused; Haskoy was
@@ -140,7 +142,7 @@ Back/Forward still restore their position.
 - **Type scale tokens (globals.css `@theme`):**
   `text-section` (section h2: fluid 32→44 px, 1.1, −0.04em, 600; centred ones also `mx-auto
   max-w-132` so they wrap as a balanced two-line block), `text-title` (big-card title 28 px,
-  1.2, medium), `text-title-sm` (bento title 22 px medium), `text-lead` (every section and card
+  1.2, semibold — owner, 2026-11-18, with Allo), `text-title-sm` (bento title 22 px medium), `text-lead` (every section and card
   body: 18 px / 1.4 / −0.01em, Regular; a bold lead-in is `font-semibold text-foreground`).
   A 16 px body with titles 2 px smaller was tried and reverted the same day (owner, 2026-11-09).
   **The row of small features** under the big cards: FOUR items (Keyboard, Folders, Grid or
@@ -232,8 +234,8 @@ re-apply per component unless overriding.
 - **An icon set inline in a heading needs `inline-block overflow-hidden`** to centre by
   `vertical-align`: without `overflow`, the box's baseline is synthesised from its content (a
   flex face with an SVG) and the "More than" tile hung 12 px low. With it, the baseline is the
-  bottom edge and `align-[(cap/2 − size/2)]` is exact (−0.19em for a 1.1em tile on Open Runde's
-  0.727em cap height). Verify with a baseline probe + canvas `actualBoundingBoxAscent`, not by eye.
+  bottom edge and `align-[(cap/2 − size/2)]` is exact (−0.19em for a 1.1em tile on Allo's
+  0.728em cap height — Open Runde's was 0.727, so the switch kept it). Verify with a baseline probe + canvas `actualBoundingBoxAscent`, not by eye.
 - **Never hand-write `-webkit-` prefixes.** Lightning CSS drops the standard unprefixed property
   when both are present — this silently killed `backdrop-filter` on every glass surface once.
   Let the toolchain prefix.

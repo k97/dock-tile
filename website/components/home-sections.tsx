@@ -303,7 +303,7 @@ const menuHighlight = "bg-[#007AFF] text-white! dark:bg-[#0A84FF]";
    overflow-hidden pins the inline-block's baseline to its bottom edge
    (otherwise it is synthesised from the face inside and the tile hung
    12px low), so the offset is exact: -0.19em centres the 1.1em tile on
-   Open Runde's cap height, 0.727/2 - 1.1/2. The face is inset, so the
+   Allo's cap height, 0.728/2 - 1.1/2. The face is inset, so the
    clip never cuts it; the shadow is a filter on this span, not clipped. */
 function InlineTile({ tilt, children }: { tilt: "rotate-6" | "-rotate-6"; children: React.ReactNode }) {
   return (

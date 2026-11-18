@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* All text in Open Runde; Inter stands in until it loads. */
-  --font-sans: var(--font-open-runde), var(--font-inter), system-ui, sans-serif;
+  /* All text in Allo; Inter stands in until it loads. */
+  --font-sans: var(--font-allo), var(--font-inter), system-ui, sans-serif;
   /* macOS mocks (popovers, menus, the inspector, the menu bar): Inter, the
      closest web stand-in for SF — a rounded face would read less like a Mac. */
   --font-ui: var(--font-inter), system-ui, sans-serif;
@@ -20,11 +20,11 @@
   --text-section--line-height: 1.1;
   --text-section--letter-spacing: -0.04em;
   --text-section--font-weight: 600;
-  /* Card titles: medium, not semibold — the card's frame already carries weight. */
+  /* Big-card titles: semibold (owner, 2026-11-18, with Allo). Bento titles stay medium. */
   --text-title: 1.75rem;
   --text-title--line-height: 1.2;
   --text-title--letter-spacing: -0.03em;
-  --text-title--font-weight: 500;
+  --text-title--font-weight: 600;
   --text-title-sm: 1.375rem;
   --text-title-sm--line-height: 1.25;
   --text-title-sm--letter-spacing: -0.025em;

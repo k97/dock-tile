@@ -17,17 +17,17 @@ const inter = Inter({
   display: "swap",
 });
 
-// The site's face: Open Runde (OFL-1.1, a rounded Inter) for all text.
-// Latin subsets of the four weights in use; the licence ships
+// The site's face: Allo (OFL-1.1, a friendly sans built on Inter) for all text.
+// Latin subsets of the four static weights in use (Text optical size); the licence ships
 // beside the files. Inter stays for the macOS mocks (globals.css --font-ui).
-const openRunde = localFont({
-  variable: "--font-open-runde",
+const allo = localFont({
+  variable: "--font-allo",
   display: "swap",
   src: [
-    { path: "./fonts/open-runde/OpenRunde-Regular-latin.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/open-runde/OpenRunde-Medium-latin.woff2", weight: "500", style: "normal" },
-    { path: "./fonts/open-runde/OpenRunde-Semibold-latin.woff2", weight: "600", style: "normal" },
-    { path: "./fonts/open-runde/OpenRunde-Bold-latin.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/allo/Allo-Regular-latin.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/allo/Allo-Medium-latin.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/allo/Allo-SemiBold-latin.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/allo/Allo-Bold-latin.woff2", weight: "700", style: "normal" },
   ],
 });
 
@@ -111,7 +111,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body
-        className={`${inter.variable} ${openRunde.variable} ${specialGothic.variable} font-sans antialiased `}
+        className={`${inter.variable} ${allo.variable} ${specialGothic.variable} font-sans antialiased `}
       >
         <JsonLd data={websiteSchema} />
         <ThemeProvider
