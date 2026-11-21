@@ -2,39 +2,43 @@
 
 import { Mail } from "lucide-react";
 import { DownloadActionButton } from "@/components/action-button";
+import { TileFace } from "@/components/dock-demo";
+import { InlineTile } from "@/components/inline-tile";
 import { useLocale } from "@/components/locale-provider";
 import { Reveal } from "@/components/reveal";
 import { siteConfig } from "@/lib/config";
 import { trackContactClick } from "@/lib/analytics";
 
 /**
- * Compact dark contact band that sits above the footer — shared by the FAQ
- * and legal pages so their page endings stay identical.
+ * The FAQ, release-notes and legal pages' last ask, styled like the homepage's
+ * Download section (owner, 2026-11-22): on the page background, a centred
+ * heading with its tilted tile, the page's own line, then Contact + Download.
  */
 export function ContactCta({ title, subtitle }: { title: string; subtitle: string }) {
   const { content } = useLocale();
 
   return (
-    <section data-nav-tone="dark" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 md:mx-4 md:mb-4">
-      <div className="grain" />
-      <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-950/40" />
-      <Reveal className="relative z-10 flex flex-col items-center justify-between gap-8 px-8 py-16 md:flex-row md:px-12">
-        <div className="text-center md:text-left">
-          <h2 className="mb-2 text-xl font-semibold tracking-[-0.05em] leading-[1.05] text-white md:text-2xl">
-            {title}
-          </h2>
-          <p className="text-sm text-white/50">{subtitle}</p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-4">
+    <section className="mx-auto flex max-w-400 flex-col items-center px-4 pt-8 pb-24 text-center sm:px-6 md:px-10 md:pt-12 md:pb-50">
+      <Reveal className="flex flex-col items-center">
+        <h2 className="mx-auto max-w-132 text-section text-foreground">
+          {title}{" "}
+          {/* The hero's green Comms tile: a conversation. */}
+          <InlineTile tilt="rotate-6">
+            <TileFace gradient="linear-gradient(to bottom, #52DFA8, #10B981)" darkGlyph="#52DFA8" glyph="chat" shaded />
+          </InlineTile>
+        </h2>
+        <p className="mt-6 max-w-150 text-lead text-muted-foreground">{subtitle}</p>
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          {/* h-13 = the md Download pill's height, so the pair lines up */}
           <a
             href={`mailto:${siteConfig.contactEmail}`}
             onClick={trackContactClick}
-            className="pressable flex items-center gap-2 rounded-full border border-white/10 px-6 py-3 text-sm font-semibold text-white transition-[color,background-color,scale] duration-200 hover:bg-white/5"
+            className="pressable flex h-13 items-center gap-2 rounded-full border border-foreground/15 px-6 text-sm font-semibold text-foreground transition-[background-color,scale] duration-200 hover:bg-foreground/5"
           >
             <Mail className="h-4 w-4" />
             Contact support
           </a>
-          <DownloadActionButton tone="light" label={content.downloadButton} />
+          <DownloadActionButton tone="adaptive" label={content.downloadButton} />
         </div>
       </Reveal>
     </section>

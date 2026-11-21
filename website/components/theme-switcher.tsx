@@ -8,6 +8,7 @@ import { trackThemeChange } from "@/lib/analytics";
 
 type Theme = "light" | "system" | "dark";
 
+/** Lives on the signature-dark footer band, so it is white-on-dark in both themes. */
 export function ThemeSwitcher() {
   // next-themes seeds `theme` from localStorage during the FIRST client render,
   // while the server rendered it undefined — so keying the active highlight off
@@ -28,9 +29,7 @@ export function ThemeSwitcher() {
   ];
 
   return (
-    // Light: `muted`/`background` equal the page colour (zinc-100), so the tray
-    // is a faint foreground tint and the selected pill is the white `card`.
-    <div className="flex items-center gap-0.5 p-1 rounded-full bg-foreground/6 border border-foreground/10 dark:bg-muted/50 dark:border-border/50">
+    <div className="flex items-center gap-0.5 p-1 rounded-full border bg-white/6 border-white/10">
       {themes.map(({ value, icon, label }) => (
         <button
           key={value}
@@ -44,9 +43,7 @@ export function ThemeSwitcher() {
             // own width so neighbouring segments never overlap.
             "hit-area flex items-center justify-center w-7 h-7 rounded-full",
             "transition-[color,background-color,box-shadow,scale] duration-200 active:scale-96",
-            active === value
-              ? "bg-card shadow-sm text-foreground dark:bg-background"
-              : "text-muted-foreground hover:text-foreground"
+            active === value ? "bg-white/15 shadow-sm text-white" : "text-white/55 hover:text-white"
           )}
           aria-label={label}
         >

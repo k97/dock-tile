@@ -7,7 +7,7 @@ import { Reveal } from "@/components/reveal";
  * Shared treatment for legal pages (Privacy, Terms), mirroring the FAQ page:
  * a centered dark hero band (eyebrow + big headline + optional subtitle),
  * a plain light prose column (same treatment as the home feature sections —
- * no card sheet), then the FAQ's contact band and footer.
+ * no card sheet), then the shared contact CTA and footer.
  */
 export function LegalShell({
   eyebrow = "Legal",

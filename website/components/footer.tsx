@@ -23,10 +23,11 @@ type FooterLink = {
 };
 
 const linkClass =
-  "inline-flex w-fit items-center gap-1 text-[14px] transition-colors duration-300 hover:text-foreground";
+  "inline-flex w-fit items-center gap-1 text-[14px] transition-colors duration-300 hover:text-white";
 
-// The footer under every page: the studio's mark and line, three link columns,
-// then "© YYYY, Made with ♥ for macOS" and the theme switcher.
+// The footer under every page: a signature-dark inset band, like the Dock Lock band
+// (owner, 2026-11-22) — the studio's mark and line, three link columns, then
+// "© YYYY, Made with ♥ for macOS" and the theme switcher.
 export function Footer() {
   const { content } = useLocale();
   const m = content.marketing;
@@ -64,8 +65,10 @@ export function Footer() {
   ];
 
   return (
-    <footer className="border-t border-border/60">
-      <div className="mx-auto grid max-w-270 grid-cols-2 gap-x-8 gap-y-10 px-6 pt-16 pb-12 lg:grid-cols-4">
+    <footer data-nav-tone="dark" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 text-white md:mx-4 md:mb-4">
+      <div className="grain" />
+      <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-950/40" />
+      <div className="relative mx-auto grid max-w-270 grid-cols-2 gap-x-8 gap-y-10 px-6 pt-16 pb-12 lg:grid-cols-4">
         {/* The studio: last on phones, first column from lg up. */}
         <div className="order-last col-span-2 lg:order-first lg:col-span-1">
           <a
@@ -75,12 +78,12 @@ export function Footer() {
             onClick={() => trackExternalLinkClick(STUDIO_URL, "footer")}
             className="group flex w-fit flex-col gap-6"
           >
-            <HmcMark className="h-11 w-11 text-foreground opacity-60 transition-opacity duration-300 group-hover:opacity-100" />
+            <HmcMark className="h-11 w-11 text-white opacity-60 transition-opacity duration-300 group-hover:opacity-100" />
             <span className="flex flex-col gap-1">
-              <span className="text-[14px] font-medium text-muted-foreground transition-colors duration-300 group-hover:text-foreground">
+              <span className="text-[14px] font-medium text-white/70 transition-colors duration-300 group-hover:text-white">
                 {siteConfig.authorName}
               </span>
-              <span className="text-[13px] text-muted-foreground/80">{m.footerStudioTagline}</span>
+              <span className="text-[13px] text-white/50">{m.footerStudioTagline}</span>
             </span>
             <span className="sr-only"> {m.opensInNewTab}</span>
           </a>
@@ -88,12 +91,12 @@ export function Footer() {
 
         {columns.map((col) => (
           <div key={col.title} className="flex flex-col gap-4">
-            <h2 className="text-[14px] font-semibold text-foreground">{col.title}</h2>
+            <h2 className="text-[14px] font-semibold text-white">{col.title}</h2>
             <nav aria-label={col.title} className="flex flex-col gap-2.5">
               {col.links.map((link) => {
                 const internal = link.href.startsWith("/");
                 const current = internal && isActiveRoute(pathname, link.href);
-                const tone = current ? "text-foreground" : "text-muted-foreground";
+                const tone = current ? "text-white" : "text-white/60";
                 const inner = (
                   <>
                     {link.label}
@@ -128,9 +131,9 @@ export function Footer() {
         ))}
       </div>
 
-      <div className="mx-auto max-w-270 border-t border-border/60 px-6">
+      <div className="relative mx-auto max-w-270 border-t border-white/10 px-6">
         <div className="flex items-center justify-between py-6">
-          <p className="flex items-center gap-1 text-[13px] text-muted-foreground">
+          <p className="flex items-center gap-1 text-[13px] text-white/60">
             © {currentYear}, {m.footerMadeWithA}
             <Heart role="img" aria-label={m.footerLove} className="h-3.5 w-3.5 fill-orange-500 text-orange-500" />
             {m.footerMadeWithB}

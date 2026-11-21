@@ -38,7 +38,7 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
 - `next-themes`, class attribute, system default. The **footer `ThemeSwitcher` must stay** — it
   was dropped once during a consolidation and explicitly demanded back.
 - **Signature-dark bands stay dark in BOTH themes** (they simulate macOS chrome or are brand
-  moments): hero, the Dock Lock band, Ghost Mode card, and the dark page headers on
+  moments): hero, the Dock Lock band, Ghost Mode card, the footer band, and the dark page headers on
   FAQ/release-notes/legal. Only neutral surfaces theme-flip.
 - **Anything visible at load themes via CSS (`dark:` variants / `.dark` rules), NEVER a
   `mounted && resolvedTheme` guard** (one exception, next bullet) — next-themes sets `.dark` on `<html>` before first paint, so
@@ -62,9 +62,9 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
   `undefined`; that mismatches the active button's `className` on every load (shipped in `cd8d437`
   on a wrong premise, fixed 2026-07-09). The whole-component `if (!mounted) return <placeholder/>`
   guard stays banned — that's the empty-circles pop `cd8d437` rightly removed.
-  **Its light-theme tray is `bg-foreground/6` + `border-foreground/10` with a `bg-card` selected
-  pill** (2026-10-30): light `--muted` and `--background` both equal the page's zinc-100, so the
-  token-default tray and pill were invisible ("barely noticeable" — owner). Dark keeps `muted`.
+  **It sits on the dark footer band (2026-11-22), so it is white-on-dark in both themes**: tray
+  `bg-white/6` + `border-white/10`, selected `bg-white/15`. (On the light page the token-default
+  tray was invisible — light `--muted` equals the page — hence the earlier `bg-foreground/6` tray.)
 - Cards have fixed theme character: the Ghost card is always dark (hardcoded whites are correct);
   the Smart Add card flips, so its colours must be theme-aware (`text-zinc-600 dark:text-white/80`).
   The Ghost card runs a charcoal gradient (`from-zinc-800 to-zinc-900`), NOT flat zinc-900 — flat
@@ -231,13 +231,16 @@ re-apply per component unless overriding.
 ## CSS / tooling gotchas (each cost real debugging time)
 
 - **Every homepage section heading carries one tilted tile mid-line** — `InlineTile` in
-  home-sections.tsx, any face as its child (owner 2026-11-09). Down the page (2026-11-21):
+  `components/inline-tile.tsx`, any face as its child (owner 2026-11-09). Down the page (2026-11-21):
   "Set up for you. ⚡" an orange bolt — a colour and glyph no hero Dock tile uses (owner: don't
   repeat a Dock tile), nowrap so the tile ends line one; "Pick a look. ▦ Done." an App Grid of
   media apps (nowrap with "Done.", "Pick a look." nbsp-bound so the break falls after "apps.");
   "The Dock 🔒 stays put." a green lock; "Tidy your ▦ Dock today." an App Grid of AI apps
   (`download-section.tsx`). Tilts alternate (+6°, −6°, +6°, −6°). Split the string into A/B keys
   around the tile.
+- **`InlineTile` lives in `components/inline-tile.tsx`** so the subpages' `ContactCta` can use it
+  without pulling `home-sections.tsx` into their bundles (its `TileFace` still comes from
+  `dock-demo.tsx`, which does ship there — accepted, 2026-11-22).
 - **An anchor target with no top padding needs `scroll-mt-28`** (the second of two light
   sections): otherwise a jump lands its heading under the fixed nav pill (`#customise`, 2026-11-21).
 - **An icon set inline in a heading needs `inline-block overflow-hidden`** to centre by

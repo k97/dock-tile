@@ -4,7 +4,8 @@ import { useLocale } from "@/components/locale-provider";
 import { Reveal } from "@/components/reveal";
 import { DownloadActionButton } from "@/components/action-button";
 import { DownloadMeta } from "@/components/hero";
-import { AppGridFace, InlineTile, aiAppIcons } from "@/components/home-sections";
+import { AppGridFace, aiAppIcons } from "@/components/home-sections";
+import { InlineTile } from "@/components/inline-tile";
 
 /**
  * The homepage's last ask, on the page background just above the footer:

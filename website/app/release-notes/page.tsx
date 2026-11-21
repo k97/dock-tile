@@ -83,7 +83,7 @@ export default async function ReleaseNotesPage() {
         </Reveal>
       </section>
 
-      {/* Dark contact band + footer — same page ending as FAQ / Privacy */}
+      {/* Contact CTA + footer — same page ending as FAQ / Privacy */}
       <ContactCta
         title="Spotted a bug?"
         subtitle="Send a note and you'll usually hear back within a day."

@@ -5,8 +5,8 @@
 - Single-page marketing site (owner, 2026-11-21, after a GA read of the redesign):
   `Hero → PowerUserSection (id="features") → CustomTilesStory (id="customise") → DockLockStory →
   DownloadSection` + Footer.
-  - **PowerUserSection** — "Set up for you. ⚡ Out of your way.": Smart Add · Menu bar · Ghost mode
-    cards, then the row of four one-liners (Keyboard, Folders, Free and open source, Languages).
+  - **PowerUserSection** — "Set up for you. ⚡ Out of your way.": Smart Add · Ghost mode · Menu
+    bar cards (the dark Ghost card in the middle, owner 2026-11-22), then the row of four one-liners (Keyboard, Folders, Free and open source, Languages).
     Nav "Features" lands here.
   - **CustomTilesStory** — "Pick your apps. Pick a look. ▦ Done." over the window capture with
     its closer-look hotspots; the body names the "Dock Tile companion app". The hero Dock's
@@ -26,7 +26,8 @@
   Download button. That line is `DownloadMeta` (in `hero.tsx`, which MacOSFloorGuardTests reads
   for "macOS 15+"): hero = "v2.7.2 · Free & open source · Apple silicon · macOS 15+"; the Download
   section's `page` variant drops the version and uses the muted tokens.
-- **Footer (owner, 2026-11-21, the studio's own footer layout)** — on every page: the studio mark +
+- **Footer (owner, 2026-11-21, the studio's own footer layout)** — on every page, inside a
+  signature-dark inset band like the Dock Lock band (2026-11-22; the theme switcher is white-on-dark): the studio mark +
   "Happy Machines Company" + "Products for the everyday." (the studio site's own line), then three
   columns — **Dock Tile** (Features · What's new · FAQ · Download), **Resources** (GitHub ·
   Request a feature · Report a bug · Contact), **Company** (About · Spades Audio · Privacy ·
@@ -36,7 +37,10 @@
   The two feedback links open pre-filled GitHub issues from `lib/feedback.ts` — the only source
   of those URLs; the FAQ's "Help shape Dock Tile" cards use the same two. The bug template sends
   diagnostics to the support email, never into the public issue (they list the reporter's
-  tiles and apps). Subpages keep their `ContactCta` band above the footer. The site is published
+  tiles and apps). Subpages end on `ContactCta` above the footer: since 2026-11-22 it is styled
+  like the homepage's Download section (page background, centred `text-section` heading with the
+  green chat tile, the page's own line, Contact support + Download), keeping each page's title
+  and line ("Questions?", "Still stuck?", "Spotted a bug?"). The site is published
   by **Happy Machines Company** (`siteConfig.authorName` / `authorUrl`; contact
   `hello@happymachines.company`).
 

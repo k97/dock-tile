@@ -172,7 +172,7 @@ export function FaqContent() {
         </Reveal>
       </section>
 
-      {/* Compact dark CTA band */}
+      {/* Contact CTA, styled like the homepage's Download section */}
       <ContactCta
         title="Still stuck?"
         subtitle="Send a note and you'll usually hear back within a day."

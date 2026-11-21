@@ -26,6 +26,7 @@ import { siteConfig } from "@/lib/config";
 import { Reveal } from "@/components/reveal";
 import { CloserLook } from "@/components/closer-look";
 import { ICON_CONTENT_RATIO, TileFace } from "@/components/dock-demo";
+import { InlineTile } from "@/components/inline-tile";
 
 /* Uniform scale-to-fit: children render at their fixed natural size; the
    whole block is zoomed (transform scale, aspect ratio locked — like a
@@ -204,7 +205,10 @@ export function PowerUserSection() {
           <Footnote icon={ShieldCheck}>{m.smartAddPrivacy}</Footnote>
         </Reveal>
 
-        <Reveal delay={80} className={bentoCard}>
+        {/* The dark Ghost card sits in the middle, between the two light ones (owner, 2026-11-22). */}
+        <GhostCard delay={80} className="mx-auto max-w-md xl:max-w-none" />
+
+        <Reveal delay={160} className={bentoCard}>
           <div>
             <h3 className="mb-3 text-title-sm text-foreground">{m.menuBarTitle}</h3>
             <p className="max-w-md text-lead text-muted-foreground">{m.menuBarBody}</p>
@@ -214,8 +218,6 @@ export function PowerUserSection() {
           </div>
           <Footnote icon={PanelTop}>{m.menuBarLead}</Footnote>
         </Reveal>
-
-        <GhostCard delay={160} className="mx-auto max-w-md xl:max-w-none" />
       </div>
 
       <SmallFeatures />
@@ -383,20 +385,6 @@ const menuRow = "flex h-5.5 items-center gap-2 rounded-md px-2 text-[13px] text-
 const menuSep = "mx-2 my-1 border-t border-black/10 dark:border-white/10";
 // A highlighted menu row is the system accent with white text, as on a real Mac.
 const menuHighlight = "bg-[#007AFF] text-white! dark:bg-[#0A84FF]";
-
-/* A tilted tile set into a section heading's line.
-   overflow-hidden pins the inline-block's baseline to its bottom edge
-   (otherwise it is synthesised from the face inside and the tile hung
-   12px low), so the offset is exact: -0.19em centres the 1.1em tile on
-   Allo's cap height, 0.728/2 - 1.1/2. The face is inset, so the
-   clip never cuts it; the shadow is a filter on this span, not clipped. */
-export function InlineTile({ tilt, children }: { tilt: "rotate-6" | "-rotate-6"; children: React.ReactNode }) {
-  return (
-    <span className={`mx-0.5 inline-block h-[1.1em] w-[1.1em] overflow-hidden ${tilt} align-[-0.19em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]`} aria-hidden>
-      {children}
-    </span>
-  );
-}
 
 function AppIcon({ src, size }: { src: string; size: number }) {
   return (
