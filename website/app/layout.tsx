@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { LocaleProvider } from "@/components/locale-provider";
 import { Header } from "@/components/header";
 import { JsonLd } from "@/components/json-ld";
+import { DevAgentation } from "@/components/dev-agentation";
 import { siteConfig } from "@/lib/config";
 import { websiteSchema } from "@/lib/schema";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
@@ -125,6 +126,7 @@ export default function RootLayout({
             {children}
           </LocaleProvider>
         </ThemeProvider>
+        <DevAgentation />
       </body>
     </html>
   );

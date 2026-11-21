@@ -2,41 +2,58 @@
 
 ## Page structure
 
-- Single-page marketing site: `Hero → CustomTilesStory (id="features") → DetailsSection →
-  PowerUserSection → ClosingBand` + Footer. `DetailsSection` ("More than a tile in your Dock", formerly eyebrowed "Hidden in plain
-  sight", 2026-11-09): the two BIGGEST features as big cards
-  (an interactive tile customiser, the menu bar), then a row of one-line features (Grid or list
-  is one) — each claim checked against the app. The power-user bento then holds Smart Add ·
-  Dock Lock · Ghost mode (owner picked this combo 2026-11-09 over Smart Add + menu bar as the
-  big two). Dock Lock was its own dark full-width section until 2026-11-09, when the owner
-  moved it into the bento in place of the right-click card ("Hide or quit, right from the
-  tile"), which was cut — it is in git history. The standalone `/features` route was deliberately
-  deleted — nav "Features" scrolls to `/#features`. Don't recreate the page.
+- Single-page marketing site (owner, 2026-11-21, after a GA read of the redesign):
+  `Hero → PowerUserSection (id="features") → CustomTilesStory (id="customise") → DockLockStory →
+  DownloadSection` + Footer.
+  - **PowerUserSection** — "Set up for you. ⚡ Out of your way.": Smart Add · Menu bar · Ghost mode
+    cards, then the row of four one-liners (Keyboard, Folders, Free and open source, Languages).
+    Nav "Features" lands here.
+  - **CustomTilesStory** — "Pick your apps. Pick a look. ▦ Done." over the window capture with
+    its closer-look hotspots; the body names the "Dock Tile companion app". The hero Dock's
+    Configure… walks to `#customise`.
+  - **DockLockStory** — its own dark inset band ("The Dock 🔒 stays put.") again, the page's one
+    problem-led chapter.
+  - **DownloadSection** — "Tidy your ▦ Dock today." + Download + `DownloadMeta variant="page"`,
+    on the page background (no wallpaper).
+  - Cut on 2026-11-21, in git history: "More than a tile in your Dock" (the interactive tile
+    customiser + menu bar big cards — it repeated the features section), the "Built for the
+    power user" heading, the closing band's wallpaper and its closing Dock, and an `/option-2`
+    preview (problem-led cards). The standalone `/features` route was deliberately deleted —
+    nav "Features" scrolls to `/#features`. Don't recreate the page.
 - Nav order: **Features · Privacy · FAQ** + Download (Download is `md`+ only — see
   design-system.md "Adaptive nav").
 - **The hero has no eyebrow** (owner, 2026-11-09): its requirements live in the line under the
   Download button. That line is `DownloadMeta` (in `hero.tsx`, which MacOSFloorGuardTests reads
-  for "macOS 15+"): hero = "v2.7.1 · Open source · Apple silicon · macOS 15+"; closing band = "Open source ·
-  Apple silicon · macOS 15+" (no version, owner) at 75% white — the hero's 40% vanished on the
-  wallpaper's bright middle.
-- **The ending says each thing once (owner, 2026-10-30).** `ClosingBand` = "All your apps. One
-  tile." + Download (+ its `DownloadMeta` line) + the closing Dock (GitHub · What's new · Contact | Studio — see
-  hero-dock-demo.md "Closing Dock"); the shared `Footer` is one line: © Happy Machines Company ·
-  theme switcher · **Request a feature · Report a bug** | Privacy · Terms. The two feedback
-  links (owner, 2026-11-09: "encourage users to request features or raise a bug") open
-  pre-filled GitHub issues from `lib/feedback.ts` — the only source of those URLs; the FAQ's
-  "Help shape Dock Tile" cards use the same two. The bug template sends diagnostics to the
-  support email, never into the public issue (they list the reporter's tiles and apps). Four
-  footer layouts were rejected for repeating links "for the sake of filling up spaces" — don't
-  add link columns, taglines or a second Spades mention. Spades Audio and Lango appear only in the Studio popover. Subpages keep their
-  `ContactCta` band above the same legal line. The site is published by **Happy Machines
-  Company** (`siteConfig.authorName` / `authorUrl`; contact `hello@happymachines.company`).
+  for "macOS 15+"): hero = "v2.7.2 · Free & open source · Apple silicon · macOS 15+"; the Download
+  section's `page` variant drops the version and uses the muted tokens.
+- **Footer (owner, 2026-11-21, the studio's own footer layout)** — on every page: the studio mark +
+  "Happy Machines Company" + "Products for the everyday." (the studio site's own line), then three
+  columns — **Dock Tile** (Features · What's new · FAQ · Download), **Resources** (GitHub ·
+  Request a feature · Report a bug · Contact), **Company** (About · Spades Audio · Privacy ·
+  Terms) — then "© YYYY, Made with 🧡 for macOS" (lucide `Heart`, orange fill, accessible name
+  "love") + the theme switcher. External links carry ↗ (+ "opens in a new tab" for screen
+  readers); the mailto Contact carries ↗ without it. Lango was removed until it has a site.
+  The two feedback links open pre-filled GitHub issues from `lib/feedback.ts` — the only source
+  of those URLs; the FAQ's "Help shape Dock Tile" cards use the same two. The bug template sends
+  diagnostics to the support email, never into the public issue (they list the reporter's
+  tiles and apps). Subpages keep their `ContactCta` band above the footer. The site is published
+  by **Happy Machines Company** (`siteConfig.authorName` / `authorUrl`; contact
+  `hello@happymachines.company`).
 
 ## Copy rules
 
 - Every user-facing string goes through `lib/i18n.ts`: `marketingBase` inherited by all locales +
   a US override for spelling-sensitive strings only. Prefer **spelling-neutral copy** — it avoids
   overrides entirely (this drove the hero headline choice).
+- **One category, plain words (copy review, 2026-11-21).** Dock Tile is "folders for the Mac's
+  Dock" — never a "launcher" or an icon maker — in the title (`siteConfig.tagline`), meta /
+  JSON-LD description, hero and FAQ. The hero defines a tile ("Put a group of apps behind one
+  Dock icon. Click it and they pop up…"); never claim "one click" to launch (it is two: the tile,
+  then the app). Homepage prose says "pops up" / "panel", not "popover"; "a plain background", not
+  "Mono"; **Command-Tab** (Apple's spelling), not Cmd-Tab / Cmd+Tab; **Ghost mode** (lower-case m;
+  a site-only name — the app's toggle is Show in App Switcher, so always explain it). "Free"
+  sits beside every Download (`ctaMetaOpenSource` = "Free & open source"). US copy says Trash where
+  AU/GB says Bin. Positioning, glossary and words to avoid: `.claude/product-marketing-context.md`.
 - "Signed & notarized" claims live only on the legal pages, nowhere else.
 - **Check every product claim against the app source before it ships** (`DockTile/`, read-only).
   On 2026-10-31 three plausible lines were false: "Drag apps in" (the popover only reorders; adding

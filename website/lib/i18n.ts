@@ -21,12 +21,12 @@ const marketingBase = {
   heroHeadlineA: "Group your apps.",
   heroHeadlineB: "Declutter your Dock.",
   heroSub:
-    "iOS-style folders for the Mac. Group apps into beautiful tiles and launch anything in one click.",
+    "Put a group of apps behind one Dock icon. Click it and they pop up, like a folder on your iPhone.",
   tryIt: "Try it — click a tile",
   tilesTitleA: "Pick your apps. Pick a look.", // nbsp: break after "apps.", never strand "Pick"
   tilesTitleB: "Done.",
   tilesBody:
-    "Arrange them right in the popover your tile opens, so what you see is what you get. Then show the tile as a grid of its apps, or give it a symbol or an emoji, in colour or mono.",
+    "Set up every tile in the Dock Tile companion app. You arrange its apps in the same panel that pops up from the Dock, so what you see is what you get. Then pick its icon: a grid of its own apps, a symbol or an emoji, on colour or a plain background.",
   tilesAlt: "Dock Tile editing a tile: its popover in the middle, Customise Tile on the right.",
   // "Take a closer look" hotspots on the screenshot — label + one or two sentences each
   tilesSpotPopover: "In This Tile",
@@ -40,39 +40,31 @@ const marketingBase = {
   tilesSpotPrevious: "Previous",
   tilesSpotNext: "Next",
   tilesSpotClose: "Close",
-  smartAddTitle: "Tiles that build themselves.",
+  // The card section's heading (Smart Add sets up; menu bar + Ghost stay out of the way)
+  cardsTitleA: "Set up for you.",
+  cardsTitleB: "Out of your way.",
+  smartAddTitle: "Ready-made tiles from the apps you use.",
   smartAddBody:
     "Click +, and Dock Tile groups the apps you use most into ready-made tiles. Pick one and it opens ready to tweak; nothing reaches your Dock until you add it.",
   smartAddPrivacy: "Learned on your Mac. Never leaves your device.",
   ghostTitle: "Ghost mode.",
   ghostBody:
-    "Tiles stay out of Cmd-Tab and the App Switcher by default — in the Dock when you need them, invisible when you don't.",
-  ghostTip: "Per-tile control. Surface any tile on demand.",
-  dockLockTitle: "The Dock stays put.",
+    "Tiles stay out of the app switcher (Command-Tab) by default, so it lists only the apps you're actually using.",
+  ghostTip: "Want one in Command-Tab? Switch it on for that tile.",
+  dockLockTitleA: "The Dock", // split around the heading's tilted tile
+  dockLockTitleB: "stays put.",
   dockLockBody:
     "Stop the Dock from jumping between screens on multi-display setups. Choose a display for each set of screens you use, and the Dock stays on it.",
-  dockLockTip: "Remembers your pick for every display setup.",
-  bentoTitleA: "Built for the",
-  bentoTitleB: "power user.",
-  // "Hidden in plain sight" — the features nobody finds until they look
-  detailsTitleA: "More than",
-  detailsTitleB: "a tile in your Dock.", // nbsp: never strand "a" at a line end
-  customPill: "Style",
-  customTitle: "Make every tile yours.",
-  customLead: "Try it here.",
-  customBody:
-    "Show a grid of the tile's own apps, or a symbol or an emoji, in full colour or Mono. Your Dock picks up the new look when you press Update.",
-  customColour: "Colour", // the mock inspector's row label
-  menuBarPill: "Menu bar",
+  dockLockTip: "Remembers a display for each desk you work at.",
   menuBarTitle: "Your tiles, in the menu bar.",
   menuBarLead: "On from the first launch.",
   menuBarBody:
     "The tiles in your Dock and their apps, listed in the menu bar, ready even when the Dock is hidden. Turn it off in Settings any time.",
   // The row of small features: a plain name, then one calm sentence.
   details: [
-    { lead: "Keyboard friendly", body: "Arrow keys move through a popover. Return opens, Esc closes." },
+    { lead: "Keyboard friendly", body: "Arrow keys move through a tile's apps. Return opens, Esc closes." },
     { lead: "Folders too", body: "Add a folder beside your apps and open it in one click." },
-    { lead: "Grid or list", body: "An icon grid or a compact list, sized your way in Settings." },
+    { lead: "Free and open source", body: "No price and no account. MIT‑licensed, with the code on GitHub." },
     { lead: "In your language", body: "English, 简体中文, 日本語, Deutsch, Русский and Français." },
   ],
   // Feature requests and bug reports (footer + FAQ), both open a GitHub issue
@@ -83,31 +75,34 @@ const marketingBase = {
   feedbackTitle: "Help shape Dock Tile",
   feedbackNote: "Both open a GitHub issue. No GitHub account? Use Contact support below.",
   ctaButton: "Download Dock Tile",
-  ctaMetaOpenSource: "Open source",
+  ctaMetaOpenSource: "Free & open source",
   ctaMetaAppleSilicon: "Apple silicon",
-  // Closing band + closing Dock (the homepage's ending)
-  closingTitle: "All your apps. One tile.",
-  closingGithubTip: "Source on GitHub",
-  closingGithubLabel: "GitHub",
-  closingWhatsNewTip: "What's new in", // the component appends the version
-  closingWhatsNewLabel: "What's new",
-  closingContactTip: "Get in touch",
-  closingContactLabel: "Contact",
-  closingStudioLabel: "Studio",
-  studioHere: "You're here",
-  studioEarlyAccess: "Early access",
+  // Download section (above the footer), split around the heading's tilted tile
+  downloadTitleA: "Tidy your", // split around the heading's tilted tile
+  downloadTitleB: "Dock today.",
+  // Footer columns
+  footerFeatures: "Features",
+  footerWhatsNew: "What's new",
+  footerFaq: "FAQ",
+  footerDownload: "Download",
+  footerResources: "Resources",
+  footerGithub: "GitHub",
+  footerContact: "Contact",
+  footerCompany: "Company",
+  footerAbout: "About",
+  footerStudioTagline: "Products for the everyday.", // the studio site's own line
+  footerMadeWithA: "Made with", // © YYYY, Made with ♥ for macOS
+  footerMadeWithB: "for macOS",
+  footerLove: "love", // the heart's accessible name
   opensInNewTab: "(opens in a new tab)",
 } as const;
 
 const marketingUS = {
   ...marketingBase,
   tilesBody:
-    "Arrange them right in the popover your tile opens, so what you see is what you get. Then show the tile as a grid of its apps, or give it a symbol or an emoji, in color or mono.",
+    "Set up every tile in the Dock Tile companion app. You arrange its apps in the same panel that pops up from the Dock, so what you see is what you get. Then pick its icon: a grid of its own apps, a symbol or an emoji, on color or a plain background.",
   tilesAlt: "Dock Tile editing a tile: its popover in the middle, Customize Tile on the right.",
   tilesSpotBackgroundBody: "Color fills the tile. Mono keeps it white in Light Mode and black in Dark Mode.",
-  customBody:
-    "Show a grid of the tile's own apps, or a symbol or an emoji, in full color or Mono. Your Dock picks up the new look when you press Update.",
-  customColour: "Color",
 } as const;
 
 // Legal pages — only spelling-sensitive strings vary by locale
@@ -216,12 +211,22 @@ export const localisedContent = {
     faq: [
       {
         question: "What macOS version do I need?",
-        answer: "Dock Tile runs on macOS 15 (Sequoia) and later, on any Mac with Apple silicon (M1 or newer). Intel Macs aren't supported. On macOS 26 (Tahoe) and later, tile icons are drawn by the system's Liquid Glass icon pipeline and follow its Icon and widget style automatically.",
+        answer: "Dock Tile runs on macOS 15 (Sequoia) and later, on any Mac with Apple silicon (M1 or newer). Intel Macs aren't supported. On macOS 26 (Tahoe) and later, tile icons follow your Icon and widget style (Default, Dark, Clear or Tinted) automatically.",
       },
       {
         question: "Is it available on the App Store?",
         answer:
-          "No, Dock Tile is distributed as a direct download. The app creates helper bundles that require permissions not allowed in sandboxed App Store apps.",
+          "No, it's a direct download. Dock Tile builds a small app for each tile and edits your Dock, which apps from the App Store aren't allowed to do.",
+      },
+      {
+        question: "Is Dock Tile free?",
+        answer:
+          "Yes. It's free and open source under the MIT licence, with no account, ads or in-app purchases.",
+      },
+      {
+        question: "What does Dock Tile change on my Mac?",
+        answer:
+          "It builds a small app for each tile, edits your Dock and restarts it to apply changes (it asks the first time), and starts your tiles at login unless you switch that off. Dock Lock asks for Accessibility access, only if you turn it on. The Privacy Policy covers each of these.",
       },
       {
         question: "How do I create a new tile?",
@@ -236,12 +241,17 @@ export const localisedContent = {
       {
         question: "Why doesn't right-click show a context menu?",
         answer:
-          'By default, tiles run in "Ghost Mode" (hidden from Cmd+Tab) which doesn\'t support context menus. Enable "Show in App Switcher" in the tile settings to get the context menu.',
+          "By default, tiles run in Ghost mode (hidden from Command-Tab), which doesn't support context menus. Turn on Show in App Switcher for the tile to get one.",
       },
       {
         question: "How do I uninstall a tile?",
         answer:
           "Select the tile, turn off Show Tile, then click Remove from Dock. The tile stays in Dock Tile for later. To delete it for good, click the trash button. You can also drag the tile out of the Dock like any app.",
+      },
+      {
+        question: "How do I uninstall Dock Tile?",
+        answer:
+          "Open Dock Tile and delete each tile with the trash button, which also takes it out of your Dock. Turn off Start tiles at login in Settings → General, quit Dock Tile, then move it to the Bin. For a clean slate, also delete ~/Library/Application Support/DockTile/ and the files starting with com.docktile in ~/Library/Preferences/. If you only move the app to the Bin, the tiles in your Dock keep working: drag them out, then delete that folder.",
       },
       {
         question: "How many tiles can I create?",
@@ -251,7 +261,7 @@ export const localisedContent = {
       {
         question: "Can I add folders to a tile?",
         answer:
-          "Yes! When adding items to a tile, you can select folders as well as applications. They'll open in Finder when clicked.",
+          "Yes. When you add items to a tile, you can pick folders as well as apps. Click one and it opens in Finder.",
       },
       {
         question: "Do tiles sync across Macs?",
@@ -261,7 +271,7 @@ export const localisedContent = {
       {
         question: "Can I reorder apps within a tile?",
         answer:
-          "Yes. In In This Tile, drag an app to a new spot. It's the same popover your tile opens, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
+          "Yes. In the tile's In This Tile list, drag an app to a new spot. It's the same panel your tile opens from the Dock, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
       },
       {
         question: "What's the difference between Grid and List layout?",
@@ -269,7 +279,7 @@ export const localisedContent = {
           "Grid layout shows apps as icons in a grid (like iOS folders). List layout shows apps in a vertical menu with names, similar to the Dock's folder view.",
       },
       {
-        question: "How do I backup my tiles?",
+        question: "How do I back up my tiles?",
         answer:
           "Your tile configurations are stored in ~/Library/Preferences/com.docktile.configs.json. Back up this file to preserve your tiles.",
       },
@@ -320,12 +330,22 @@ export const localisedContent = {
     faq: [
       {
         question: "What macOS version do I need?",
-        answer: "Dock Tile runs on macOS 15 (Sequoia) and later, on any Mac with Apple silicon (M1 or newer). Intel Macs aren't supported. On macOS 26 (Tahoe) and later, tile icons are drawn by the system's Liquid Glass icon pipeline and follow its Icon and widget style automatically.",
+        answer: "Dock Tile runs on macOS 15 (Sequoia) and later, on any Mac with Apple silicon (M1 or newer). Intel Macs aren't supported. On macOS 26 (Tahoe) and later, tile icons follow your Icon and widget style (Default, Dark, Clear or Tinted) automatically.",
       },
       {
         question: "Is it available on the App Store?",
         answer:
-          "No, Dock Tile is distributed as a direct download. The app creates helper bundles that require permissions not allowed in sandboxed App Store apps.",
+          "No, it's a direct download. Dock Tile builds a small app for each tile and edits your Dock, which apps from the App Store aren't allowed to do.",
+      },
+      {
+        question: "Is Dock Tile free?",
+        answer:
+          "Yes. It's free and open source under the MIT licence, with no account, ads or in-app purchases.",
+      },
+      {
+        question: "What does Dock Tile change on my Mac?",
+        answer:
+          "It builds a small app for each tile, edits your Dock and restarts it to apply changes (it asks the first time), and starts your tiles at login unless you switch that off. Dock Lock asks for Accessibility access, only if you turn it on. The Privacy Policy covers each of these.",
       },
       {
         question: "How do I create a new tile?",
@@ -340,12 +360,17 @@ export const localisedContent = {
       {
         question: "Why doesn't right-click show a context menu?",
         answer:
-          'By default, tiles run in "Ghost Mode" (hidden from Cmd+Tab) which doesn\'t support context menus. Enable "Show in App Switcher" in the tile settings to get the context menu.',
+          "By default, tiles run in Ghost mode (hidden from Command-Tab), which doesn't support context menus. Turn on Show in App Switcher for the tile to get one.",
       },
       {
         question: "How do I uninstall a tile?",
         answer:
           "Select the tile, turn off Show Tile, then click Remove from Dock. The tile stays in Dock Tile for later. To delete it for good, click the trash button. You can also drag the tile out of the Dock like any app.",
+      },
+      {
+        question: "How do I uninstall Dock Tile?",
+        answer:
+          "Open Dock Tile and delete each tile with the trash button, which also takes it out of your Dock. Turn off Start tiles at login in Settings → General, quit Dock Tile, then move it to the Bin. For a clean slate, also delete ~/Library/Application Support/DockTile/ and the files starting with com.docktile in ~/Library/Preferences/. If you only move the app to the Bin, the tiles in your Dock keep working: drag them out, then delete that folder.",
       },
       {
         question: "How many tiles can I create?",
@@ -355,7 +380,7 @@ export const localisedContent = {
       {
         question: "Can I add folders to a tile?",
         answer:
-          "Yes! When adding items to a tile, you can select folders as well as applications. They'll open in Finder when clicked.",
+          "Yes. When you add items to a tile, you can pick folders as well as apps. Click one and it opens in Finder.",
       },
       {
         question: "Do tiles sync across Macs?",
@@ -365,7 +390,7 @@ export const localisedContent = {
       {
         question: "Can I reorder apps within a tile?",
         answer:
-          "Yes. In In This Tile, drag an app to a new spot. It's the same popover your tile opens, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
+          "Yes. In the tile's In This Tile list, drag an app to a new spot. It's the same panel your tile opens from the Dock, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
       },
       {
         question: "What's the difference between Grid and List layout?",
@@ -373,7 +398,7 @@ export const localisedContent = {
           "Grid layout shows apps as icons in a grid (like iOS folders). List layout shows apps in a vertical menu with names, similar to the Dock's folder view.",
       },
       {
-        question: "How do I backup my tiles?",
+        question: "How do I back up my tiles?",
         answer:
           "Your tile configurations are stored in ~/Library/Preferences/com.docktile.configs.json. Back up this file to preserve your tiles.",
       },
@@ -424,12 +449,22 @@ export const localisedContent = {
     faq: [
       {
         question: "What macOS version do I need?",
-        answer: "Dock Tile runs on macOS 15 (Sequoia) and later, on any Mac with Apple silicon (M1 or newer). Intel Macs aren't supported. On macOS 26 (Tahoe) and later, tile icons are drawn by the system's Liquid Glass icon pipeline and follow its Icon and widget style automatically.",
+        answer: "Dock Tile runs on macOS 15 (Sequoia) and later, on any Mac with Apple silicon (M1 or newer). Intel Macs aren't supported. On macOS 26 (Tahoe) and later, tile icons follow your Icon and widget style (Default, Dark, Clear or Tinted) automatically.",
       },
       {
         question: "Is it available on the App Store?",
         answer:
-          "No, Dock Tile is distributed as a direct download. The app creates helper bundles that require permissions not allowed in sandboxed App Store apps.",
+          "No, it's a direct download. Dock Tile builds a small app for each tile and edits your Dock, which apps from the App Store aren't allowed to do.",
+      },
+      {
+        question: "Is Dock Tile free?",
+        answer:
+          "Yes. It's free and open source under the MIT license, with no account, ads or in-app purchases.",
+      },
+      {
+        question: "What does Dock Tile change on my Mac?",
+        answer:
+          "It builds a small app for each tile, edits your Dock and restarts it to apply changes (it asks the first time), and starts your tiles at login unless you switch that off. Dock Lock asks for Accessibility access, only if you turn it on. The Privacy Policy covers each of these.",
       },
       {
         question: "How do I create a new tile?",
@@ -444,12 +479,17 @@ export const localisedContent = {
       {
         question: "Why doesn't right-click show a context menu?",
         answer:
-          'By default, tiles run in "Ghost Mode" (hidden from Cmd+Tab) which doesn\'t support context menus. Enable "Show in App Switcher" in the tile settings to get the context menu.',
+          "By default, tiles run in Ghost mode (hidden from Command-Tab), which doesn't support context menus. Turn on Show in App Switcher for the tile to get one.",
       },
       {
         question: "How do I uninstall a tile?",
         answer:
           "Select the tile, turn off Show Tile, then click Remove from Dock. The tile stays in Dock Tile for later. To delete it for good, click the trash button. You can also drag the tile out of the Dock like any app.",
+      },
+      {
+        question: "How do I uninstall Dock Tile?",
+        answer:
+          "Open Dock Tile and delete each tile with the trash button, which also takes it out of your Dock. Turn off Start tiles at login in Settings → General, quit Dock Tile, then move it to the Trash. For a clean slate, also delete ~/Library/Application Support/DockTile/ and the files starting with com.docktile in ~/Library/Preferences/. If you only move the app to the Trash, the tiles in your Dock keep working: drag them out, then delete that folder.",
       },
       {
         question: "How many tiles can I create?",
@@ -459,7 +499,7 @@ export const localisedContent = {
       {
         question: "Can I add folders to a tile?",
         answer:
-          "Yes! When adding items to a tile, you can select folders as well as applications. They'll open in Finder when clicked.",
+          "Yes. When you add items to a tile, you can pick folders as well as apps. Click one and it opens in Finder.",
       },
       {
         question: "Do tiles sync across Macs?",
@@ -469,7 +509,7 @@ export const localisedContent = {
       {
         question: "Can I reorder apps within a tile?",
         answer:
-          "Yes. In In This Tile, drag an app to a new spot. It's the same popover your tile opens, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
+          "Yes. In the tile's In This Tile list, drag an app to a new spot. It's the same panel your tile opens from the Dock, so the order you see is the order you get. If the tile is already in your Dock, click Update to apply it.",
       },
       {
         question: "What's the difference between Grid and List layout?",
@@ -477,7 +517,7 @@ export const localisedContent = {
           "Grid layout shows apps as icons in a grid (like iOS folders). List layout shows apps in a vertical menu with names, similar to the Dock's folder view.",
       },
       {
-        question: "How do I backup my tiles?",
+        question: "How do I back up my tiles?",
         answer:
           "Your tile configurations are stored in ~/Library/Preferences/com.docktile.configs.json. Back up this file to preserve your tiles.",
       },

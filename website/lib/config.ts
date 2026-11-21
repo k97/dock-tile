@@ -14,21 +14,19 @@ export const siteConfig = {
   githubUrl: "https://github.com/k97/dock-tile",
   spadesAudioUrl: "https://www.spadesaudio.com",
   spadesAudioName: "Spades Audio",
-  // Lango has no site of its own yet — the studio's product list stands in.
-  langoUrl: "https://happymachines.company/#products",
-  langoName: "Lango",
 
   // App Info
   appName: "Dock Tile",
-  tagline: "A native macOS launcher, built for the Dock",
+  // One category everywhere: folders for the Dock (not a launcher, not an icon changer).
+  tagline: "iOS-style folders for your Mac's Dock",
   description:
-    "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders — native, open source, for macOS 15+.",
+    "Put a group of apps behind one Dock icon. Click it and they pop up, like a folder on your iPhone. Free and open source, for macOS 15+ on Apple silicon.",
 
   // Meta — primary domain (docktile.rkarthik.co is retained as a redirecting
   // alias; shipped apps' Sparkle feed URL still points at it, so never drop it)
   siteUrl: "https://docktile.app",
-  // The studio that makes Dock Tile — author/publisher in JSON-LD, the footer's
-  // © line and the closing Dock's Studio tile.
+  // The studio that makes Dock Tile — author/publisher in JSON-LD and the
+  // footer's studio block.
   authorName: "Happy Machines Company",
   authorUrl: "https://happymachines.company",
 };

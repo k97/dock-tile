@@ -12,9 +12,8 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
 - Grain overlay at 15% on every dark section (prevents banding).
 - Radii: 2.5rem on major section wrappers (the site's rhythm — keep it); internal cards 16–24px.
   shadcn remaps the radius names: `rounded-sm` 6 px, `md` 8, `lg` 10 (not Tailwind v4's 4/6/8).
-  macOS mocks copy the app's proportions — the customiser's Background cards `rounded-sm` (6 px on
-  32 px), Style cards `rounded-lg` (10 px on 69 px); `rounded-lg` on the short Background card
-  read far rounder than the app (owner, 2026-11-09).
+  macOS mocks copy the app's proportions: check the radius against an app screenshot (on
+  2026-11-09 `rounded-lg` on a short 32 px card read far rounder than the app's 6 px).
 - **One spacing rhythm (2026-11-09):** 200px
   (`md:py-50`; 96 px on phones) from a section's last content to the next heading, everywhere —
   128 px read cramped once the type grew to 44 / 18 px (owner, 2026-11-09); section headings
@@ -39,7 +38,7 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
 - `next-themes`, class attribute, system default. The **footer `ThemeSwitcher` must stay** — it
   was dropped once during a consolidation and explicitly demanded back.
 - **Signature-dark bands stay dark in BOTH themes** (they simulate macOS chrome or are brand
-  moments): hero, the closing band, Ghost Mode card, and the dark page headers on
+  moments): hero, the Dock Lock band, Ghost Mode card, and the dark page headers on
   FAQ/release-notes/legal. Only neutral surfaces theme-flip.
 - **Anything visible at load themes via CSS (`dark:` variants / `.dark` rules), NEVER a
   `mounted && resolvedTheme` guard** (one exception, next bullet) — next-themes sets `.dark` on `<html>` before first paint, so
@@ -69,8 +68,7 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
 - Cards have fixed theme character: the Ghost card is always dark (hardcoded whites are correct);
   the Smart Add card flips, so its colours must be theme-aware (`text-zinc-600 dark:text-white/80`).
   The Ghost card runs a charcoal gradient (`from-zinc-800 to-zinc-900`), NOT flat zinc-900 — flat
-  read as one slab with the pure-black Final CTA that used to follow it on mobile (since
-  2026-10-30 the closing band, on the hero's wallpaper).
+  read as one slab with the pure-black Final CTA that used to follow it on mobile.
 
 ## Adaptive nav
 
@@ -103,8 +101,8 @@ includes the `#hash`, so the old `pathname.startsWith("/#features")` left Featur
 and the footer had no current state at all. Route links use `isActiveRoute` (exact or a `/`
 sub-path); section links (Features) are current on `/` while a `data-nav-section="features"`
 section crosses 40% of the viewport, read by the header's existing scroll sampler (no second
-listener). Tagged: the custom-tiles story, the power-user cards, the details section — never the
-hero or the closing band. Current links carry `aria-current` ("page" / "location").
+listener). Tagged: the power-user cards, the custom-tiles story, the Dock Lock band — never the
+hero or the Download section. Current links carry `aria-current` ("page" / "location").
 
 **The pill's ends are concentric.** The Download button sits 7px from the pill's edge on every
 side, so the logo's hover pill does too (`px-1.5` on the pill, `pl-1.5` in the logo link → icon
@@ -112,7 +110,7 @@ side, so the logo's hover pill does too (`px-1.5` on the pill, `pl-1.5` in the l
 
 Below `md` the pill drops **Download** (`max-md:hidden`) and keeps logo + wordmark + the three
 text links inline — on a phone nobody installs a macOS app from the nav, and the links are the
-contextual actions (the hero + the closing band still offer Download). No hamburger. The wordmark stays
+contextual actions (the hero + the Download section still offer Download). No hamburger. The wordmark stays
 on mobile (nothing else on a phone names the app) and yields only below 360px
 (`min-[360px]:inline`), where the pill would otherwise touch the viewport edges. The pill must
 always fit the viewport with side gutters — it was the Download button that made the full link
@@ -145,8 +143,9 @@ Back/Forward still restore their position.
   1.2, semibold — owner, 2026-11-18, with Allo), `text-title-sm` (bento title 22 px medium), `text-lead` (every section and card
   body: 18 px / 1.4 / −0.01em, Regular; a bold lead-in is `font-semibold text-foreground`).
   A 16 px body with titles 2 px smaller was tried and reverted the same day (owner, 2026-11-09).
-  **The row of small features** under the big cards: FOUR items (Keyboard, Folders, Grid or
-  list, Languages — the obvious ones were cut: login, updates, revert, missing apps), each a
+  **The row of small features** under the power-user cards: FOUR items (Keyboard, Folders, Free
+  and open source — linked to GitHub, it replaced Grid or list on 2026-11-21 — and Languages; the
+  obvious ones were cut: login, updates, revert, missing apps), each a
   `text-lead` medium name on its own line + one `text-lead` muted sentence, 36 px icon chip.
   Eight 18 px bold run-ins read "busy" and "shouty"; with four items and the name on its own
   line the full size reads fine (owner, 2026-11-09). Copy: titles keep their voice, slogans
@@ -155,7 +154,7 @@ Back/Forward still restore their position.
   6.2:1 on white). Use the token, never restate size/leading/tracking. Card titles carry no
   `max-w-*`: a capped title broke into an awkward two lines in a card wide enough for one. **Never name a text token after a colour token** — `text-card`
   collided with shadcn's `--color-card` and rendered the title in the card's own white.
-  **Display headings** (hero h1, closing band, FAQ / Release Notes / legal h1s) use the
+  **Display headings** (hero h1, FAQ / Release Notes / legal h1s) use the
   `heading-display` utility — 600, −0.04em, line-height **1.05** — and keep their own sizes
   (owner: "footer and hero are okay"). At 0.9 the 48 px hero's lines overlapped ("apps." descender 1.5 px into "Declutter"'s
   caps, measured with canvas glyph bounds); 1.05 leaves ~6 px (owner, 2026-11-09). The utility
@@ -192,7 +191,7 @@ Back/Forward still restore their position.
 
 ## Shared polish primitives (globals.css)
 
-Two unlayered helpers, used instead of re-deriving them per component:
+Helpers used instead of re-deriving them per component (`.pressable` and `.hit-area` are unlayered):
 
 - **`.pressable`** — `:active { scale: 0.96 }`, and **nothing else**. It deliberately declares no
   `transition`: the rule is *unlayered*, so a `transition` shorthand here **silently beats and
@@ -201,6 +200,10 @@ Two unlayered helpers, used instead of re-deriving them per component:
   animation and the Contact-support hover fill never faded. The transition belongs to the call site.
   Press uses the **`scale` property, not `transform`** — Tailwind v4 emits `scale:` for `scale-*`, so
   `transition: transform` doesn't cover it, and `scale` composes with a hover `scale-105`.
+- **`button-gloss`** (a Tailwind `@utility`, owner 2026-11-21) — the macOS gel on every pill button
+  (`ActionButton`): lit top edge, soft fall-off to a faint bottom shade, lit inner rim, two-step
+  drop shadow, over an 85% fill with `backdrop-blur-md backdrop-saturate-150`, so the wallpaper
+  reads through the hero's button. Same treatment as the studio's other site.
 - **`.hit-area`** — a pseudo-element that grows a small control to the 40px minimum target with **zero
   layout change** (critical for the nav pill, whose min-content width is a WebKit landmine). It only
   expands vertically and stays inside the control's own horizontal edges, so adjacent targets
@@ -226,11 +229,13 @@ re-apply per component unless overriding.
 ## CSS / tooling gotchas (each cost real debugging time)
 
 - **Every homepage section heading carries one tilted tile mid-line** — `InlineTile` in
-  home-sections.tsx, any face as its child (owner 2026-11-09): "Pick a look. ▦ Done." an App Grid
-  of media apps (nowrap with "Done.", and "Pick a look." nbsp-bound so the break falls after
-  "apps."); "More than ✦ a tile…" purple sparkles; "Built for the ⚡ power user." an orange bolt —
-  a colour and glyph no hero Dock tile uses (owner: don't repeat a Dock tile). Tilts alternate.
-  Split the string into A/B keys around the tile.
+  home-sections.tsx, any face as its child (owner 2026-11-09). Down the page (2026-11-21):
+  "Set up for you. ⚡" an orange bolt — a colour and glyph no hero Dock tile uses (owner: don't
+  repeat a Dock tile), nowrap so the tile ends line one; "Pick a look. ▦ Done." an App Grid of
+  media apps (nowrap with "Done.", "Pick a look." nbsp-bound so the break falls after "apps.");
+  "The Dock 🔒 stays put." a green lock; "Tidy your ▦ Dock today." an App Grid of AI apps
+  (`download-section.tsx`). Tilts alternate (+6°, −6°, +6°, −6°). Split the string into A/B keys
+  around the tile.
 - **An icon set inline in a heading needs `inline-block overflow-hidden`** to centre by
   `vertical-align`: without `overflow`, the box's baseline is synthesised from its content (a
   flex face with an SVG) and the "More than" tile hung 12 px low. With it, the baseline is the

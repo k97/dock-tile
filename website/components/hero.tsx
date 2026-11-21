@@ -81,24 +81,22 @@ export function Hero() {
   );
 }
 
-/* The line under a Download button, shared by the hero and the closing band;
+/* The line under a Download button, shared by the hero and the Download section;
    it lives here because MacOSFloorGuardTests reads this file for "macOS 15+".
-   Hero: version (→ release notes) · Open source (→ GitHub) · Apple silicon · macOS floor.
-   Closing: the same without the version (owner),
-   brighter, because it sits on the wallpaper's bright middle where the hero's
-   40% white (meant for its dark bottom) all but vanished. */
-export function DownloadMeta({ variant = "hero" }: { variant?: "hero" | "closing" }) {
+   Hero: version (→ release notes) · Free & open source (→ GitHub) · Apple silicon · macOS floor.
+   `page`: the same without the version (owner), in theme-aware tones on the page background. */
+export function DownloadMeta({ variant = "hero" }: { variant?: "hero" | "page" }) {
   const { content } = useLocale();
-  const closing = variant === "closing";
-  const dot = <span className="h-1 w-1 rounded-full bg-white/20" />;
+  const page = variant === "page";
+  const dot = <span className={`h-1 w-1 rounded-full ${page ? "bg-foreground/20" : "bg-white/20"}`} />;
   return (
     <p
       // wraps (centred) on the narrowest phones: 4 items are ~326 px, a 360 px phone has ~304
       className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs font-medium ${
-        closing ? "text-white/75 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]" : "text-white/40"
+        page ? "text-muted-foreground" : "text-white/40"
       }`}
     >
-      {!closing && (
+      {!page && (
         <>
           <Link
             href="/release-notes"
@@ -114,7 +112,7 @@ export function DownloadMeta({ variant = "hero" }: { variant?: "hero" | "closing
         href={siteConfig.githubUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="hit-area transition-colors hover:text-white"
+        className={`hit-area transition-colors ${page ? "hover:text-foreground" : "hover:text-white"}`}
       >
         {content.marketing.ctaMetaOpenSource}
       </a>

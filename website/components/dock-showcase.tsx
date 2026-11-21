@@ -2,8 +2,8 @@
 
 import * as React from "react";
 
-/* The idle Dock showcase shared by the hero Dock (dock-demo.tsx) and the
-   closing Dock (closing-dock.tsx): a human-like cursor glides to a RANDOM tile
+/* The hero Dock's idle showcase (dock-demo.tsx; it also drove a closing Dock
+   until 2026-11-21, hence `land` / `release`): a human-like cursor glides to a RANDOM tile
    (never the one just visited), aims, and lands — slower and organic (variable
    travel speed, a short aim, off-centre landings, a click ripple), so the Dock
    reads as operated, not a carousel. It hard-stops the instant the real pointer

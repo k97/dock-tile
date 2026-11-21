@@ -293,11 +293,11 @@ export function DockDemo({ className = "" }: { className?: string }) {
 
   // Configure (the gear in the grid header / the "Configure…" list row) stands
   // in for the real app's deep link into Tile Detail: on the site it walks you
-  // to the first feature story instead.
+  // to the window-capture section, where a tile is edited, instead.
   const configure = React.useCallback(() => {
     close();
     document
-      .getElementById("features")
+      .getElementById("customise")
       ?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   }, [close, reduced]);
 

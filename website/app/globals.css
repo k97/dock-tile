@@ -348,7 +348,7 @@
   }
 }
 
-/* Display headings (hero, closing band, subpage headers): 600, -0.04em,
+/* Display headings (hero, subpage headers): 600, -0.04em,
    1.05 leading — 0.9 overlapped the 48 px hero lines (design-system.md). */
 @utility heading-display {
   font-weight: 600;
@@ -358,12 +358,23 @@
   letter-spacing: -0.04em;
 }
 
-/* Customiser demo: the big tile eases into each new look (opacity + scale). */
-@keyframes face-swap {
-  from {
-    opacity: 0.4;
-    transform: scale(0.96);
-  }
+/* macOS-style gel on the pill buttons (owner, 2026-11-21): light catching the
+   top edge, a soft fall-off to a faint shade at the bottom, a lit inner rim and
+   a two-step drop shadow. The call site makes the fill slightly see-through and
+   blurs what is behind it, so the wallpaper reads through the button. */
+@utility button-gloss {
+  background-image: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.22),
+    rgb(255 255 255 / 0.06) 40%,
+    transparent 50%,
+    rgb(0 0 0 / 0.1)
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -1px 0 rgb(0 0 0 / 0.18),
+    0 1px 3px rgb(0 0 0 / 0.25),
+    0 4px 16px rgb(0 0 0 / 0.16);
 }
 
 /* Entry reveal — fade-in-up, staggered via --reveal-delay */

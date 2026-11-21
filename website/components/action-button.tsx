@@ -12,7 +12,8 @@ import { trackDownloadClick } from "@/lib/analytics";
  * light under the site's dark theme, purely via CSS `dark:` variants (the
  * header uses it on the light-frost pill, which the dark theme forces to
  * dark frost before first paint). Whole button scales on hover, circle
- * shifts tone.
+ * shifts tone. Every tone is a translucent macOS gel (`button-gloss`, 85% fill
+ * + backdrop blur), so what sits behind reads through it.
  */
 export function ActionButton({
   children,
@@ -33,10 +34,10 @@ export function ActionButton({
 }) {
   const pill =
     tone === "light"
-      ? "bg-white text-zinc-900"
+      ? "bg-white/85 text-zinc-900"
       : tone === "adaptive"
-        ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-        : "bg-zinc-900 text-white";
+        ? "bg-zinc-900/85 text-white dark:bg-white/85 dark:text-zinc-900"
+        : "bg-zinc-900/85 text-white";
   const circle =
     tone === "light"
       ? "bg-zinc-900 text-white group-hover:bg-zinc-700"
@@ -62,7 +63,7 @@ export function ActionButton({
   );
   // `transition-transform` covers `scale` in Tailwind v4, so one declaration
   // animates both the hover growth and `.pressable:active`'s 0.96 press.
-  const base = `group pressable inline-flex items-center rounded-full ${dims.pad} ${pill} transition-transform duration-200 ease-(--ease-out-strong) hover:scale-105 ${className}`;
+  const base = `group pressable button-gloss inline-flex items-center rounded-full backdrop-blur-md backdrop-saturate-150 ${dims.pad} ${pill} transition-transform duration-200 ease-(--ease-out-strong) hover:scale-105 ${className}`;
 
   if (href) {
     return (

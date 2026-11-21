@@ -1,10 +1,10 @@
 import { Hero } from "@/components/hero";
 import {
   CustomTilesStory,
+  DockLockStory,
   PowerUserSection,
-  DetailsSection,
 } from "@/components/home-sections";
-import { ClosingBand } from "@/components/closing-band";
+import { DownloadSection } from "@/components/download-section";
 import { Footer } from "@/components/footer";
 import { JsonLd } from "@/components/json-ld";
 import { HeroVeil } from "@/components/hero-veil";
@@ -36,10 +36,10 @@ export default function Home() {
       <main className="bg-background">
         <JsonLd data={softwareApplicationSchema} />
         <Hero />
-        <CustomTilesStory />
-        <DetailsSection />
         <PowerUserSection />
-        <ClosingBand />
+        <CustomTilesStory />
+        <DockLockStory />
+        <DownloadSection />
         <Footer />
       </main>
     </>
