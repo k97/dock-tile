@@ -247,6 +247,11 @@ Connect > Business); it took a few minutes to reach the notary service.
 
 **No manual steps needed** for Sparkle signing, appcast editing, or release note writing. Edit the GitHub Release notes after creation if you want to polish them.
 
+**Release-note voice (owner, 2026-11-21):** each bullet says what changed for the user, subject first
+("Update now lights up when…", "Renaming a tile no longer leaves…"), never a commit-style imperative
+("Light up Update when…", "Move the Dock onto…"). No implementation detail ("tries each stretch of
+the edge"). The website's What's new page renders these bodies verbatim.
+
 ## Release Checklist (quick reference)
 
 - [ ] Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `Base.xcconfig`
