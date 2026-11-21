@@ -114,10 +114,11 @@ on 2026-11-09 (Grid or list became a one-liner); it is in git history.
   Ghost card is always dark, where 0.2 vanishes; popover icons stay flat. The hero's tiles pass
   `shaded` (top→bottom glyph fall-off, as the app bakes) at the 58% glyph size.
 - **The closing Dock (GitHub · What's new · Contact | Studio) was removed on 2026-11-21** — its
-  links moved into the footer columns (content-i18n.md "Footer"). Left behind, unused but
-  harmless: `MacOSDock`'s optional link props (`href`, `external`, `tooltip`, `label`,
-  `kind: "divider"`), `TileFace`'s `glyphSize`, the `github` / `fire` / `mail` glyphs and
-  `public/assets/studio/*.png`. The component itself is in git history.
+  links moved into the footer columns (content-i18n.md "Footer"). Its leftovers went on
+  2026-11-22: `MacOSDock`'s link / divider / tooltip / touch-label props, `TileFace`'s
+  `glyphSize`, the `github` / `fire` / `mail` glyphs (and `TileGlyph`'s stroke and even-odd
+  support) and `public/assets/studio/*.png`. All in git history; the R2 copies of the studio
+  icons are orphaned (delete them in the bucket if wanted).
 
 ## App-icon assets (`public/assets/app-icons/`)
 
@@ -145,6 +146,4 @@ on 2026-11-09 (Grid or list became a one-liner); it is in git history.
 Filled Bootstrap Icons (MIT) matching each tile's real SF Symbol — outline glyphs read "comicky"
 and un-Mac. One shared set for every designed icon on the site (hero dock, Smart Add, the
 section-heading tiles). Multi-path or non-16×16 glyphs go in `GLYPH_DEFS` (e.g. the two-bubble chat
-symbol). **Exceptions:** `fire` and `mail` (made for the closing Dock, now unused) are Hugeicons
-stroke-rounded outlines, chosen by the owner on 2026-10-30 — `GLYPH_DEFS` entries may set
-`stroke` (outline) or `fillRule: "evenodd"` (the GitHub mark).
+symbol).

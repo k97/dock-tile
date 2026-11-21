@@ -207,7 +207,9 @@ Helpers used instead of re-deriving them per component (`.pressable` and `.hit-a
 - **`.hit-area`** — a pseudo-element that grows a small control to the 40px minimum target with **zero
   layout change** (critical for the nav pill, whose min-content width is a WebKit landmine). It only
   expands vertically and stays inside the control's own horizontal edges, so adjacent targets
-  (nav links, the 28px theme-switcher segments, footer links) can never overlap.
+  (nav links, the 28px theme-switcher segments) can never overlap. **Not in a vertical list**: with
+  a gap under 40 px the targets overlap and the lower link steals clicks, so the footer's stacked
+  columns (2026-11-21) do without it.
 
 **App screenshots are window captures, not framed crops (2026-10-31).** The custom-tiles story shows the
 window with its own corners and shadow on transparency (cropped to the alpha bounds, light and dark
@@ -236,6 +238,8 @@ re-apply per component unless overriding.
   "The Dock 🔒 stays put." a green lock; "Tidy your ▦ Dock today." an App Grid of AI apps
   (`download-section.tsx`). Tilts alternate (+6°, −6°, +6°, −6°). Split the string into A/B keys
   around the tile.
+- **An anchor target with no top padding needs `scroll-mt-28`** (the second of two light
+  sections): otherwise a jump lands its heading under the fixed nav pill (`#customise`, 2026-11-21).
 - **An icon set inline in a heading needs `inline-block overflow-hidden`** to centre by
   `vertical-align`: without `overflow`, the box's baseline is synthesised from its content (a
   flex face with an SVG) and the "More than" tile hung 12 px low. With it, the baseline is the

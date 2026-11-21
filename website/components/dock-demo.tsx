@@ -121,7 +121,6 @@ export function TileFace({
   darkGlyph,
   glyph,
   glyphColor = "#ffffff",
-  glyphSize = "58%",
   shaded = false,
 }: {
   gradient: string;
@@ -129,8 +128,6 @@ export function TileFace({
   glyph: GlyphName;
   /** Light-theme glyph colour (white by default; dark on a Mono plate). */
   glyphColor?: string;
-  /** Glyph box as a share of the tile — padded SVGs need more than 58%. */
-  glyphSize?: string;
   /** Top→bottom glyph shading, as the app's own icons bake it. */
   shaded?: boolean;
 }) {
@@ -155,7 +152,7 @@ export function TileFace({
           aria-hidden
           className="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-white/25 to-transparent dark:hidden"
         />
-        <span className="relative" style={{ width: glyphSize, height: glyphSize }}>
+        <span className="relative h-[58%] w-[58%]">
           <TileGlyph
             name={glyph}
             shaded={shaded}

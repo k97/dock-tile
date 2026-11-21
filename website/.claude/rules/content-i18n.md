@@ -62,6 +62,9 @@
   **A visitor is a NEW install, so describe a new install's defaults** (2026-11-09: "Turn the menu
   bar icon on in Settings" was false — `MenuBarController.initialEnabled` is ON for new installs,
   OFF only for upgraders). Check the default-seeding code, not just the setting's existence.
+  **What happens once the app is gone is a claim too** (2026-11-21): the uninstall answer said
+  deleting only Dock Tile leaves "?" tiles in the Dock — false, each tile is its own app copy and
+  keeps working (architecture.md "Multi-Instance Model"). A diff review caught it before push.
 - **Invisible characters in copy (U+00A0 binding "a tile", etc.): check bytes with `od -c`**,
   never `cat -v` or grep output — in a UTF-8 terminal both print U+00A0 as a plain space. On
   2026-11-09 a diff review flagged a real non-breaking space as missing and a `sed` "fix" then

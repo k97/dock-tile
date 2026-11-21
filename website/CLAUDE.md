@@ -32,6 +32,14 @@ npx tsc --noEmit
 - The Agentation toolbar (`components/dev-agentation.tsx`, devDependency) renders only under
   `next dev` and is never fetched in production. Licence: PolyForm Shield (non-compete); keep it a
   dev tool.
+- **Vercel builds only when the NEWEST commit of a push touches `website/`** (`vercel.json`
+  `ignoreCommand` diffs `HEAD^ HEAD`). Push a website commit with a docs or app commit on top and the
+  site never deploys: put the website commit last (2026-11-21).
+- **No Prettier here.** There is no config; `npx prettier --write` turned one edit into an
+  800-line reformat of `home-sections.tsx` (2026-11-21). Edit by hand; `npm run lint` is the check.
+- **The app's `MacOSFloorGuardTests` reads `lib/i18n.ts`, `lib/schema.ts`, `lib/config.ts` and
+  `components/hero.tsx`**: after a copy edit each must still state the floor ("for macOS 15+",
+  "macOS 15+", "runs on macOS 15"). Website pushes skip app CI, so a break shows up later.
 - Dead code, imported nowhere: `components/{features,screenshot,support,faq,theme-toggle}.tsx`.
 
 ## Rules
