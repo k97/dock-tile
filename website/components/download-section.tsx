@@ -16,7 +16,7 @@ export function DownloadSection() {
   const m = content.marketing;
 
   return (
-    <section className="mx-auto flex max-w-400 flex-col items-center px-4 py-24 text-center sm:px-6 md:px-10 md:py-50">
+    <section className="mx-auto flex max-w-400 flex-col items-center px-4 pb-24 text-center sm:px-6 md:px-10 md:pb-50">
       <Reveal className="flex flex-col items-center">
         <h2 className="mx-auto max-w-132 text-section text-foreground">
           {m.downloadTitleA}{" "}

@@ -77,6 +77,10 @@ const marketingBase = {
   ctaButton: "Download Dock Tile",
   ctaMetaOpenSource: "Free & open source",
   ctaMetaAppleSilicon: "Apple silicon",
+  // Homepage FAQ (the top questions; the rest live on /faq)
+  homeFaqTitleA: "Questions,", // split around the heading's tilted tile
+  homeFaqTitleB: "answered.",
+  homeFaqMore: "See all questions",
   // Download section (above the footer), split around the heading's tilted tile
   downloadTitleA: "Tidy your", // split around the heading's tilted tile
   downloadTitleB: "Dock today.",

@@ -5,6 +5,7 @@ import {
   PowerUserSection,
 } from "@/components/home-sections";
 import { DownloadSection } from "@/components/download-section";
+import { HomeFaq } from "@/components/home-faq";
 import { Footer } from "@/components/footer";
 import { JsonLd } from "@/components/json-ld";
 import { HeroVeil } from "@/components/hero-veil";
@@ -39,6 +40,7 @@ export default function Home() {
         <PowerUserSection />
         <CustomTilesStory />
         <DockLockStory />
+        <HomeFaq />
         <DownloadSection />
         <Footer />
       </main>

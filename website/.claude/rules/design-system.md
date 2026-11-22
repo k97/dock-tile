@@ -25,7 +25,8 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
   its border because it sits on white.
   Two light sections back to back: the second takes no top padding (the first's bottom is the
   gap). Re-measure after moving sections — the swap that put two light sections together left a
-  160px gap.
+  160px gap. The same holds after a subpage's prose column (it ends in its own `md:py-24`): the
+  `ContactCta` takes only `md:pt-12`, or ~300 px of blank page opens above it (2026-11-22).
 - The power-user bento is 3-across only from `xl`; below that the cards stack in a centred
   `max-w-md` column — a narrow 3-col card can't hold the fixed-size mocks
   (see hero-dock-demo.md "Card mocks").
