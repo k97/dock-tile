@@ -176,9 +176,9 @@ struct GeneralSettingsView: View {
         }
     }
 
-    /// Adds or removes the menu bar icon at once. Turning it off brings the Dock icon back (the
-    /// window is open while toggling); the app then quits on close again unless Dock Lock is on.
-    /// Turning it off while a tile is only in the menu bar asks first; no tile changes either way.
+    /// Adds or removes the menu bar icon at once through `MenuBarController.setEnabled`, the same
+    /// path a tile's Show in Menu Bar takes. Turning it off while a tile is only in the menu bar
+    /// asks first; no tile changes either way.
     private var menuBarRow: some View {
         Toggle(isOn: Binding(
             get: { menuBarEnabled },
@@ -189,7 +189,7 @@ struct GeneralSettingsView: View {
                        isInDock: { $0.isVisibleInDock && HelperBundleManager.shared.helperExists(for: $0) })) {
                     pendingMenuBarOff = message
                 } else {
-                    menuBarEnabled = newValue
+                    MenuBarController.shared.setEnabled(newValue, from: "general")
                 }
             }
         )) {
@@ -198,17 +198,11 @@ struct GeneralSettingsView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .onChange(of: menuBarEnabled) { _, enabled in
-            MenuBarController.shared.apply(enabled: enabled)
-            if !enabled { NSApp.setActivationPolicy(.regular) }
-            AnalyticsService.shared.log(.settingChanged, ["setting": "menu_bar", "enabled": enabled])
-            DiagnosticsLog.shared.log("settings", "Menu bar icon toggled \(enabled ? "ON" : "OFF")")
-        }
         .alert(
             AppStrings.Alert.menuBarOffTitle,
             isPresented: Binding(get: { pendingMenuBarOff != nil }, set: { if !$0 { pendingMenuBarOff = nil } })
         ) {
-            Button(AppStrings.Button.turnOff) { menuBarEnabled = false }
+            Button(AppStrings.Button.turnOff) { MenuBarController.shared.setEnabled(false, from: "general") }
             Button(AppStrings.Button.cancel, role: .cancel) {}
         } message: {
             Text(pendingMenuBarOff ?? "")

@@ -42,7 +42,8 @@ struct DockTileDetailView: View {
     @State private var showDockRestartConsent = false  // Show consent dialog for Dock restart
     @State private var hasAppearedOnce = false  // Track if view has fully loaded
     @State private var isCurrentlyInDock = false  // Track actual Dock state
-    /// The global Menu Bar setting (General); the Show in Menu Bar row exists only while it is on.
+    /// The global Menu Bar setting (General). Show in Menu Bar reads on only while it is on, and
+    /// turning a tile on turns it on (`menuBarSwitchIsOn` / `menuBarSwitchEnablesSetting`).
     @AppStorage(UserDefaultsKeys.menuBarEnabled) private var menuBarEnabled = false
     /// `dockSignature` stamped into the tile's helper — what the Dock shows now (nil: no helper, or
     /// built before the stamp). Read with the Dock state, never per render.
@@ -483,14 +484,39 @@ struct DockTileDetailView: View {
     nonisolated static let formDividerHeight: CGFloat = 1
 
     /// The hero is as tall as the Tile Name card beside it: `rows` `formRow`s and the dividers
-    /// between them — 122 pt for three rows, 163 pt with Show in Menu Bar's fourth. The card takes
-    /// the width that is left (owner, 2026-11-22). Guarded by `TileDetailMenuBarTests`.
+    /// between them — 163 pt for its four rows. The card takes the width that is left (owner,
+    /// 2026-11-22). Guarded by `TileDetailMenuBarTests`.
     nonisolated static func heroIconSize(rows: Int) -> CGFloat {
         CGFloat(rows) * formRowHeight + CGFloat(rows - 1) * formDividerHeight
     }
 
-    /// The card's row count: Tile Name, Show in Dock, Show in App Switcher, plus Show in Menu Bar.
-    private var heroIconSize: CGFloat { Self.heroIconSize(rows: menuBarEnabled ? 4 : 3) }
+    /// The card's rows: Tile Name, Show in Dock, Show in Menu Bar, Show in App Switcher.
+    private var heroIconSize: CGFloat { Self.heroIconSize(rows: 4) }
+
+    /// Show in Menu Bar reads on only while the global setting is on too (owner, 2026-11-22).
+    nonisolated static func menuBarSwitchIsOn(showInMenuBar: Bool, settingOn: Bool) -> Bool {
+        showInMenuBar && settingOn
+    }
+
+    /// Turning a tile on while the setting is off turns the setting on; turning one off never
+    /// turns it off. Every tile whose saved flag is on comes back with it.
+    nonisolated static func menuBarSwitchEnablesSetting(newValue: Bool, settingOn: Bool) -> Bool {
+        newValue && !settingOn
+    }
+
+    /// The tile flag autosaves (300 ms); the setting is written at once through the one writer. The
+    /// setter reads the stored setting, not `@AppStorage`, which can be stale inside a setter.
+    private var showInMenuBarBinding: Binding<Bool> {
+        Binding(
+            get: { Self.menuBarSwitchIsOn(showInMenuBar: session.config.showInMenuBar, settingOn: menuBarEnabled) },
+            set: { newValue in
+                session.config.showInMenuBar = newValue
+                if Self.menuBarSwitchEnablesSetting(newValue: newValue, settingOn: MenuBarController.isEnabled) {
+                    MenuBarController.shared.setEnabled(true, from: "tile")
+                }
+            }
+        )
+    }
 
     @ViewBuilder private var heroFace: some View {
         if let forced = Self.heroForcedStyle(inspectorShown: inspectorShown, colorScheme: colorScheme,
@@ -556,15 +582,13 @@ struct DockTileDetailView: View {
                         .tileSwitch()
                 }
 
-                // Show in Menu Bar — only while the menu bar icon is on. An ordinary edit saved by
-                // the autosave: no Dock action, no consent, no restart.
-                if menuBarEnabled {
-                    formRow(isLast: false) {
-                        Text(AppStrings.Label.showInMenuBar)
-                        Spacer()
-                        Toggle("", isOn: $session.config.showInMenuBar)
-                            .tileSwitch()
-                    }
+                // Show in Menu Bar — always shown, off while the menu bar icon is off. An ordinary
+                // edit saved by the autosave: no Dock action, no consent, no restart.
+                formRow(isLast: false) {
+                    Text(AppStrings.Label.showInMenuBar)
+                    Spacer()
+                    Toggle("", isOn: showInMenuBarBinding)
+                        .tileSwitch()
                 }
 
                 // Row 3: Show in App Switcher (last row, no separator)

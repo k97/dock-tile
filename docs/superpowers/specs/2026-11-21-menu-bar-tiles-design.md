@@ -14,16 +14,17 @@ in the menu bar, both, or neither. Dock Tile must not add noise to an already cr
 - **No new menu bar icons.** A menu bar tile appears inside Dock Tile's existing menu bar menu
   (`TileMenu`, issue #13), as the submenu of apps it already shows for Dock tiles. Each tile owning
   its own status item was considered and rejected for menu bar noise.
-- **The per-tile switch exists only while Settings › General › Menu Bar is on.** Off: Tile Detail
-  looks exactly as today, apart from the Show Tile row's new label.
+- **The per-tile switch is always shown (revised 2026-11-22, 2.8.1).** It reads off while Settings ›
+  General › Menu Bar is off, and turning it on turns that setting on. (Shipped in 2.8.0 as "exists only
+  while the setting is on".)
 - **Two independent switches** in the Tile Detail card: **Show in Dock** (today's Show Tile, renamed)
   and **Show in Menu Bar**, then Show in App Switcher (still greyed unless the tile is in the Dock).
   Prior art: Apple's Control Center settings (macOS 11–12) — "Show in Menu Bar" / "Show in Control
   Center", one checkbox per place.
 - **Menu bar menu lists exactly the tiles whose Show in Menu Bar is on**, in sidebar order (today it
   lists Dock-shown tiles). Dock Tile's own Dock menu is unchanged: Dock-shown tiles.
-- **Turning the global setting off changes no tile.** The switch hides, each tile keeps its choice,
-  and turning the setting back on restores the menu as it was. If any tile is in the menu bar but not
+- **Turning the global setting off changes no tile.** Every switch reads off, each tile keeps its
+  choice, and turning the setting back on (in General or from any tile) restores the menu as it was. If any tile is in the menu bar but not
   the Dock, turning it off first says so: "<Media> is only in the menu bar. It stays in Dock Tile but
   won't show anywhere until you turn this back on or add it to the Dock." (one alert, names up to 3).
 
@@ -42,7 +43,7 @@ in the menu bar, both, or neither. Dock Tile must not add noise to an already cr
   until the user picks (my call, matching `duplicate(named:)`'s Dock reset).
 - Sidebar: Apple's `menubar.rectangle` symbol after a tile's name while the setting is on and the
   tile is in the menu bar (owner, 2026-11-21).
-- Hero icon stays 122 pt, top-aligned beside the card, whether the card has 3 rows or 4 (owner,
+- (Superseded 2026-11-22: the hero is the card's height, 163 pt.) Hero icon stays 122 pt, top-aligned beside the card, whether the card has 3 rows or 4 (owner,
   2026-11-21: a 163 pt hero needs a 447 pt row, wider than the 420 pt narrowest detail column).
 - Action button still driven by Show in Dock alone, with shorter labels (owner): **Add** (was Add to
   Dock), **Remove** (was Remove from Dock), Update and Done unchanged. Its tooltip and accessibility

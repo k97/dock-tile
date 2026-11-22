@@ -36,6 +36,18 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
     // MARK: - Status item
 
+    /// The one writer of the setting after first launch (General's toggle and its turn-off alert,
+    /// Tile Detail's Show in Menu Bar). Runs its side effects here, not in a view's `onChange`, so
+    /// they happen whichever pane is on screen. Turning it off brings the Dock icon back (the
+    /// window is open while toggling); `from` names the caller in the log ("general" / "tile").
+    func setEnabled(_ enabled: Bool, from: String) {
+        UserDefaults.standard.set(enabled, forKey: UserDefaultsKeys.menuBarEnabled)
+        apply(enabled: enabled)
+        if !enabled { NSApp.setActivationPolicy(.regular) }
+        AnalyticsService.shared.log(.settingChanged, ["setting": "menu_bar", "enabled": enabled])
+        DiagnosticsLog.shared.log("settings", "Menu bar icon toggled \(enabled ? "ON" : "OFF") (from \(from))")
+    }
+
     /// Adds or removes the icon. Idempotent.
     func apply(enabled: Bool) {
         if enabled, statusItem == nil {
