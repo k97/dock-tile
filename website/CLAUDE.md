@@ -28,7 +28,8 @@ npx tsc --noEmit
 - All user-facing copy goes through `lib/i18n.ts` (en-AU default) — never hardcode marketing strings.
 - Changed a static asset but kept its filename? Bump its `?v=N` query param or caches serve the old file.
 - Assets load from the R2 CDN in prod (one bucket — never S3), `public/` in dev — route every `/assets/…` ref through `asset()` (`lib/assets.ts`); see assets-cdn rule. New/changed files must also be uploaded to R2.
-- **Never name a design reference** (a site or app the look was taken from) in code, rules or commit messages — state the value and its reason; see development.md "Never store the name of a reference".
+- **Never name a design reference** (a site or app the look was taken from) in code, rules or commit messages — state the value and its reason; see development.md "Never store the name of a reference". That includes a quoted owner remark: a verbatim quote put one in a rule on 2026-11-22 (a diff review caught it) — paraphrase the reason.
+- **Another session may push to `main` (an app release) while you work.** `git fetch` before pushing. If the rebase is blocked by untracked files origin now tracks, compare `git hash-object <file>` with `git rev-parse origin/main:<file>`: identical means set them aside and rebase.
 - The Agentation toolbar (`components/dev-agentation.tsx`, devDependency) renders only under
   `next dev` and is never fetched in production. Licence: PolyForm Shield (non-compete); keep it a
   dev tool.
@@ -64,7 +65,9 @@ npm run build
 Visual checks: never drive the user's own browser — use an isolated Chrome profile; headless
 Chrome can't composite `backdrop-filter` (reports `none`). What works: the chrome-devtools MCP's
 `new_page` with an `isolatedContext`; `<html>` scrolls smoothly, so jump with
-`scrollTo({behavior:"instant"})`; flip theme by toggling `.dark` on `<html>`. Turbopack hot-reload quirks in dev —
+`scrollTo({behavior:"instant"})`; flip theme by toggling `.dark` on `<html>`. Script can't
+trigger `:hover`: to inspect a hover-only layer, clone its children into a `position:fixed`
+overlay at `scale(5)` (page zoom doesn't reach `ScaleToFit` mocks — they rescale themselves). Turbopack hot-reload quirks in dev —
 stale `globals.css` (restart `next dev`), and after HMR a `Reveal` scroll-observer can hold a
 stale DOM node so a whole section sits at opacity 0. Hard-reload before debugging either as a
 code bug.

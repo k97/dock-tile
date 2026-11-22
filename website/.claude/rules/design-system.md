@@ -256,6 +256,14 @@ re-apply per component unless overriding.
   flex face with an SVG) and the "More than" tile hung 12 px low. With it, the baseline is the
   bottom edge and `align-[(cap/2 − size/2)]` is exact (−0.19em for a 1.1em tile on Allo's
   0.728em cap height — Open Runde's was 0.727, so the switch kept it). Verify with a baseline probe + canvas `actualBoundingBoxAscent`, not by eye.
+- **A `backdrop-filter` blurs only up to its nearest "backdrop root" (2026-11-22).** Any
+  ancestor with `backdrop-filter`, `filter`, `opacity` < 1, `mask` or `clip-path` is one, and
+  the child then blurs nothing behind it. It bit three times in one day: the Dock strip's blur
+  confined the hover popovers, the arrow nested in its panel showed sharp wallpaper, and a fade
+  on a shared parent would drop the blur mid-fade. Make glass a sibling, never a descendant of
+  another effect; fade each layer, not the parent. A panel with an arrow is ONE outline
+  (`popoverOutline` in home-sections.tsx: one `clip-path` glass, rim and outside-only shadow
+  from the same path), never two glass pieces with a seam.
 - **Never hand-write `-webkit-` prefixes.** Lightning CSS drops the standard unprefixed property
   when both are present — this silently killed `backdrop-filter` on every glass surface once.
   Let the toolchain prefix.
