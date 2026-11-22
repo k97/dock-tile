@@ -53,7 +53,7 @@ struct DockVisibilityReconcileTests {
 
     /// THE never-pinned guard. A brand-new tile defaults to visible but has no helper bundle
     /// until the user clicks Add to Dock. It must NOT be flipped hidden, or the action button
-    /// degrades "Add to Dock" → "Done" and the tile never pins. If someone deletes the
+    /// degrades "Add" → "Done" and the tile never pins. If someone deletes the
     /// `helperExists` guard, this test goes red.
     @Test("Visible + absent + NEVER pinned → skip (never-pinned guard)")
     func direction1NeverPinnedGuard() {

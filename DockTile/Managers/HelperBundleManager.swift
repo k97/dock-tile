@@ -652,7 +652,7 @@ final class HelperBundleManager {
     }
 
     /// Remove tile from Dock only (without deleting bundle)
-    /// Use this when user toggles "Show Tile" OFF - removes from Dock but keeps bundle
+    /// Use this when user toggles "Show in Dock" OFF - removes from Dock but keeps bundle
     /// Returns the Dock index before removal (for position restoration later)
     @discardableResult
     func removeFromDock(for config: DockTileConfiguration) async throws -> Int? {

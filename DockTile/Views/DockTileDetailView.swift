@@ -328,7 +328,7 @@ struct DockTileDetailView: View {
             // The actual Dock add/remove is logged in performDockAction; this records the
             // user's toggle intent (verbose — the outcome is what matters in prod reports).
             if hasAppearedOnce {
-                DiagnosticsLog.shared.log("tile", "Show Tile toggled \(newValue ? "ON" : "OFF") for \(editedConfig.diagnosticName) (applies on action)", verbose: true)
+                DiagnosticsLog.shared.log("tile", "Show in Dock toggled \(newValue ? "ON" : "OFF") for \(editedConfig.diagnosticName) (applies on action)", verbose: true)
             }
         }
         .onChange(of: editedConfig.layoutMode) { _, newValue in
@@ -342,7 +342,7 @@ struct DockTileDetailView: View {
         .onChange(of: configManager.configurations) { _, newConfigs in
             // Sync editedConfig when the underlying configuration changes externally
             // NOTE: We intentionally do NOT sync isVisibleInDock here because:
-            // 1. User might be in the middle of editing and toggled "Show Tile" ON
+            // 1. User might be in the middle of editing and toggled "Show in Dock" ON
             // 2. Dock watcher might fire and think the tile should be OFF
             // 3. This would reset the user's toggle before they can click "Done"
             // The correct state will be set when user clicks "Done" and we install/uninstall
@@ -706,7 +706,7 @@ struct DockTileDetailView: View {
 
     /// Persist the editor's content edits (name, layout, icon, app list…). Visibility is owned
     /// EXCLUSIVELY by performDockAction, gated on the Dock op actually completing — so this must
-    /// NOT commit the Show Tile toggle's transient isVisibleInDock, or a hide whose un-pin never
+    /// NOT commit the Show in Dock toggle's transient isVisibleInDock, or a hide whose un-pin never
     /// runs leaves a permanent "hidden in config but still pinned" desync. Preserve the stored value.
     private func persistEdits() {
         configManager.updateConfiguration(ConfigurationManager.preservingStoredVisibility(

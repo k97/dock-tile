@@ -261,8 +261,9 @@ file, so every relaunch (login, reboot, a rebuild) showed unsaved edits. Only Ad
 (`installHelper`) publish. The missing-app alert's Remove is an EDIT like any other (Update goes
 accent, the Dock keeps the placeholder until Update). Limits, accepted: a helper built before copies
 existed follows the live config until its next build (the first migration after the release that ships
-this builds from the draft once, logged per tile); a never-added draft has no copy. Guarded by `DockVersionTests`. Menu bar
-/ Dock Tile's Dock menu (#13) must read tiles through `dockVersion` too.
+this builds from the draft once, logged per tile); a never-added draft has no copy. Guarded by `DockVersionTests`. The menu bar
+menu and Dock Tile's Dock menu (#13) read the LIVE config, not `dockVersion`: a menu-only tile has no
+helper and so no copy, and Show in Menu Bar applies at once like any setting (menu-bar.md).
 
 ## Dock Position Preservation
 
@@ -272,11 +273,11 @@ this builds from the draft once, logged per tile); a never-added draft has no co
 
 `DockPlistWatcher.swift` monitors `com.apple.dock.plist` via `DispatchSource.makeFileSystemObjectSource` to detect manual tile removals and sync `isVisibleInDock` state.
 
-**Visibility ownership (critical invariant)**: `isVisibleInDock` is written **only** by `DockTileDetailView.performDockAction()`, after the Dock add/remove actually completes. The Show Tile toggle must **not** persist visibility via the debounced auto-save — that decoupling caused a "hidden in config but still pinned in Dock" desync that never self-healed. The auto-save preserves the stored visibility/`lastDockIndex`/`helperAppVersion` (`preservingStoredVisibility`; the stamp since 2026-11-04 — launch migration stamps it after the edit session exists, and saving the session's old stamp rebuilt the tile on every next launch). **The watcher leaves a tile alone while one of our Dock operations is running for it** (building, removing, or being verified after a batch — `HelperBundleManager.isDockOperationInFlight`, 2.6.2): install re-seats the entry (remove + re-add) after the swap — before 2.6.3 it removed it early and re-added it seconds later — and the watcher used to mark the tile hidden in that gap, which a failed install then left as "hidden but pinned". The skip only suppresses mark-hidden and the launch removal, so its worst case is "visible but absent" until the next Dock change or launch.
+**Visibility ownership (critical invariant)**: `isVisibleInDock` is written **only** by `DockTileDetailView.performDockAction()`, after the Dock add/remove actually completes. The Show in Dock toggle must **not** persist visibility via the debounced auto-save — that decoupling caused a "hidden in config but still pinned in Dock" desync that never self-healed. The auto-save preserves the stored visibility/`lastDockIndex`/`helperAppVersion` (`preservingStoredVisibility`; the stamp since 2026-11-04 — launch migration stamps it after the edit session exists, and saving the session's old stamp rebuilt the tile on every next launch). **The watcher leaves a tile alone while one of our Dock operations is running for it** (building, removing, or being verified after a batch — `HelperBundleManager.isDockOperationInFlight`, 2.6.2): install re-seats the entry (remove + re-add) after the swap — before 2.6.3 it removed it early and re-added it seconds later — and the watcher used to mark the tile hidden in that gap, which a failed install then left as "hidden but pinned". The skip only suppresses mark-hidden and the launch removal, so its worst case is "visible but absent" until the next Dock change or launch.
 
 `ConfigurationManager.syncDockVisibility(reconcileDockedHiddenTiles:)` reconciles **both** directions: visible-but-absent → mark hidden; and (launch only, `reconcile=true`) hidden-but-still-pinned → actually remove. The destructive direction runs only on the one-shot launch sync, never the live watcher (avoids restart loops).
 
-**Never-pinned guard (critical)**: direction 1 (visible-but-absent → mark hidden) must skip tiles that were **never pinned** — gated on `HelperBundleManager.helperExists(for:)`. A brand-new tile defaults to `isVisibleInDock = true` but has no helper bundle on disk until the user clicks **Add to Dock**; without this guard the reconciler flips it hidden, the action button degrades "Add to Dock" → "Done", and the tile never pins. (A genuinely removed tile keeps its bundle on disk, so the guard only spares new tiles.) This regressed when #5 stopped the editor auto-save re-asserting visibility — the premature hide then stuck instead of bouncing back.
+**Never-pinned guard (critical)**: direction 1 (visible-but-absent → mark hidden) must skip tiles that were **never pinned** — gated on `HelperBundleManager.helperExists(for:)`. A brand-new tile defaults to `isVisibleInDock = true` but has no helper bundle on disk until the user clicks **Add to Dock**; without this guard the reconciler flips it hidden, the action button degrades "Add" → "Done", and the tile never pins. (A genuinely removed tile keeps its bundle on disk, so the guard only spares new tiles.) This regressed when #5 stopped the editor auto-save re-asserting visibility — the premature hide then stuck instead of bouncing back.
 
 **Helpers must not touch the Dock**: helper processes also construct a `ConfigurationManager` (for popover config), so `init()` returns early via `AppEnvironment.isHelper` before `startDockWatcher()`/`syncDockVisibility()` — only the main app watches/reconciles the Dock, preventing multi-writer races on the config file and Dock plist.
 
@@ -435,7 +436,8 @@ Popover, Dock Lock) · Dock Tile (About)** — the old accordion `@AppStorage` e
     menu (Show / Hide Inspector) via a `FocusedValue` (`InspectorCommand`), enabled only for a
     tile row (`inspectorCommandIsEnabled`, `InspectorEntryPointTests`).
   - **Hero**: `heroIconSize` 122 pt, the Tile Name card's height (3 × 40 pt rows + 2 × 1 pt dividers),
-    so they align top and bottom. Canonical Default/Dark while the inspector is open, Dark only where
+    top-aligned with it; with Show in Menu Bar's fourth row the card grows downward and the hero stays
+    122 pt (owner, 2026-11-21: a matching 163 pt hero did not fit the 420 pt narrowest column). Canonical Default/Dark while the inspector is open, Dark only where
     the Dock icon follows the appearance (macOS 26+; macOS 15 stays Default), live `TileFace` while
     closed (`DockTileDetailView.heroForcedStyle`, `InspectorEntryPointTests`).
   - **Content only while presented (R15)**: SwiftUI instantiates inspector content while it is closed,
@@ -522,7 +524,7 @@ Helper bundles have `CFBundleURLTypes` stripped from Info.plist (prevents helper
 ## Main app's Dock menu, menu bar icon, staying resident
 
 Moved to its own rule: [Menu Bar Icon](menu-bar.md). In short: the main app's Dock menu and the optional
-menu bar icon share one builder (`TileMenu`, every Dock-shown tile with its apps); the main app keeps
+menu bar icon share one builder (`TileMenu`: the Dock menu lists the tiles in the Dock, the menu bar menu those with Show in Menu Bar on); the main app keeps
 running with its window closed while Dock Lock or the icon is on (`AppDelegate.staysResident`); at login
 it can start quietly (window created and hidden, so its `onAppear` and launch maintenance still run);
 only one main app runs at a time (`main-app.lock`); and AppKit window restoration is ignored, because

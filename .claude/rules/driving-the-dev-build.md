@@ -55,10 +55,10 @@ Paths (re-measured 2026-10-30 — the inspector added a split level, so the 2.4-
 - sidebar rows: `row N of outline 1 of scroll area 1 of group 1 of S`; read labels with
   `value of static text 1 of UI element 1 of every row of …` and pick N by label — indices shift as
   tiles are added or deleted (`set selected of row N … to true` selects; `click at {x,y}` often does nothing);
-- detail pane: `scroll area 1 of group 2 of S` (tile name = `text field 1`, Show Tile = `checkbox 1`);
+- detail pane: `scroll area 1 of group 2 of S` (tile name = `text field 1`, Show in Dock = `checkbox 1`; with the Menu Bar setting on, Show in Menu Bar sits between it and App Switcher, so read checkbox indices by label);
   a Settings pane nests one `group 1` deeper;
 - toolbar: `UI element N of toolbar 1 of window 1`, chosen by `description` (Update / Add to Dock /
-  Remove from Dock is the 5th, Delete Tile the 4th); a confirmation sheet's buttons are matched by
+  Remove from Dock — its description; the title reads Add / Remove — is the 5th, Delete Tile the 4th); a confirmation sheet's buttons are matched by
   `description` (`whose description is "Delete"`), never by index.
 
 Quirks paid for in the 2.6.2 hands-on:

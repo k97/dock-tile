@@ -11,7 +11,8 @@ only. Shipped as a native `NSMenu`; a Control Centre-style panel was mocked up a
 - The menu is rebuilt in `menuNeedsUpdate`, so tiles, install state and icons are current on every open.
 - **One builder, two menus**: `TileMenu.tileItems` builds the tile part of both the menu bar menu and the
   main app's own Dock menu (`AppDelegate.applicationDockMenu`, which used to list only the selected
-  tile's apps). Tiles in sidebar order, only `isVisibleInDock` ones (owner decision); each submenu is
+  tile's apps). Tiles in sidebar order, by place (`TileMenu.menuTiles(_:in:)`): the menu bar menu lists the tiles
+  with **Show in Menu Bar** on (`showInMenuBar`, schema v13), the Dock menu the tiles in the Dock; each submenu is
   built lazily: its apps (missing ones greyed), then **Configure Tile…**, the same path as a tile's gear
   link (`revealTile` → `docktile://configure`). Launches go through `AppLauncher.launch` (source
   `menu_bar` / `main_dock_menu`). Guarded by `TileMenuTests`.
@@ -26,6 +27,24 @@ only. Shipped as a native `NSMenu`; a Control Centre-style panel was mocked up a
 (`MenuBarController.initialEnabled`, `MenuBarDefaultTests`). Absent reads OFF for any reader that runs
 before the main app ever has (the login spawner). UI: General's "Menu Bar" section, before "Adding
 Tiles". Analytics: `setting_changed` with `setting: "menu_bar"`; no new event.
+
+## Menu bar tiles (2026-11-21)
+
+A tile can be in the Dock, the menu bar, both or neither. **No tile gets its own status item** (owner:
+the menu bar is noisy); a menu bar tile is a submenu of Dock Tile's one menu.
+
+- `DockTileConfiguration.showInMenuBar`: a missing key decodes to the tile's OWN `isVisibleInDock`, so
+  an upgrade lists exactly what 2.7.x listed (`ShowInMenuBarTests`). A new tile (blank or Smart Add)
+  starts as the setting is (`createConfiguration(menuBarEnabled:)`); a duplicate starts off.
+- Tile Detail's **Show in Menu Bar** switch (below Show in Dock) exists only while the setting is on.
+  It is an ordinary edit saved by the autosave: no Dock action, no consent, never in `dockSignature` or
+  `contentSignature`, and Revert to Dock Version keeps it like bookkeeping. A menu-only tile needs no
+  helper. The sidebar shows `menubar.rectangle` after the name while the setting is on and the tile is listed.
+- **Turning the setting off changes no tile.** With a menu-only tile (`showInMenuBar && !isVisibleInDock`)
+  General asks first, naming up to three (`menuBarOffMessage`); Cancel leaves it on.
+- The action button reads **Add / Update / Remove / Done**; its tooltip and accessibility label keep
+  "Add to Dock" / "Remove from Dock", so Remove is never read as Delete (`button.dockRemove` must
+  never use a language's Delete word).
 
 ## Lifetime and Dock icon
 

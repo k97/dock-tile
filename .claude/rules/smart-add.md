@@ -90,9 +90,9 @@ The style the card did NOT show keeps the identity's other glyph in `savedSymbol
 switching styles in Customise lands on 🌐/globe, never the generic `plus` / ⭐ fallback (a review
 finding, 2026-10-22; pinned in `tileMatchesTheCardsDesign`).
 
-- **`isVisibleInDock = true`** — matches a blank new tile's default so the **Show Tile** switch
+- **`isVisibleInDock = true`** — matches a blank new tile's default so the **Show in Dock** switch
   reads on while reviewing. This does **not** pin anything: with no helper bundle on disk the action
-  button still reads **Add to Dock**, and the reconciler's **never-pinned guard** (see
+  button still reads **Add**, and the reconciler's **never-pinned guard** (see
   architecture.md "Never-pinned guard") spares this brand-new-visible-but-unpinned state.
 
 ## Opt-out toggle & provenance banner
