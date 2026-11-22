@@ -249,7 +249,6 @@ struct AppStringsTests {
     func menuBarTileStringsExist() {
         #expect(AppStrings.Label.showTile == "Show in Dock")
         #expect(!AppStrings.Label.showInMenuBar.isEmpty)
-        #expect(!AppStrings.Label.inMenuBar.isEmpty)
         #expect(!AppStrings.Alert.menuBarOffTitle.isEmpty)
         #expect(AppStrings.Alert.menuBarOffMessageOne("Media").contains("Media"))
         #expect(AppStrings.Alert.menuBarOffMessageMany("A, B").contains("A, B"))

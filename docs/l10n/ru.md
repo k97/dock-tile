@@ -126,7 +126,6 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `label.colour.hint.toned.static` | Toned to stay clear on white | Подобран для четкости на белом | machine | Customise Tile: colour hint, Mono tile on macOS 15 |
 | `label.iconSize` | Icon Size | Размер значка | machine | Compact label for the icon size stepper (side-by-side with icon weight) |
 | `label.iconWeight` | Icon Weight | Толщина значка | machine | Label for the SF Symbol weight picker |
-| `label.inMenuBar` | In the menu bar | В строке меню | machine | VoiceOver label for the sidebar mark on a tile listed in Dock Tile's menu bar icon menu. "Menu bar" is Apple's macOS menu bar — use Apple's own term. |
 | `label.missingAppsScan` | Missing Apps | Отсутствующие приложения | machine | Settings row title for the missing-app scan |
 | `label.missingAppsScanDescription` | Check your tiles for apps that have been moved or uninstalled. | Проверьте, нет ли в плитках перемещенных или удаленных приложений. | machine | Settings row description for the missing-app scan |
 | `label.notInstalled` | Not installed | Не установлено | machine | Badge/kind text shown for an app whose bundle is no longer on disk |

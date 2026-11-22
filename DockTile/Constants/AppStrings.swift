@@ -657,12 +657,6 @@ enum AppStrings {
             comment: "Tile Detail: toggle that lists this tile in Dock Tile's menu bar icon menu. \"Menu bar\" is Apple's macOS menu bar at the top of the screen — use Apple's own term."
         )
 
-        static let inMenuBar = NSLocalizedString(
-            "label.inMenuBar",
-            value: "In the menu bar",
-            comment: "VoiceOver label for the sidebar mark on a tile listed in Dock Tile's menu bar icon menu. \"Menu bar\" is Apple's macOS menu bar — use Apple's own term."
-        )
-
         static let showInAppSwitcher = NSLocalizedString(
             "label.showInAppSwitcher",
             value: "Show in App Switcher",

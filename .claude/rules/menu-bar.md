@@ -40,7 +40,7 @@ the menu bar is noisy); a menu bar tile is a submenu of Dock Tile's one menu.
   the hero grows with the card (163 pt, architecture.md "Hero").
   It is an ordinary edit saved by the autosave: no Dock action, no consent, never in `dockSignature` or
   `contentSignature`, and Revert to Dock Version keeps it like bookkeeping. A menu-only tile needs no
-  helper. The sidebar shows `menubar.rectangle` after the name while the setting is on and the tile is listed.
+  helper. No sidebar mark (owner, 2026-11-22: the sidebar got crowded).
 - **Turning the setting off changes no tile.** With a menu-only tile (`showInMenuBar` and not in the Dock:
   Show in Dock off, OR on but never added — no helper; `menuOnlyTileNames(_:isInDock:)`)
   General asks first, naming up to three (`menuBarOffMessage`); Cancel leaves it on.

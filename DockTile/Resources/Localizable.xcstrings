@@ -6427,60 +6427,6 @@
         }
       }
     },
-    "label.inMenuBar": {
-      "comment": "VoiceOver label for the sidebar mark on a tile listed in Dock Tile's menu bar icon menu. \"Menu bar\" is Apple's macOS menu bar — use Apple's own term.",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "In der Menüleiste"
-          }
-        },
-        "en-GB": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In the menu bar"
-          }
-        },
-        "en-AU": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In the menu bar"
-          }
-        },
-        "en-US": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In the menu bar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Dans la barre des menus"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "メニューバーに表示中"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "В строке меню"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "在菜单栏中"
-          }
-        }
-      }
-    },
     "label.missingAppsScan": {
       "comment": "Settings row title for the missing-app scan",
       "extractionState": "manual",
