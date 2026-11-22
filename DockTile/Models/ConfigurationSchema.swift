@@ -61,6 +61,10 @@ enum ConfigurationDefaults {
     static let appsBackground: AppsGridBackground = .automatic
     static let appsBackgroundColor = "#404040"
 
+    // v13: Show in Menu Bar — off unless the caller passes one; the decoder gives an existing tile
+    // its own isVisibleInDock, so the menu bar menu lists what it did before
+    static let showInMenuBar = false
+
     // Visibility
     static let isVisibleInDock = true  // Show in Dock by default
     static let showInAppSwitcher = false  // Hidden from Cmd+Tab by default

@@ -31,6 +31,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     var layoutMode: LayoutMode
     var appItems: [AppItem]
     var isVisibleInDock: Bool
+    var showInMenuBar: Bool  // v13: listed in the menu bar icon's menu; independent of the Dock
     var showInAppSwitcher: Bool  // v2: Show in Cmd+Tab app switcher
     var bundleIdentifier: String  // e.g., "com.docktile.dev"
     var lastDockIndex: Int?  // v5: Saved Dock position for show/hide restoration
@@ -89,12 +90,14 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
     /// build time (`HelperBundleManager.readDockSnapshot`) — and the Dock bookkeeping kept from `self`.
     /// Starts FROM the snapshot so a content field added later reverts without editing this. Another
     /// tile's copy changes nothing. An item's `lastKnownPath` is bookkeeping too (the missing-app scan
-    /// heals it), so it stays live per item id. Guarded by `DockSnapshotRevertTests`.
+    /// heals it), so it stays live per item id. `showInMenuBar` is kept live too: the menu bar menu
+    /// is built in the main app, so it is nothing the Dock shows. Guarded by `DockSnapshotRevertTests`.
     func revertingContent(to snapshot: DockTileConfiguration) -> DockTileConfiguration {
         guard snapshot.id == id else { return self }
         var reverted = snapshot
         reverted.bundleIdentifier = bundleIdentifier
         reverted.isVisibleInDock = isVisibleInDock
+        reverted.showInMenuBar = showInMenuBar
         reverted.lastDockIndex = lastDockIndex
         reverted.helperAppVersion = helperAppVersion
         let livePaths = Dictionary(appItems.map { ($0.id, $0.lastKnownPath) }, uniquingKeysWith: { first, _ in first })
@@ -120,8 +123,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
 
     /// A copy that looks exactly like this tile. Only identity and Dock bookkeeping are new: a fresh
     /// `id` (and so a fresh bundle identifier — the copy must never share this tile's helper), the
-    /// given name, not visible in the Dock until the user adds it, and no saved Dock position or
-    /// helper version. Every content field is passed explicitly — a defaulted one would silently
+    /// given name, not visible in the Dock until the user adds it, not in the menu bar either, and no
+    /// saved Dock position or helper version. Every content field is passed explicitly — a defaulted one would silently
     /// reset (issue #21). Guarded by `DockTileDuplicateTests`, which also fails when a new field is
     /// added without a non-default value in its sample.
     func duplicate(named name: String) -> DockTileConfiguration {
@@ -142,6 +145,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
             layoutMode: layoutMode,
             appItems: appItems,
             isVisibleInDock: false,
+            showInMenuBar: false,
             showInAppSwitcher: showInAppSwitcher
         )
     }
@@ -166,6 +170,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         layoutMode: LayoutMode = ConfigurationDefaults.layoutMode,
         appItems: [AppItem] = [],
         isVisibleInDock: Bool = ConfigurationDefaults.isVisibleInDock,
+        showInMenuBar: Bool = ConfigurationDefaults.showInMenuBar,
         showInAppSwitcher: Bool = ConfigurationDefaults.showInAppSwitcher,
         bundleIdentifier: String? = nil,
         lastDockIndex: Int? = nil,
@@ -188,6 +193,7 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         self.layoutMode = layoutMode
         self.appItems = appItems
         self.isVisibleInDock = isVisibleInDock
+        self.showInMenuBar = showInMenuBar
         self.showInAppSwitcher = showInAppSwitcher
         // Use environment-specific prefix for bundle IDs
         // Dev: com.docktile.dev.<UUID>  |  Release: com.docktile.<UUID>
@@ -250,6 +256,10 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         appsBackgroundColor = try container.decodeIfPresent(String.self, forKey: .appsBackgroundColor)
             ?? ConfigurationDefaults.appsBackgroundColor
 
+        // v13 fields - Show in Menu Bar. The missing-key fallback is the tile's OWN isVisibleInDock,
+        // not ConfigurationDefaults.showInMenuBar: before v13 the menu bar menu listed Dock-shown tiles.
+        showInMenuBar = try container.decodeIfPresent(Bool.self, forKey: .showInMenuBar) ?? isVisibleInDock
+
         // v5 fields - last Dock position
         lastDockIndex = try container.decodeIfPresent(Int.self, forKey: .lastDockIndex)
 
@@ -279,6 +289,8 @@ struct DockTileConfiguration: Identifiable, Codable, Hashable {
         case savedSymbol, savedEmoji
         // v12 fields
         case appsBackground, appsBackgroundColor
+        // v13 fields
+        case showInMenuBar
         // v5 fields
         case lastDockIndex
         // v6 fields

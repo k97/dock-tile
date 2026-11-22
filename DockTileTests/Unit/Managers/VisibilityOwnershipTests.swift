@@ -83,6 +83,22 @@ struct VisibilityOwnershipTests {
         #expect(ConfigurationManager.preservingStoredVisibility(edited, stored: stored).helperAppVersion == nil)
     }
 
+    /// `showInMenuBar` is an ordinary edit saved through the autosave, never Dock bookkeeping: the
+    /// seam must pass the editor's value through while the stored Dock visibility still wins.
+    /// Failing value: a seam that also copies `stored.showInMenuBar` returns `false`.
+    @Test("An edited Show in Menu Bar survives; the stored Dock visibility still wins")
+    func editedMenuBarSurvivesStoredVisibility() {
+        var edited = config(name: "Media", visible: true, dockIndex: nil)
+        edited.showInMenuBar = true
+        var stored = config(name: "Media", visible: false, dockIndex: nil)
+        stored.showInMenuBar = false
+
+        let result = ConfigurationManager.preservingStoredVisibility(edited, stored: stored)
+
+        #expect(result.showInMenuBar == true)
+        #expect(result.isVisibleInDock == false)
+    }
+
     /// An unknown id has nothing to preserve. `updateConfiguration` no-ops on one anyway, so the
     /// snapshot passes through unchanged rather than being silently blanked.
     @Test("With no stored copy the snapshot passes through untouched")

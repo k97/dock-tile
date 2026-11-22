@@ -17,7 +17,7 @@ struct DockTileDuplicateTests {
 
     /// Keys a duplicate must NOT share with its original: identity, name and Dock bookkeeping.
     private static let resetKeys: Set<String> = [
-        "id", "name", "bundleIdentifier", "isVisibleInDock", "lastDockIndex", "helperAppVersion"
+        "id", "name", "bundleIdentifier", "isVisibleInDock", "showInMenuBar", "lastDockIndex", "helperAppVersion"
     ]
 
     /// Every content field set to something other than a new tile's default.
@@ -38,6 +38,7 @@ struct DockTileDuplicateTests {
         layoutMode: .list,
         appItems: [AppItem(bundleIdentifier: "com.apple.TV", name: "TV", lastKnownPath: "/System/Applications/TV.app")],
         isVisibleInDock: true,
+        showInMenuBar: true,
         showInAppSwitcher: true,
         lastDockIndex: 3,
         helperAppVersion: "2.2.0"

@@ -14,9 +14,9 @@ import Testing
 @Suite("Revert to Dock Version")
 struct DockSnapshotRevertTests {
 
-    /// Owned by Dock operations, never by Revert.
+    /// Owned by Dock operations (or, for `showInMenuBar`, by the main app's menu), never by Revert.
     private static let bookkeepingKeys: Set<String> = [
-        "id", "bundleIdentifier", "isVisibleInDock", "lastDockIndex", "helperAppVersion"
+        "id", "bundleIdentifier", "isVisibleInDock", "showInMenuBar", "lastDockIndex", "helperAppVersion"
     ]
 
     private static let tileID = UUID()
@@ -40,6 +40,7 @@ struct DockSnapshotRevertTests {
         layoutMode: .list,
         appItems: [AppItem(bundleIdentifier: "com.apple.TV", name: "TV", lastKnownPath: "/System/Applications/TV.app")],
         isVisibleInDock: true,
+        showInMenuBar: false,
         showInAppSwitcher: true,
         lastDockIndex: 3,
         helperAppVersion: "2.6.3"
@@ -49,6 +50,7 @@ struct DockSnapshotRevertTests {
     private static let draft = DockTileConfiguration(
         id: tileID,
         isVisibleInDock: false,
+        showInMenuBar: true,
         bundleIdentifier: "com.docktile.test.draft",
         lastDockIndex: 7,
         helperAppVersion: "2.6.4"
