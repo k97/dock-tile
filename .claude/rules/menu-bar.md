@@ -27,6 +27,12 @@ only. Shipped as a native `NSMenu`; a Control Centre-style panel was mocked up a
 (`MenuBarController.initialEnabled`, `MenuBarDefaultTests`). Absent reads OFF for any reader that runs
 before the main app ever has (the login spawner). UI: General's "Menu Bar" section, before "Adding
 Tiles". Analytics: `setting_changed` with `setting: "menu_bar"`; no new event.
+**One writer (2.8.1):** after first launch every write goes through `MenuBarController.setEnabled(_:from:)`
+— the default, `apply`, `.regular` when off, `setting_changed`, and a `Menu bar icon toggled ON|OFF
+(from general|tile)` line — so it works whichever pane is on screen (it used to live in General's
+`onChange`, which ran only while General was shown). `@AppStorage` readers refresh from the write. The
+one exception is the first-launch seed in `configureAsMainApp`, which calls `apply` itself and must not
+log a `setting_changed` on every first launch.
 
 ## Menu bar tiles (2026-11-21)
 
@@ -36,8 +42,13 @@ the menu bar is noisy); a menu bar tile is a submenu of Dock Tile's one menu.
 - `DockTileConfiguration.showInMenuBar`: a missing key decodes to the tile's OWN `isVisibleInDock`, so
   an upgrade lists exactly what 2.7.x listed (`ShowInMenuBarTests`). A new tile (blank or Smart Add)
   starts as the setting is (`createConfiguration(menuBarEnabled:)`); a duplicate starts off.
-- Tile Detail's **Show in Menu Bar** switch (below Show in Dock) exists only while the setting is on;
-  the hero grows with the card (163 pt, architecture.md "Hero").
+- Tile Detail's **Show in Menu Bar** switch (below Show in Dock) is always shown (owner, 2026-11-22):
+  it reads on only while the setting is on AND the tile's flag is (`menuBarSwitchIsOn`). Turning it on
+  with the setting off turns the setting on (`menuBarSwitchEnablesSetting`, `setEnabled(true, from:
+  "tile")`), so every tile whose saved flag is on comes back with it; turning it off never touches the
+  setting. So a tile switch can make an upgrader resident (stays running, quiet login launch, idle
+  updates). The flag autosaves after 300 ms, the setting at once: only a Force Quit inside that gap
+  loses the tile's flag (accepted). The hero is 163 pt (four rows, architecture.md "Hero").
   It is an ordinary edit saved by the autosave: no Dock action, no consent, never in `dockSignature` or
   `contentSignature`, and Revert to Dock Version keeps it like bookkeeping. A menu-only tile needs no
   helper. No sidebar mark (owner, 2026-11-22: the sidebar got crowded).

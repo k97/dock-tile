@@ -3,7 +3,7 @@
 //  DockTileTests
 //
 //  The App Store-style lift (rim + shadow) on every tile icon in the app scales with the icon's
-//  size. The 122 pt row pins the Tile Detail hero: Dark as shipped (rim 1, shadow 8 / 4, 0.45), Light
+//  size. The 122 pt row pins the hero tier (64 pt and up, e.g. the 163 pt Tile Detail hero): Dark as shipped (rim 1, shadow 8 / 4, 0.45), Light
 //  matched to the App Store's measured edge (shadow 3 / 1.5 at 0.22, no hairline — 2026-10-21). The
 //  old Light values (8 / 4 + a 0.5 hairline) fail it.
 //
@@ -15,7 +15,7 @@ import CoreGraphics
 @Suite("Icon lift metrics")
 struct IconLiftTests {
 
-    @Test("Hero (122 pt): Dark as shipped, Light a tight App Store shadow with no hairline")
+    @Test("Hero tier (122 pt): Dark as shipped, Light a tight App Store shadow with no hairline")
     func hero() {
         #expect(IconLift.metrics(size: 122) == IconLift.Metrics(rimWidth: 1, shadowRadius: 8, shadowY: 4,
                                                                  darkOpacity: 0.45, lightRadius: 3, lightY: 1.5,

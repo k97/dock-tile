@@ -439,8 +439,8 @@ Popover, Dock Lock) · Dock Tile (About)** — the old accordion `@AppStorage` e
     `accessibilityAction` makes its button trait answer AXPress / VoiceOver). ⌥⌘I is in the View
     menu (Show / Hide Inspector) via a `FocusedValue` (`InspectorCommand`), enabled only for a
     tile row (`inspectorCommandIsEnabled`, `InspectorEntryPointTests`).
-  - **Hero**: `heroIconSize(rows:)`, the Tile Name card's height — 122 pt for 3 × 40 pt rows + 2 × 1 pt
-    dividers, 163 pt with Show in Menu Bar's fourth row — so they align top and bottom. The card takes
+  - **Hero**: `heroIconSize(rows:)`, the Tile Name card's height — 163 pt for its 4 × 40 pt rows + 3 × 1 pt
+    dividers (Show in Menu Bar is always shown since 2.8.1) — so they align top and bottom. The card takes
     the width left (owner, 2026-11-22: a narrower card is fine; at the 420 pt narrowest column it gets
     ~240 pt and long translated labels wrap). Canonical Default/Dark while the inspector is open, Dark only where
     the Dock icon follows the appearance (macOS 26+; macOS 15 stays Default), live `TileFace` while

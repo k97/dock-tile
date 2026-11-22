@@ -36,4 +36,22 @@ struct TileDetailMenuBarTests {
         #expect(DockTileDetailView.heroIconSize(rows: 3) == 122)
         #expect(DockTileDetailView.heroIconSize(rows: 4) == 163)
     }
+
+    /// The switch is always shown; it reads on only while the global setting AND the tile's flag
+    /// are on. Failing value: a getter returning the tile flag alone reads on with the setting off.
+    @Test func switchReadsOnOnlyWithTheSetting() {
+        #expect(DockTileDetailView.menuBarSwitchIsOn(showInMenuBar: true, settingOn: true))
+        #expect(!DockTileDetailView.menuBarSwitchIsOn(showInMenuBar: true, settingOn: false))
+        #expect(!DockTileDetailView.menuBarSwitchIsOn(showInMenuBar: false, settingOn: true))
+        #expect(!DockTileDetailView.menuBarSwitchIsOn(showInMenuBar: false, settingOn: false))
+    }
+
+    /// Turning a tile on while the setting is off turns the setting on; nothing else touches it —
+    /// turning a tile off never turns the setting off.
+    @Test func switchOnTurnsTheSettingOn() {
+        #expect(DockTileDetailView.menuBarSwitchEnablesSetting(newValue: true, settingOn: false))
+        #expect(!DockTileDetailView.menuBarSwitchEnablesSetting(newValue: true, settingOn: true))
+        #expect(!DockTileDetailView.menuBarSwitchEnablesSetting(newValue: false, settingOn: false))
+        #expect(!DockTileDetailView.menuBarSwitchEnablesSetting(newValue: false, settingOn: true))
+    }
 }
