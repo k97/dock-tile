@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-11-22
+
+### Added
+
+- **menu bar:** Tiles can live in the menu bar now: a Show in Menu Bar switch in each tile puts it in Dock Tile's menu bar menu, with or without the Dock, so a tile can be in the Dock, the menu bar, both or neither. The switch shows while the menu bar icon is on in Settings › General ([ead6825](https://github.com/k97/dock-tile/commit/ead6825), [88e5d85](https://github.com/k97/dock-tile/commit/88e5d85), [b5492d7](https://github.com/k97/dock-tile/commit/b5492d7))
+
+### Changed
+
+- **menu bar:** The menu bar menu lists the tiles you pick instead of every tile in the Dock; after updating it lists the same tiles as before ([ead6825](https://github.com/k97/dock-tile/commit/ead6825), [88e5d85](https://github.com/k97/dock-tile/commit/88e5d85))
+- **menu bar:** New tiles start in the menu bar while the menu bar icon is on ([b5492d7](https://github.com/k97/dock-tile/commit/b5492d7))
+- **menu bar:** Turning the menu bar icon off first names any tile that is only in the menu bar; no tile changes, and turning it back on brings the menu back as it was ([d0eb3e7](https://github.com/k97/dock-tile/commit/d0eb3e7), [ec124a4](https://github.com/k97/dock-tile/commit/ec124a4))
+- **tiles:** Show Tile is now Show in Dock, and the tile's button reads Add, Update, Remove or Done; its tooltip still says Add to Dock or Remove from Dock ([9daac47](https://github.com/k97/dock-tile/commit/9daac47), [b5492d7](https://github.com/k97/dock-tile/commit/b5492d7))
+- **tiles:** The tile's icon in Tile Detail grows to the height of the settings beside it ([b79994c](https://github.com/k97/dock-tile/commit/b79994c))
+
+### Fixed
+
+- **localization:** Remove from Dock in French, Japanese and Russian no longer uses the word for Delete ([9daac47](https://github.com/k97/dock-tile/commit/9daac47))
+
 ## [2.7.2] - 2026-11-10
 
 ### Added
@@ -220,7 +238,10 @@ so every fix below reaches them without any action from you.
 - **customise:** Fix Customise overwriting a tile's Dock visibility with the value from when the editor was opened ([eaa93c6](https://github.com/k97/dock-tile/commit/eaa93c6))
 - **diagnostics:** Fix multi-line entries in Copy Diagnostics surviving the one-hour trim forever ([1e5a6a9](https://github.com/k97/dock-tile/commit/1e5a6a9))
 
-[Unreleased]: https://github.com/k97/dock-tile/compare/v2.7.0...HEAD
+[Unreleased]: https://github.com/k97/dock-tile/compare/v2.8.0...HEAD
+[2.8.0]: https://github.com/k97/dock-tile/compare/v2.7.2...v2.8.0
+[2.7.2]: https://github.com/k97/dock-tile/compare/v2.7.1...v2.7.2
+[2.7.1]: https://github.com/k97/dock-tile/compare/v2.7.0...v2.7.1
 [2.7.0]: https://github.com/k97/dock-tile/compare/v2.6.4...v2.7.0
 [2.6.4]: https://github.com/k97/dock-tile/compare/v2.6.3...v2.6.4
 [2.6.3]: https://github.com/k97/dock-tile/compare/v2.6.2...v2.6.3
