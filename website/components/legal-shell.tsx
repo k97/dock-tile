@@ -27,7 +27,7 @@ export function LegalShell({
       {/* Dark hero band — same treatment as the FAQ page header */}
       <section
         data-nav-tone="dark"
-        className="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] bg-black px-6 pb-16 pt-28 text-center md:mx-4 md:mt-4 md:pb-20 md:pt-36"
+        className="relative mx-3 mt-3 overflow-hidden rounded-[2.5rem] border border-white/10 bg-black px-6 pb-16 pt-28 text-center md:mx-4 md:mt-4 md:pb-20 md:pt-36"
       >
         <div className="grain" />
         <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-900/60" />

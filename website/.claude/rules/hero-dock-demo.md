@@ -111,7 +111,7 @@ on 2026-11-09 (Grid or list became a one-liner); it is in git history.
   it. Off-Dock tiles get `TileFace shaded` plus the Dock's lift on a wrapper
   (`drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]`; a squircle mask clips a box-shadow). Real app icons
   outside a popover (the Ghost card's ⌘Tab strip) take the lift too, at `rgba(0,0,0,0.4)` — the
-  Ghost card is always dark, where 0.2 vanishes; popover icons stay flat. The hero's tiles pass
+  Ghost card's ⌘Tab strip sits in a dark well, where 0.2 vanishes; popover icons stay flat. The hero's tiles pass
   `shaded` (top→bottom glyph fall-off, as the app bakes) at the 58% glyph size.
 - **The closing Dock (GitHub · What's new · Contact | Studio) was removed on 2026-11-21** — its
   links moved into the footer columns (content-i18n.md "Footer"). Its leftovers went on

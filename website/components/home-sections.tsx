@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   BatteryFull,
+  ChevronDown,
   ChevronRight,
   EyeOff,
   FolderOpen,
@@ -13,6 +14,7 @@ import {
   Lock,
   LockOpen,
   PanelTop,
+  Settings2,
   Search,
   Plus,
   SlidersHorizontal,
@@ -25,7 +27,7 @@ import { asset } from "@/lib/assets";
 import { siteConfig } from "@/lib/config";
 import { Reveal } from "@/components/reveal";
 import { CloserLook } from "@/components/closer-look";
-import { ICON_CONTENT_RATIO, TileFace } from "@/components/dock-demo";
+import { ICON_CONTENT_RATIO, TILES, TileFace } from "@/components/dock-demo";
 import { InlineTile } from "@/components/inline-tile";
 
 /* Uniform scale-to-fit: children render at their fixed natural size; the
@@ -135,7 +137,7 @@ export function DockLockStory() {
 
   return (
     // The last band before the Download section, inset like the hero, with a gap below.
-    <section data-nav-tone="dark" data-nav-section="features" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 md:mx-4 md:mb-4">
+    <section data-nav-tone="dark" data-nav-section="features" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] border border-white/10 bg-zinc-900 md:mx-4 md:mb-4">
       <div className="grain" />
       <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-950/40" />
       <div className="relative mx-auto grid max-w-400 items-center gap-12 px-6 py-24 md:grid-cols-2 md:gap-20 md:px-10 md:py-32">
@@ -149,7 +151,9 @@ export function DockLockStory() {
               {m.dockLockTitleB}
             </span>
           </h2>
-          <p className="max-w-lg text-lead text-white/60">{m.dockLockBody}</p>
+          <p className="max-w-lg text-lead text-white/60">
+            <b className="font-semibold text-white">{m.dockLockLead}</b> {m.dockLockBody}
+          </p>
           <div className="mt-8 flex items-center gap-3">
             <Lock className="h-5 w-5 shrink-0 text-emerald-400" />
             <p className="text-[13px] font-medium text-white/80">{m.dockLockTip}</p>
@@ -174,8 +178,8 @@ export function PowerUserSection() {
   const m = content.marketing;
 
   return (
-    // The first section after the hero (nav "Features" lands here).
-    <section id="features" data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-50">
+    // Follows the light intro section: no top padding, its bottom padding is the gap.
+    <section data-nav-section="features" className="mx-auto max-w-400 px-4 pb-24 sm:px-6 md:px-10 md:pb-50">
       <Reveal className="mb-12 text-center md:mb-13">
         <h2 className="mx-auto max-w-132 text-section text-foreground">
           {/* Orange + bolt: a colour and glyph no hero Dock tile uses. nowrap keeps
@@ -205,18 +209,37 @@ export function PowerUserSection() {
           <Footnote icon={ShieldCheck}>{m.smartAddPrivacy}</Footnote>
         </Reveal>
 
-        {/* The dark Ghost card sits in the middle, between the two light ones (owner, 2026-11-22). */}
-        <GhostCard delay={80} className="mx-auto max-w-md xl:max-w-none" />
+        {/* The dark card sits in the middle, between the two light ones (owner, 2026-11-22):
+            the menu bar card since the swap; Ghost mode moved right. Charcoal gradient,
+            not flat zinc-900, so it reads as its own card. */}
+        <Reveal delay={80} className="relative mx-auto flex w-full max-w-md flex-col justify-between gap-8 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-b from-zinc-800 to-zinc-900 p-6 text-white md:p-10 xl:max-w-none">
+          <div className="grain" />
+          <div className="relative">
+            <h3 className="mb-3 text-title-sm">{m.menuBarTitle}</h3>
+            <p className="max-w-md text-lead text-white/60">
+              <b className="font-semibold text-white">{m.menuBarIntro}</b> {m.menuBarBody}
+            </p>
+          </div>
+          <div className="relative rounded-2xl bg-white/[0.06] p-5">
+            <MenuBarMock />
+          </div>
+          {/* `relative` keeps the footnote above the grain overlay. */}
+          <div className="relative mx-auto flex w-fit items-center gap-3">
+            <PanelTop className="h-5 w-5 shrink-0 text-emerald-400" />
+            <p className="text-[13px] font-medium text-white/80">{m.menuBarLead}</p>
+          </div>
+        </Reveal>
 
         <Reveal delay={160} className={bentoCard}>
           <div>
-            <h3 className="mb-3 text-title-sm text-foreground">{m.menuBarTitle}</h3>
-            <p className="max-w-md text-lead text-muted-foreground">{m.menuBarBody}</p>
+            <h3 className="mb-3 text-title-sm text-foreground">{m.ghostTitle}</h3>
+            <p className="max-w-md text-lead text-muted-foreground">{m.ghostBody}</p>
           </div>
-          <div className="rounded-2xl bg-muted p-5">
-            <MenuBarMock />
+          {/* The ⌘Tab switcher is a dark HUD, so it sits in a dark well on the light card. */}
+          <div className="rounded-2xl bg-linear-to-b from-zinc-800 to-zinc-900 p-5">
+            <AppSwitcherMock />
           </div>
-          <Footnote icon={PanelTop}>{m.menuBarLead}</Footnote>
+          <Footnote icon={EyeOff}>{m.ghostTip}</Footnote>
         </Reveal>
       </div>
 
@@ -232,28 +255,6 @@ function Footnote({ icon: Icon, children }: { icon: React.ComponentType<{ classN
       <Icon className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400" />
       <p className="text-[13px] font-medium text-zinc-600 dark:text-white/80">{children}</p>
     </div>
-  );
-}
-
-/* Ghost Mode — always a dark card. It runs a charcoal gradient (lighter than
-   the flat zinc-900 shells) so it reads as its OWN card. */
-function GhostCard({ delay, className = "" }: { delay: number; className?: string }) {
-  const { content } = useLocale();
-  const m = content.marketing;
-  return (
-    <Reveal delay={delay} className={`relative flex w-full flex-col justify-between gap-8 overflow-hidden rounded-3xl bg-linear-to-b from-zinc-800 to-zinc-900 p-6 text-white md:p-10 ${className}`}>
-      <div className="grain" />
-      <div className="relative">
-        <h3 className="mb-3 text-title-sm">{m.ghostTitle}</h3>
-        <p className="max-w-md text-lead text-white/60">{m.ghostBody}</p>
-      </div>
-      <AppSwitcherMock />
-      {/* `relative` keeps the footnote above the grain overlay. */}
-      <div className="relative mx-auto flex w-fit items-center gap-3">
-        <EyeOff className="h-5 w-5 shrink-0 text-emerald-400" />
-        <p className="text-[13px] font-medium text-white/80">{m.ghostTip}</p>
-      </div>
-    </Reveal>
   );
 }
 
@@ -386,9 +387,17 @@ const menuSep = "mx-2 my-1 border-t border-black/10 dark:border-white/10";
 // A highlighted menu row is the system accent with white text, as on a real Mac.
 const menuHighlight = "bg-[#007AFF] text-white! dark:bg-[#0A84FF]";
 
-function AppIcon({ src, size }: { src: string; size: number }) {
+function AppIcon({ src, darkSrc, size }: { src: string; darkSrc?: string; size: number }) {
+  const icon = (s: string, className?: string) => (
+    <Image src={asset(s)} alt="" width={size} height={size} unoptimized draggable={false} className={className} style={{ width: size, height: size }} />
+  );
+  // The app's own Dark rendition in dark theme, swapped in CSS so it is right on frame 1.
+  if (!darkSrc) return icon(src);
   return (
-    <Image src={asset(src)} alt="" width={size} height={size} unoptimized draggable={false} style={{ width: size, height: size }} />
+    <>
+      {icon(src, "dark:hidden")}
+      {icon(darkSrc, "hidden dark:block")}
+    </>
   );
 }
 
@@ -587,5 +596,250 @@ function SmartAddMock() {
         </div>
       </div>
     </ScaleToFit>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* What Dock Tile is — a crowded Dock becomes a few tiles (2026-11-22) */
+/* ------------------------------------------------------------------ */
+
+const icon = (n: string) => `/assets/app-icons/${n}`;
+// A real-looking crowded Dock: the hero tiles' own apps, laid out flat.
+const crowdedDock = [
+  "claude.png", "chatgpt.png", "gemini.png", "granola.png", "vscode.png", "github.png", "xcode.png",
+  "warp.png", "messages.png", "slack.png", "whatsapp.png", "google-meet.png", "facetime.png",
+  "msteams.png", "appletv.png", "netflix.png", "music.png?v=2", "podcasts.png",
+].map(icon);
+
+/* Finder / System Settings bookend both Docks, as in the hero; their Dark
+   renditions dual-render so the first frame is right in either theme. */
+function DockEnd({ name }: { name: "finder" | "settings" }) {
+  const dark = name === "finder" ? "finder-dark.png?v=4" : "settings-dark.png";
+  return (
+    <span className="relative flex h-10 w-10">
+      <span className="dark:hidden">
+        <AppIcon src={icon(`${name}.png`)} size={40} />
+      </span>
+      <span className="hidden dark:block">
+        <AppIcon src={icon(dark)} size={40} />
+      </span>
+    </span>
+  );
+}
+
+/* A Dock strip at a fixed natural size (zoomed by ScaleToFit, never reflowed). */
+function DockStrip({ children }: { children: React.ReactNode }) {
+  return (
+    // No backdrop-filter here: it would make the strip a backdrop root, and the hover
+    // popovers inside it could then blur only the strip, never the wallpaper behind.
+    <div className="flex items-center gap-1.5 rounded-2xl border border-white/15 bg-[rgba(45,45,45,0.8)] p-2 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+      {children}
+    </div>
+  );
+}
+
+/* A Dock tile that shows its popover on hover — the hero's grid or list popover,
+   absolutely positioned above the tile so it overlays the picture instead of pushing
+   it down. CSS only (group-hover); off-screen for touch, where the hero Dock is the demo. */
+/** The arrow's size in px: a macOS popover arrow is wide and shallow. */
+const ARROW_W = 30;
+const ARROW_H = 11;
+
+/**
+ * The popover's outline as ONE path: a rounded rectangle with the arrow grown out of
+ * its bottom edge — curved flanks, a rounded tip. The glass, its rim and its shadow
+ * are all drawn from this path, so the arrow can't read as a separate piece.
+ */
+function popoverOutline(w: number, h: number, r = 16) {
+  const c = w / 2;
+  const half = ARROW_W / 2;
+  const tip = h + ARROW_H;
+  return [
+    `M${r},0 H${w - r} A${r},${r} 0 0 1 ${w},${r} V${h - r} A${r},${r} 0 0 1 ${w - r},${h}`,
+    `H${c + half} C${c + half - 7},${h} ${c + 5},${tip - 2.5} ${c + 2.2},${tip - 0.7}`,
+    `Q${c},${tip + 0.6} ${c - 2.2},${tip - 0.7} C${c - 5},${tip - 2.5} ${c - half + 7},${h} ${c - half},${h}`,
+    `H${r} A${r},${r} 0 0 1 0,${h - r} V${r} A${r},${r} 0 0 1 ${r},0 Z`,
+  ].join(" ");
+}
+
+function HoverTile({ tile }: { tile: (typeof TILES)[number] }) {
+  const list = tile.layout === "list";
+  const panelRef = React.useRef<HTMLSpanElement>(null);
+  const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
+  const id = React.useId();
+
+  // offsetWidth/Height ignore the pop-in scale, so this is the panel's resting size.
+  React.useLayoutEffect(() => {
+    const el = panelRef.current;
+    if (el) setSize({ w: el.offsetWidth, h: el.offsetHeight });
+  }, []);
+
+  const outline = size && popoverOutline(size.w, size.h);
+  // Opacity sits on each layer, never on a shared parent: a parent below opacity 1 cuts the
+  // glass off from the wallpaper, so its blur would vanish while fading in.
+  const fade = "opacity-0 transition-opacity duration-200 ease-(--ease-out-strong) group-hover:opacity-100";
+
+  return (
+    <span className="group relative flex h-10 w-10">
+      <TileFace gradient={tile.gradient} darkGlyph={tile.darkGlyph} glyph={tile.glyph} shaded />
+      <span className="absolute -bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-white/80 opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
+      <span
+        ref={panelRef}
+        aria-hidden // illustrative, like every mock on the page; hover-only, unreachable by keyboard
+        // Pops a layer up from its arrow tip like the macOS Dock: rises 6 px and scales from
+        // 0.94, on the snappy UI curve; reduced motion only fades.
+        className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-4 block origin-[50%_calc(100%+11px)] -translate-x-1/2 translate-y-1.5 scale-94 transition-[translate,scale] duration-200 ease-(--ease-out-strong) group-hover:translate-y-0 group-hover:scale-100 motion-reduce:translate-y-0 motion-reduce:scale-100 ${
+          list ? "w-60" : "w-72"
+        }`}
+      >
+        {outline && size && (
+          <>
+            {/* Shadow outside the outline only, so it never darkens the see-through glass. */}
+            <svg aria-hidden width={size.w} height={size.h + ARROW_H} className={`absolute top-0 left-0 overflow-visible ${fade}`}>
+              <defs>
+                <filter id={`${id}s`} x="-50%" y="-50%" width="200%" height="250%">
+                  <feDropShadow dx="0" dy="4" stdDeviation="5" floodOpacity="0.14" />
+                  <feDropShadow dx="0" dy="18" stdDeviation="18" floodOpacity="0.32" />
+                </filter>
+                <mask id={`${id}m`} maskUnits="userSpaceOnUse" x="-100" y="-100" width={size.w + 200} height={size.h + 200}>
+                  <rect x="-100" y="-100" width={size.w + 200} height={size.h + 200} fill="white" />
+                  <path d={outline} fill="black" />
+                </mask>
+              </defs>
+              <g mask={`url(#${id}m)`}>
+                <path d={outline} filter={`url(#${id}s)`} fill="black" />
+              </g>
+            </svg>
+            <span
+              aria-hidden
+              className={`popover-glass absolute top-0 left-0 ${fade}`}
+              style={{ width: size.w, height: size.h + ARROW_H, clipPath: `path("${outline}")` }}
+            />
+            {/* The rim: lit all round, brightest along the top like light catching glass. */}
+            <svg aria-hidden width={size.w} height={size.h + ARROW_H} className={`absolute top-0 left-0 overflow-visible ${fade}`}>
+              <defs>
+                <linearGradient id={`${id}r`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" className="[stop-color:white] [stop-opacity:0.8] dark:[stop-opacity:0.22]" />
+                  <stop offset="1" className="[stop-color:white] [stop-opacity:0.35] dark:[stop-opacity:0.08]" />
+                </linearGradient>
+              </defs>
+              <path d={outline} fill="none" stroke={`url(#${id}r)`} strokeWidth="1" />
+            </svg>
+          </>
+        )}
+        <span className={`relative block ${fade} ${list ? "p-1.5" : "px-2 pb-2"}`}>
+          {list ? (
+            <>
+              <span className="block px-3 pb-1 pt-2 text-left text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">{tile.name}</span>
+              {tile.apps.map((app) => (
+                <span key={app.name} className="flex items-center gap-2.5 px-3 py-1 text-[13px] text-zinc-700 dark:text-zinc-300">
+                  <AppIcon src={app.src} darkSrc={app.darkSrc} size={24} />
+                  {app.name}
+                </span>
+              ))}
+            </>
+          ) : (
+            <>
+              <span className="flex h-9 items-center justify-between px-1">
+                <span className="w-7" />
+                <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">{tile.name}</span>
+                <Settings2 className="mr-2 h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
+              </span>
+              <span className="grid grid-cols-4 gap-x-1 gap-y-2 px-1">
+                {tile.apps.map((app) => (
+                  <span key={app.name} className="flex flex-col items-center gap-1.5 p-1.5">
+                    <AppIcon src={app.src} darkSrc={app.darkSrc} size={48} />
+                    <span className="max-w-full truncate text-[11px] leading-none text-zinc-600 dark:text-zinc-300">{app.name}</span>
+                  </span>
+                ))}
+              </span>
+            </>
+          )}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function BeforeAfterDocks({ before, after }: { before: string; after: string }) {
+  const label = "mb-3 text-[13px] font-medium text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]";
+  return (
+    <ScaleToFit>
+      <div className="flex w-235 flex-col items-center font-ui">
+        <p className={label}>{before}</p>
+        <DockStrip>
+          <DockEnd name="finder" />
+          {crowdedDock.map((src) => (
+            <span key={src} className="flex h-10 w-10">
+              <AppIcon src={src} size={40} />
+            </span>
+          ))}
+          <DockEnd name="settings" />
+        </DockStrip>
+        <ChevronDown className="my-6 h-5 w-5 text-white/75" />
+        <p className={label}>{after}</p>
+        <DockStrip>
+          <DockEnd name="finder" />
+          {TILES.map((t) => (
+            <HoverTile key={t.id} tile={t} />
+          ))}
+          <DockEnd name="settings" />
+        </DockStrip>
+      </div>
+    </ScaleToFit>
+  );
+}
+
+export function IntroSection() {
+  const { content } = useLocale();
+  const m = content.marketing;
+
+  return (
+    // The first section after the hero: what Dock Tile is, before what it does.
+    <section id="features" data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-50">
+      <Reveal className="mb-12 text-center md:mb-13">
+        <h2 className="mx-auto max-w-132 text-section text-foreground">
+          {m.introTitleA}{" "}
+          <span className="whitespace-nowrap">
+            <InlineTile tilt="-rotate-6">
+              <AppGridFace icons={devApps.map((a) => a.src)} />
+            </InlineTile>{" "}
+            {m.introTitleB}
+          </span>
+        </h2>
+      </Reveal>
+
+      {/* The picture of the idea on a wallpaper that is NOT the hero's (owner, 2026-11-22):
+          the same dither file (already cached), cropped to another region and
+          hue-shifted, so each section reads as its own scene. */}
+      <Reveal className="relative mx-auto max-w-300 overflow-hidden rounded-3xl border border-white/10 px-6 py-12 md:px-12 md:py-16">
+        <div
+          aria-hidden
+          className="hero-texture"
+          style={
+            {
+              "--hero-bg": `url("${asset("/assets/bg/hero-bg.webp")}")`,
+              "--hero-bg-dark": `url("${asset("/assets/bg/hero-bg-dark.webp")}")`,
+              backgroundSize: "150%",
+              backgroundPosition: "60% 75%",
+              filter: "hue-rotate(200deg) saturate(1.1)",
+            } as React.CSSProperties
+          }
+        />
+        <div aria-hidden className="absolute inset-0 bg-black/10" />
+        <div className="relative">
+          <BeforeAfterDocks before={m.introBefore} after={m.introAfter} />
+        </div>
+      </Reveal>
+
+      <ul className="mx-auto mt-14 grid max-w-300 gap-x-10 gap-y-8 px-2 md:mt-16 md:grid-cols-3">
+        {m.introPoints.map((p, i) => (
+          <Reveal as="li" key={p.lead} delay={i * 60}>
+            <p className="text-lead font-medium text-foreground">{p.lead}</p>
+            <p className="mt-1 text-lead text-muted-foreground">{p.body}</p>
+          </Reveal>
+        ))}
+      </ul>
+    </section>
   );
 }

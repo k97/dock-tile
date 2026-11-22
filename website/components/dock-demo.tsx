@@ -40,7 +40,7 @@ const LIST_WIDTH = 240;
 const widthFor = (tile: DemoTile | null) =>
   tile?.layout === "list" ? LIST_WIDTH : GRID_WIDTH;
 
-const TILES: DemoTile[] = [
+export const TILES: DemoTile[] = [
   {
     id: "ai",
     name: "AI Apps",

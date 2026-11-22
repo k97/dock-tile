@@ -3,11 +3,22 @@
 ## Page structure
 
 - Single-page marketing site (owner, 2026-11-21, after a GA read of the redesign):
-  `Hero → PowerUserSection (id="features") → CustomTilesStory (id="customise") → DockLockStory →
-  HomeFaq → DownloadSection` + Footer.
-  - **PowerUserSection** — "Set up for you. ⚡ Out of your way.": Smart Add · Ghost mode · Menu
-    bar cards (the dark Ghost card in the middle, owner 2026-11-22), then the row of four one-liners (Keyboard, Folders, Free and open source, Languages).
-    Nav "Features" lands here.
+  `Hero → IntroSection (id="features") → PowerUserSection → CustomTilesStory (id="customise") → DockLockStory →
+  HomeFaq → FeatureVote → DownloadSection` + Footer.
+  - **FeatureVote** (2026-11-22) — a small "Widgets in the popover?" card with a 🙋 raised
+    hand ("I want it"; a heart was replaced the same day). **Every tap counts — no per-visitor
+    limit, on purpose (owner)**, so the number measures enthusiasm, not people.
+    `/api/votes/[feature]` → `lib/votes.ts` (Upstash Redis over REST, a plain `INCR`; nothing
+    about the visitor is stored, so the privacy page needs no line; GET is CDN-cached for
+    30 s). Without `KV_REST_API_URL` / `KV_REST_API_TOKEN` it hides the number and still logs
+    GA `feature_vote` per tap. A new idea = a slug in `VOTE_FEATURES` + copy keys.
+  - **IntroSection** (2026-11-22) — "Less Dock. ▦ More multitasking.": what Dock Tile is, before what it
+    does. A Before / With Dock Tile pair of fixed-size Docks on the hero wallpaper, re-cropped (150%, 60% 75%) and hue-shifted 200° to blues and purples so it reads as its own scene (owner: no section repeats another's background) (18 apps + the
+    Finder/Settings bookends → Finder, the four hero tiles, Settings; `ScaleToFit`), then three short
+    points (`introPoints`). Nav "Features" lands here.
+  - **PowerUserSection** — "Set up for you. ⚡ Out of your way.": Smart Add · Menu bar · Ghost mode
+    cards, light · dark · light (owner, 2026-11-22: the middle card is always the dark one; the menu
+    bar card took it, and Ghost mode's ⌘Tab strip sits in a dark well on its white card), then the row of four one-liners (Keyboard, Folders, Free and open source, Languages).
   - **CustomTilesStory** — "Pick your apps. Pick a look. ▦ Done." over the window capture with
     its closer-look hotspots; the body names the "Dock Tile companion app". The hero Dock's
     Configure… walks to `#customise`.

@@ -21,7 +21,7 @@ export function DownloadSection() {
         <h2 className="mx-auto max-w-132 text-section text-foreground">
           {m.downloadTitleA}{" "}
           <span className="whitespace-nowrap">
-            <InlineTile tilt="-rotate-6">
+            <InlineTile tilt="rotate-6">
               <AppGridFace icons={aiAppIcons} />
             </InlineTile>{" "}
             {m.downloadTitleB}

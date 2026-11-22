@@ -65,7 +65,7 @@ export function Footer() {
   ];
 
   return (
-    <footer data-nav-tone="dark" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] bg-zinc-900 text-white md:mx-4 md:mb-4">
+    <footer data-nav-tone="dark" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] border border-white/10 bg-zinc-900 text-white md:mx-4 md:mb-4">
       <div className="grain" />
       <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-950/40" />
       <div className="relative mx-auto grid max-w-270 grid-cols-2 gap-x-8 gap-y-10 px-6 pt-16 pb-12 lg:grid-cols-4">

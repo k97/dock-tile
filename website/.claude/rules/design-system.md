@@ -10,6 +10,11 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
 - Dark shells are **pure `#000` with a bottom-heavy gradient — never flat black**; secondary dark
   blocks `#18181B`; light background `#F4F4F5` (zinc-100).
 - Grain overlay at 15% on every dark section (prevents banding).
+- **Every card and band has the same 1px hairline (owner, 2026-11-22)**: theme-flipping cards
+  use `border border-border`; always-dark surfaces (hero, the intro's wallpaper card, the
+  menu bar card, the Dock Lock band, the footer, the FAQ / Release Notes / legal headers) use
+  `border border-white/10`, which is `--border`'s own dark-theme value, so in dark theme
+  every card's edge is identical. A new card gets one of the two.
 - Radii: 2.5rem on major section wrappers (the site's rhythm — keep it); internal cards 16–24px.
   shadcn remaps the radius names: `rounded-sm` 6 px, `md` 8, `lg` 10 (not Tailwind v4's 4/6/8).
   macOS mocks copy the app's proportions: check the radius against an app screenshot (on
@@ -39,7 +44,7 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
 - `next-themes`, class attribute, system default. The **footer `ThemeSwitcher` must stay** — it
   was dropped once during a consolidation and explicitly demanded back.
 - **Signature-dark bands stay dark in BOTH themes** (they simulate macOS chrome or are brand
-  moments): hero, the Dock Lock band, Ghost Mode card, the footer band, and the dark page headers on
+  moments): hero, the Dock Lock band, the menu bar card, the footer band, and the dark page headers on
   FAQ/release-notes/legal. Only neutral surfaces theme-flip.
 - **Anything visible at load themes via CSS (`dark:` variants / `.dark` rules), NEVER a
   `mounted && resolvedTheme` guard** (one exception, next bullet) — next-themes sets `.dark` on `<html>` before first paint, so
@@ -66,9 +71,9 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
   **It sits on the dark footer band (2026-11-22), so it is white-on-dark in both themes**: tray
   `bg-white/6` + `border-white/10`, selected `bg-white/15`. (On the light page the token-default
   tray was invisible — light `--muted` equals the page — hence the earlier `bg-foreground/6` tray.)
-- Cards have fixed theme character: the Ghost card is always dark (hardcoded whites are correct);
+- Cards have fixed theme character: the menu bar card (the middle one) is always dark (hardcoded whites are correct);
   the Smart Add card flips, so its colours must be theme-aware (`text-zinc-600 dark:text-white/80`).
-  The Ghost card runs a charcoal gradient (`from-zinc-800 to-zinc-900`), NOT flat zinc-900 — flat
+  The dark card runs a charcoal gradient (`from-zinc-800 to-zinc-900`), NOT flat zinc-900 — flat
   read as one slab with the pure-black Final CTA that used to follow it on mobile.
 
 ## Adaptive nav
@@ -232,12 +237,14 @@ re-apply per component unless overriding.
 ## CSS / tooling gotchas (each cost real debugging time)
 
 - **Every homepage section heading carries one tilted tile mid-line** — `InlineTile` in
-  `components/inline-tile.tsx`, any face as its child (owner 2026-11-09). Down the page (2026-11-21):
+  `components/inline-tile.tsx`, any face as its child (owner 2026-11-09). Down the page (2026-11-22):
+  "Less Dock. ▦ More multitasking." an App Grid of dev apps;
   "Set up for you. ⚡" an orange bolt — a colour and glyph no hero Dock tile uses (owner: don't
   repeat a Dock tile), nowrap so the tile ends line one; "Pick a look. ▦ Done." an App Grid of
   media apps (nowrap with "Done.", "Pick a look." nbsp-bound so the break falls after "apps.");
   "The Dock 🔒 stays put." a green lock; "Tidy your ▦ Dock today." an App Grid of AI apps
-  (`download-section.tsx`). Tilts alternate (+6°, −6°, +6°, −6°). Split the string into A/B keys
+  (`download-section.tsx`); "Questions, ❓ answered." an indigo question mark (`home-faq.tsx`).
+  Tilts alternate down the page (−6°, +6°, −6°, +6°, −6°, +6°). Split the string into A/B keys
   around the tile.
 - **`InlineTile` lives in `components/inline-tile.tsx`** so the subpages' `ContactCta` can use it
   without pulling `home-sections.tsx` into their bundles (its `TileFace` still comes from

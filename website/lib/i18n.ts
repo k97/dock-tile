@@ -40,6 +40,16 @@ const marketingBase = {
   tilesSpotPrevious: "Previous",
   tilesSpotNext: "Next",
   tilesSpotClose: "Close",
+  // What Dock Tile is (first section after the hero), split around the heading's tile
+  introTitleA: "Less Dock.",
+  introTitleB: "More multitasking.",
+  introBefore: "Before",
+  introAfter: "With Dock Tile",
+  introPoints: [
+    { lead: "One tile, many apps", body: "Group apps and folders behind a single Dock icon. Click it and they pop up, ready to open." },
+    { lead: "Looks like it belongs", body: "Each tile is a real Mac app with its own icon, so it sits and magnifies like everything else in your Dock." },
+    { lead: "Ready in a minute", body: "Pick a suggested tile or start blank, add your apps, then press Add to Dock." },
+  ],
   // The card section's heading (Smart Add sets up; menu bar + Ghost stay out of the way)
   cardsTitleA: "Set up for you.",
   cardsTitleB: "Out of your way.",
@@ -53,11 +63,14 @@ const marketingBase = {
   ghostTip: "Want one in Command-Tab? Switch it on for that tile.",
   dockLockTitleA: "The Dock", // split around the heading's tilted tile
   dockLockTitleB: "stays put.",
+  // Dock Lock is its own tool that ships with Dock Tile, not a tile feature: the lead says so.
+  dockLockLead: "Dock Lock comes with Dock Tile.",
   dockLockBody:
-    "Stop the Dock from jumping between screens on multi-display setups. Choose a display for each set of screens you use, and the Dock stays on it.",
+    "It's a separate tool for Macs with more than one display that stops the Dock jumping between screens. Choose a display for each set of screens you use, and the Dock stays on it. Turn it on in Settings\u00A0›\u00A0Dock\u00A0Lock.",
   dockLockTip: "Remembers a display for each desk you work at.",
   menuBarTitle: "Your tiles, in the menu bar.",
   menuBarLead: "On from the first launch.",
+  menuBarIntro: "A menu bar shortcut comes with Dock Tile.", // bold lead-in, like Dock Lock's
   menuBarBody:
     "The tiles in your Dock and their apps, listed in the menu bar, ready even when the Dock is hidden. Turn it off in Settings any time.",
   // The row of small features: a plain name, then one calm sentence.
@@ -77,6 +90,12 @@ const marketingBase = {
   ctaButton: "Download Dock Tile",
   ctaMetaOpenSource: "Free & open source",
   ctaMetaAppleSilicon: "Apple silicon",
+  // Feature vote banner (a raised hand for the next idea; lib/votes.ts counts every tap)
+  voteTitle: "Widgets in your tiles?",
+  voteBody:
+    "A world clock, your calendar or the weather, the moment a tile pops up, without digging through windows. Raise your hand if you want it: the more hands, the sooner we build it.",
+  voteThanks: "Counted! Want it more? Raise your hand again.",
+  voteButton: "I want widgets in my tiles",
   // Homepage FAQ (the top questions; the rest live on /faq)
   homeFaqTitleA: "Questions,", // split around the heading's tilted tile
   homeFaqTitleB: "answered.",
