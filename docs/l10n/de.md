@@ -13,6 +13,10 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `alert.configUnreadable.quit` | Quit | Beenden | machine | Only button of the can't-read-tiles launch alert; quits Dock Tile |
 | `alert.configUnreadable.title` | Dock Tile Can't Read Your Tiles | Dock Tile kann deine Kacheln nicht lesen | machine | Launch alert title: the tile settings file exists but could not be opened; the app quits after it |
 | `alert.deleteTile.message` | This will permanently delete the tile and remove it from the dock. | Die Kachel wird endgültig gelöscht und aus dem Dock entfernt. | machine | Delete-tile confirmation message |
+| `alert.menuBarOff.messageMany` | These tiles are only in the menu bar: %@. They stay in Dock Tile but won’t show anywhere until you turn this back on or add them to the Dock. | Diese Kacheln sind nur in der Menüleiste: %@. Sie bleiben in Dock Tile, werden aber nirgends angezeigt, bis du dies wieder aktivierst oder sie zum Dock hinzufügst. | machine | Turn-off-menu-bar alert, several tiles; %@ = up to three tile names joined as a list, possibly ending with alert.menuBarOff.more ("2 more"). "Menu bar" is Apple's macOS menu bar. |
+| `alert.menuBarOff.messageOne` | %@ is only in the menu bar. It stays in Dock Tile but won’t show anywhere until you turn this back on or add it to the Dock. | „%@“ ist nur in der Menüleiste. Die Kachel bleibt in Dock Tile, wird aber nirgends angezeigt, bis du dies wieder aktivierst oder sie zum Dock hinzufügst. | machine | Turn-off-menu-bar alert, one tile; %@ = the tile's name. "Menu bar" is Apple's macOS menu bar. |
+| `alert.menuBarOff.more` | %lld more | %lld weitere | machine | Last element of the tile list in the turn-off-menu-bar alert, after three names ("A, B, C and 2 more"); %lld = how many more tiles. Must read right for any count. |
+| `alert.menuBarOff.title` | Turn Off the Menu Bar Icon? | Symbol in der Menüleiste deaktivieren? | machine | Alert title when turning off Dock Tile's menu bar icon while some tiles are only in the menu bar. "Menu bar" is Apple's macOS menu bar — use Apple's own term. |
 | `alert.missingApps.message` | Some apps in your tiles can't be found on this Mac. Remove them from your tiles? | Einige Apps in deinen Kacheln wurden auf diesem Mac nicht gefunden. Aus deinen Kacheln entfernen? | machine | Alert message offering to remove uninstalled apps from tiles |
 | `alert.missingApps.title` | Some apps are no longer installed | Einige Apps sind nicht mehr installiert | machine | Alert title when apps referenced by tiles can't be found on disk |
 | `alert.missingAppsScan.foundMessage` | These apps can't be found on this Mac: | Diese Apps wurden auf diesem Mac nicht gefunden: | machine | Intro line of the manual scan results dialog; a list of tiles/apps follows |
@@ -37,6 +41,8 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.confirm` | Confirm | Bestätigen | machine | Confirm button for alert dialogs |
 | `button.createNewTile` | Create New Tile | Neue Kachel erstellen | machine | Smart Add sheet — neutral button that starts a blank tile instead of a suggestion |
 | `button.delete` | Delete | Löschen | machine | Delete button |
+| `button.dockAdd` | Add | Hinzufügen | machine | Tile Detail toolbar button: puts this tile in the Dock (short form of Add to Dock). Not the file picker's Add. |
+| `button.dockRemove` | Remove | Entfernen | machine | Tile Detail toolbar button: takes this tile out of the Dock (short form of Remove from Dock). It does NOT delete the tile — never use the word for Delete. |
 | `button.done` | Done | Fertig | machine | Done button |
 | `button.duplicate` | Duplicate | Duplizieren | machine | Duplicate button in context menu |
 | `button.keep` | Keep | Behalten | machine | Button to keep uninstalled apps in tiles (dismiss the removal prompt) |
@@ -54,6 +60,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.save` | Save | Sichern | machine | Primary toolbar button that commits the popover appearance settings |
 | `button.saving` | Applying… | Wird angewendet … | machine | Loading label on the Save button while applying settings to Dock tiles |
 | `button.scanForMissingApps` | Scan | Prüfen | machine | Settings button that scans tiles for moved/uninstalled apps |
+| `button.turnOff` | Turn Off | Deaktivieren | machine | Confirm button of the alert that turns off Dock Tile's menu bar icon |
 | `button.update` | Update | Aktualisieren | machine | Update button when tile is already in Dock |
 | `button.useThisTile` | Use This Tile | Kachel verwenden | machine | Smart Add sheet — button that creates a pre-filled tile from a suggestion |
 | `emojiCategory.activity` | Activity | Aktivität | machine | Emoji picker: section header |
@@ -119,6 +126,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `label.colour.hint.toned.static` | Toned to stay clear on white | Abgestimmt für gute Erkennbarkeit auf Weiß | machine | Customise Tile: colour hint, Mono tile on macOS 15 |
 | `label.iconSize` | Icon Size | Symbolgröße | machine | Compact label for the icon size stepper (side-by-side with icon weight) |
 | `label.iconWeight` | Icon Weight | Strichstärke | machine | Label for the SF Symbol weight picker |
+| `label.inMenuBar` | In the menu bar | In der Menüleiste | machine | VoiceOver label for the sidebar mark on a tile listed in Dock Tile's menu bar icon menu. "Menu bar" is Apple's macOS menu bar — use Apple's own term. |
 | `label.missingAppsScan` | Missing Apps | Fehlende Apps | machine | Settings row title for the missing-app scan |
 | `label.missingAppsScanDescription` | Check your tiles for apps that have been moved or uninstalled. | Prüfe deine Kacheln auf Apps, die verschoben oder deinstalliert wurden. | machine | Settings row description for the missing-app scan |
 | `label.notInstalled` | Not installed | Nicht installiert | machine | Badge/kind text shown for an app whose bundle is no longer on disk |
@@ -133,9 +141,10 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `label.shareAnalytics` | Share anonymous usage data | Anonyme Nutzungsdaten teilen | machine | Label for the analytics opt-out toggle in Settings |
 | `label.shareAnalyticsDescription` | Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected. | Hilf mit, Dock Tile zu verbessern, indem du anonyme Nutzungsdaten und Absturzberichte sendest. Es werden keine persönlichen Daten erfasst. | machine | Explanation under the analytics toggle |
 | `label.addAppsAndFolders` | Add Apps & Folders | Apps & Ordner hinzufügen | machine | Tooltip on the Add button in Tile Detail's In This Tile section |
-| `label.appSwitcherNeedsShowTile` | Turn on Show Tile first — this only applies while the tile is in the Dock. | Aktiviere zuerst „Kachel zeigen“ – diese Option gilt nur, solange die Kachel im Dock ist. | machine | Tooltip on the disabled Show in App Switcher toggle when the tile is hidden |
+| `label.appSwitcherNeedsShowTile` | Turn on Show in Dock first — this only applies while the tile is in the Dock. | Aktiviere zuerst „Im Dock anzeigen“ – diese Option gilt nur, solange die Kachel im Dock ist. | machine | Tooltip on the disabled Show in App Switcher toggle when the tile is hidden |
 | `label.showInAppSwitcher` | Show in App Switcher | Im App-Umschalter zeigen | machine | Label for app switcher toggle |
-| `label.showTile` | Show Tile | Kachel zeigen | machine | Label for show tile toggle |
+| `label.showInMenuBar` | Show in Menu Bar | In Menüleiste anzeigen | machine | Tile Detail: toggle that lists this tile in Dock Tile's menu bar icon menu. "Menu bar" is Apple's macOS menu bar at the top of the screen — use Apple's own term. |
+| `label.showTile` | Show in Dock | Im Dock anzeigen | machine | Label for show tile toggle |
 | `label.softwareUpdate` | Software Update | Softwareupdate | machine | Title of the software-update row in General settings |
 | `label.softwareUpdateDescription` | You’re using version %@. Dock Tile checks for updates automatically. | Du verwendest Version %@. Dock Tile sucht automatisch nach Updates. | machine | Description under the software-update row; %@ is the current version |
 | `label.startAtLogin` | Start tiles at login | Kacheln bei der Anmeldung starten | machine | Label for the start-at-login toggle in Settings |
@@ -210,7 +219,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.login.requiresApproval` | Approve Dock Tile in Login Items to finish enabling this. | Erlaube Dock Tile unter „Anmeldeobjekte“, um die Aktivierung abzuschließen. | machine | Shown when macOS is holding the login item for user approval |
 | `settings.menuBar` | Menu Bar | Menüleiste | machine | General: section holding the menu bar icon toggle |
 | `settings.menuBar.toggle` | Show Dock Tile in the menu bar | Dock Tile in der Menüleiste anzeigen | machine | General: toggle that adds Dock Tile's icon to the menu bar, listing the tiles and their apps |
-| `settings.menuBar.toggleDescription` | Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on. | Listet die Kacheln in deinem Dock und ihre Apps auf. Solange dies aktiv ist, läuft Dock Tile im Hintergrund weiter. | machine | General: caption under the menu bar icon toggle |
+| `settings.menuBar.toggleDescription` | Lists the tiles you choose and their apps. Turn on Show in Menu Bar in a tile to add it. Dock Tile keeps running in the background while this is on. | Listet die Kacheln deiner Wahl und ihre Apps auf. Aktiviere „In Menüleiste anzeigen“ in einer Kachel, um sie hinzuzufügen. Solange dies aktiv ist, läuft Dock Tile im Hintergrund weiter. | machine | General: caption under the menu bar icon toggle |
 | `settings.popover` | Popover | Popover | machine | Section header and pane title for popover appearance settings |
 | `settings.popover.configure` | Configure | Konfigurieren | machine | Label for the Grid/List panel switcher in popover settings |
 | `settings.popover.configure.subtitle` | Each layout's settings are saved independently | Die Einstellungen jedes Layouts werden separat gesichert | machine | Subtitle explaining that Grid and List popover settings are stored separately |

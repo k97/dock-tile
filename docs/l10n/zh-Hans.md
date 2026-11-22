@@ -13,6 +13,10 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `alert.configUnreadable.quit` | Quit | 退出 | machine | Only button of the can't-read-tiles launch alert; quits Dock Tile |
 | `alert.configUnreadable.title` | Dock Tile Can't Read Your Tiles | Dock Tile无法读取你的磁贴 | machine | Launch alert title: the tile settings file exists but could not be opened; the app quits after it |
 | `alert.deleteTile.message` | This will permanently delete the tile and remove it from the dock. | 此操作将永久删除该磁贴，并将其从程序坞中移除。 | machine | Delete-tile confirmation message |
+| `alert.menuBarOff.messageMany` | These tiles are only in the menu bar: %@. They stay in Dock Tile but won’t show anywhere until you turn this back on or add them to the Dock. | 以下磁贴仅在菜单栏中：%@。它们仍保留在Dock Tile中，但在你重新打开此选项或将其添加到程序坞之前，不会在任何地方显示。 | machine | Turn-off-menu-bar alert, several tiles; %@ = up to three tile names joined as a list, possibly ending with alert.menuBarOff.more ("2 more"). "Menu bar" is Apple's macOS menu bar. |
+| `alert.menuBarOff.messageOne` | %@ is only in the menu bar. It stays in Dock Tile but won’t show anywhere until you turn this back on or add it to the Dock. | “%@”仅在菜单栏中。它仍保留在Dock Tile中，但在你重新打开此选项或将其添加到程序坞之前，不会在任何地方显示。 | machine | Turn-off-menu-bar alert, one tile; %@ = the tile's name. "Menu bar" is Apple's macOS menu bar. |
+| `alert.menuBarOff.more` | %lld more | 另外 %lld 个 | machine | Last element of the tile list in the turn-off-menu-bar alert, after three names ("A, B, C and 2 more"); %lld = how many more tiles. Must read right for any count. |
+| `alert.menuBarOff.title` | Turn Off the Menu Bar Icon? | 关闭菜单栏图标？ | machine | Alert title when turning off Dock Tile's menu bar icon while some tiles are only in the menu bar. "Menu bar" is Apple's macOS menu bar — use Apple's own term. |
 | `alert.missingApps.message` | Some apps in your tiles can't be found on this Mac. Remove them from your tiles? | 你的磁贴中有些App在这台Mac上找不到了。要将它们从磁贴中移除吗？ | machine | Alert message offering to remove uninstalled apps from tiles |
 | `alert.missingApps.title` | Some apps are no longer installed | 部分App已不再安装 | machine | Alert title when apps referenced by tiles can't be found on disk |
 | `alert.missingAppsScan.foundMessage` | These apps can't be found on this Mac: | 在这台Mac上找不到以下App： | machine | Intro line of the manual scan results dialog; a list of tiles/apps follows |
@@ -37,6 +41,8 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.confirm` | Confirm | 确认 | machine | Confirm button for alert dialogs |
 | `button.createNewTile` | Create New Tile | 新建磁贴 | machine | Smart Add sheet — neutral button that starts a blank tile instead of a suggestion |
 | `button.delete` | Delete | 删除 | machine | Delete button |
+| `button.dockAdd` | Add | 添加 | machine | Tile Detail toolbar button: puts this tile in the Dock (short form of Add to Dock). Not the file picker's Add. |
+| `button.dockRemove` | Remove | 移除 | machine | Tile Detail toolbar button: takes this tile out of the Dock (short form of Remove from Dock). It does NOT delete the tile — never use the word for Delete. |
 | `button.done` | Done | 完成 | machine | Done button |
 | `button.duplicate` | Duplicate | 复制 | machine | Duplicate button in context menu |
 | `button.keep` | Keep | 保留 | machine | Button to keep uninstalled apps in tiles (dismiss the removal prompt) |
@@ -54,6 +60,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.save` | Save | 保存 | machine | Primary toolbar button that commits the popover appearance settings |
 | `button.saving` | Applying… | 正在应用… | machine | Loading label on the Save button while applying settings to Dock tiles |
 | `button.scanForMissingApps` | Scan | 扫描 | machine | Settings button that scans tiles for moved/uninstalled apps |
+| `button.turnOff` | Turn Off | 关闭 | machine | Confirm button of the alert that turns off Dock Tile's menu bar icon |
 | `button.update` | Update | 更新 | machine | Update button when tile is already in Dock |
 | `button.useThisTile` | Use This Tile | 使用此磁贴 | machine | Smart Add sheet — button that creates a pre-filled tile from a suggestion |
 | `emojiCategory.activity` | Activity | 活动 | machine | Emoji picker: section header |
@@ -119,6 +126,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `label.colour.hint.toned.static` | Toned to stay clear on white | 已调整色调，在白色上保持清晰 | machine | Customise Tile: colour hint, Mono tile on macOS 15 |
 | `label.iconSize` | Icon Size | 图标大小 | machine | Compact label for the icon size stepper (side-by-side with icon weight) |
 | `label.iconWeight` | Icon Weight | 图标粗细 | machine | Label for the SF Symbol weight picker |
+| `label.inMenuBar` | In the menu bar | 在菜单栏中 | machine | VoiceOver label for the sidebar mark on a tile listed in Dock Tile's menu bar icon menu. "Menu bar" is Apple's macOS menu bar — use Apple's own term. |
 | `label.missingAppsScan` | Missing Apps | 缺失的App | machine | Settings row title for the missing-app scan |
 | `label.missingAppsScanDescription` | Check your tiles for apps that have been moved or uninstalled. | 检查你的磁贴中是否有已被移动或卸载的App。 | machine | Settings row description for the missing-app scan |
 | `label.notInstalled` | Not installed | 未安装 | machine | Badge/kind text shown for an app whose bundle is no longer on disk |
@@ -133,9 +141,10 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `label.shareAnalytics` | Share anonymous usage data | 共享匿名使用数据 | machine | Label for the analytics opt-out toggle in Settings |
 | `label.shareAnalyticsDescription` | Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected. | 发送匿名使用情况和崩溃报告，帮助改进Dock Tile。不会收集任何个人数据。 | machine | Explanation under the analytics toggle |
 | `label.addAppsAndFolders` | Add Apps & Folders | 添加App和文件夹 | machine | Tooltip on the Add button in Tile Detail's In This Tile section |
-| `label.appSwitcherNeedsShowTile` | Turn on Show Tile first — this only applies while the tile is in the Dock. | 请先打开“显示磁贴”——此设置仅在磁贴位于程序坞中时生效。 | machine | Tooltip on the disabled Show in App Switcher toggle when the tile is hidden |
+| `label.appSwitcherNeedsShowTile` | Turn on Show in Dock first — this only applies while the tile is in the Dock. | 请先打开“在程序坞中显示”——此设置仅在磁贴位于程序坞中时生效。 | machine | Tooltip on the disabled Show in App Switcher toggle when the tile is hidden |
 | `label.showInAppSwitcher` | Show in App Switcher | 在App切换器中显示 | machine | Label for app switcher toggle |
-| `label.showTile` | Show Tile | 显示磁贴 | machine | Label for show tile toggle |
+| `label.showInMenuBar` | Show in Menu Bar | 在菜单栏显示 | machine | Tile Detail: toggle that lists this tile in Dock Tile's menu bar icon menu. "Menu bar" is Apple's macOS menu bar at the top of the screen — use Apple's own term. |
+| `label.showTile` | Show in Dock | 在程序坞中显示 | machine | Label for show tile toggle |
 | `label.softwareUpdate` | Software Update | 软件更新 | machine | Title of the software-update row in General settings |
 | `label.softwareUpdateDescription` | You’re using version %@. Dock Tile checks for updates automatically. | 你正在使用版本%@。Dock Tile会自动检查更新。 | machine | Description under the software-update row; %@ is the current version |
 | `label.startAtLogin` | Start tiles at login | 登录时启动磁贴 | machine | Label for the start-at-login toggle in Settings |
@@ -210,7 +219,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.login.requiresApproval` | Approve Dock Tile in Login Items to finish enabling this. | 在“登录项”中批准Dock Tile以完成启用。 | machine | Shown when macOS is holding the login item for user approval |
 | `settings.menuBar` | Menu Bar | 菜单栏 | machine | General: section holding the menu bar icon toggle |
 | `settings.menuBar.toggle` | Show Dock Tile in the menu bar | 在菜单栏中显示Dock Tile | machine | General: toggle that adds Dock Tile's icon to the menu bar, listing the tiles and their apps |
-| `settings.menuBar.toggleDescription` | Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on. | 列出程序坞中的磁贴及其应用。开启后，Dock Tile会在后台持续运行。 | machine | General: caption under the menu bar icon toggle |
+| `settings.menuBar.toggleDescription` | Lists the tiles you choose and their apps. Turn on Show in Menu Bar in a tile to add it. Dock Tile keeps running in the background while this is on. | 列出你选择的磁贴及其应用。在磁贴中打开“在菜单栏显示”即可添加。开启后，Dock Tile会在后台持续运行。 | machine | General: caption under the menu bar icon toggle |
 | `settings.popover` | Popover | 弹出面板 | machine | Section header and pane title for popover appearance settings |
 | `settings.popover.configure` | Configure | 配置 | machine | Label for the Grid/List panel switcher in popover settings |
 | `settings.popover.configure.subtitle` | Each layout's settings are saved independently | 每种布局的设置分别存储 | machine | Subtitle explaining that Grid and List popover settings are stored separately |

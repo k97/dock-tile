@@ -13,6 +13,10 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `alert.configUnreadable.quit` | Quit | 終了 | machine | Only button of the can't-read-tiles launch alert; quits Dock Tile |
 | `alert.configUnreadable.title` | Dock Tile Can't Read Your Tiles | Dock Tileがタイルを読み込めません | machine | Launch alert title: the tile settings file exists but could not be opened; the app quits after it |
 | `alert.deleteTile.message` | This will permanently delete the tile and remove it from the dock. | このタイルは完全に削除され、Dockからも取り除かれます。 | machine | Delete-tile confirmation message |
+| `alert.menuBarOff.messageMany` | These tiles are only in the menu bar: %@. They stay in Dock Tile but won’t show anywhere until you turn this back on or add them to the Dock. | 次のタイルはメニューバーにのみあります：%@。Dock Tileには残りますが、この設定を再びオンにするかDockに追加するまで、どこにも表示されません。 | machine | Turn-off-menu-bar alert, several tiles; %@ = up to three tile names joined as a list, possibly ending with alert.menuBarOff.more ("2 more"). "Menu bar" is Apple's macOS menu bar. |
+| `alert.menuBarOff.messageOne` | %@ is only in the menu bar. It stays in Dock Tile but won’t show anywhere until you turn this back on or add it to the Dock. | “%@”はメニューバーにのみあります。Dock Tileには残りますが、この設定を再びオンにするかDockに追加するまで、どこにも表示されません。 | machine | Turn-off-menu-bar alert, one tile; %@ = the tile's name. "Menu bar" is Apple's macOS menu bar. |
+| `alert.menuBarOff.more` | %lld more | ほか%lld個 | machine | Last element of the tile list in the turn-off-menu-bar alert, after three names ("A, B, C and 2 more"); %lld = how many more tiles. Must read right for any count. |
+| `alert.menuBarOff.title` | Turn Off the Menu Bar Icon? | メニューバーのアイコンをオフにしますか？ | machine | Alert title when turning off Dock Tile's menu bar icon while some tiles are only in the menu bar. "Menu bar" is Apple's macOS menu bar — use Apple's own term. |
 | `alert.missingApps.message` | Some apps in your tiles can't be found on this Mac. Remove them from your tiles? | タイル内の一部のアプリがこのMacで見つかりません。タイルから取り除きますか? | machine | Alert message offering to remove uninstalled apps from tiles |
 | `alert.missingApps.title` | Some apps are no longer installed | 一部のアプリがインストールされていません | machine | Alert title when apps referenced by tiles can't be found on disk |
 | `alert.missingAppsScan.foundMessage` | These apps can't be found on this Mac: | 次のアプリがこのMacで見つかりません： | machine | Intro line of the manual scan results dialog; a list of tiles/apps follows |
@@ -37,6 +41,8 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.confirm` | Confirm | 確認 | machine | Confirm button for alert dialogs |
 | `button.createNewTile` | Create New Tile | 新規タイルを作成 | machine | Smart Add sheet — neutral button that starts a blank tile instead of a suggestion |
 | `button.delete` | Delete | 削除 | machine | Delete button |
+| `button.dockAdd` | Add | 追加 | machine | Tile Detail toolbar button: puts this tile in the Dock (short form of Add to Dock). Not the file picker's Add. |
+| `button.dockRemove` | Remove | 取り除く | machine | Tile Detail toolbar button: takes this tile out of the Dock (short form of Remove from Dock). It does NOT delete the tile — never use the word for Delete. |
 | `button.done` | Done | 完了 | machine | Done button |
 | `button.duplicate` | Duplicate | 複製 | machine | Duplicate button in context menu |
 | `button.keep` | Keep | 残す | machine | Button to keep uninstalled apps in tiles (dismiss the removal prompt) |
@@ -47,13 +53,14 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `button.openLoginItems` | Open Login Items Settings… | ログイン項目設定を開く… | machine | Button that opens System Settings Login Items for approval |
 | `button.remove` | Remove | 取り除く | machine | Remove button |
 | `button.removeAll` | Remove All | すべて取り除く | machine | Button to remove all missing apps from tiles at once |
-| `button.removeFromDock` | Remove from Dock | Dockから削除 | machine | Button to remove tile from Dock |
+| `button.removeFromDock` | Remove from Dock | Dockから取り除く | machine | Button to remove tile from Dock |
 | `button.resetToDefaults` | Reset to Defaults | デフォルトに戻す | machine | Button that restores popover appearance settings to their defaults |
 | `button.revert` | Revert | 戻す | machine | Confirm button of the Revert to Dock Version alert |
 | `button.reviewInTiles` | Review in Tiles | タイルで確認 | machine | Button that navigates to the first tile containing a missing app |
 | `button.save` | Save | 保存 | machine | Primary toolbar button that commits the popover appearance settings |
 | `button.saving` | Applying… | 適用中… | machine | Loading label on the Save button while applying settings to Dock tiles |
 | `button.scanForMissingApps` | Scan | スキャン | machine | Settings button that scans tiles for moved/uninstalled apps |
+| `button.turnOff` | Turn Off | オフにする | machine | Confirm button of the alert that turns off Dock Tile's menu bar icon |
 | `button.update` | Update | 更新 | machine | Update button when tile is already in Dock |
 | `button.useThisTile` | Use This Tile | このタイルを使用 | machine | Smart Add sheet — button that creates a pre-filled tile from a suggestion |
 | `emojiCategory.activity` | Activity | 活動 | machine | Emoji picker: section header |
@@ -119,6 +126,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `label.colour.hint.toned.static` | Toned to stay clear on white | 白の上でも見やすいように調整済み | machine | Customise Tile: colour hint, Mono tile on macOS 15 |
 | `label.iconSize` | Icon Size | アイコンサイズ | machine | Compact label for the icon size stepper (side-by-side with icon weight) |
 | `label.iconWeight` | Icon Weight | アイコンの太さ | machine | Label for the SF Symbol weight picker |
+| `label.inMenuBar` | In the menu bar | メニューバーに表示中 | machine | VoiceOver label for the sidebar mark on a tile listed in Dock Tile's menu bar icon menu. "Menu bar" is Apple's macOS menu bar — use Apple's own term. |
 | `label.missingAppsScan` | Missing Apps | 見つからないアプリ | machine | Settings row title for the missing-app scan |
 | `label.missingAppsScanDescription` | Check your tiles for apps that have been moved or uninstalled. | 移動またはアンインストールされたアプリがないか、タイルを確認します。 | machine | Settings row description for the missing-app scan |
 | `label.notInstalled` | Not installed | 未インストール | machine | Badge/kind text shown for an app whose bundle is no longer on disk |
@@ -133,9 +141,10 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `label.shareAnalytics` | Share anonymous usage data | 匿名の使用状況データを共有 | machine | Label for the analytics opt-out toggle in Settings |
 | `label.shareAnalyticsDescription` | Help improve Dock Tile by sending anonymous usage and crash reports. No personal data is collected. | 匿名の使用状況データとクラッシュレポートを送信して、Dock Tileの改善にご協力ください。個人データは収集されません。 | machine | Explanation under the analytics toggle |
 | `label.addAppsAndFolders` | Add Apps & Folders | アプリとフォルダを追加 | machine | Tooltip on the Add button in Tile Detail's In This Tile section |
-| `label.appSwitcherNeedsShowTile` | Turn on Show Tile first — this only applies while the tile is in the Dock. | 先に“タイルを表示”をオンにしてください。この設定は、タイルがDockにあるときにのみ適用されます。 | machine | Tooltip on the disabled Show in App Switcher toggle when the tile is hidden |
+| `label.appSwitcherNeedsShowTile` | Turn on Show in Dock first — this only applies while the tile is in the Dock. | 先に“Dockに表示”をオンにしてください。この設定は、タイルがDockにあるときにのみ適用されます。 | machine | Tooltip on the disabled Show in App Switcher toggle when the tile is hidden |
 | `label.showInAppSwitcher` | Show in App Switcher | アプリスイッチャーに表示 | machine | Label for app switcher toggle |
-| `label.showTile` | Show Tile | タイルを表示 | machine | Label for show tile toggle |
+| `label.showInMenuBar` | Show in Menu Bar | メニューバーに表示 | machine | Tile Detail: toggle that lists this tile in Dock Tile's menu bar icon menu. "Menu bar" is Apple's macOS menu bar at the top of the screen — use Apple's own term. |
+| `label.showTile` | Show in Dock | Dockに表示 | machine | Label for show tile toggle |
 | `label.softwareUpdate` | Software Update | ソフトウェアアップデート | machine | Title of the software-update row in General settings |
 | `label.softwareUpdateDescription` | You’re using version %@. Dock Tile checks for updates automatically. | バージョン%@を使用しています。Dock Tileはアップデートを自動的に確認します。 | machine | Description under the software-update row; %@ is the current version |
 | `label.startAtLogin` | Start tiles at login | ログイン時にタイルを起動 | machine | Label for the start-at-login toggle in Settings |
@@ -210,7 +219,7 @@ Keep `%@`-style placeholders exactly as they are. `\n` means a line break, `\|` 
 | `settings.login.requiresApproval` | Approve Dock Tile in Login Items to finish enabling this. | この設定を有効にするには、ログイン項目でDock Tileを承認してください。 | machine | Shown when macOS is holding the login item for user approval |
 | `settings.menuBar` | Menu Bar | メニューバー | machine | General: section holding the menu bar icon toggle |
 | `settings.menuBar.toggle` | Show Dock Tile in the menu bar | メニューバーにDock Tileを表示 | machine | General: toggle that adds Dock Tile's icon to the menu bar, listing the tiles and their apps |
-| `settings.menuBar.toggleDescription` | Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on. | Dockにあるタイルとそのアプリを一覧表示します。オンのあいだ、Dock Tileはバックグラウンドで実行され続けます。 | machine | General: caption under the menu bar icon toggle |
+| `settings.menuBar.toggleDescription` | Lists the tiles you choose and their apps. Turn on Show in Menu Bar in a tile to add it. Dock Tile keeps running in the background while this is on. | 選んだタイルとそのアプリを一覧表示します。追加するには、タイルで“メニューバーに表示”をオンにします。オンのあいだ、Dock Tileはバックグラウンドで実行され続けます。 | machine | General: caption under the menu bar icon toggle |
 | `settings.popover` | Popover | ポップオーバー | machine | Section header and pane title for popover appearance settings |
 | `settings.popover.configure` | Configure | 設定対象 | machine | Label for the Grid/List panel switcher in popover settings |
 | `settings.popover.configure.subtitle` | Each layout's settings are saved independently | 各レイアウトの設定は個別に保存されます | machine | Subtitle explaining that Grid and List popover settings are stored separately |

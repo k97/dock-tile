@@ -245,6 +245,20 @@ struct AppStringsTests {
         #expect(!AppStrings.Tooltip.toggleCustomiser.isEmpty)
     }
 
+    @Test("Menu bar tile strings exist; Show Tile reads Show in Dock")
+    func menuBarTileStringsExist() {
+        #expect(AppStrings.Label.showTile == "Show in Dock")
+        #expect(!AppStrings.Label.showInMenuBar.isEmpty)
+        #expect(!AppStrings.Label.inMenuBar.isEmpty)
+        #expect(!AppStrings.Alert.menuBarOffTitle.isEmpty)
+        #expect(AppStrings.Alert.menuBarOffMessageOne("Media").contains("Media"))
+        #expect(AppStrings.Alert.menuBarOffMessageMany("A, B").contains("A, B"))
+        #expect(AppStrings.Alert.menuBarOffMore(2).contains("2"))
+        #expect(!AppStrings.Button.turnOff.isEmpty)
+        #expect(!AppStrings.Button.dockAdd.isEmpty)
+        #expect(!AppStrings.Button.dockRemove.isEmpty)
+    }
+
     @Test("Inspector title spelling follows the English variant")
     func inspectorTitleSpelling() {
         #expect(localizedString(for: "title.customiseTile", locale: "en-GB") == "Customise Tile")

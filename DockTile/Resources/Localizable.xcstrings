@@ -325,6 +325,222 @@
         }
       }
     },
+    "alert.menuBarOff.messageMany": {
+      "comment": "Turn-off-menu-bar alert, several tiles; %@ = up to three tile names joined as a list, possibly ending with alert.menuBarOff.more (\"2 more\"). \"Menu bar\" is Apple's macOS menu bar.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Diese Kacheln sind nur in der Menüleiste: %@. Sie bleiben in Dock Tile, werden aber nirgends angezeigt, bis du dies wieder aktivierst oder sie zum Dock hinzufügst."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These tiles are only in the menu bar: %@. They stay in Dock Tile but won’t show anywhere until you turn this back on or add them to the Dock."
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These tiles are only in the menu bar: %@. They stay in Dock Tile but won’t show anywhere until you turn this back on or add them to the Dock."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These tiles are only in the menu bar: %@. They stay in Dock Tile but won’t show anywhere until you turn this back on or add them to the Dock."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ces tuiles se trouvent uniquement dans la barre des menus : %@. Elles restent dans Dock Tile, mais n’apparaîtront nulle part tant que vous ne réactivez pas cette option ou ne les ajoutez pas au Dock."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "次のタイルはメニューバーにのみあります：%@。Dock Tileには残りますが、この設定を再びオンにするかDockに追加するまで、どこにも表示されません。"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Эти плитки есть только в строке меню: %@. Они останутся в Dock Tile, но не будут нигде отображаться, пока вы снова не включите этот параметр или не добавите их в Dock."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "以下磁贴仅在菜单栏中：%@。它们仍保留在Dock Tile中，但在你重新打开此选项或将其添加到程序坞之前，不会在任何地方显示。"
+          }
+        }
+      }
+    },
+    "alert.menuBarOff.messageOne": {
+      "comment": "Turn-off-menu-bar alert, one tile; %@ = the tile's name. \"Menu bar\" is Apple's macOS menu bar.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "„%@“ ist nur in der Menüleiste. Die Kachel bleibt in Dock Tile, wird aber nirgends angezeigt, bis du dies wieder aktivierst oder sie zum Dock hinzufügst."
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is only in the menu bar. It stays in Dock Tile but won’t show anywhere until you turn this back on or add it to the Dock."
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is only in the menu bar. It stays in Dock Tile but won’t show anywhere until you turn this back on or add it to the Dock."
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is only in the menu bar. It stays in Dock Tile but won’t show anywhere until you turn this back on or add it to the Dock."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "« %@ » se trouve uniquement dans la barre des menus. La tuile reste dans Dock Tile, mais n’apparaîtra nulle part tant que vous ne réactivez pas cette option ou ne l’ajoutez pas au Dock."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "“%@”はメニューバーにのみあります。Dock Tileには残りますが、この設定を再びオンにするかDockに追加するまで、どこにも表示されません。"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "«%@» есть только в строке меню. Плитка останется в Dock Tile, но не будет нигде отображаться, пока вы снова не включите этот параметр или не добавите ее в Dock."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "“%@”仅在菜单栏中。它仍保留在Dock Tile中，但在你重新打开此选项或将其添加到程序坞之前，不会在任何地方显示。"
+          }
+        }
+      }
+    },
+    "alert.menuBarOff.more": {
+      "comment": "Last element of the tile list in the turn-off-menu-bar alert, after three names (\"A, B, C and 2 more\"); %lld = how many more tiles. Must read right for any count.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld weitere"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld more"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld de plus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ほか%lld個"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "еще %lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "另外 %lld 个"
+          }
+        }
+      }
+    },
+    "alert.menuBarOff.title": {
+      "comment": "Alert title when turning off Dock Tile's menu bar icon while some tiles are only in the menu bar. \"Menu bar\" is Apple's macOS menu bar — use Apple's own term.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Symbol in der Menüleiste deaktivieren?"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off the Menu Bar Icon?"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off the Menu Bar Icon?"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off the Menu Bar Icon?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Désactiver l’icône de la barre des menus ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メニューバーのアイコンをオフにしますか？"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Выключить значок в строке меню?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "关闭菜单栏图标？"
+          }
+        }
+      }
+    },
     "alert.missingApps.message": {
       "comment": "Alert message offering to remove uninstalled apps from tiles",
       "extractionState": "manual",
@@ -1621,6 +1837,114 @@
         }
       }
     },
+    "button.dockAdd": {
+      "comment": "Tile Detail toolbar button: puts this tile in the Dock (short form of Add to Dock). Not the file picker's Add.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hinzufügen"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ajouter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "追加"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Добавить"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "添加"
+          }
+        }
+      }
+    },
+    "button.dockRemove": {
+      "comment": "Tile Detail toolbar button: takes this tile out of the Dock (short form of Remove from Dock). It does NOT delete the tile — never use the word for Delete.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Entfernen"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Retirer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "取り除く"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Убрать"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "移除"
+          }
+        }
+      }
+    },
     "button.done": {
       "comment": "Done button",
       "extractionState": "manual",
@@ -2192,19 +2516,19 @@
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Supprimer du Dock"
+            "value": "Retirer du Dock"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dockから削除"
+            "value": "Dockから取り除く"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Удалить из Dock"
+            "value": "Убрать из Dock"
           }
         },
         "zh-Hans": {
@@ -2535,6 +2859,60 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "扫描"
+          }
+        }
+      }
+    },
+    "button.turnOff": {
+      "comment": "Confirm button of the alert that turns off Dock Tile's menu bar icon",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Deaktivieren"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Désactiver"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "オフにする"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Выключить"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "关闭"
           }
         }
       }
@@ -6049,6 +6427,60 @@
         }
       }
     },
+    "label.inMenuBar": {
+      "comment": "VoiceOver label for the sidebar mark on a tile listed in Dock Tile's menu bar icon menu. \"Menu bar\" is Apple's macOS menu bar — use Apple's own term.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "In der Menüleiste"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the menu bar"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the menu bar"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the menu bar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dans la barre des menus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メニューバーに表示中"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "В строке меню"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在菜单栏中"
+          }
+        }
+      }
+    },
     "label.missingAppsScan": {
       "comment": "Settings row title for the missing-app scan",
       "extractionState": "manual",
@@ -6812,49 +7244,49 @@
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Aktiviere zuerst „Kachel zeigen“ – diese Option gilt nur, solange die Kachel im Dock ist."
+            "value": "Aktiviere zuerst „Im Dock anzeigen“ – diese Option gilt nur, solange die Kachel im Dock ist."
           }
         },
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn on Show Tile first — this only applies while the tile is in the Dock."
+            "value": "Turn on Show in Dock first — this only applies while the tile is in the Dock."
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn on Show Tile first — this only applies while the tile is in the Dock."
+            "value": "Turn on Show in Dock first — this only applies while the tile is in the Dock."
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn on Show Tile first — this only applies while the tile is in the Dock."
+            "value": "Turn on Show in Dock first — this only applies while the tile is in the Dock."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Activez d’abord « Afficher la tuile » — ce réglage ne s’applique que lorsque la tuile est dans le Dock."
+            "value": "Activez d’abord « Afficher dans le Dock » — ce réglage ne s’applique que lorsque la tuile est dans le Dock."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "先に“タイルを表示”をオンにしてください。この設定は、タイルがDockにあるときにのみ適用されます。"
+            "value": "先に“Dockに表示”をオンにしてください。この設定は、タイルがDockにあるときにのみ適用されます。"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Сначала включите «Показывать плитку» — этот параметр действует, только когда плитка находится в Dock."
+            "value": "Сначала включите «Показывать в Dock» — этот параметр действует, только когда плитка находится в Dock."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "请先打开“显示磁贴”——此设置仅在磁贴位于程序坞中时生效。"
+            "value": "请先打开“在程序坞中显示”——此设置仅在磁贴位于程序坞中时生效。"
           }
         }
       }
@@ -6913,6 +7345,60 @@
         }
       }
     },
+    "label.showInMenuBar": {
+      "comment": "Tile Detail: toggle that lists this tile in Dock Tile's menu bar icon menu. \"Menu bar\" is Apple's macOS menu bar at the top of the screen — use Apple's own term.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "In Menüleiste anzeigen"
+          }
+        },
+        "en-GB": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Menu Bar"
+          }
+        },
+        "en-AU": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Menu Bar"
+          }
+        },
+        "en-US": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Menu Bar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Afficher dans la barre des menus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メニューバーに表示"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Показывать в строке меню"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在菜单栏显示"
+          }
+        }
+      }
+    },
     "label.showTile": {
       "comment": "Label for show tile toggle",
       "extractionState": "manual",
@@ -6920,49 +7406,49 @@
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Kachel zeigen"
+            "value": "Im Dock anzeigen"
           }
         },
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show Tile"
+            "value": "Show in Dock"
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show Tile"
+            "value": "Show in Dock"
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show Tile"
+            "value": "Show in Dock"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Afficher la tuile"
+            "value": "Afficher dans le Dock"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "タイルを表示"
+            "value": "Dockに表示"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Показывать плитку"
+            "value": "Показывать в Dock"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "显示磁贴"
+            "value": "在程序坞中显示"
           }
         }
       }
@@ -10970,49 +11456,49 @@
         "de": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Listet die Kacheln in deinem Dock und ihre Apps auf. Solange dies aktiv ist, läuft Dock Tile im Hintergrund weiter."
+            "value": "Listet die Kacheln deiner Wahl und ihre Apps auf. Aktiviere „In Menüleiste anzeigen“ in einer Kachel, um sie hinzuzufügen. Solange dies aktiv ist, läuft Dock Tile im Hintergrund weiter."
           }
         },
         "en-GB": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on."
+            "value": "Lists the tiles you choose and their apps. Turn on Show in Menu Bar in a tile to add it. Dock Tile keeps running in the background while this is on."
           }
         },
         "en-AU": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on."
+            "value": "Lists the tiles you choose and their apps. Turn on Show in Menu Bar in a tile to add it. Dock Tile keeps running in the background while this is on."
           }
         },
         "en-US": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on."
+            "value": "Lists the tiles you choose and their apps. Turn on Show in Menu Bar in a tile to add it. Dock Tile keeps running in the background while this is on."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Liste les tuiles de votre Dock et leurs apps. Dock Tile reste ouvert en arrière-plan tant que cette option est activée."
+            "value": "Liste les tuiles de votre choix et leurs apps. Activez « Afficher dans la barre des menus » dans une tuile pour l’y ajouter. Dock Tile reste ouvert en arrière-plan tant que cette option est activée."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Dockにあるタイルとそのアプリを一覧表示します。オンのあいだ、Dock Tileはバックグラウンドで実行され続けます。"
+            "value": "選んだタイルとそのアプリを一覧表示します。追加するには、タイルで“メニューバーに表示”をオンにします。オンのあいだ、Dock Tileはバックグラウンドで実行され続けます。"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Показывает плитки в Dock и их приложения. Пока параметр включен, Dock Tile продолжает работать в фоновом режиме."
+            "value": "Показывает выбранные вами плитки и их приложения. Чтобы добавить плитку, включите в ней «Показывать в строке меню». Пока параметр включен, Dock Tile продолжает работать в фоновом режиме."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "列出程序坞中的磁贴及其应用。开启后，Dock Tile会在后台持续运行。"
+            "value": "列出你选择的磁贴及其应用。在磁贴中打开“在菜单栏显示”即可添加。开启后，Dock Tile会在后台持续运行。"
           }
         }
       }

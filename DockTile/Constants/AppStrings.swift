@@ -156,6 +156,33 @@ enum AppStrings {
             value: "Don't ask again",
             comment: "Checkbox to suppress future move-to-Applications nudges"
         )
+
+        static let menuBarOffTitle = NSLocalizedString(
+            "alert.menuBarOff.title",
+            value: "Turn Off the Menu Bar Icon?",
+            comment: "Alert title when turning off Dock Tile's menu bar icon while some tiles are only in the menu bar. \"Menu bar\" is Apple's macOS menu bar — use Apple's own term."
+        )
+        static func menuBarOffMessageOne(_ name: String) -> String {
+            String(format: NSLocalizedString(
+                "alert.menuBarOff.messageOne",
+                value: "%@ is only in the menu bar. It stays in Dock Tile but won’t show anywhere until you turn this back on or add it to the Dock.",
+                comment: "Turn-off-menu-bar alert, one tile; %@ = the tile's name. \"Menu bar\" is Apple's macOS menu bar."
+            ), name)
+        }
+        static func menuBarOffMessageMany(_ list: String) -> String {
+            String(format: NSLocalizedString(
+                "alert.menuBarOff.messageMany",
+                value: "These tiles are only in the menu bar: %@. They stay in Dock Tile but won’t show anywhere until you turn this back on or add them to the Dock.",
+                comment: "Turn-off-menu-bar alert, several tiles; %@ = up to three tile names joined as a list, possibly ending with alert.menuBarOff.more (\"2 more\"). \"Menu bar\" is Apple's macOS menu bar."
+            ), list)
+        }
+        static func menuBarOffMore(_ count: Int) -> String {
+            String(format: NSLocalizedString(
+                "alert.menuBarOff.more",
+                value: "%lld more",
+                comment: "Last element of the tile list in the turn-off-menu-bar alert, after three names (\"A, B, C and 2 more\"); %lld = how many more tiles. Must read right for any count."
+            ), count)
+        }
     }
 
     // MARK: - Buttons
@@ -289,6 +316,24 @@ enum AppStrings {
             "button.removeFromDock",
             value: "Remove from Dock",
             comment: "Button to remove tile from Dock"
+        )
+
+        static let dockAdd = NSLocalizedString(
+            "button.dockAdd",
+            value: "Add",
+            comment: "Tile Detail toolbar button: puts this tile in the Dock (short form of Add to Dock). Not the file picker's Add."
+        )
+
+        static let dockRemove = NSLocalizedString(
+            "button.dockRemove",
+            value: "Remove",
+            comment: "Tile Detail toolbar button: takes this tile out of the Dock (short form of Remove from Dock). It does NOT delete the tile — never use the word for Delete."
+        )
+
+        static let turnOff = NSLocalizedString(
+            "button.turnOff",
+            value: "Turn Off",
+            comment: "Confirm button of the alert that turns off Dock Tile's menu bar icon"
         )
 
         static let update = NSLocalizedString(
@@ -602,8 +647,20 @@ enum AppStrings {
 
         static let appSwitcherNeedsShowTile = NSLocalizedString(
             "label.appSwitcherNeedsShowTile",
-            value: "Turn on Show Tile first — this only applies while the tile is in the Dock.",
+            value: "Turn on Show in Dock first — this only applies while the tile is in the Dock.",
             comment: "Tooltip on the disabled Show in App Switcher toggle when the tile is hidden"
+        )
+
+        static let showInMenuBar = NSLocalizedString(
+            "label.showInMenuBar",
+            value: "Show in Menu Bar",
+            comment: "Tile Detail: toggle that lists this tile in Dock Tile's menu bar icon menu. \"Menu bar\" is Apple's macOS menu bar at the top of the screen — use Apple's own term."
+        )
+
+        static let inMenuBar = NSLocalizedString(
+            "label.inMenuBar",
+            value: "In the menu bar",
+            comment: "VoiceOver label for the sidebar mark on a tile listed in Dock Tile's menu bar icon menu. \"Menu bar\" is Apple's macOS menu bar — use Apple's own term."
         )
 
         static let showInAppSwitcher = NSLocalizedString(
@@ -614,8 +671,8 @@ enum AppStrings {
 
         static let showTile = NSLocalizedString(
             "label.showTile",
-            value: "Show Tile",
-            comment: "Label for show tile toggle"
+            value: "Show in Dock",
+            comment: "Tile Detail: toggle that shows this tile in the Dock"
         )
 
         static let tileIconSize = NSLocalizedString(
@@ -725,8 +782,8 @@ enum AppStrings {
 
         static let menuBarToggleDescription = NSLocalizedString(
             "settings.menuBar.toggleDescription",
-            value: "Lists the tiles in your Dock and their apps. Dock Tile keeps running in the background while this is on.",
-            comment: "General: caption under the menu bar icon toggle"
+            value: "Lists the tiles you choose and their apps. Turn on Show in Menu Bar in a tile to add it. Dock Tile keeps running in the background while this is on.",
+            comment: "General: caption under the menu bar icon toggle. \"Show in Menu Bar\" is the tile's toggle (label.showInMenuBar) — use the same words."
         )
 
         static let dockLock = NSLocalizedString(
