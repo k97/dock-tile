@@ -482,16 +482,22 @@ struct DockTileDetailView: View {
     nonisolated static let formRowHeight: CGFloat = 40
     nonisolated static let formDividerHeight: CGFloat = 1
 
-    /// The hero matches the Tile Name card's height while the card has three `formRow`s and two
-    /// dividers; with Show in Menu Bar's fourth row it stays 122 pt, top-aligned (owner, 2026-11-21).
-    nonisolated static let heroIconSize: CGFloat = 3 * formRowHeight + 2 * formDividerHeight
+    /// The hero is as tall as the Tile Name card beside it: `rows` `formRow`s and the dividers
+    /// between them — 122 pt for three rows, 163 pt with Show in Menu Bar's fourth. The card takes
+    /// the width that is left (owner, 2026-11-22). Guarded by `TileDetailMenuBarTests`.
+    nonisolated static func heroIconSize(rows: Int) -> CGFloat {
+        CGFloat(rows) * formRowHeight + CGFloat(rows - 1) * formDividerHeight
+    }
+
+    /// The card's row count: Tile Name, Show in Dock, Show in App Switcher, plus Show in Menu Bar.
+    private var heroIconSize: CGFloat { Self.heroIconSize(rows: menuBarEnabled ? 4 : 3) }
 
     @ViewBuilder private var heroFace: some View {
         if let forced = Self.heroForcedStyle(inspectorShown: inspectorShown, colorScheme: colorScheme,
                                              followsAppearance: IconPipeline.isDeclarative) {
-            DockTileIconPreview.fromConfig(editedConfig, size: Self.heroIconSize).forcing(forced)
+            DockTileIconPreview.fromConfig(editedConfig, size: heroIconSize).forcing(forced)
         } else {
-            TileFace(config: editedConfig, size: Self.heroIconSize)
+            TileFace(config: editedConfig, size: heroIconSize)
         }
     }
 
@@ -502,12 +508,12 @@ struct DockTileDetailView: View {
 
     private var heroSection: some View {
         HStack(alignment: .top, spacing: 16) {
-            // Left column: the icon preview, as tall as the three-row form card beside it
-            // (`heroIconSize`, 122 pt); a fourth row grows the card downward. The preview fills its frame (no icon-grid
+            // Left column: the icon preview, as tall as the form card beside it (`heroIconSize`), so
+            // the two align top and bottom. The preview fills its frame (no icon-grid
             // margin — an artifact fact, not a UI-slot fact). Clicking it toggles Customise Tile.
             heroFace
-                .iconLift(size: Self.heroIconSize)
-                .contentShape(RoundedRectangle(cornerRadius: Self.heroIconSize * 0.225, style: .continuous))
+                .iconLift(size: heroIconSize)
+                .contentShape(RoundedRectangle(cornerRadius: heroIconSize * 0.225, style: .continuous))
                 .onHover { hovering in
                     if hovering {
                         NSCursor.pointingHand.push()
