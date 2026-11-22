@@ -261,9 +261,11 @@ file, so every relaunch (login, reboot, a rebuild) showed unsaved edits. Only Ad
 (`installHelper`) publish. The missing-app alert's Remove is an EDIT like any other (Update goes
 accent, the Dock keeps the placeholder until Update). Limits, accepted: a helper built before copies
 existed follows the live config until its next build (the first migration after the release that ships
-this builds from the draft once, logged per tile); a never-added draft has no copy. Guarded by `DockVersionTests`. The menu bar
-menu and Dock Tile's Dock menu (#13) read the LIVE config, not `dockVersion`: a menu-only tile has no
-helper and so no copy, and Show in Menu Bar applies at once like any setting (menu-bar.md).
+this builds from the draft once, logged per tile); a never-added draft has no copy. Guarded by `DockVersionTests`. Menu bar
+/ Dock Tile's Dock menu (#13) should read tiles through `dockVersion` too — NOT done yet: both still read
+the live config, so they show a tile's unsaved draft name and apps. Adopting it is safe for menu bar
+tiles: a tile with no helper (menu-only) has no copy and `dockVersion` falls back to live, and
+`revertingContent` keeps `showInMenuBar` live, so the switch still applies at once.
 
 ## Dock Position Preservation
 
@@ -435,9 +437,10 @@ Popover, Dock Lock) · Dock Tile (About)** — the old accordion `@AppStorage` e
     `accessibilityAction` makes its button trait answer AXPress / VoiceOver). ⌥⌘I is in the View
     menu (Show / Hide Inspector) via a `FocusedValue` (`InspectorCommand`), enabled only for a
     tile row (`inspectorCommandIsEnabled`, `InspectorEntryPointTests`).
-  - **Hero**: `heroIconSize` 122 pt, the Tile Name card's height (3 × 40 pt rows + 2 × 1 pt dividers),
-    top-aligned with it; with Show in Menu Bar's fourth row the card grows downward and the hero stays
-    122 pt (owner, 2026-11-21: a matching 163 pt hero did not fit the 420 pt narrowest column). Canonical Default/Dark while the inspector is open, Dark only where
+  - **Hero**: `heroIconSize(rows:)`, the Tile Name card's height — 122 pt for 3 × 40 pt rows + 2 × 1 pt
+    dividers, 163 pt with Show in Menu Bar's fourth row — so they align top and bottom. The card takes
+    the width left (owner, 2026-11-22: a narrower card is fine; at the 420 pt narrowest column it gets
+    ~240 pt and long translated labels wrap). Canonical Default/Dark while the inspector is open, Dark only where
     the Dock icon follows the appearance (macOS 26+; macOS 15 stays Default), live `TileFace` while
     closed (`DockTileDetailView.heroForcedStyle`, `InspectorEntryPointTests`).
   - **Content only while presented (R15)**: SwiftUI instantiates inspector content while it is closed,

@@ -22,6 +22,15 @@ struct MenuBarOffAlertTests {
         #expect(GeneralSettingsView.menuOnlyTileNames(configs) == ["MenuOnly"])
     }
 
+    /// A new tile defaults to Show in Dock ON but has no helper until Add: it is in the menu bar
+    /// only, so it must be named. `isInDock` is the call site's "visible AND has a helper" check.
+    @Test func neverAddedDraftCountsAsMenuOnly() {
+        let draft = tile("Draft", dock: true, menuBar: true)
+        let pinned = tile("Pinned", dock: true, menuBar: true)
+        let names = GeneralSettingsView.menuOnlyTileNames([draft, pinned], isInDock: { $0.id == pinned.id })
+        #expect(names == ["Draft"])
+    }
+
     @Test func keepsSidebarOrder() {
         let configs = [
             tile("Zed", dock: false, menuBar: true),

@@ -1,6 +1,6 @@
 # Menu Bar Icon (issue #13)
 
-An optional menu bar icon listing the tiles in the Dock and their apps. A **global app feature**, main app
+An optional menu bar icon listing the tiles with Show in Menu Bar on and their apps. A **global app feature**, main app
 only. Shipped as a native `NSMenu`; a Control Centre-style panel was mocked up and deferred (owner,
 2026-11-07: "keep it simple for the first release").
 
@@ -36,11 +36,13 @@ the menu bar is noisy); a menu bar tile is a submenu of Dock Tile's one menu.
 - `DockTileConfiguration.showInMenuBar`: a missing key decodes to the tile's OWN `isVisibleInDock`, so
   an upgrade lists exactly what 2.7.x listed (`ShowInMenuBarTests`). A new tile (blank or Smart Add)
   starts as the setting is (`createConfiguration(menuBarEnabled:)`); a duplicate starts off.
-- Tile Detail's **Show in Menu Bar** switch (below Show in Dock) exists only while the setting is on.
+- Tile Detail's **Show in Menu Bar** switch (below Show in Dock) exists only while the setting is on;
+  the hero grows with the card (163 pt, architecture.md "Hero").
   It is an ordinary edit saved by the autosave: no Dock action, no consent, never in `dockSignature` or
   `contentSignature`, and Revert to Dock Version keeps it like bookkeeping. A menu-only tile needs no
   helper. The sidebar shows `menubar.rectangle` after the name while the setting is on and the tile is listed.
-- **Turning the setting off changes no tile.** With a menu-only tile (`showInMenuBar && !isVisibleInDock`)
+- **Turning the setting off changes no tile.** With a menu-only tile (`showInMenuBar` and not in the Dock:
+  Show in Dock off, OR on but never added — no helper; `menuOnlyTileNames(_:isInDock:)`)
   General asks first, naming up to three (`menuBarOffMessage`); Cancel leaves it on.
 - The action button reads **Add / Update / Remove / Done**; its tooltip and accessibility label keep
   "Add to Dock" / "Remove from Dock", so Remove is never read as Delete (`button.dockRemove` must

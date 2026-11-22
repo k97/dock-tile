@@ -184,7 +184,9 @@ struct GeneralSettingsView: View {
             get: { menuBarEnabled },
             set: { newValue in
                 if !newValue,
-                   let message = Self.menuBarOffMessage(names: Self.menuOnlyTileNames(configManager.configurations)) {
+                   let message = Self.menuBarOffMessage(names: Self.menuOnlyTileNames(
+                       configManager.configurations,
+                       isInDock: { $0.isVisibleInDock && HelperBundleManager.shared.helperExists(for: $0) })) {
                     pendingMenuBarOff = message
                 } else {
                     menuBarEnabled = newValue
@@ -213,9 +215,11 @@ struct GeneralSettingsView: View {
         }
     }
 
-    /// Tiles in the menu bar but not the Dock (stored flags; a never-added draft counts), sidebar order.
-    nonisolated static func menuOnlyTileNames(_ configs: [DockTileConfiguration]) -> [String] {
-        configs.filter { $0.showInMenuBar && !$0.isVisibleInDock }.map(\.name)
+    /// Tiles in the menu bar but not the Dock, sidebar order. `isInDock` is the caller's "Show in Dock
+    /// on AND a helper built" check: a new tile defaults to Show in Dock on but is in no Dock until Add.
+    nonisolated static func menuOnlyTileNames(_ configs: [DockTileConfiguration],
+                                              isInDock: (DockTileConfiguration) -> Bool = \.isVisibleInDock) -> [String] {
+        configs.filter { $0.showInMenuBar && !isInDock($0) }.map(\.name)
     }
 
     /// The turn-off alert's message, or nil when no tile is menu-only. Names three, then "N more".
