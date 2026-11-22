@@ -201,6 +201,10 @@ struct ConfigurationRow: View {
     @EnvironmentObject private var configManager: ConfigurationManager
     let config: DockTileConfiguration
 
+    /// Live, so the mark comes and goes as the Menu Bar setting flips in General.
+    @AppStorage(UserDefaultsKeys.menuBarEnabled)
+    private var menuBarEnabled = false
+
     var body: some View {
         HStack(spacing: 12) {
             // Mini icon preview (24×24pt) - uses same component as other previews
@@ -212,6 +216,12 @@ struct ConfigurationRow: View {
             Text(configManager.displayName(for: config.id))
                 .font(.system(size: 13))
                 .lineLimit(1)
+
+            if menuBarEnabled && config.showInMenuBar {
+                Image(systemName: "menubar.rectangle")
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(AppStrings.Label.inMenuBar)
+            }
         }
         .padding(.vertical, 4)
     }

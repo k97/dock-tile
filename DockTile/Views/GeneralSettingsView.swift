@@ -46,6 +46,9 @@ struct GeneralSettingsView: View {
     @AppStorage(UserDefaultsKeys.menuBarEnabled)
     private var menuBarEnabled = false
 
+    /// The turn-off alert's message while it is up; nil = no alert. The setting flips only on Turn Off.
+    @State private var pendingMenuBarOff: String?
+
     var body: some View {
         Form {
             // All general preferences live in a single grouped container (System Settings style):
@@ -175,8 +178,19 @@ struct GeneralSettingsView: View {
 
     /// Adds or removes the menu bar icon at once. Turning it off brings the Dock icon back (the
     /// window is open while toggling); the app then quits on close again unless Dock Lock is on.
+    /// Turning it off while a tile is only in the menu bar asks first; no tile changes either way.
     private var menuBarRow: some View {
-        Toggle(isOn: $menuBarEnabled) {
+        Toggle(isOn: Binding(
+            get: { menuBarEnabled },
+            set: { newValue in
+                if !newValue,
+                   let message = Self.menuBarOffMessage(names: Self.menuOnlyTileNames(configManager.configurations)) {
+                    pendingMenuBarOff = message
+                } else {
+                    menuBarEnabled = newValue
+                }
+            }
+        )) {
             Text(AppStrings.Settings.menuBarToggle)
             Text(AppStrings.Settings.menuBarToggleDescription)
                 .font(.caption)
@@ -187,6 +201,32 @@ struct GeneralSettingsView: View {
             if !enabled { NSApp.setActivationPolicy(.regular) }
             AnalyticsService.shared.log(.settingChanged, ["setting": "menu_bar", "enabled": enabled])
             DiagnosticsLog.shared.log("settings", "Menu bar icon toggled \(enabled ? "ON" : "OFF")")
+        }
+        .alert(
+            AppStrings.Alert.menuBarOffTitle,
+            isPresented: Binding(get: { pendingMenuBarOff != nil }, set: { if !$0 { pendingMenuBarOff = nil } })
+        ) {
+            Button(AppStrings.Button.turnOff) { menuBarEnabled = false }
+            Button(AppStrings.Button.cancel, role: .cancel) {}
+        } message: {
+            Text(pendingMenuBarOff ?? "")
+        }
+    }
+
+    /// Tiles in the menu bar but not the Dock (stored flags; a never-added draft counts), sidebar order.
+    nonisolated static func menuOnlyTileNames(_ configs: [DockTileConfiguration]) -> [String] {
+        configs.filter { $0.showInMenuBar && !$0.isVisibleInDock }.map(\.name)
+    }
+
+    /// The turn-off alert's message, or nil when no tile is menu-only. Names three, then "N more".
+    nonisolated static func menuBarOffMessage(names: [String]) -> String? {
+        switch names.count {
+        case 0: return nil
+        case 1: return AppStrings.Alert.menuBarOffMessageOne(names[0])
+        default:
+            var items = Array(names.prefix(3))
+            if names.count > 3 { items.append(AppStrings.Alert.menuBarOffMore(names.count - 3)) }
+            return AppStrings.Alert.menuBarOffMessageMany(ListFormatter.localizedString(byJoining: items))
         }
     }
 
