@@ -49,6 +49,10 @@ load-and-redump it by any other route than `l10n.py`, which preserves key order.
 editor rewrites the whole file in its own style (`"key" : value`, sorted) — harmless to the round
 trip, but a noisy diff; prefer not to open it there.
 
+**Removing a key** (2026-11-22): `l10n.py` has no remove command. Delete the key's block textually
+(from `    "key": {` to its own `    },`), confirm the file still parses (`json.loads`), delete the
+`AppStrings` accessor in the same commit, then `l10n.py export` + `check` — the sheets drop the row.
+
 ## Usage
 
 ```swift

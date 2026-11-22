@@ -3,6 +3,13 @@
 How to verify UI work against the running Debug app. Both rules below were paid for in real
 incidents, not theory.
 
+## Put layout changes on the dev build before review (2026-11-22)
+
+Two menu bar tile choices the owner had approved on mockups were reversed on first sight of the
+running build: the hero kept at 122 pt (became the card's height) and the sidebar mark (removed).
+For any change to a layout, relaunch the signed dev build and ask the owner to look BEFORE the final
+review and release steps, so the reversal does not cost a second review.
+
 ## Capture the window by ID, never by screen rect (critical — privacy)
 
 `screencapture -R "$X,$Y,$W,$H"` races with focus: between reading the window's frame and the

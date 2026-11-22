@@ -212,7 +212,9 @@ tile has no Dock entry and no running helper (`shouldPerformDockRemoval` seam), 
 `uninstallHelper` restart only when `removeFromDockPlist` reports it actually removed an entry.
 `isVisibleInDock` is **not** a presence signal (a never-pinned tile defaults to visible) — gate on
 `findInDock`, never the config flag. Regression this kills: every "Done"/delete on a hidden or
-never-pinned tile bounced the Dock.
+never-pinned tile bounced the Dock. **Second miss (2026-11-22):** the menu bar turn-off alert read
+`!isVisibleInDock` as "not in the Dock" and skipped every never-added draft. Any "is it in the Dock?"
+question takes a presence check (`findInDock`, or `isVisibleInDock && helperExists`), never the flag.
 
 **Tile Detail action button** resolves through the pure `DockTileDetailView.resolveDockAction`
 seam: visible → install (Add to Dock / Update, always enabled — Update deliberately re-renders the

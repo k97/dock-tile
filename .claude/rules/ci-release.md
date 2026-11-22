@@ -104,7 +104,10 @@ and its per-test durations there are suite wall time, not the test's own.
 Two false alarms from 2026-10-28: a `gh run watch` that exits 1 may be a LOCAL network error
 ("can't assign requested address") with the run still going — read `gh run view` first; and a
 re-run of an older `main` run shows "cancelled" when a newer push lands, because `ci.yml` uses
-`cancel-in-progress` per ref — only the newest commit's run counts.
+`cancel-in-progress` per ref — only the newest commit's run counts. A third (2026-11-18, PR #42): a red
+check whose job reads conclusion `cancelled` with no steps and `runner_id` 0 never got a runner (the
+macos-15 queue gave up at 15 min) — not a test result; re-run it
+(`gh api repos/k97/dock-tile/actions/jobs/<id>` shows all three).
 
 **Dock render check (on demand):** `gh workflow run ci.yml --ref <branch> -f dock_check=true`
 adds `dock-check-macos-15`, which bakes legacy tiles with the real generator on the macOS 15
@@ -228,7 +231,8 @@ git tag -a v1.x.x -m "Release 1.x.x" && git push origin v1.x.x
 - Generate Sparkle EdDSA signature (uses `SPARKLE_EDDSA_KEY` secret)
 - Update `appcast.xml` (inserts entry after `<language>`, newest first)
 - Update `website/lib/config.ts` (download URL, version)
-- Commit website changes to main
+- Commit website changes to main (re-applied on the LATEST `origin/main` with retries, so a push to `main`
+  during a release is safe unless it touches `appcast.xml` / `config.ts`; v2.8.0 shipped this way)
 - Create GitHub Release with auto-generated notes from commits
 - Upload DMG + SHA256 as release assets
 
