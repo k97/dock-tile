@@ -2,8 +2,8 @@
 //  MenuBarController.swift
 //  DockTile
 //
-//  The optional menu bar icon (issue #13): every tile shown in the Dock with a submenu of its
-//  apps, then Open Dock Tile… and Quit. Main app only; owns the one NSStatusItem. While it is on,
+//  The optional menu bar icon (issue #13): every tile with Show in Menu Bar on, with a submenu of
+//  its apps, then Open Dock Tile… and Quit. Main app only; owns the one NSStatusItem. While it is on,
 //  Dock Tile stays running with its window closed and drops its own Dock icon (AppDelegate).
 //
 //  Swift 6 - Strict Concurrency
@@ -85,7 +85,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
             menu.addItem(item(AppStrings.Button.addATile, #selector(addTile)))
         } else {
             let tiles = DiagnosticsLog.shared.measure("Build menu bar menu", category: "menu") {
-                TileMenu.tileItems(for: configs, target: self,
+                TileMenu.tileItems(for: configs, in: .menuBar, target: self,
                                    launch: #selector(launchApp(_:)), configure: #selector(configureTile(_:)))
             }
             tiles.forEach(menu.addItem)

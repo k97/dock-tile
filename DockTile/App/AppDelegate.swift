@@ -400,14 +400,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     // MARK: - Context Menu (Right-Click)
 
-    /// Every tile with a submenu of its apps (`TileMenu`, shared with the menu bar icon). It used to
+    /// Every tile in the Dock with a submenu of its apps (`TileMenu`, shared with the menu bar icon). It used to
     /// list only the sidebar's selected tile, flat and unnamed.
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: AppStrings.Menu.openDockTile, action: #selector(openConfigurator), keyEquivalent: ""))
 
         let tiles = DiagnosticsLog.shared.measure("Build Dock menu", category: "menu") {
-            TileMenu.tileItems(for: configManager?.configurations ?? [], target: self,
+            TileMenu.tileItems(for: configManager?.configurations ?? [], in: .dock, target: self,
                                launch: #selector(launchApp(_:)), configure: #selector(configureTile(_:)))
         }
         if !tiles.isEmpty {

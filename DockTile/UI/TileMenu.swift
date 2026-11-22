@@ -21,10 +21,16 @@ enum TileMenu {
         let enabled: Bool
     }
 
-    /// The tiles a menu lists: those shown in the Dock, in the order given (the sidebar's). A tile with
-    /// Show Tile off is hidden from the menus too (owner, 2026-11-05).
-    nonisolated static func menuTiles(_ configs: [DockTileConfiguration]) -> [DockTileConfiguration] {
-        configs.filter(\.isVisibleInDock)
+    /// Which menu is being built: Dock Tile's own Dock menu, or the menu bar icon's.
+    enum Place { case dock, menuBar }
+
+    /// The tiles a menu lists, in the order given (the sidebar's): the Dock menu lists the tiles in the
+    /// Dock (`isVisibleInDock`), the menu bar menu the tiles with Show in Menu Bar on (`showInMenuBar`).
+    nonisolated static func menuTiles(_ configs: [DockTileConfiguration], in place: Place) -> [DockTileConfiguration] {
+        switch place {
+        case .dock: configs.filter(\.isVisibleInDock)
+        case .menuBar: configs.filter(\.showInMenuBar)
+        }
     }
 
     /// A tile's apps and folders in tile order. A missing one stays listed but disabled, like the
@@ -61,14 +67,14 @@ enum TileMenu {
         }
     }
 
-    /// One item per tile shown in the Dock (`menuTiles`), with its icon and a submenu of its apps
+    /// One item per tile the menu at `place` lists (`menuTiles`), with its icon and a submenu of its apps
     /// followed by "Configure Tile…" (whose `representedObject` is the tile's `UUID`). The submenu
     /// is filled when it opens: building every tile's app icons up front took 183 ms with a
     /// 96-app tile (Debug, 2026-11-05).
-    static func tileItems(for configs: [DockTileConfiguration], target: AnyObject,
+    static func tileItems(for configs: [DockTileConfiguration], in place: Place, target: AnyObject,
                           launch: Selector, configure: Selector) -> [NSMenuItem] {
         let scheme: ColorScheme = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? .dark : .light
-        return menuTiles(configs).map { config in
+        return menuTiles(configs, in: place).map { config in
             let item = NSMenuItem(title: config.name, action: nil, keyEquivalent: "")
             item.image = tileIcon(for: config, colorScheme: scheme)
             item.submenu = TileSubmenu(config: config, target: target, launch: launch, configure: configure)
