@@ -90,12 +90,6 @@ const marketingBase = {
   ctaButton: "Download Dock Tile",
   ctaMetaOpenSource: "Free & open source",
   ctaMetaAppleSilicon: "Apple silicon",
-  // Feature vote banner (a raised hand for the next idea; lib/votes.ts counts every tap)
-  voteTitle: "Widgets in your tiles?",
-  voteBody:
-    "A world clock, your calendar or the weather, the moment a tile pops up, without digging through windows. Raise your hand if you want it: the more hands, the sooner we build it.",
-  voteThanks: "Counted! Want it more? Raise your hand again.",
-  voteButton: "I want widgets in my tiles",
   // Homepage FAQ (the top questions; the rest live on /faq)
   homeFaqTitleA: "Questions,", // split around the heading's tilted tile
   homeFaqTitleB: "answered.",

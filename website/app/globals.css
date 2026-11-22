@@ -1003,19 +1003,3 @@
     animation: none;
   }
 }
-
-/* Feature vote: the raised hand pops on every tap (feature-vote.tsx re-keys it per tap). */
-@keyframes vote-pop {
-  0% { scale: 1; rotate: 0deg; }
-  40% { scale: 1.35; rotate: -12deg; }
-  100% { scale: 1; rotate: 0deg; }
-}
-.vote-pop {
-  display: inline-block;
-  animation: vote-pop 360ms cubic-bezier(0.2, 0, 0, 1);
-}
-@media (prefers-reduced-motion: reduce) {
-  .vote-pop {
-    animation: none;
-  }
-}
