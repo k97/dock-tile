@@ -42,6 +42,8 @@ struct DockTileDetailView: View {
     @State private var showDockRestartConsent = false  // Show consent dialog for Dock restart
     @State private var hasAppearedOnce = false  // Track if view has fully loaded
     @State private var isCurrentlyInDock = false  // Track actual Dock state
+    /// The global Menu Bar setting (General); the Show in Menu Bar row exists only while it is on.
+    @AppStorage(UserDefaultsKeys.menuBarEnabled) private var menuBarEnabled = false
     /// `dockSignature` stamped into the tile's helper — what the Dock shows now (nil: no helper, or
     /// built before the stamp). Read with the Dock state, never per render.
     @State private var builtDockSignature: String?
@@ -128,7 +130,8 @@ struct DockTileDetailView: View {
     /// Cheap fingerprint of the user-editable content. Deliberately EXCLUDES bookkeeping that
     /// `performDockAction` writes back after a successful action (`lastDockIndex`,
     /// `helperAppVersion`) — including those would immediately re-dirty the button — and
-    /// `isVisibleInDock` (visibility selects WHICH action shows, it isn't content). App items are
+    /// `isVisibleInDock` (visibility selects WHICH action shows, it isn't content), and
+    /// `showInMenuBar` (the autosave applies it at once; Done has nothing to do for it). App items are
     /// identified by `id` (items are added/removed, never edited in place), which keeps this free
     /// of the O(n × icon_data_size) full-struct equality the view avoids elsewhere.
     nonisolated static func contentSignature(of config: DockTileConfiguration) -> Int {
@@ -172,16 +175,27 @@ struct DockTileDetailView: View {
         Self.contentSignature(of: editedConfig) != appliedContentSignature
     }
 
-    /// Dynamic button text based on toggle state and actual Dock presence
-    private var actionButtonText: String {
-        switch currentDockAction {
-        case .install:
-            return isCurrentlyInDock ? AppStrings.Button.update : AppStrings.Button.addToDock
-        case .remove:
-            return AppStrings.Button.removeFromDock
-        case .saveOnly:
-            return AppStrings.Button.done
+    /// The action button's short title: Add / Update / Remove / Done. Guarded by `TileDetailMenuBarTests`.
+    nonisolated static func actionTitle(_ action: DockAction, isCurrentlyInDock: Bool) -> String {
+        switch action {
+        case .install: return isCurrentlyInDock ? AppStrings.Button.update : AppStrings.Button.dockAdd
+        case .remove: return AppStrings.Button.dockRemove
+        case .saveOnly: return AppStrings.Button.done
         }
+    }
+
+    /// Tooltip + accessibility label naming the place, so a short "Remove" is never read as Delete.
+    /// Nil where the title already says it all (Update, Done).
+    nonisolated static func actionHelp(_ action: DockAction, isCurrentlyInDock: Bool) -> String? {
+        switch action {
+        case .install: return isCurrentlyInDock ? nil : AppStrings.Button.addToDock
+        case .remove: return AppStrings.Button.removeFromDock
+        case .saveOnly: return nil
+        }
+    }
+
+    private var actionButtonText: String {
+        Self.actionTitle(currentDockAction, isCurrentlyInDock: isCurrentlyInDock)
     }
 
     init(session: TileEditSession, inspectorShown: Bool, onToggleInspector: @escaping () -> Void) {
@@ -400,6 +414,8 @@ struct DockTileDetailView: View {
             // The toolbar capsule gives a label 6–7 pt a side; +6 matches a native push button's ~12 (Popover Save too).
             .padding(.horizontal, 6)
         }
+        .help(Self.actionHelp(currentDockAction, isCurrentlyInDock: isCurrentlyInDock) ?? "")
+        .accessibilityLabel(Self.actionHelp(currentDockAction, isCurrentlyInDock: isCurrentlyInDock) ?? actionButtonText)
         .disabled(!Self.dockActionIsEnabled(action: currentDockAction, isDirty: isDirty, isProcessing: isProcessing))
         if Self.actionIsProminent(action: currentDockAction, isCurrentlyInDock: isCurrentlyInDock,
                                   builtDockSignature: builtDockSignature, dockSignature: editedConfig.dockSignature,
@@ -466,8 +482,8 @@ struct DockTileDetailView: View {
     nonisolated static let formRowHeight: CGFloat = 40
     nonisolated static let formDividerHeight: CGFloat = 1
 
-    /// The hero fills the hero row's height: the Tile Name card beside it is three `formRow`s
-    /// and two `formRow` dividers.
+    /// The hero matches the Tile Name card's height while the card has three `formRow`s and two
+    /// dividers; with Show in Menu Bar's fourth row it stays 122 pt, top-aligned (owner, 2026-11-21).
     nonisolated static let heroIconSize: CGFloat = 3 * formRowHeight + 2 * formDividerHeight
 
     @ViewBuilder private var heroFace: some View {
@@ -485,9 +501,9 @@ struct DockTileDetailView: View {
     }
 
     private var heroSection: some View {
-        HStack(alignment: .center, spacing: 16) {
-            // Left column: the icon preview, as tall as the form card beside it (`heroIconSize`,
-            // 122 pt), so the two align top and bottom. The preview fills its frame (no icon-grid
+        HStack(alignment: .top, spacing: 16) {
+            // Left column: the icon preview, as tall as the three-row form card beside it
+            // (`heroIconSize`, 122 pt); a fourth row grows the card downward. The preview fills its frame (no icon-grid
             // margin — an artifact fact, not a UI-slot fact). Clicking it toggles Customise Tile.
             heroFace
                 .iconLift(size: Self.heroIconSize)
@@ -526,12 +542,23 @@ struct DockTileDetailView: View {
                         }
                 }
 
-                // Row 2: Show Tile
+                // Row 2: Show in Dock
                 formRow(isLast: false) {
                     Text(AppStrings.Label.showTile)
                     Spacer()
                     Toggle("", isOn: $session.config.isVisibleInDock)
                         .tileSwitch()
+                }
+
+                // Show in Menu Bar — only while the menu bar icon is on. An ordinary edit saved by
+                // the autosave: no Dock action, no consent, no restart.
+                if menuBarEnabled {
+                    formRow(isLast: false) {
+                        Text(AppStrings.Label.showInMenuBar)
+                        Spacer()
+                        Toggle("", isOn: $session.config.showInMenuBar)
+                            .tileSwitch()
+                    }
                 }
 
                 // Row 3: Show in App Switcher (last row, no separator)

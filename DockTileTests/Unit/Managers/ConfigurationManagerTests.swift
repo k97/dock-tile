@@ -184,6 +184,32 @@ struct ConfigurationManagerTests {
     func displayNameUnknownId() {
         #expect(createTestManager().displayName(for: UUID()) == "")
     }
+
+    // MARK: - Show in Menu Bar at creation
+
+    /// A new tile, blank or Smart Add, starts in the menu bar exactly when the Menu Bar setting is on.
+    /// Failing value: seeding `ConfigurationDefaults.showInMenuBar` (false) fails the `true` cases.
+    @Test func newTileFollowsTheMenuBarSetting() {
+        let manager = createTestManager()
+        let suggestion = TileSuggestion(
+            name: "Browse", strategy: .category, reason: "By category", tint: .blue,
+            symbol: "globe", emoji: "🌐", style: .symbol,
+            appItems: [AppItem(bundleIdentifier: "com.apple.Safari", name: "Safari")]
+        )
+        let blankOn = manager.createConfiguration(menuBarEnabled: true)
+        let blankOff = manager.createConfiguration(menuBarEnabled: false)
+        let smartOn = manager.createConfiguration(from: suggestion, menuBarEnabled: true)
+        let smartOff = manager.createConfiguration(from: suggestion, menuBarEnabled: false)
+        defer { [blankOn, blankOff, smartOn, smartOff].forEach { manager.deleteConfiguration($0.id) } }
+
+        #expect(blankOn.showInMenuBar == true)
+        #expect(blankOff.showInMenuBar == false)
+        #expect(smartOn.showInMenuBar == true)
+        #expect(smartOff.showInMenuBar == false)
+        // Stored as created, not only returned.
+        #expect(manager.configuration(for: blankOn.id)?.showInMenuBar == true)
+        #expect(manager.configuration(for: smartOn.id)?.showInMenuBar == true)
+    }
 }
 
 // MARK: - Configuration Operations Tests

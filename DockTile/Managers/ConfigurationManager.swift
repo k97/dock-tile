@@ -146,9 +146,10 @@ final class ConfigurationManager: ObservableObject {
 
     // MARK: - CRUD Operations
 
-    /// Create a new configuration with default values
+    /// Create a new configuration with default values. Show in Menu Bar starts as the Menu Bar
+    /// setting is at creation (owner).
     @discardableResult
-    func createConfiguration() -> DockTileConfiguration {
+    func createConfiguration(menuBarEnabled: Bool = MenuBarController.isEnabled) -> DockTileConfiguration {
         // A random starter symbol (the glyph, on the Symbol card) and emoji (the Emoji card's
         // saved glyph), so every new tile starts different.
         var generator = SystemRandomNumberGenerator()
@@ -159,7 +160,8 @@ final class ConfigurationManager: ObservableObject {
             symbolEmoji: ConfigurationDefaults.symbolEmoji,
             iconType: ConfigurationDefaults.iconType,
             iconValue: starter.symbol,
-            savedEmoji: SavedGlyph(value: starter.emoji, scale: ConfigurationDefaults.iconScale)
+            savedEmoji: SavedGlyph(value: starter.emoji, scale: ConfigurationDefaults.iconScale),
+            showInMenuBar: menuBarEnabled
         )
 
         configurations.append(config)
@@ -183,14 +185,16 @@ final class ConfigurationManager: ObservableObject {
 
     /// Create a pre-filled configuration from a Smart Add suggestion. Seeds name (uniquified),
     /// tint, SF Symbol icon, and the suggestion's apps. `isVisibleInDock` is left **ON** — matching
-    /// a blank new tile's default — so the **Show Tile** switch reads on while the user reviews it.
+    /// a blank new tile's default — so the **Show in Dock** switch reads on while the user reviews it.
     /// This does NOT dock anything: with no helper bundle on disk the action button still reads
-    /// **Add to Dock** and nothing pins until the user confirms there (the reconciler's never-pinned
+    /// **Add** and nothing pins until the user confirms there (the reconciler's never-pinned
     /// guard spares this brand-new-visible-but-unpinned state). Selects the new tile and marks it
     /// "edited" (a pre-filled tile is already engaged, so the + button stays enabled), records the
     /// provenance for the one-time banner, and logs the creation with `source: "smart_add"`.
+    /// Show in Menu Bar starts as the Menu Bar setting is at creation, like a blank tile.
     @discardableResult
-    func createConfiguration(from suggestion: TileSuggestion) -> DockTileConfiguration {
+    func createConfiguration(from suggestion: TileSuggestion,
+                             menuBarEnabled: Bool = MenuBarController.isEnabled) -> DockTileConfiguration {
         let config = DockTileConfiguration(
             name: generateUniqueName(base: suggestion.name),
             tintColor: suggestion.tint,
@@ -206,7 +210,8 @@ final class ConfigurationManager: ObservableObject {
             savedEmoji: suggestion.style == .emoji
                 ? nil : SavedGlyph(value: suggestion.emoji, scale: ConfigurationDefaults.iconScale),
             appItems: suggestion.appItems,
-            isVisibleInDock: true
+            isVisibleInDock: true,
+            showInMenuBar: menuBarEnabled
         )
 
         configurations.append(config)

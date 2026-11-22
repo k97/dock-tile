@@ -329,7 +329,7 @@ struct SmartAddCreateConfigurationTests {
         #expect(emoji.savedSymbol?.value == "globe" && emoji.savedEmoji == nil)
     }
 
-    @Test("Seeds name, tint, symbol and apps; Show Tile reads on but nothing is docked yet")
+    @Test("Seeds name, tint, symbol and apps; Show in Dock reads on but nothing is docked yet")
     func seedsFieldsAndShowsTile() {
         let manager = ConfigurationManager()
         let created = manager.createConfiguration(from: suggestion())
@@ -345,8 +345,8 @@ struct SmartAddCreateConfigurationTests {
         #expect(created.appItems.count == 3)
         #expect(created.appItems.map(\.bundleIdentifier) == ["com.apple.Safari", "com.google.Chrome", "org.mozilla.firefox"])
 
-        // Show Tile reads ON while reviewing (matches a blank new tile's default). This does NOT
-        // pin anything — the user still confirms with Add to Dock — but the stored intent is visible.
+        // Show in Dock reads ON while reviewing (matches a blank new tile's default). This does NOT
+        // pin anything — the user still confirms with Add — but the stored intent is visible.
         #expect(created.isVisibleInDock == true)
 
         // Selected and flagged for the provenance banner.
