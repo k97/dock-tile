@@ -172,16 +172,16 @@ export function DownloadActionButton({
   function buttonLabel() {
     switch (state) {
       case "downloading":
-        return "Downloading…";
+        return m.downloading;
       case "downloaded":
-        return "Downloaded";
+        return m.downloaded;
       case "copied":
         return m.copyLinkDone;
       case "manual":
         return siteConfig.siteUrl.replace("https://", "");
       default:
         if (nonMac) return size === "sm" ? m.copyLinkShort : m.copyLinkButton;
-        return label ?? "Download for macOS";
+        return label ?? content.downloadButton;
     }
   }
 

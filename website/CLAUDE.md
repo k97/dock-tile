@@ -67,6 +67,7 @@ No test suite. After changes:
 npm run lint
 npx tsc --noEmit
 npm run build
+npm run check:zh   # English copy vs docs/l10n/website-zh-Hans.md (the Chinese test pages)
 ```
 
 Visual checks: never drive the user's own browser — use an isolated Chrome profile; headless

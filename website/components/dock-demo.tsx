@@ -9,6 +9,7 @@ import { TileGlyph, type GlyphName } from "@/components/tile-glyph";
 import { DemoCursor, useDockShowcase } from "@/components/dock-showcase";
 import { asset } from "@/lib/assets";
 import { anchorPopover } from "@/lib/dock-popover";
+import { useDisplayName, useLocale } from "@/components/locale-provider";
 
 /**
  * DockTile hero demo — the interactive macOS Dock (magnification, click bounce)
@@ -324,6 +325,10 @@ export function DockDemo({ className = "" }: { className?: string }) {
   // Pointer type of the interaction in flight — click handlers fire after the
   // pointer events and need it to decide the touch-only resume paths.
   const lastPointerTypeRef = React.useRef("mouse");
+  const m = useLocale().content.marketing;
+  const name = useDisplayName();
+  // The Dock's tooltips and accessible names in the page's language (ids stay English).
+  const apps = React.useMemo(() => APPS.map((a) => ({ ...a, name: name(a.name) })), [name]);
 
   const openTile = TILES.find((t) => t.id === openId) ?? null;
 
@@ -513,7 +518,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
         <div
           ref={panelRef}
           role="dialog"
-          aria-label={`${openTile.name} apps`}
+          aria-label={m.mockPopoverLabel.replace("{tile}", name(openTile.name))}
           onKeyDown={handlePopoverKeys}
           className={`absolute z-30 rounded-2xl font-ui ${openTile.layout === "list" ? "p-2" : "p-3 pt-0"}`}
           style={{
@@ -530,7 +535,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
           {openTile.layout === "list" ? (
             <>
               <p className="px-3 pb-1 pt-1.5 text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">
-                {openTile.name}
+                {name(openTile.name)}
               </p>
               <div className="flex flex-col">
                 {openTile.apps.map((app, i) => {
@@ -566,7 +571,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
                         />
                       ))}
                       <span className="truncate text-[13px] text-zinc-800 dark:text-zinc-100">
-                        {app.name}
+                        {name(app.name)}
                       </span>
                     </button>
                   );
@@ -579,7 +584,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
                 className="flex w-full items-center gap-2.5 rounded px-3 py-1 text-left text-[13px] text-zinc-700 outline-none transition-colors duration-150 hover:bg-black/5 dark:text-zinc-300 dark:hover:bg-white/10"
               >
                 <Settings2 className="h-3 w-4 text-zinc-500 dark:text-zinc-400" />
-                Configure…
+                {m.mockConfigure}
               </button>
             </>
           ) : (
@@ -587,12 +592,12 @@ export function DockDemo({ className = "" }: { className?: string }) {
               <header className="flex h-9 items-center justify-between px-1">
                 <span className="w-7" />
                 <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">
-                  {openTile.name}
+                  {name(openTile.name)}
                 </span>
                 <button
                   type="button"
-                  aria-label="Configure Tile"
-                  title="Configure Tile"
+                  aria-label={m.mockConfigureTile}
+                  title={m.mockConfigureTile}
                   onClick={configure}
                   className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-black/5 dark:text-zinc-400 dark:hover:bg-white/10"
                 >
@@ -634,7 +639,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
                         />
                       ))}
                       <span className="max-w-full truncate text-[11px] leading-none text-zinc-600 dark:text-zinc-300">
-                        {app.name}
+                        {name(app.name)}
                       </span>
                     </button>
                   );
@@ -646,7 +651,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
         </div>
       )}
 
-      <MacOSDock apps={APPS} onAppClick={handleAppClick} openApps={openId && !closing ? [openId] : []} />
+      <MacOSDock apps={apps} onAppClick={handleAppClick} openApps={openId && !closing ? [openId] : []} />
 
       <DemoCursor {...demo} />
     </div>

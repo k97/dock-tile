@@ -22,7 +22,7 @@ import {
   Wifi,
 } from "lucide-react";
 import Image from "next/image";
-import { useLocale } from "@/components/locale-provider";
+import { useDisplayName, useLocale } from "@/components/locale-provider";
 import { asset, HERO_BG, HERO_BG_DARK } from "@/lib/assets";
 import { siteConfig } from "@/lib/config";
 import { Reveal } from "@/components/reveal";
@@ -263,6 +263,7 @@ function Footnote({ icon: Icon, children }: { icon: React.ComponentType<{ classN
 /* Cmd+Tab app switcher — the selection tabs across real apps and skips the
    ghosted Dock Tile slot. */
 function AppSwitcherMock() {
+  const name = useDisplayName();
   return (
     // pt-10 leaves room for the name tooltip that floats above the strip.
     <div className="relative flex flex-col items-center gap-4 pt-10">
@@ -286,7 +287,7 @@ function AppSwitcherMock() {
             <span key={app.name ?? i} className="relative z-10 flex h-12 w-12 items-center justify-center">
               <Image
                 src={asset(app.src)}
-                alt={app.name}
+                alt={name(app.name)}
                 width={44}
                 height={44}
                 unoptimized
@@ -296,7 +297,7 @@ function AppSwitcherMock() {
               {app.darkSrc && (
                 <Image
                   src={asset(app.darkSrc)}
-                  alt={app.name}
+                  alt={name(app.name)}
                   width={44}
                   height={44}
                   unoptimized
@@ -321,7 +322,7 @@ function AppSwitcherMock() {
               }`}
               style={{ left: 36 + i * 56, animationDelay: i === 0 ? undefined : `${-[0, 4.4, 0, 3.3, 2.2][i]}s` }}
             >
-              {app.name}
+              {name(app.name)}
             </span>
           ),
         )}
@@ -408,6 +409,8 @@ function AppIcon({ src, darkSrc, size }: { src: string; darkSrc?: string; size: 
    ScaleToFit like every illustrative macOS component on the page. Status
    items sit right as on a real menu bar, so the submenu opens leftwards. */
 function MenuBarMock() {
+  const m = useLocale().content.marketing;
+  const name = useDisplayName();
   return (
     <ScaleToFit>
       <div className="h-49 w-115">
@@ -429,32 +432,32 @@ function MenuBarMock() {
                   <span className="flex h-4 w-4">
                     <TileFace gradient={t.gradient} darkGlyph={t.dark} glyph={t.glyph} shaded />
                   </span>
-                  {t.name}
+                  {name(t.name)}
                   <ChevronRight className={`ml-auto h-3 w-3 ${t.name === "Dev Apps" ? "text-white/80" : "text-zinc-400"}`} />
                 </div>
               ))}
               <div className={menuSep} />
-              <div className={menuRow}>Open Dock Tile…</div>
+              <div className={menuRow}>{m.mockOpenDockTile}</div>
               <div className={menuRow}>
-                Quit Dock Tile<span className="ml-auto text-zinc-400">⌘Q</span>
+                {m.mockQuitDockTile}<span className="ml-auto text-zinc-400">⌘Q</span>
               </div>
             </div>
             <div className="popover-surface absolute -left-43 top-12.25 w-44 rounded-xl p-1.5">
               {devApps.map((app) => (
                 <div key={app.name} className={menuRow}>
                   <AppIcon src={app.src} size={16} />
-                  {app.name}
+                  {name(app.name)}
                 </div>
               ))}
               <div className={menuSep} />
-              <div className={menuRow}>Configure Tile…</div>
+              <div className={menuRow}>{m.mockConfigureTileItem}</div>
             </div>
           </span>
           <Wifi className="h-3.5 w-3.5" />
           <BatteryFull className="h-4 w-4" />
           <Search className="h-3.5 w-3.5" />
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          <span className="font-medium">Mon 9:41</span>
+          <span className="font-medium">{m.mockClock}</span>
         </div>
       </div>
     </ScaleToFit>
@@ -552,36 +555,38 @@ export const aiAppIcons = ["claude", "chatgpt", "gemini", "granola"].map((n) => 
 const suggestions = [
   {
     name: "Chat",
-    note: "Most used this week",
+    note: "mockMostUsed",
     face: <AppGridFace icons={["messages", "slack", "whatsapp", "google-meet"].map((n) => `/assets/app-icons/${n}.png`)} />,
   },
   {
     name: "Ship",
-    note: "5 apps",
+    note: "mockFiveApps",
     face: <TileFace gradient="linear-gradient(to bottom, #818CF8, #4F46E5)" darkGlyph="#818CF8" glyph="code" shaded />,
   },
-  { name: "Watch", note: "3 apps", face: <EmojiFace emoji="🍿" tint={{ top: "#FF7AAE", bottom: "#EC3E7C" }} /> },
-];
+  { name: "Watch", note: "mockThreeApps", face: <EmojiFace emoji="🍿" tint={{ top: "#FF7AAE", bottom: "#EC3E7C" }} /> },
+] as const;
 
 /* The "Add a Tile" sheet Smart Add opens on +: blank row, the rule, the
    suggestion cards (the privacy note is the card's footnote). 440 px wide. */
 function SmartAddMock() {
+  const m = useLocale().content.marketing;
+  const name = useDisplayName();
   return (
     <ScaleToFit>
       <div className="popover-surface w-110 rounded-2xl p-4 text-zinc-800 dark:text-zinc-100">
-        <p className="mb-3 text-center text-[13px] font-semibold">Add a Tile</p>
+        <p className="mb-3 text-center text-[13px] font-semibold">{m.mockAddTile}</p>
         <div className="flex items-center gap-3 rounded-xl bg-black/4 p-2.5 dark:bg-white/6">
           <span className="squircle flex h-9 w-9 items-center justify-center bg-black/6 dark:bg-white/10">
             <Plus className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
           </span>
           <span>
-            <p className="text-[12px] font-semibold">Create a blank tile</p>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Name it, pick an icon and add apps yourself.</p>
+            <p className="text-[12px] font-semibold">{m.mockBlankTitle}</p>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{m.mockBlankBody}</p>
           </span>
         </div>
         <div className="my-3 flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
           <span className="h-px flex-1 bg-black/10 dark:bg-white/10" />
-          or start from what you use
+          {m.mockStartFrom}
           <span className="h-px flex-1 bg-black/10 dark:bg-white/10" />
         </div>
         <div className="grid grid-cols-3 gap-2.5">
@@ -591,8 +596,8 @@ function SmartAddMock() {
               className="flex flex-col items-center gap-1 rounded-xl bg-white/70 px-2 pb-2.5 pt-3 ring-1 ring-black/5 dark:bg-white/5 dark:ring-white/10"
             >
               <span className="mb-1 flex h-14 w-14 drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">{s.face}</span>
-              <p className="text-[12px] font-semibold">{s.name}</p>
-              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{s.note}</p>
+              <p className="text-[12px] font-semibold">{name(s.name)}</p>
+              <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{m[s.note]}</p>
             </div>
           ))}
         </div>
@@ -640,11 +645,12 @@ function DockIcon({ name, children }: { name: string; children: React.ReactNode 
 /* Finder / System Settings bookend both Docks, as in the hero; their Dark
    renditions dual-render so the first frame is right in either theme. */
 function DockEnd({ name }: { name: "finder" | "settings" }) {
+  const display = useDisplayName();
   // Same ?v= keys as the hero Dock (dock-demo.tsx), or the browser downloads each icon twice.
   const light = name === "finder" ? "finder.png?v=3" : "settings.png?v=3";
   const dark = name === "finder" ? "finder-dark.png?v=4" : "settings-dark.png?v=1";
   return (
-    <DockIcon name={name === "finder" ? "Finder" : "System Settings"}>
+    <DockIcon name={display(name === "finder" ? "Finder" : "System Settings")}>
       <AppIcon src={icon(light)} darkSrc={icon(dark)} size={40} />
     </DockIcon>
   );
@@ -763,6 +769,7 @@ const staggerAt = (i: number) => ({ "--stagger": `${i * 30}ms` }) as React.CSSPr
 
 function IntroTile({ tile, open, onToggle }: { tile: (typeof TILES)[number]; open: boolean; onToggle: () => void }) {
   const list = tile.layout === "list";
+  const name = useDisplayName();
   const panelRef = React.useRef<HTMLSpanElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
 
@@ -785,7 +792,7 @@ function IntroTile({ tile, open, onToggle }: { tile: (typeof TILES)[number]; ope
       type="button"
       data-intro-tile
       data-open={open || undefined}
-      aria-label={tile.name}
+      aria-label={name(tile.name)}
       aria-expanded={open}
       onClick={onToggle}
       className="dock-item group relative flex h-10 w-10 cursor-pointer rounded-[22.5%] outline-none focus-visible:ring-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/80"
@@ -804,7 +811,7 @@ function IntroTile({ tile, open, onToggle }: { tile: (typeof TILES)[number]; ope
         aria-hidden
         className={`absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 group-data-[open]:hidden ${dockTooltip}`}
       >
-        {tile.name}
+        {name(tile.name)}
       </span>
       <span
         ref={panelRef}
@@ -819,11 +826,11 @@ function IntroTile({ tile, open, onToggle }: { tile: (typeof TILES)[number]; ope
         <span className={`relative block ${fade} ${list ? "p-1.5" : "px-2 pb-2"}`}>
           {list ? (
             <>
-              <span className="block px-3 pb-1 pt-2 text-left text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">{tile.name}</span>
+              <span className="block px-3 pb-1 pt-2 text-left text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">{name(tile.name)}</span>
               {tile.apps.map((app, i) => (
                 <span key={app.name} className={`flex items-center gap-2.5 px-3 py-1 text-[13px] text-zinc-700 dark:text-zinc-300 ${appIn}`} style={staggerAt(i)}>
                   <AppIcon src={app.src} darkSrc={app.darkSrc} size={24} />
-                  {app.name}
+                  {name(app.name)}
                 </span>
               ))}
             </>
@@ -831,14 +838,14 @@ function IntroTile({ tile, open, onToggle }: { tile: (typeof TILES)[number]; ope
             <>
               <span className="flex h-9 items-center justify-between px-1">
                 <span className="w-7" />
-                <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">{tile.name}</span>
+                <span className="text-[13px] font-medium text-zinc-800 dark:text-zinc-100">{name(tile.name)}</span>
                 <Settings2 className="mr-2 h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
               </span>
               <span className="grid grid-cols-4 gap-x-1 gap-y-2 px-1">
                 {tile.apps.map((app, i) => (
                   <span key={app.name} className={`flex flex-col items-center gap-1.5 p-1.5 ${appIn}`} style={staggerAt(i)}>
                     <AppIcon src={app.src} darkSrc={app.darkSrc} size={48} />
-                    <span className="max-w-full truncate text-[11px] leading-none text-zinc-600 dark:text-zinc-300">{app.name}</span>
+                    <span className="max-w-full truncate text-[11px] leading-none text-zinc-600 dark:text-zinc-300">{name(app.name)}</span>
                   </span>
                 ))}
               </span>
@@ -855,6 +862,7 @@ function BeforeAfterDocks({ before, after }: { before: string; after: string }) 
   const label = "mb-3 text-[13px] font-medium text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]";
   // Which tile's popover is open. A click elsewhere or Escape closes it, as on the hero.
   const [openId, setOpenId] = React.useState<string | null>(null);
+  const name = useDisplayName();
   React.useEffect(() => {
     if (!openId) return;
     const outside = (e: PointerEvent) => {
@@ -877,7 +885,7 @@ function BeforeAfterDocks({ before, after }: { before: string; after: string }) 
         <DockStrip>
           <DockEnd name="finder" />
           {crowdedDock.map((app) => (
-            <DockIcon key={app.src} name={app.name}>
+            <DockIcon key={app.src} name={name(app.name)}>
               <AppIcon src={app.src} darkSrc={app.darkSrc} size={40} />
             </DockIcon>
           ))}

@@ -1042,3 +1042,13 @@
     animation: none;
   }
 }
+
+/* The Chinese pages (/zh-Hans): CJK glyphs fall back to the system font, and the
+   Latin headings' negative tracking crowds them, so headings track at 0 there.
+   Unlayered, so it wins over the utilities. */
+.heading-display:lang(zh-Hans),
+.text-section:lang(zh-Hans),
+.text-title:lang(zh-Hans),
+.text-title-sm:lang(zh-Hans) {
+  letter-spacing: 0;
+}

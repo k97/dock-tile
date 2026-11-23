@@ -7,7 +7,8 @@
     "dev:r2": "NEXT_PUBLIC_IMAGE_SOURCE=r2 next dev -p 3010",
     "build": "next build",
     "start": "next start -p 3010",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:zh": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-zh.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

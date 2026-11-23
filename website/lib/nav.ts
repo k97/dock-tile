@@ -1,9 +1,10 @@
 // Which nav/footer link is "current" — one rule for both, so they never disagree.
 //
 // Route links are current on their own route (or a sub-route). Section links
-// (the homepage's Features) are current on "/" while their section is on screen;
-// `usePathname()` never includes the #hash, so a "/#features" href can't be
+// (the homepage's Features) are current on the locale's home while their section is
+// on screen; `usePathname()` never includes the #hash, so a "/#features" href can't be
 // matched as a route — it needs the section the header's scroll sampling reports.
+import type { Locale } from "@/lib/i18n";
 
 export type NavLink = {
   label: string;
@@ -12,11 +13,34 @@ export type NavLink = {
   section?: string;
 };
 
-export const NAV_LINKS: readonly NavLink[] = [
-  { label: "Features", href: "/#features", section: "features" },
-  { label: "Privacy", href: "/privacy" },
-  { label: "FAQ", href: "/faq" },
-];
+/** The Chinese test (/zh-Hans and /zh-Hans/faq) is the only locale with its own routes. */
+const ZH_PREFIX = "/zh-Hans";
+
+/** The route's own locale, or null where the browser decides (every English page). */
+export function localeForPath(pathname: string): Locale | null {
+  return isActiveRoute(pathname, ZH_PREFIX) ? "zh-Hans" : null;
+}
+
+/** A homepage or FAQ path in a locale: "/faq" → "/zh-Hans/faq", "/#features" → "/zh-Hans#features".
+ *  Only "/" and "/faq" have Chinese pages; pass anything else unchanged. */
+export function localePath(locale: Locale, path: string): string {
+  if (locale !== "zh-Hans") return path;
+  return path === "/" ? ZH_PREFIX : ZH_PREFIX + (path.startsWith("/#") ? path.slice(1) : path);
+}
+
+/** hreflang alternates for a page that exists in both languages ("/" or "/faq"). */
+export function languageAlternates(path: string) {
+  return { en: path, "zh-Hans": localePath("zh-Hans", path), "x-default": path };
+}
+
+/** The nav pill's links, in the page's language and pointing at its pages. */
+export function navLinks(locale: Locale, labels: { features: string; privacy: string; faq: string }): NavLink[] {
+  return [
+    { label: labels.features, href: localePath(locale, "/#features"), section: "features" },
+    { label: labels.privacy, href: "/privacy" },
+    { label: labels.faq, href: localePath(locale, "/faq") },
+  ];
+}
 
 /** Exact route, or a sub-route after a "/" — never a lookalike ("/privacy-old"). */
 export function isActiveRoute(pathname: string, href: string): boolean {
@@ -29,6 +53,9 @@ export function currentFor(
   pathname: string,
   activeSection: string | null,
 ): "page" | "location" | undefined {
-  if (link.section) return pathname === "/" && activeSection === link.section ? "location" : undefined;
+  if (link.section) {
+    const home = localePath(localeForPath(pathname) ?? "en-AU", "/");
+    return pathname === home && activeSection === link.section ? "location" : undefined;
+  }
   return isActiveRoute(pathname, link.href) ? "page" : undefined;
 }

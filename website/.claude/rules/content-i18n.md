@@ -106,7 +106,23 @@
 
 - `en-AU` (default) / `en-GB` / `en-US`. SSR always renders AU; `locale-provider.tsx` reads
   `navigator.language` after mount and swaps to US content when the browser says so.
-  **No Next.js locale routing, on purpose.**
+  **No Next.js locale routing, on purpose** — with one exception below.
+- **Simplified Chinese test (owner, 2026-11-23, issue #43 option B):** `/zh-Hans` and
+  `/zh-Hans/faq` only, decided by the ROUTE (`localeForPath`; `LocaleProvider` is route-aware, so the
+  server renders Chinese), never by the browser (`detectLocale` never returns zh-Hans). Other pages
+  stay English. Plan, baseline and keep/drop rule: docs/superpowers/plans/2026-11-23-website-zh-hans-test.md;
+  reviews scheduled 2026-12-07 and 2027-03-01.
+  - Every string goes through `lib/i18n.ts` (`marketingZh`, the zh FAQ, `zhPageMeta`); names shown in
+    the mocks (tile names, Apple apps) go through `useDisplayName()` with the `names` map, data and
+    comparisons stay English. Mock UI labels reuse the app's own zh-Hans strings
+    (`Localizable.xcstrings`); terms from docs/l10n/GLOSSARY.md.
+  - **Changing English copy:** update `docs/l10n/website-zh-Hans.md` (English | Chinese | status)
+    and the Chinese in `i18n.ts`; `npm run check:zh` fails when an English string no longer matches
+    the sheet. Machine-first, all `needs_review` until a native reviewer passes.
+  - FAQ entries carry an explicit `slug` (the old English slugify, kept identical so links survive);
+    Chinese questions reuse the English slug.
+  - `hero.tsx` keeps the literal `macOS 15+` (MacOSFloorGuardTests); the guard's regexes are English,
+    so check macOS versions in Chinese copy by hand.
 - Seeing "organized" on an AU Mac is usually NOT a bug — macOS browsers commonly report `en-US`.
 - Release notes localise UK→US through the `localiseText()` word-map in `i18n.ts` rather than
   duplicated datasets.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/json-ld";
 import { siteConfig } from "@/lib/config";
 import { faqPageSchema } from "@/lib/schema";
+import { languageAlternates } from "@/lib/nav";
 import { FaqContent } from "./faq-content";
 
 const title = `Frequently Asked Questions - ${siteConfig.appName}`;
@@ -11,7 +12,7 @@ const description =
 export const metadata: Metadata = {
   title,
   description,
-  alternates: { canonical: "/faq" },
+  alternates: { canonical: "/faq", languages: languageAlternates("/faq") },
   openGraph: {
     title,
     description,

@@ -7,11 +7,16 @@ import { usePathname } from "next/navigation";
 import { siteConfig } from "@/lib/config";
 import { asset } from "@/lib/assets";
 import { DownloadActionButton } from "@/components/action-button";
-import { NAV_LINKS, currentFor } from "@/lib/nav";
+import { currentFor, localePath, navLinks } from "@/lib/nav";
+import { useLocale } from "@/components/locale-provider";
 import { useHydrated } from "@/lib/use-client-value";
 
 export function Header() {
   const pathname = usePathname();
+  const { locale, content } = useLocale();
+  const m = content.marketing;
+  // The logo's and Features' home: "/" or, on the Chinese pages, "/zh-Hans".
+  const home = localePath(locale, "/");
   const navRef = React.useRef<HTMLElement>(null);
   // Arms the pill's 300ms tone cross-fade only after hydration (CSS
   // `.glass-nav[data-ready]`), so any load-time tone correction snaps into
@@ -20,11 +25,11 @@ export function Header() {
   // Set by a logo click on another page; consumed once the homepage renders.
   const logoToHomeRef = React.useRef(false);
   React.useEffect(() => {
-    if (pathname === "/" && logoToHomeRef.current) {
+    if (pathname === home && logoToHomeRef.current) {
       logoToHomeRef.current = false;
       window.scrollTo({ top: 0, behavior: "auto" });
     }
-  }, [pathname]);
+  }, [pathname, home]);
   // Which tone of section sits behind the nav right now. Drives an inverse
   // pill: light frost over dark sections, dark frost over light ones.
   const [overDark, setOverDark] = React.useState(true);
@@ -112,19 +117,19 @@ export function Header() {
         className="glass-nav pointer-events-auto flex items-center gap-1 rounded-full px-1.5 py-1.5"
       >
         <Link
-          href="/"
+          href={home}
           // The logo always lands on the hero. On the homepage a link to "/" is
           // a no-op in Next, so scroll up ourselves (and drop a leftover
           // #features). From another page Next navigates home but keeps the
           // old scroll offset, so flag it and the effect below scrolls to top
           // once "/" renders — logo clicks only, so Back/Forward still restore.
           onClick={(e) => {
-            if (pathname !== "/") {
+            if (pathname !== home) {
               logoToHomeRef.current = true;
               return;
             }
             e.preventDefault();
-            if (window.location.hash) history.replaceState(null, "", "/");
+            if (window.location.hash) history.replaceState(null, "", home);
             const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
           }}
@@ -158,7 +163,7 @@ export function Header() {
 
         {/* The three links stay inline at every width — on mobile they ARE the
             nav's content, since Download drops out (below). */}
-        {NAV_LINKS.map((link) => {
+        {navLinks(locale, { features: m.footerFeatures, privacy: content.privacy, faq: m.footerFaq }).map((link) => {
           const current = currentFor(link, pathname, activeSection);
           return (
             <Link
@@ -182,7 +187,7 @@ export function Header() {
           location="header"
           tone={overDark ? "adaptive" : "light"}
           size="sm"
-          label="Download"
+          label={m.footerDownload}
           className="max-md:hidden md:ml-3"
         />
       </nav>

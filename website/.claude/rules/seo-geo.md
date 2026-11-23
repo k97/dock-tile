@@ -48,10 +48,16 @@
 ## Structured data (`lib/schema.ts` + `components/json-ld.tsx`)
 
 - WebSite (root layout) · SoftwareApplication (homepage) · FAQPage (`/faq`, all Q&As).
-  Every field wires to siteConfig / en-AU i18n — never hardcode; `softwareVersion` and
+  The Chinese test pages (content-i18n.md) carry their own: a Chinese SoftwareApplication
+  (`…/zh-Hans#app`, `inLanguage`, `sameAs` the English `…/#app`) on `/zh-Hans`, a Chinese FAQPage on
+  `/zh-Hans/faq` only. `/`, `/faq`, `/zh-Hans`, `/zh-Hans/faq` each set `alternates.languages`
+  (en, zh-Hans, x-default → English) through `languageAlternates()` in `lib/nav.ts`; keep them
+  reciprocal, and add a new Chinese route to the sitemap.
+  Every field wires to siteConfig / en-AU i18n (the `/zh-Hans` nodes to the zh content) — never hardcode; `softwareVersion` and
   `downloadUrl` track the CI-written config automatically.
 - **No `aggregateRating`** without verifiable on-page review data (rich-results penalty).
-  FAQPage stays on `/faq` only — Google requires the marked-up content visible on that page.
+  FAQPage stays on the FAQ pages only (`/faq`, `/zh-Hans/faq`) — Google requires the marked-up
+  content visible on that page.
 - Author/publisher is the **Organization** Happy Machines Company (2026-10-30; was a Person). The
   app's `sameAs` GitHub repo is what disambiguates it from Apple's `NSDockTile` API — keep it.
   Its `@id` is `https://happymachines.company/#organization`, the studio site's own, so engines
@@ -88,5 +94,5 @@
   Radix's default unmount made every answer invisible to them. Don't regress.
 - `app/robots.ts` (allow-all; `/appcast.xml` disallowed) + `app/sitemap.ts` — new routes
   must be added to the sitemap's route list.
-- The client-side locale swap means only en-AU content is crawlable — deliberate
+- The client-side locale swap means only en-AU content is crawlable on the English pages (`/zh-Hans*` render Chinese on the server) — deliberate
   (see content-i18n.md), so schema/meta text uses AU spelling.

@@ -12,7 +12,6 @@ import { FAQ_ANSWER, FAQ_CARD, FAQ_TRIGGER } from "@/components/faq-card";
 import { Footer } from "@/components/footer";
 import { Reveal } from "@/components/reveal";
 import { useLocale } from "@/components/locale-provider";
-import { slugify } from "@/lib/i18n";
 import { trackExternalLinkClick, trackFaqOpen } from "@/lib/analytics";
 import { bugReportUrl, featureRequestUrl } from "@/lib/feedback";
 import { ArrowUpRight, Bug, Lightbulb } from "lucide-react";
@@ -29,10 +28,10 @@ export function FaqContent() {
       if (hash) {
         // Check if hash matches any FAQ slug
         const matchingFaq = content.faq.find(
-          (item) => slugify(item.question) === hash
+          (item) => item.slug === hash
         );
         if (matchingFaq) {
-          const slug = slugify(matchingFaq.question);
+          const slug = matchingFaq.slug;
           setOpenItem(slug);
           // Scroll to the element after a short delay to ensure accordion is open
           setTimeout(() => {
@@ -61,7 +60,7 @@ export function FaqContent() {
       window.history.replaceState(null, "", `#${value}`);
       // Track FAQ open event
       const matchingFaq = content.faq.find(
-        (item) => slugify(item.question) === value
+        (item) => item.slug === value
       );
       if (matchingFaq) {
         trackFaqOpen(matchingFaq.question);
@@ -83,15 +82,15 @@ export function FaqContent() {
             className="reveal mb-3 block text-[14px] font-semibold tracking-[0.01em] text-white/75"
             style={{ "--reveal-delay": "0ms" } as React.CSSProperties}
           >
-            FAQ
+            {m.footerFaq}
           </span>
           <h1
             className="reveal text-3xl heading-display text-white md:text-5xl"
             style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
           >
-            Questions,
+            {m.homeFaqTitleA}
             <br />
-            <span className="text-white/40">answered.</span>
+            <span className="text-white/40">{m.homeFaqTitleB}</span>
           </h1>
         </div>
       </section>
@@ -109,7 +108,7 @@ export function FaqContent() {
               list fading up as one slab. Capped at 300ms so a long FAQ never
               leaves the last cards waiting. */}
           {content.faq.map((item, i) => {
-            const slug = slugify(item.question);
+            const slug = item.slug;
             return (
               <Reveal key={slug} delay={Math.min(i * 60, 300)}>
                 <AccordionItem
@@ -171,8 +170,8 @@ export function FaqContent() {
 
       {/* Contact CTA, styled like the homepage's Download section */}
       <ContactCta
-        title="Still stuck?"
-        subtitle="Send a note and you'll usually hear back within a day."
+        title={m.faqCtaTitle}
+        subtitle={m.faqCtaSubtitle}
       />
 
       <Footer />

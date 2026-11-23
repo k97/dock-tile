@@ -1,9 +1,9 @@
 // JSON-LD structured data (schema.org) for search engines and AI answer
-// engines. Every field is wired to siteConfig or the en-AU i18n content —
-// the variant SSR renders, i.e. what crawlers actually see. Never hardcode
+// engines. Every field is wired to siteConfig or the i18n content the page's SSR
+// renders (en-AU; zh-Hans for the /zh-Hans nodes), i.e. what crawlers actually see. Never hardcode
 // values here that already live in config.ts or i18n.ts.
 import { siteConfig } from "@/lib/config";
-import { localisedContent } from "@/lib/i18n";
+import { localisedContent, zhPageMeta } from "@/lib/i18n";
 
 const content = localisedContent["en-AU"];
 const m = content.marketing;
@@ -52,23 +52,47 @@ export const softwareApplicationSchema = {
   author: organization,
   publisher: organization,
   sameAs: [siteConfig.githubUrl],
-  // The homepage's own copy, so the schema can't claim what the page doesn't.
-  featureList: [
+  featureList: featureList(m),
+};
+
+export const faqPageSchema = faqSchema(content.faq);
+
+// The Chinese pages (/zh-Hans, /zh-Hans/faq): their own app node in Chinese, tied to the
+// English one by sameAs; the WebSite and Organization nodes are shared unchanged.
+const zh = localisedContent["zh-Hans"];
+
+export const softwareApplicationSchemaZh = {
+  ...softwareApplicationSchema,
+  "@id": `${siteConfig.siteUrl}/zh-Hans#app`,
+  url: `${siteConfig.siteUrl}/zh-Hans`,
+  inLanguage: "zh-Hans",
+  description: zhPageMeta.homeDescription,
+  sameAs: [`${siteConfig.siteUrl}/#app`, siteConfig.githubUrl],
+  featureList: featureList(zh.marketing),
+};
+
+export const faqPageSchemaZh = { ...faqSchema(zh.faq), inLanguage: "zh-Hans" };
+
+// The homepage's own copy, so the schema can't claim what the page doesn't.
+function featureList(m: (typeof localisedContent)[keyof typeof localisedContent]["marketing"]) {
+  return [
     ...m.introPoints.map((p) => `${p.lead}: ${p.body}`),
     `${m.smartAddTitle} ${m.smartAddBody}`,
     `${m.menuBarTitle} ${m.menuBarBody}`,
     `${m.ghostTitle} ${m.ghostBody}`,
     `${m.dockLockLead} ${m.dockLockBody}`,
     ...m.details.map((d) => `${d.lead}: ${d.body}`),
-  ],
-};
+  ];
+}
 
-export const faqPageSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: content.faq.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: { "@type": "Answer", text: item.answer },
-  })),
-};
+function faqSchema(faq: readonly { question: string; answer: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  };
+}

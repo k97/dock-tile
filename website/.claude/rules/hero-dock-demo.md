@@ -17,7 +17,7 @@ not invented. Product-truth spec of record: `.superdesign/refs/product-demo-spec
   first frame, and only the used image downloads (no mount-guard JS swap). The scrim
   ramps bright-top → `black/95` bottom (wallpaper at full brightness up top, CTA on a settled dark
   base); the headline has its own radial-masked readability blur, independent of the scrim.
-- **Load veil** (`components/hero-veil.tsx` + the `<link rel=preload>`s in `app/page.tsx`): the
+- **Load veil** (`components/hero-veil.tsx` + the `<link rel=preload>`s in `components/home-page.tsx`, shared by `/` and `/zh-Hans`): the
   wallpaper is a CSS `background-image`, discovered only *after* first paint, so it used to pop in
   late (the residual load flash the theme fixes never touched). Two-part fix. **(1)** A
   theme-matched preload on the homepage — `<link rel="preload" as="image" media="(prefers-color-scheme:…)">`

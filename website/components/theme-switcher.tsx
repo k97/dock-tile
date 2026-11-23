@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { trackThemeChange } from "@/lib/analytics";
 import { useHydrated } from "@/lib/use-client-value";
+import { useLocale } from "@/components/locale-provider";
 
 type Theme = "light" | "system" | "dark";
 
@@ -19,13 +20,14 @@ export function ThemeSwitcher() {
   // not — rendering them eagerly is what keeps the old empty-circles placeholder
   // from popping into icons on every load.
   const { theme, setTheme } = useTheme();
+  const m = useLocale().content.marketing;
   const mounted = useHydrated();
   const active = mounted ? theme : undefined;
 
   const themes: { value: Theme; icon: React.ReactNode; label: string }[] = [
-    { value: "light", icon: <Sun className="h-4 w-4" />, label: "Light" },
-    { value: "system", icon: <Monitor className="h-4 w-4" />, label: "System" },
-    { value: "dark", icon: <Moon className="h-4 w-4" />, label: "Dark" },
+    { value: "light", icon: <Sun className="h-4 w-4" />, label: m.themeLight },
+    { value: "system", icon: <Monitor className="h-4 w-4" />, label: m.themeSystem },
+    { value: "dark", icon: <Moon className="h-4 w-4" />, label: m.themeDark },
   ];
 
   return (

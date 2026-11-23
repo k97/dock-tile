@@ -173,7 +173,7 @@ export function CloserLook() {
       style={wide ? { transform: `translate(${cardAt.x}px, ${cardAt.y}px)` } : undefined}
     >
       <p className="text-[15px] leading-relaxed text-muted-foreground">
-        <b className="font-semibold text-foreground">{items[active].label}.</b> {items[active].body}
+        <b className="font-semibold text-foreground">{items[active].label}{m.tilesSpotLabelEnd}</b> {items[active].body}
       </p>
       {/* The arrows move within the tour (left); close leaves it, so it sits
           apart at the far right rather than grouped with them. */}

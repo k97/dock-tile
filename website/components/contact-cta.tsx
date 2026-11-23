@@ -36,7 +36,7 @@ export function ContactCta({ title, subtitle }: { title: string; subtitle: strin
             className="pressable flex h-13 items-center gap-2 rounded-full border border-foreground/15 px-6 text-sm font-semibold text-foreground transition-[background-color,scale] duration-200 hover:bg-foreground/5"
           >
             <Mail className="h-4 w-4" />
-            Contact support
+            {content.marketing.contactSupport}
           </a>
           <DownloadActionButton tone="adaptive" location="contact_cta" label={content.downloadButton} />
         </div>

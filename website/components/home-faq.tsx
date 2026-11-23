@@ -6,8 +6,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { TileFace } from "@/components/dock-demo";
 import { InlineTile } from "@/components/inline-tile";
 import { useLocale } from "@/components/locale-provider";
+import { localePath } from "@/lib/nav";
 import { Reveal } from "@/components/reveal";
-import { slugify } from "@/lib/i18n";
 import { trackFaqOpen } from "@/lib/analytics";
 import { FAQ_ANSWER, FAQ_CARD, FAQ_TRIGGER } from "@/components/faq-card";
 
@@ -23,9 +23,9 @@ const TOP_QUESTIONS = [
 ];
 
 export function HomeFaq() {
-  const { content } = useLocale();
+  const { locale, content } = useLocale();
   const m = content.marketing;
-  const items = TOP_QUESTIONS.map((slug) => content.faq.find((f) => slugify(f.question) === slug)).filter(
+  const items = TOP_QUESTIONS.map((slug) => content.faq.find((f) => f.slug === slug)).filter(
     (f) => f !== undefined,
   );
   if (process.env.NODE_ENV === "development" && items.length !== TOP_QUESTIONS.length) {
@@ -51,12 +51,12 @@ export function HomeFaq() {
         collapsible
         className="mx-auto flex w-full max-w-3xl flex-col gap-3"
         onValueChange={(slug) => {
-          const item = items.find((f) => slugify(f.question) === slug);
+          const item = items.find((f) => f.slug === slug);
           if (item) trackFaqOpen(item.question);
         }}
       >
         {items.map((item, i) => {
-          const slug = slugify(item.question);
+          const slug = item.slug;
           return (
             <Reveal key={slug} delay={i * 60}>
               <AccordionItem value={slug} className={FAQ_CARD}>
@@ -70,7 +70,7 @@ export function HomeFaq() {
 
       <Reveal className="mt-10 flex justify-center">
         <Link
-          href="/faq"
+          href={localePath(locale, "/faq")}
           className="pressable group inline-flex h-13 items-center gap-2 rounded-full border border-foreground/15 px-6 text-sm font-semibold text-foreground transition-[background-color,scale] duration-200 hover:bg-foreground/5"
         >
           {m.homeFaqMore}

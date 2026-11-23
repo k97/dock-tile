@@ -9,7 +9,7 @@ import { HmcMark } from "@/components/hmc-mark";
 import { siteConfig } from "@/lib/config";
 import { trackContactClick, trackDownloadClick, trackExternalLinkClick } from "@/lib/analytics";
 import { withReferral } from "@/lib/referral";
-import { isActiveRoute } from "@/lib/nav";
+import { isActiveRoute, localeForPath, localePath } from "@/lib/nav";
 import { bugReportUrl, featureRequestUrl } from "@/lib/feedback";
 
 const STUDIO_URL = withReferral(siteConfig.authorUrl);
@@ -29,18 +29,22 @@ const linkClass =
 // (owner, 2026-11-22) — the studio's mark and line, three link columns, then
 // "© YYYY, Made with ♥ for macOS" and the theme switcher.
 export function Footer() {
-  const { content } = useLocale();
+  const { locale, content } = useLocale();
   const m = content.marketing;
   const pathname = usePathname();
+  // The other language's version of this page: its FAQ for an FAQ, else its home.
+  const zh = localeForPath(pathname) === "zh-Hans";
+  const onFaq = pathname === localePath(locale, "/faq");
+  const languageHref = localePath(zh ? "en-AU" : "zh-Hans", onFaq ? "/faq" : "/");
   const currentYear = new Date().getFullYear();
 
   const columns: { title: string; links: FooterLink[] }[] = [
     {
       title: siteConfig.appName,
       links: [
-        { label: m.footerFeatures, href: "/#features" },
+        { label: m.footerFeatures, href: localePath(locale, "/#features") },
         { label: m.footerWhatsNew, href: "/release-notes" },
-        { label: m.footerFaq, href: "/faq" },
+        { label: m.footerFaq, href: localePath(locale, "/faq") },
         { label: m.footerDownload, href: siteConfig.downloadUrl, onClick: () => trackDownloadClick("footer") },
       ],
     },
@@ -138,7 +142,17 @@ export function Footer() {
             <Heart role="img" aria-label={m.footerLove} className="h-3.5 w-3.5 fill-orange-500 text-orange-500" />
             {m.footerMadeWithB}
           </p>
-          <ThemeSwitcher />
+          <div className="flex items-center gap-4">
+            <Link
+              href={languageHref}
+              hrefLang={zh ? "en" : "zh-Hans"}
+              lang={zh ? "en" : "zh-Hans"}
+              className="text-[13px] text-white/60 transition-colors duration-300 hover:text-white"
+            >
+              {m.languageLink}
+            </Link>
+            <ThemeSwitcher />
+          </div>
         </div>
       </div>
     </footer>
