@@ -111,7 +111,8 @@ final class AnalyticsService {
     /// launch from `main.swift` (both main and helper branches). No-ops gracefully if the
     /// GoogleService-Info.plist is not bundled (e.g. during early development).
     func configure() {
-        guard FirebaseApp.app() == nil else { return } // already configured
+        // Our own flag, not `FirebaseApp.app()`: asking Firebase before configure logs I-COR000003.
+        guard !isConfigured else { return } // already configured
 
         guard Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil else {
             print("ℹ️ Firebase not configured: GoogleService-Info.plist missing (analytics disabled).")
