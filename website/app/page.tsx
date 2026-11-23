@@ -11,7 +11,7 @@ import { Footer } from "@/components/footer";
 import { JsonLd } from "@/components/json-ld";
 import { HeroVeil } from "@/components/hero-veil";
 import { softwareApplicationSchema } from "@/lib/schema";
-import { asset } from "@/lib/assets";
+import { HERO_BG, HERO_BG_DARK } from "@/lib/assets";
 
 export default function Home() {
   return (
@@ -25,7 +25,7 @@ export default function Home() {
         as="image"
         fetchPriority="high"
         type="image/webp"
-        href={asset("/assets/bg/hero-bg.webp")}
+        href={HERO_BG}
         media="(prefers-color-scheme: light)"
       />
       <link
@@ -33,7 +33,7 @@ export default function Home() {
         as="image"
         fetchPriority="high"
         type="image/webp"
-        href={asset("/assets/bg/hero-bg-dark.webp")}
+        href={HERO_BG_DARK}
         media="(prefers-color-scheme: dark)"
       />
       <HeroVeil />

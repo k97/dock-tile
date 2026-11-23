@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useLocale } from "@/components/locale-provider";
-import { asset } from "@/lib/assets";
+import { asset, HERO_BG, HERO_BG_DARK } from "@/lib/assets";
 import { siteConfig } from "@/lib/config";
 import { Reveal } from "@/components/reveal";
 import { CloserLook } from "@/components/closer-look";
@@ -925,8 +925,8 @@ export function IntroSection() {
           className="hero-texture"
           style={
             {
-              "--hero-bg": `url("${asset("/assets/bg/hero-bg.webp")}")`,
-              "--hero-bg-dark": `url("${asset("/assets/bg/hero-bg-dark.webp")}")`,
+              "--hero-bg": `url("${HERO_BG}")`,
+              "--hero-bg-dark": `url("${HERO_BG_DARK}")`,
               backgroundSize: "150%",
               backgroundPosition: "60% 75%",
               filter: "hue-rotate(200deg) saturate(1.1)",

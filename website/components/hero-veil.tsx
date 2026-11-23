@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { asset } from "@/lib/assets";
+import { asset, HERO_BG, HERO_BG_DARK } from "@/lib/assets";
 
 /**
  * Branded load veil — a Dock Tile splash that covers the viewport on the FIRST
@@ -19,11 +19,6 @@ import { asset } from "@/lib/assets";
  * (<noscript> in layout.tsx). Those are handled in CSS so the decision lands
  * before first paint; this effect re-checks them only to skip a wasted decode.
  */
-
-// The wallpapers the hero actually renders (light/dark Ventura dither). Module
-// scope: asset() is pure, so these resolve once to the right dev/R2 URL.
-const HERO_LIGHT = asset("/assets/bg/hero-bg.webp");
-const HERO_DARK = asset("/assets/bg/hero-bg-dark.webp");
 
 const MIN_VISIBLE_MS = 320; // floor, so a warm cache doesn't blink the veil
 const MAX_VISIBLE_MS = 1200; // ceiling — lift regardless; never hold the page
@@ -69,8 +64,8 @@ export function HeroVeil() {
     // one). decode() resolves off the shared cache the preload already warmed.
     const probe = new window.Image();
     probe.src = document.documentElement.classList.contains("dark")
-      ? HERO_DARK
-      : HERO_LIGHT;
+      ? HERO_BG_DARK
+      : HERO_BG;
     if (typeof probe.decode === "function") {
       probe.decode().then(lift, lift);
     } else {

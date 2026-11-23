@@ -27,7 +27,7 @@ npx tsc --noEmit
 - `lib/releases.ts` `getReleases()` fetches the `/release-notes` changelog from **GitHub Releases** (server-side, revalidated hourly) — the source of truth is each GitHub release's notes; there's no static list to maintain. To change what the site shows, edit the release on GitHub.
 - All user-facing copy goes through `lib/i18n.ts` (en-AU default) — never hardcode marketing strings.
 - Changed a static asset but kept its filename? Bump its `?v=N` query param or caches serve the old file.
-- Assets load from the R2 CDN in prod (one bucket — never S3), `public/` in dev — route every `/assets/…` ref through `asset()` (`lib/assets.ts`); see assets-cdn rule. New/changed files must also be uploaded to R2.
+- Assets load from the R2 CDN in prod (one bucket — never S3), `public/` in dev — route every `/assets/…` ref through `asset()` (`lib/assets.ts`), except the hero wallpapers (`HERO_BG`, same origin); see assets-cdn rule. New/changed files must also be uploaded to R2.
 - **Never name a design reference** (a site or app the look was taken from) in code, rules or commit messages — state the value and its reason; see development.md "Never store the name of a reference". That includes a quoted owner remark: a verbatim quote put one in a rule on 2026-11-22 (a diff review caught it) — paraphrase the reason.
 - **Another session may push to `main` (an app release) while you work.** `git fetch` before pushing. If the rebase is blocked by untracked files origin now tracks, compare `git hash-object <file>` with `git rev-parse origin/main:<file>`: identical means set them aside and rebase.
 - The Agentation toolbar (`components/dev-agentation.tsx`, devDependency) renders only under

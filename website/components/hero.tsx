@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/locale-provider";
 import { siteConfig } from "@/lib/config";
-import { asset } from "@/lib/assets";
+import { HERO_BG, HERO_BG_DARK } from "@/lib/assets";
 import { trackReleaseNotesClick } from "@/lib/analytics";
 import { DockDemo } from "@/components/dock-demo";
 import { DownloadActionButton } from "@/components/action-button";
@@ -25,8 +25,8 @@ export function Hero() {
         className="hero-texture"
         style={
           {
-            "--hero-bg": `url("${asset("/assets/bg/hero-bg.webp")}")`,
-            "--hero-bg-dark": `url("${asset("/assets/bg/hero-bg-dark.webp")}")`,
+            "--hero-bg": `url("${HERO_BG}")`,
+            "--hero-bg-dark": `url("${HERO_BG_DARK}")`,
           } as React.CSSProperties
         }
         aria-hidden

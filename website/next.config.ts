@@ -13,6 +13,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // The hero wallpapers are served from this origin (lib/assets.ts HERO_BG): a year in the
+  // browser cache, versioned by their `?v=`. Without this Vercel sends max-age=0.
+  async headers() {
+    return [
+      {
+        source: "/assets/bg/:file*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
