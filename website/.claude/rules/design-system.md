@@ -14,7 +14,11 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
   use `border border-border`; always-dark surfaces (hero, the intro's wallpaper card, the
   menu bar card, the Dock Lock band, the footer, the FAQ / Release Notes / legal headers) use
   `border border-white/10`, which is `--border`'s own dark-theme value, so in dark theme
-  every card's edge is identical. A new card gets one of the two.
+  every card's edge is identical. A new card gets one of the two. **Exception — wallpaper shells
+  (hero, intro card) use `edge-hairline`**, an `::after` ring over the wallpaper: `.hero-texture`
+  fills only the padding box, so a real border showed the shell's `bg-black` as a black outline
+  on the light page (2026-11-23). Its colour is the nav pill's edge on that wallpaper (white 50%
+  light, white 10% dark).
 - Radii: 2.5rem on major section wrappers (the site's rhythm — keep it); internal cards 16–24px.
   shadcn remaps the radius names: `rounded-sm` 6 px, `md` 8, `lg` 10 (not Tailwind v4's 4/6/8).
   macOS mocks copy the app's proportions: check the radius against an app screenshot (on
@@ -262,8 +266,13 @@ re-apply per component unless overriding.
   confined the hover popovers, the arrow nested in its panel showed sharp wallpaper, and a fade
   on a shared parent would drop the blur mid-fade. Make glass a sibling, never a descendant of
   another effect; fade each layer, not the parent. A panel with an arrow is ONE outline
-  (`popoverOutline` in home-sections.tsx: one `clip-path` glass, rim and outside-only shadow
+  (`PopoverShape` in dock-demo.tsx: one masked glass, rim and outside-only shadow
   from the same path), never two glass pieces with a seam.
+- **Cut a glass layer to shape with `mask`, never `clip-path` (2026-11-23).** Chrome clips the
+  fill to a `clip-path` but still paints the element's own `backdrop-filter` over its whole box:
+  the intro popover showed a tinted band either side of its arrow, across the box's bottom strip.
+  `PopoverShape` in dock-demo.tsx (its `maskImage`) does it right, for both Dock popovers.
+  Headless Chrome showed the band too; it was written off as a headless limit, wrongly.
 - **Never hand-write `-webkit-` prefixes.** Lightning CSS drops the standard unprefixed property
   when both are present — this silently killed `backdrop-filter` on every glass surface once.
   Let the toolchain prefix.

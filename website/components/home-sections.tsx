@@ -27,7 +27,8 @@ import { asset } from "@/lib/assets";
 import { siteConfig } from "@/lib/config";
 import { Reveal } from "@/components/reveal";
 import { CloserLook } from "@/components/closer-look";
-import { ICON_CONTENT_RATIO, TILES, TileFace } from "@/components/dock-demo";
+import { ICON_CONTENT_RATIO, PopoverShape, TILES, TileFace } from "@/components/dock-demo";
+import { dockDot, dockGlass, dockLift, dockTooltip } from "@/components/ui/mac-os-dock";
 import { InlineTile } from "@/components/inline-tile";
 
 /* Uniform scale-to-fit: children render at their fixed natural size; the
@@ -235,8 +236,7 @@ export function PowerUserSection() {
             <h3 className="mb-3 text-title-sm text-foreground">{m.ghostTitle}</h3>
             <p className="max-w-md text-lead text-muted-foreground">{m.ghostBody}</p>
           </div>
-          {/* The ⌘Tab switcher is a dark HUD, so it sits in a dark well on the light card. */}
-          <div className="rounded-2xl bg-linear-to-b from-zinc-800 to-zinc-900 p-5">
+          <div className="rounded-2xl bg-muted p-5">
             <AppSwitcherMock />
           </div>
           <Footnote icon={EyeOff}>{m.ghostTip}</Footnote>
@@ -266,16 +266,16 @@ function AppSwitcherMock() {
     <div className="relative flex flex-col items-center gap-4 pt-10">
       {/* Concentric: the 12px slot radius + the 12px `p-3` inset ⇒ a 24px
           (rounded-3xl) shell. */}
-      <div className="relative flex items-center gap-2 rounded-3xl border border-white/10 bg-white/[0.07] p-3 backdrop-blur-xl">
+      <div className={`relative flex items-center gap-2 rounded-3xl p-3 ${dockGlass}`}>
         {/* moving selection highlight (sits behind the icons) */}
-        <span className="app-switch-sel absolute left-3 top-3 h-12 w-12 rounded-xl bg-white/15 ring-1 ring-white/25" />
+        <span className="app-switch-sel absolute left-3 top-3 h-12 w-12 rounded-xl bg-black/[0.12] dark:bg-white/15" />
         {switcherApps.map((app, i) =>
           app.ghost ? (
             <span
               key="ghost"
-              className="relative z-10 flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-white/20"
+              className="relative z-10 flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-black/20 dark:border-white/20"
             >
-              <Ghost strokeWidth={1.5} className="ghost-phase h-6 w-6 text-white/40" />
+              <Ghost strokeWidth={1.5} className="ghost-phase h-6 w-6 text-black/30 dark:text-white/40" />
             </span>
           ) : (
             // Every icon renders at the SAME 44px. Dark mode swaps in a bespoke
@@ -289,7 +289,7 @@ function AppSwitcherMock() {
                 height={44}
                 unoptimized
                 draggable={false}
-                className={`h-11 w-11 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] ${app.darkSrc ? "dark:hidden" : ""}`}
+                className={`h-11 w-11 ${dockLift} ${app.darkSrc ? "dark:hidden" : ""}`}
               />
               {app.darkSrc && (
                 <Image
@@ -299,7 +299,7 @@ function AppSwitcherMock() {
                   height={44}
                   unoptimized
                   draggable={false}
-                  className="hidden h-11 w-11 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] dark:block"
+                  className={`hidden h-11 w-11 dark:block ${dockLift}`}
                 />
               )}
             </span>
@@ -314,7 +314,7 @@ function AppSwitcherMock() {
             <span
               key={`name-${app.name}`}
               aria-hidden
-              className={`absolute bottom-full mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-white/10 bg-zinc-900/85 px-2 py-1 font-ui text-xs font-medium text-white shadow-md backdrop-blur-sm ${
+              className={`absolute bottom-full mb-2 -translate-x-1/2 whitespace-nowrap ${dockTooltip} ${
                 i === 0 ? "switch-name-first" : "switch-name opacity-0"
               }`}
               style={{ left: 36 + i * 56, animationDelay: i === 0 ? undefined : `${-[0, 4.4, 0, 3.3, 2.2][i]}s` }}
@@ -324,9 +324,9 @@ function AppSwitcherMock() {
           ),
         )}
       </div>
-      <div className="flex items-center gap-1.5 text-white/40">
-        <kbd className="rounded-md border border-white/15 bg-white/5 px-2 py-0.5 text-[11px] font-semibold">⌘</kbd>
-        <kbd className="rounded-md border border-white/15 bg-white/5 px-2 py-0.5 text-[11px] font-semibold">⇥</kbd>
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <kbd className="rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-semibold">⌘</kbd>
+        <kbd className="rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-semibold">⇥</kbd>
       </div>
     </div>
   );
@@ -604,69 +604,163 @@ function SmartAddMock() {
 /* ------------------------------------------------------------------ */
 
 const icon = (n: string) => `/assets/app-icons/${n}`;
-// A real-looking crowded Dock: the hero tiles' own apps, laid out flat.
+// A real-looking crowded Dock: the hero tiles' own apps, laid out flat. Looked up in TILES
+// so each icon carries its name (the tooltip) and its Dark rendition.
+const tileApps = TILES.flatMap((t) => t.apps);
 const crowdedDock = [
   "claude.png", "chatgpt.png", "gemini.png", "granola.png", "vscode.png", "github.png", "xcode.png",
   "warp.png", "messages.png", "slack.png", "whatsapp.png", "google-meet.png", "facetime.png",
   "msteams.png", "appletv.png", "netflix.png", "music.png?v=2", "podcasts.png",
-].map(icon);
+].map((n) => {
+  const app = tileApps.find((a) => a.src === icon(n));
+  if (!app) throw new Error(`crowdedDock: ${n} is not a tile app`);
+  return app;
+});
+
+/* One Dock icon as the hero's Dock draws it: the lift, darkening on press, its name on hover. */
+function DockIcon({ name, children }: { name: string; children: React.ReactNode }) {
+  return (
+    <span className="dock-item group relative flex h-10 w-10">
+      <span className={`dock-face flex h-full w-full active:brightness-[0.72] ${dockLift}`}>{children}</span>
+      {/* The label rides the lift layer, which rises with the magnified icon. Instant, like the hero's. */}
+      <span className="dock-lift pointer-events-none absolute inset-0">
+        <span
+          aria-hidden
+          className={`absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 ${dockTooltip}`}
+        >
+          {name}
+        </span>
+      </span>
+    </span>
+  );
+}
 
 /* Finder / System Settings bookend both Docks, as in the hero; their Dark
    renditions dual-render so the first frame is right in either theme. */
 function DockEnd({ name }: { name: "finder" | "settings" }) {
   const dark = name === "finder" ? "finder-dark.png?v=4" : "settings-dark.png";
   return (
-    <span className="relative flex h-10 w-10">
-      <span className="dark:hidden">
-        <AppIcon src={icon(`${name}.png`)} size={40} />
-      </span>
-      <span className="hidden dark:block">
-        <AppIcon src={icon(dark)} size={40} />
-      </span>
-    </span>
+    <DockIcon name={name === "finder" ? "Finder" : "System Settings"}>
+      <AppIcon src={icon(`${name}.png`)} darkSrc={icon(dark)} size={40} />
+    </DockIcon>
   );
+}
+
+/* The hero Dock's magnification (ui/mac-os-dock.tsx) for a fixed-size strip: the same cosine
+   window and 1.8x peak, scaled from its 64 px icon to these 40 px ones, and the same per-frame
+   easing (0.2 toward the pointer, 0.12 back). The pointer is measured against the strip's own
+   box, which never moves, so icons sliding apart can't change what counts as hovered (the CSS
+   :hover version flickered on exactly that). Writes styles straight to the DOM each frame, no
+   re-render; icons move by transform, the glass by one absolute box's left/right. */
+const DOCK_ICON = 40;
+const DOCK_GAP = 6;
+const DOCK_PAD = 8;
+const DOCK_MAX_SCALE = 1.8;
+const DOCK_WINDOW = DOCK_ICON * (300 / 64);
+
+function useDockMagnify() {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const strip = ref.current;
+    if (!strip || !window.matchMedia("(hover: hover)").matches) return;
+    const items = Array.from(strip.querySelectorAll<HTMLElement>(":scope > .dock-item"));
+    const faces = items.map((it) => it.querySelector<HTMLElement>(".dock-face"));
+    const lifts = items.map((it) => it.querySelector<HTMLElement>(".dock-lift"));
+    const glass = strip.querySelector<HTMLElement>(":scope > .dock-glass");
+    const rest = items.map((_, i) => i * (DOCK_ICON + DOCK_GAP) + DOCK_ICON / 2);
+    const restTotal = items.length * DOCK_ICON + (items.length - 1) * DOCK_GAP;
+    const scales = items.map(() => 1);
+    const shifts = items.map(() => 0);
+    // Where an open tile's popover sat when it opened: it holds there, as the hero's does,
+    // while the Dock keeps magnifying under it.
+    const held: ({ x: number; y: number } | undefined)[] = items.map(() => undefined);
+    let grow = 0;
+    let mouseX: number | null = null;
+    let frame = 0;
+
+    const tick = () => {
+      const target = rest.map((c) => {
+        const d = mouseX === null ? Infinity : Math.abs(c - mouseX);
+        if (d > DOCK_WINDOW / 2) return 1;
+        return 1 + ((1 + Math.cos((d / (DOCK_WINDOW / 2)) * Math.PI)) / 2) * (DOCK_MAX_SCALE - 1);
+      });
+      const total = target.reduce((sum, s) => sum + s * DOCK_ICON, 0) + (items.length - 1) * DOCK_GAP;
+      const targetGrow = (total - restTotal) / 2;
+      const k = mouseX === null ? 0.12 : 0.2;
+      let x = 0;
+      let moving = Math.abs(targetGrow - grow) > 0.05;
+      target.forEach((s, i) => {
+        const shift = x + (s * DOCK_ICON) / 2 - targetGrow - rest[i];
+        x += s * DOCK_ICON + DOCK_GAP;
+        if (items[i].hasAttribute("data-open")) held[i] ??= { x: shifts[i], y: -(scales[i] - 1) * DOCK_ICON };
+        else held[i] = undefined;
+        scales[i] += (s - scales[i]) * k;
+        shifts[i] += (shift - shifts[i]) * k;
+        moving ||= Math.abs(s - scales[i]) > 0.002 || Math.abs(shift - shifts[i]) > 0.05;
+        items[i].style.translate = `${shifts[i]}px`;
+        faces[i]?.style.setProperty("scale", `${scales[i]}`);
+        const h = held[i];
+        lifts[i]?.style.setProperty(
+          "translate",
+          h ? `${h.x - shifts[i]}px ${h.y}px` : `0 ${-(scales[i] - 1) * DOCK_ICON}px`,
+        );
+      });
+      grow += (targetGrow - grow) * k;
+      if (glass) glass.style.left = glass.style.right = `${-grow}px`;
+      // A resting pointer needs no frames once settled; pointermove restarts the loop.
+      frame = moving ? requestAnimationFrame(tick) : 0;
+    };
+    const start = () => {
+      if (!frame) frame = requestAnimationFrame(tick);
+    };
+    const move = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const box = strip.getBoundingClientRect();
+      // ScaleToFit zooms the whole picture; convert back to the strip's own pixels.
+      mouseX = (e.clientX - box.left) / (box.width / strip.offsetWidth) - DOCK_PAD;
+      start();
+    };
+    const leave = () => {
+      mouseX = null;
+      start();
+    };
+    strip.addEventListener("pointermove", move);
+    strip.addEventListener("pointerleave", leave);
+    return () => {
+      strip.removeEventListener("pointermove", move);
+      strip.removeEventListener("pointerleave", leave);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+  return ref;
 }
 
 /* A Dock strip at a fixed natural size (zoomed by ScaleToFit, never reflowed). */
 function DockStrip({ children }: { children: React.ReactNode }) {
+  const ref = useDockMagnify();
   return (
-    // No backdrop-filter here: it would make the strip a backdrop root, and the hover
-    // popovers inside it could then blur only the strip, never the wallpaper behind.
-    <div className="flex items-center gap-1.5 rounded-2xl border border-white/15 bg-[rgba(45,45,45,0.8)] p-2 shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
+    <div ref={ref} className="dock-strip relative flex items-center gap-1.5 p-2">
+      {/* The glass is a sibling layer, never the icons' parent: a backdrop-filter parent would
+          make the hover popovers blur only the strip, never the wallpaper behind. */}
+      <span aria-hidden className={`dock-glass absolute inset-0 rounded-2xl ${dockGlass}`} />
       {children}
     </div>
   );
 }
 
-/* A Dock tile that shows its popover on hover — the hero's grid or list popover,
-   absolutely positioned above the tile so it overlays the picture instead of pushing
-   it down. CSS only (group-hover); off-screen for touch, where the hero Dock is the demo. */
-/** The arrow's size in px: a macOS popover arrow is wide and shallow. */
-const ARROW_W = 30;
-const ARROW_H = 11;
+/* A Dock tile that opens its popover on click, as the hero's do — the hero's grid or list
+   popover, absolutely positioned above the tile so it overlays the picture instead of pushing
+   it down. Open state is `data-open` on the tile (BeforeAfterDocks owns it); hover shows the name. */
+// The hero popover's per-app entrance (dock-app-in): each app rises 4 px and fades in over
+// 240 ms, 30 ms after the one before. The delay applies on open only, so closing is one move.
+const appIn =
+  "opacity-0 translate-y-1 transition-[opacity,translate] duration-[240ms] ease-(--ease-out-strong) group-data-[open]:opacity-100 group-data-[open]:translate-y-0 group-data-[open]:delay-(--stagger)";
+const staggerAt = (i: number) => ({ "--stagger": `${i * 30}ms` }) as React.CSSProperties;
 
-/**
- * The popover's outline as ONE path: a rounded rectangle with the arrow grown out of
- * its bottom edge — curved flanks, a rounded tip. The glass, its rim and its shadow
- * are all drawn from this path, so the arrow can't read as a separate piece.
- */
-function popoverOutline(w: number, h: number, r = 16) {
-  const c = w / 2;
-  const half = ARROW_W / 2;
-  const tip = h + ARROW_H;
-  return [
-    `M${r},0 H${w - r} A${r},${r} 0 0 1 ${w},${r} V${h - r} A${r},${r} 0 0 1 ${w - r},${h}`,
-    `H${c + half} C${c + half - 7},${h} ${c + 5},${tip - 2.5} ${c + 2.2},${tip - 0.7}`,
-    `Q${c},${tip + 0.6} ${c - 2.2},${tip - 0.7} C${c - 5},${tip - 2.5} ${c - half + 7},${h} ${c - half},${h}`,
-    `H${r} A${r},${r} 0 0 1 0,${h - r} V${r} A${r},${r} 0 0 1 ${r},0 Z`,
-  ].join(" ");
-}
-
-function HoverTile({ tile }: { tile: (typeof TILES)[number] }) {
+function IntroTile({ tile, open, onToggle }: { tile: (typeof TILES)[number]; open: boolean; onToggle: () => void }) {
   const list = tile.layout === "list";
   const panelRef = React.useRef<HTMLSpanElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
-  const id = React.useId();
 
   // offsetWidth/Height ignore the pop-in scale, so this is the panel's resting size.
   React.useLayoutEffect(() => {
@@ -674,65 +768,56 @@ function HoverTile({ tile }: { tile: (typeof TILES)[number] }) {
     if (el) setSize({ w: el.offsetWidth, h: el.offsetHeight });
   }, []);
 
-  const outline = size && popoverOutline(size.w, size.h);
   // Opacity sits on each layer, never on a shared parent: a parent below opacity 1 cuts the
   // glass off from the wallpaper, so its blur would vanish while fading in.
-  const fade = "opacity-0 transition-opacity duration-200 ease-(--ease-out-strong) group-hover:opacity-100";
+  // The hero popover's timing (dock-scale-in / -out): 260 ms in with a small overshoot,
+  // 190 ms out. Transitions, not keyframes, so a quick re-click reverses from where it is.
+  const timing =
+    "duration-[190ms] ease-[cubic-bezier(0.4,0,1,1)] group-data-[open]:duration-[260ms] group-data-[open]:ease-[cubic-bezier(0.34,1.56,0.64,1)]";
+  const fade = `opacity-0 transition-opacity group-data-[open]:opacity-100 ${timing}`;
 
   return (
-    <span className="group relative flex h-10 w-10">
-      <TileFace gradient={tile.gradient} darkGlyph={tile.darkGlyph} glyph={tile.glyph} shaded />
-      <span className="absolute -bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-white/80 opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
+    <button
+      type="button"
+      data-intro-tile
+      data-open={open || undefined}
+      aria-label={tile.name}
+      aria-expanded={open}
+      onClick={onToggle}
+      className="dock-item group relative flex h-10 w-10 cursor-pointer rounded-[22.5%] outline-none focus-visible:ring-2 focus-visible:ring-black/60 dark:focus-visible:ring-white/80"
+    >
+      {/* Lift, press and magnification on the face only: a filter or scale on the popover's
+          parent would break its blur or grow the popover. */}
+      <span className={`dock-face flex h-full w-full active:brightness-[0.72] ${dockLift}`}>
+        <TileFace gradient={tile.gradient} darkGlyph={tile.darkGlyph} glyph={tile.glyph} shaded />
+      </span>
+      {/* The open dot under the tile while its popover is up, as on the hero Dock. */}
+      <span className={`absolute -bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full opacity-0 group-data-[open]:opacity-100 ${dockDot}`} />
+      {/* The lift layer rises with the magnified tile (useDockMagnify), carrying the name and popover. */}
+      <span className="dock-lift pointer-events-none absolute inset-0">
+      {/* The name on hover, instant like the hero's; hidden while the popover is up. */}
+      <span
+        aria-hidden
+        className={`absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 group-data-[open]:hidden ${dockTooltip}`}
+      >
+        {tile.name}
+      </span>
       <span
         ref={panelRef}
-        aria-hidden // illustrative, like every mock on the page; hover-only, unreachable by keyboard
-        // Pops a layer up from its arrow tip like the macOS Dock: rises 6 px and scales from
-        // 0.94, on the snappy UI curve; reduced motion only fades.
-        className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-4 block origin-[50%_calc(100%+11px)] -translate-x-1/2 translate-y-1.5 scale-94 transition-[translate,scale] duration-200 ease-(--ease-out-strong) group-hover:translate-y-0 group-hover:scale-100 motion-reduce:translate-y-0 motion-reduce:scale-100 ${
+        aria-hidden // illustrative, like every mock on the page; its apps are not interactive
+        // Pops up from its arrow tip like the hero's: rises 8 px and scales from 0.86 with a small
+        // overshoot; reduced motion only fades.
+        className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-4 block origin-[50%_calc(100%+11px)] -translate-x-1/2 translate-y-2 scale-86 transition-[translate,scale] group-data-[open]:translate-y-0 group-data-[open]:scale-100 motion-reduce:translate-y-0 motion-reduce:scale-100 ${timing} ${
           list ? "w-60" : "w-72"
         }`}
       >
-        {outline && size && (
-          <>
-            {/* Shadow outside the outline only, so it never darkens the see-through glass. */}
-            <svg aria-hidden width={size.w} height={size.h + ARROW_H} className={`absolute top-0 left-0 overflow-visible ${fade}`}>
-              <defs>
-                <filter id={`${id}s`} x="-50%" y="-50%" width="200%" height="250%">
-                  <feDropShadow dx="0" dy="4" stdDeviation="5" floodOpacity="0.14" />
-                  <feDropShadow dx="0" dy="18" stdDeviation="18" floodOpacity="0.32" />
-                </filter>
-                <mask id={`${id}m`} maskUnits="userSpaceOnUse" x="-100" y="-100" width={size.w + 200} height={size.h + 200}>
-                  <rect x="-100" y="-100" width={size.w + 200} height={size.h + 200} fill="white" />
-                  <path d={outline} fill="black" />
-                </mask>
-              </defs>
-              <g mask={`url(#${id}m)`}>
-                <path d={outline} filter={`url(#${id}s)`} fill="black" />
-              </g>
-            </svg>
-            <span
-              aria-hidden
-              className={`popover-glass absolute top-0 left-0 ${fade}`}
-              style={{ width: size.w, height: size.h + ARROW_H, clipPath: `path("${outline}")` }}
-            />
-            {/* The rim: lit all round, brightest along the top like light catching glass. */}
-            <svg aria-hidden width={size.w} height={size.h + ARROW_H} className={`absolute top-0 left-0 overflow-visible ${fade}`}>
-              <defs>
-                <linearGradient id={`${id}r`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" className="[stop-color:white] [stop-opacity:0.8] dark:[stop-opacity:0.22]" />
-                  <stop offset="1" className="[stop-color:white] [stop-opacity:0.35] dark:[stop-opacity:0.08]" />
-                </linearGradient>
-              </defs>
-              <path d={outline} fill="none" stroke={`url(#${id}r)`} strokeWidth="1" />
-            </svg>
-          </>
-        )}
+        {size && <PopoverShape w={size.w} h={size.h} className={fade} />}
         <span className={`relative block ${fade} ${list ? "p-1.5" : "px-2 pb-2"}`}>
           {list ? (
             <>
               <span className="block px-3 pb-1 pt-2 text-left text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">{tile.name}</span>
-              {tile.apps.map((app) => (
-                <span key={app.name} className="flex items-center gap-2.5 px-3 py-1 text-[13px] text-zinc-700 dark:text-zinc-300">
+              {tile.apps.map((app, i) => (
+                <span key={app.name} className={`flex items-center gap-2.5 px-3 py-1 text-[13px] text-zinc-700 dark:text-zinc-300 ${appIn}`} style={staggerAt(i)}>
                   <AppIcon src={app.src} darkSrc={app.darkSrc} size={24} />
                   {app.name}
                 </span>
@@ -746,8 +831,8 @@ function HoverTile({ tile }: { tile: (typeof TILES)[number] }) {
                 <Settings2 className="mr-2 h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" />
               </span>
               <span className="grid grid-cols-4 gap-x-1 gap-y-2 px-1">
-                {tile.apps.map((app) => (
-                  <span key={app.name} className="flex flex-col items-center gap-1.5 p-1.5">
+                {tile.apps.map((app, i) => (
+                  <span key={app.name} className={`flex flex-col items-center gap-1.5 p-1.5 ${appIn}`} style={staggerAt(i)}>
                     <AppIcon src={app.src} darkSrc={app.darkSrc} size={48} />
                     <span className="max-w-full truncate text-[11px] leading-none text-zinc-600 dark:text-zinc-300">{app.name}</span>
                   </span>
@@ -757,22 +842,40 @@ function HoverTile({ tile }: { tile: (typeof TILES)[number] }) {
           )}
         </span>
       </span>
-    </span>
+      </span>
+    </button>
   );
 }
 
 function BeforeAfterDocks({ before, after }: { before: string; after: string }) {
   const label = "mb-3 text-[13px] font-medium text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]";
+  // Which tile's popover is open. A click elsewhere or Escape closes it, as on the hero.
+  const [openId, setOpenId] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    if (!openId) return;
+    const outside = (e: PointerEvent) => {
+      if (!(e.target as Element).closest("[data-intro-tile]")) setOpenId(null);
+    };
+    const escape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenId(null);
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [openId]);
   return (
     <ScaleToFit>
       <div className="flex w-235 flex-col items-center font-ui">
         <p className={label}>{before}</p>
         <DockStrip>
           <DockEnd name="finder" />
-          {crowdedDock.map((src) => (
-            <span key={src} className="flex h-10 w-10">
-              <AppIcon src={src} size={40} />
-            </span>
+          {crowdedDock.map((app) => (
+            <DockIcon key={app.src} name={app.name}>
+              <AppIcon src={app.src} darkSrc={app.darkSrc} size={40} />
+            </DockIcon>
           ))}
           <DockEnd name="settings" />
         </DockStrip>
@@ -781,7 +884,7 @@ function BeforeAfterDocks({ before, after }: { before: string; after: string }) 
         <DockStrip>
           <DockEnd name="finder" />
           {TILES.map((t) => (
-            <HoverTile key={t.id} tile={t} />
+            <IntroTile key={t.id} tile={t} open={openId === t.id} onToggle={() => setOpenId(openId === t.id ? null : t.id)} />
           ))}
           <DockEnd name="settings" />
         </DockStrip>
@@ -812,7 +915,7 @@ export function IntroSection() {
       {/* The picture of the idea on a wallpaper that is NOT the hero's (owner, 2026-11-22):
           the same dither file (already cached), cropped to another region and
           hue-shifted, so each section reads as its own scene. */}
-      <Reveal className="relative mx-auto max-w-300 overflow-hidden rounded-3xl border border-white/10 px-6 py-12 md:px-12 md:py-16">
+      <Reveal className="relative mx-auto max-w-300 overflow-hidden rounded-3xl edge-hairline px-6 py-12 md:px-12 md:py-16">
         <div
           aria-hidden
           className="hero-texture"

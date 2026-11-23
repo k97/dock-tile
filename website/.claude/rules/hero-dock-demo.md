@@ -110,8 +110,31 @@ on 2026-11-09 (Grid or list became a one-liner); it is in git history.
   hand-rolled `.tile-face` spans and missed the shading, rim, glow and lift until the owner caught
   it. Off-Dock tiles get `TileFace shaded` plus the Dock's lift on a wrapper
   (`drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]`; a squircle mask clips a box-shadow). Real app icons
-  outside a popover (the Ghost card's ⌘Tab strip) take the lift too, at `rgba(0,0,0,0.4)` — the
-  Ghost card's ⌘Tab strip sits in a dark well, where 0.2 vanishes; popover icons stay flat. The hero's tiles pass
+  outside a popover (the Ghost card's ⌘Tab strip) take the lift too; popover icons stay flat.
+- **One Dock look, four places (owner, 2026-11-23)**: the hero Dock, the intro's Before / With
+  Dock Tile Docks and the Ghost card's ⌘Tab HUD all take `dockGlass`, `dockTooltip` and `dockLift`
+  from `ui/mac-os-dock.tsx`. They follow the theme like the system's: light frosted glass, a light
+  label and a 0.2 lift in light; dark glass, a dark label and 0.4 (0.2 vanishes there) in dark.
+  Every icon darkens on press and names itself on hover (instantly, as the macOS Dock does);
+  every tile opens its popover on CLICK, the intro's too (owner, 2026-11-23: hover was wrong;
+  `IntroTile`, open state in `BeforeAfterDocks`, outside click / Escape closes). Both popovers
+  are ONE shape, `PopoverShape` in dock-demo.tsx (glass + rim + outside-only shadow, arrow at the
+  tile), and fade per layer while the panel only moves. The tile whose popover is open shows the
+  open dot under it (`dockDot`, dark on light glass, light on dark) in both Docks. Change a Dock's
+  look in those constants, never per Dock — the four had drifted apart (dark-only panels, no lift
+  or tooltips in the intro, a dot only there, Music's Dark icon missing from the Before Dock).
+- **The motion matches too (owner, 2026-11-23), with the hero as the reference — never trim the
+  hero's to match** (its demo cursor, scale-pop with overshoot and per-app stagger are its own).
+  The intro Docks magnify with the hero's own math (`useDockMagnify` in home-sections.tsx: the
+  same cosine window and 1.8× peak scaled to 40 px icons, the same 0.2 / 0.12 per-frame easing),
+  writing transforms straight to the DOM; labels and popovers ride a `.dock-lift` layer that
+  rises with the icon. **Never CSS `:hover` for magnification (2026-11-23)**: a sibling-selector
+  version jittered, because icons sliding apart moved the hover target under a still pointer.
+  The hook measures the pointer against the strip's own box, which never moves. The intro
+  popover copies the hero's `dock-scale-in` / `-out` as transitions (0.86 → 1 with a small
+  overshoot over 260 ms, 190 ms out, apps 30 ms apart), so a quick re-click reverses smoothly.
+  The hero's magnification is transform-only (`translateX` + `scale` per icon; its label and dot
+  counter-scale) — it used to set left/width/height every frame. The hero's tiles pass
   `shaded` (top→bottom glyph fall-off, as the app bakes) at the 58% glyph size.
 - **The closing Dock (GitHub · What's new · Contact | Studio) was removed on 2026-11-21** — its
   links moved into the footer columns (content-i18n.md "Footer"). Its leftovers went on

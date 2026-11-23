@@ -11,7 +11,7 @@
     points (`introPoints`). Nav "Features" lands here.
   - **PowerUserSection** — "Set up for you. ⚡ Out of your way.": Smart Add · Menu bar · Ghost mode
     cards, light · dark · light (owner, 2026-11-22: the middle card is always the dark one; the menu
-    bar card took it, and Ghost mode's ⌘Tab strip sits in a dark well on its white card), then the row of four one-liners (Keyboard, Folders, Free and open source, Languages).
+    bar card took it; Ghost mode's ⌘Tab HUD sits in the same muted well as Smart Add), then the row of four one-liners (Keyboard, Folders, Free and open source, Languages).
   - **CustomTilesStory** — "Pick your apps. Pick a look. ▦ Done." over the window capture with
     its closer-look hotspots; the body names the "Dock Tile companion app". The hero Dock's
     Configure… walks to `#customise`.

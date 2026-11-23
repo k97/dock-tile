@@ -110,6 +110,91 @@ export const TILES: DemoTile[] = [
 // layout fact of the icon art, not a color-mode concern.
 export const ICON_CONTENT_RATIO = "90.625%";
 
+/** The arrow's size in px: a macOS popover arrow is wide and shallow. */
+const ARROW_W = 30;
+const ARROW_H = 11;
+
+/**
+ * The popover's outline as ONE path: a rounded rectangle with the arrow grown out of its
+ * bottom edge at `c` (curved flanks, a rounded tip), kept clear of the corners. The glass, its
+ * rim and its shadow are all drawn from this path, so the arrow can't read as a separate piece.
+ */
+function popoverOutline(w: number, h: number, arrowX = w / 2, r = 16) {
+  const half = ARROW_W / 2;
+  const c = Math.min(Math.max(arrowX, r + half), w - r - half);
+  const tip = h + ARROW_H;
+  return [
+    `M${r},0 H${w - r} A${r},${r} 0 0 1 ${w},${r} V${h - r} A${r},${r} 0 0 1 ${w - r},${h}`,
+    `H${c + half} C${c + half - 7},${h} ${c + 5},${tip - 2.5} ${c + 2.2},${tip - 0.7}`,
+    `Q${c},${tip + 0.6} ${c - 2.2},${tip - 0.7} C${c - 5},${tip - 2.5} ${c - half + 7},${h} ${c - half},${h}`,
+    `H${r} A${r},${r} 0 0 1 0,${h - r} V${r} A${r},${r} 0 0 1 ${r},0 Z`,
+  ].join(" ");
+}
+
+/**
+ * A popover's glass, rim and outside-only shadow for a w x h panel, the arrow hanging below
+ * it at `arrowX` — the hero's and the intro's popovers both. Each layer takes `className` /
+ * `style` (their fade): opacity sits on each layer, never on a shared parent, because a parent
+ * below opacity 1 cuts the glass off from what is behind it and its blur would vanish.
+ */
+export function PopoverShape({
+  w,
+  h,
+  arrowX,
+  className = "",
+  style,
+}: {
+  w: number;
+  h: number;
+  arrowX?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const id = React.useId();
+  const d = popoverOutline(w, h, arrowX);
+  const H = h + ARROW_H;
+  // A mask, never clip-path: Chrome clips the fill to a clip-path but still paints the
+  // backdrop-filter over the whole box, which showed as a band beside the arrow.
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${H}' viewBox='0 0 ${w} ${H}' preserveAspectRatio='none'><path d='${d}'/></svg>`;
+  const mask = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  const layer = `absolute top-0 left-0 ${className}`;
+  return (
+    <>
+      {/* Shadow outside the outline only, so it never darkens the see-through glass. */}
+      <svg aria-hidden width={w} height={H} className={`${layer} overflow-visible`} style={style}>
+        <defs>
+          <filter id={`${id}s`} x="-50%" y="-50%" width="200%" height="250%">
+            <feDropShadow dx="0" dy="4" stdDeviation="5" floodOpacity="0.14" />
+            <feDropShadow dx="0" dy="18" stdDeviation="18" floodOpacity="0.32" />
+          </filter>
+          <mask id={`${id}m`} maskUnits="userSpaceOnUse" x="-100" y="-100" width={w + 200} height={H + 200}>
+            <rect x="-100" y="-100" width={w + 200} height={H + 200} fill="white" />
+            <path d={d} fill="black" />
+          </mask>
+        </defs>
+        <g mask={`url(#${id}m)`}>
+          <path d={d} filter={`url(#${id}s)`} fill="black" />
+        </g>
+      </svg>
+      <span
+        aria-hidden
+        className={`popover-glass ${layer}`}
+        style={{ ...style, width: w, height: H, maskImage: mask, maskSize: "100% 100%", maskRepeat: "no-repeat" }}
+      />
+      {/* The rim: lit all round, brightest along the top like light catching glass. */}
+      <svg aria-hidden width={w} height={H} className={`${layer} overflow-visible`} style={style}>
+        <defs>
+          <linearGradient id={`${id}r`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" className="[stop-color:white] [stop-opacity:0.8] dark:[stop-opacity:0.22]" />
+            <stop offset="1" className="[stop-color:white] [stop-opacity:0.35] dark:[stop-opacity:0.08]" />
+          </linearGradient>
+        </defs>
+        <path d={d} fill="none" stroke={`url(#${id}r)`} strokeWidth="1" />
+      </svg>
+    </>
+  );
+}
+
 /* A DockTile tile face — gradient squircle + glyph, inset to match the real
    Finder/Settings icons' safe area (see ICON_CONTENT_RATIO above).
    Dark icon style (matches the real app): background flattens to a neutral
@@ -232,6 +317,9 @@ export function DockDemo({ className = "" }: { className?: string }) {
   });
 
   const rootRef = React.useRef<HTMLDivElement>(null);
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  // The open panel's resting size (offsetWidth/Height ignore the pop's scale), for its shape.
+  const [panel, setPanel] = React.useState<{ w: number; h: number } | null>(null);
   // Pointer type of the interaction in flight — click handlers fire after the
   // pointer events and need it to decide the touch-only resume paths.
   const lastPointerTypeRef = React.useRef("mouse");
@@ -380,14 +468,24 @@ export function DockDemo({ className = "" }: { className?: string }) {
     setFocusIndex(next < 0 ? 0 : next);
   };
 
+  React.useLayoutEffect(() => {
+    const el = panelRef.current;
+    if (el) setPanel({ w: el.offsetWidth, h: el.offsetHeight });
+  }, [openId, pos.width]);
+
   // Popover motion — Apple-style scale-pop from the tile (subtle overshoot +
-  // fade), plain quick fade under reduced motion.
+  // fade), plain quick fade under reduced motion. The panel MOVES (transform-only
+  // keyframes); each layer FADES on its own (`fade`), never the panel, so the glass
+  // keeps its blur through the pop (a fading parent would cut it off).
   const animIn = reduced
     ? "dock-pop-in 180ms var(--ease-out-strong)"
     : "dock-scale-in 260ms cubic-bezier(0.22, 1, 0.36, 1)";
   const animOut = reduced
     ? "dock-pop-out 140ms var(--ease-out-strong) forwards"
     : "dock-scale-out 190ms cubic-bezier(0.4, 0, 1, 1) forwards";
+  const fadeIn = reduced ? "dock-fade-in 180ms var(--ease-out-strong)" : "dock-fade-in-early 260ms cubic-bezier(0.22, 1, 0.36, 1)";
+  const fadeOut = `dock-fade-out ${reduced ? 140 : 190}ms ${reduced ? "var(--ease-out-strong)" : "cubic-bezier(0.4, 0, 1, 1)"} forwards`;
+  const fade: React.CSSProperties = { animation: closing ? fadeOut : fadeIn };
 
   return (
     <div
@@ -417,20 +515,22 @@ export function DockDemo({ className = "" }: { className?: string }) {
       {/* Popover — anchored above the clicked tile */}
       {openTile && (
         <div
+          ref={panelRef}
           role="dialog"
           aria-label={`${openTile.name} apps`}
           onKeyDown={handlePopoverKeys}
-          className={`popover-surface absolute z-30 rounded-2xl ${
-            openTile.layout === "list" ? "p-2" : "p-3 pt-0"
-          }`}
+          className={`absolute z-30 rounded-2xl font-ui ${openTile.layout === "list" ? "p-2" : "p-3 pt-0"}`}
           style={{
             width: pos.width,
             left: pos.left,
             bottom: pos.bottom,
-            transformOrigin: `${pos.arrow}px 100%`,
+            // Scales from the arrow tip, which hangs 11 px below the panel.
+            transformOrigin: `${pos.arrow}px calc(100% + 11px)`,
             animation: closing ? animOut : animIn,
           }}
         >
+          {panel && <PopoverShape w={panel.w} h={panel.h} arrowX={pos.arrow} style={fade} />}
+          <div className="relative" style={fade}>
           {openTile.layout === "list" ? (
             <>
               <p className="px-3 pb-1 pt-1.5 text-[13px] font-semibold text-zinc-800 dark:text-zinc-100">
@@ -546,21 +646,11 @@ export function DockDemo({ className = "" }: { className?: string }) {
               </div>
             </>
           )}
-
-          {/* Arrow — wide shallow triangle, at the clicked tile's centre */}
-          <span
-            aria-hidden
-            className="popover-surface absolute top-full h-2.5 w-6 border-0! shadow-none!"
-            style={{
-              left: pos.arrow - 12,
-              marginTop: -1,
-              clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-            }}
-          />
+          </div>
         </div>
       )}
 
-      <MacOSDock apps={APPS} onAppClick={handleAppClick} openApps={[]} />
+      <MacOSDock apps={APPS} onAppClick={handleAppClick} openApps={openId && !closing ? [openId] : []} />
 
       <DemoCursor {...demo} />
     </div>

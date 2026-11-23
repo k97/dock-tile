@@ -41,6 +41,9 @@ npx tsc --noEmit
 - **The app's `MacOSFloorGuardTests` reads `lib/i18n.ts`, `lib/schema.ts`, `lib/config.ts` and
   `components/hero.tsx`**: after a copy edit each must still state the floor ("for macOS 15+",
   "macOS 15+", "runs on macOS 15"). Website pushes skip app CI, so a break shows up later.
+- **A rule edited in the same change as a rename or move goes stale.** On 2026-11-23 a rule cited
+  two helpers the same diff had merged away (a diff review caught it). Before pushing, grep every
+  symbol a changed rule names.
 - Dead code, imported nowhere: `components/{features,screenshot,support,faq,theme-toggle}.tsx`.
 
 ## Rules
@@ -63,7 +66,8 @@ npm run build
 ```
 
 Visual checks: never drive the user's own browser — use an isolated Chrome profile; headless
-Chrome can't composite `backdrop-filter` (reports `none`). What works: the chrome-devtools MCP's
+Chrome can't composite `backdrop-filter` (reports `none`). That excuses a missing blur, not an
+odd shape: a band beside a popover arrow was written off as headless on 2026-11-23 and was real. What works: the chrome-devtools MCP's
 `new_page` with an `isolatedContext`; `<html>` scrolls smoothly, so jump with
 `scrollTo({behavior:"instant"})`; flip theme by toggling `.dark` on `<html>`. Script can't
 trigger `:hover`: to inspect a hover-only layer, clone its children into a `position:fixed`

@@ -21,6 +21,18 @@ interface MacOSDockProps {
   className?: string
 }
 
+/* One Dock look for every Dock on the site (hero, the intro's two, the Ghost card's ⌘Tab HUD).
+   It follows the theme like the system's: light frosted glass in light, dark glass in dark. */
+export const dockGlass =
+  "border border-black/[0.08] bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_2px_6px_rgba(0,0,0,0.06),0_12px_32px_rgba(0,0,0,0.14)] backdrop-blur-xl dark:border-white/15 dark:bg-[rgba(45,45,45,0.8)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_24px_rgba(0,0,0,0.35)]"
+/** The Dock's name label, light or dark with the theme. */
+export const dockTooltip =
+  "rounded-md border border-black/10 bg-white/90 px-2 py-1 font-ui text-xs font-medium text-zinc-900 shadow-md backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/85 dark:text-white"
+/** The open dot under an icon: dark on light glass, light on dark. */
+export const dockDot = "bg-black/60 dark:bg-white/80"
+/** An icon's lift off the Dock: 0.2 vanishes on dark glass, so dark takes 0.4. */
+export const dockLift = "drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)] dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
+
 // The server has no viewport, so SSR renders at this default. The client MUST
 // also start here, or hydration desyncs icon *size* (the SSR value, baked into
 // the server HTML) from icon *positions* (recomputed from the client viewport),
@@ -228,7 +240,7 @@ const MacOSDock: React.FC<MacOSDockProps> = ({
 
   return (
     <div
-      className={cn("backdrop-blur-md", className)}
+      className={cn(dockGlass, "[--dock-lift:0.2] dark:[--dock-lift:0.4]", className)}
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
       ref={dockRef}
@@ -236,15 +248,7 @@ const MacOSDock: React.FC<MacOSDockProps> = ({
       tabIndex={0}
       style={{
         width: `${contentWidth + padding * 2}px`,
-        background: "rgba(45, 45, 45, 0.75)",
         borderRadius: `${Math.max(12, baseIconSize * 0.4)}px`,
-        border: "1px solid rgba(255, 255, 255, 0.15)",
-        boxShadow: `
-          0 ${Math.max(4, baseIconSize * 0.1)}px ${Math.max(16, baseIconSize * 0.4)}px rgba(0, 0, 0, 0.4),
-          0 ${Math.max(2, baseIconSize * 0.05)}px ${Math.max(8, baseIconSize * 0.2)}px rgba(0, 0, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.15),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.2)
-        `,
         padding: `${padding}px`,
       }}
     >
@@ -258,15 +262,18 @@ const MacOSDock: React.FC<MacOSDockProps> = ({
         {apps.map((app, index) => {
           const scale = currentScales[index]
           const position = currentPositions[index] || 0
-          const scaledSize = baseIconSize * scale
 
-          const iconShadow = `drop-shadow(0 ${scale > 1.2 ? Math.max(2, baseIconSize * 0.05) : Math.max(1, baseIconSize * 0.03)}px ${scale > 1.2 ? Math.max(4, baseIconSize * 0.1) : Math.max(2, baseIconSize * 0.06)}px rgba(0,0,0,${0.2 + (scale - 1) * 0.15}))`
+          // The item's own scale enlarges the shadow with the icon; only its depth grows here.
+          const iconShadow = `drop-shadow(0 ${Math.max(1, baseIconSize * 0.03)}px ${Math.max(2, baseIconSize * 0.06)}px rgba(0,0,0,calc(var(--dock-lift) + ${(scale - 1) * 0.15})))`
           const itemClass = "group absolute cursor-pointer flex flex-col items-center justify-end"
           const itemStyle: React.CSSProperties = {
-            left: `${position - scaledSize / 2}px`,
+            // Magnification is transform-only (compositor), never left/width/height, which
+            // re-ran layout for every icon on every frame. getBoundingClientRect includes it.
+            left: 0,
             bottom: "0px",
-            width: `${scaledSize}px`,
-            height: `${scaledSize}px`,
+            width: `${baseIconSize}px`,
+            height: `${baseIconSize}px`,
+            transform: `translateX(${position - baseIconSize / 2}px) scale(${scale})`,
             transformOrigin: "bottom center",
             zIndex: Math.round(scale * 10),
           }
@@ -287,35 +294,37 @@ const MacOSDock: React.FC<MacOSDockProps> = ({
                 <img
                   alt={app.name}
                   className="object-contain"
-                  height={scaledSize}
+                  height={baseIconSize}
                   src={app.icon}
                   style={{ filter: iconShadow }}
-                  width={scaledSize}
+                  width={baseIconSize}
                 />
               )}
 
               {/* Native-style hover tooltip. Sits in the Dock's own stacking
                   context (backdrop-filter), so it always renders BEHIND the
-                  DockTile popover (which is a higher-z sibling of the Dock). */}
+                  DockTile popover (which is a higher-z sibling of the Dock).
+                  Instant, as the macOS Dock's labels are: sweeping the Dock shows dozens.
+                  Counter-scaled so the magnified item doesn't enlarge it. */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md font-ui border border-white/10 bg-zinc-900/85 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100"
+                className={`pointer-events-none absolute bottom-full left-1/2 z-50 origin-bottom -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 ${dockTooltip}`}
+                style={{ scale: `${1 / scale}`, marginBottom: `${8 / scale}px` }}
               >
                 {app.name}
               </span>
 
+              {/* The open dot under the tile, dark on light glass and light on dark, as macOS
+                  draws it. Counter-scaled about its top edge so magnification doesn't grow it. */}
               {openApps.includes(app.id) && (
                 <div
-                  className="absolute"
+                  className={`absolute left-1/2 -translate-x-1/2 rounded-full ${dockDot}`}
                   style={{
-                    bottom: `${Math.max(-2, -baseIconSize * 0.05)}px`,
-                    left: "50%",
-                    transform: "translateX(-50%)",
+                    top: `calc(100% - ${Math.max(3, baseIconSize * 0.06) / 2 / scale}px)`,
                     width: `${Math.max(3, baseIconSize * 0.06)}px`,
                     height: `${Math.max(3, baseIconSize * 0.06)}px`,
-                    borderRadius: "50%",
-                    backgroundColor: "rgba(255, 255, 255, 0.8)",
-                    boxShadow: "0 0 4px rgba(0, 0, 0, 0.3)",
+                    scale: `${1 / scale}`,
+                    transformOrigin: "50% 0",
                   }}
                 />
               )}

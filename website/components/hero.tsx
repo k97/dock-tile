@@ -16,7 +16,7 @@ export function Hero() {
   return (
     <section
       data-nav-tone="dark"
-      className="relative mx-3 mt-3 flex min-h-[92vh] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] border border-white/10 bg-black px-4 pb-16 pt-28 md:mx-4 md:mt-4"
+      className="relative mx-3 mt-3 flex min-h-[92vh] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] bg-black edge-hairline px-4 pb-16 pt-28 md:mx-4 md:mt-4"
     >
       {/* Full-bleed macOS wallpaper — Light/Dark Ventura dither by theme.
           Both URLs ride as CSS vars; `.dark .hero-texture` picks the dark one,

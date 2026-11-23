@@ -317,9 +317,9 @@
     0 30px 60px rgba(0, 0, 0, 0.4);
 }
 
-/* The intro's hover popovers (owner, 2026-11-22): macOS 27 glass, more see-through and
-   a stronger blur than `.popover-surface`. Only the fill: the outline (panel + arrow as
-   one clip-path), its rim and its shadow come from `popoverOutline` in home-sections.tsx. */
+/* The Dock popovers, hero and intro (owner, 2026-11-22/23): macOS 27 glass, more see-through
+   and a stronger blur than `.popover-surface`. Only the fill: the outline (panel + arrow as one
+   mask), its rim and its shadow come from `PopoverShape` in dock-demo.tsx. */
 .popover-glass {
   background: rgba(250, 250, 252, 0.55);
   backdrop-filter: blur(28px) saturate(190%);
@@ -500,6 +500,21 @@
   }
 }
 
+/* Hairline drawn OVER a wallpaper shell: `.hero-texture` fills only the padding box, so a real
+   border showed the shell's black (or the page) through a 1px ring around the wallpaper.
+   Same edge as the nav pill on that wallpaper (`.glass-nav[data-over="dark"]` / `.dark`). */
+.edge-hairline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+.dark .edge-hairline::after {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 /* Hero wallpaper — full-bleed dithered macOS wallpaper behind the hero content.
    A legibility scrim over the top keeps the white headline/CTA readable. The
    component passes BOTH Light/Dark Ventura dither URLs as custom properties and
@@ -622,25 +637,54 @@
   }
 }
 
+/* Intro Docks: icons magnify from their bottom edge (driven by useDockMagnify). */
+.dock-face {
+  transform-origin: bottom center;
+}
+
 /* Dock demo popover motion — 200ms in (matches the app's 0.25s), faster out */
+/* Transform-only: each popover layer fades on its own (dock-fade-*), never the panel, so the
+   glass keeps its blur through the pop. */
 @keyframes dock-pop-in {
   from {
-    opacity: 0;
     transform: translateY(6px) scale(0.94);
   }
   to {
-    opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 @keyframes dock-pop-out {
   from {
-    opacity: 1;
     transform: translateY(0) scale(1);
   }
   to {
-    opacity: 0;
     transform: translateY(4px) scale(0.96);
+  }
+}
+@keyframes dock-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* dock-scale-in's fade: fully in by 55%, where the overshoot peaks. */
+@keyframes dock-fade-in-early {
+  0% {
+    opacity: 0;
+  }
+  55%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes dock-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 @keyframes dock-app-in {
@@ -706,25 +750,20 @@
    compositor-only (transform + opacity). */
 @keyframes dock-scale-in {
   0% {
-    opacity: 0;
     transform: translateY(8px) scale(0.86);
   }
   55% {
-    opacity: 1;
     transform: translateY(0) scale(1.015);
   }
   100% {
-    opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 @keyframes dock-scale-out {
   0% {
-    opacity: 1;
     transform: translateY(0) scale(1);
   }
   100% {
-    opacity: 0;
     transform: translateY(6px) scale(0.9);
   }
 }
