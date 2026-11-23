@@ -57,7 +57,7 @@
   Its `@id` is `https://happymachines.company/#organization`, the studio site's own, so engines
   join the two graphs (the logo lives there); the blocks here link by `@id` too.
 - **Schema reads the copy the page renders, never a side table (2026-11-23).** `featureList`
-  was built from `content.features`, which only dead code renders, and kept claiming "open them
+  was built from `content.features`, which only dead code rendered (both deleted 2026-11-23), and kept claiming "open them
   all with one click" for weeks after the page dropped it. It now maps the homepage's marketing
   keys; anything schema reads must be visible somewhere on the site.
 

@@ -201,32 +201,7 @@ export const localisedContent = {
     marketing: marketingBase,
     legal: legalBase,
     // Hero
-    tagline: "A native macOS launcher, built for the Dock",
-    description:
-      "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders.",
     downloadButton: "Download for macOS",
-    systemRequirements: "Requires macOS 15 or later on a Mac with Apple silicon",
-
-    // Features
-    featuresTitle: "Made for your Dock",
-    featuresSubtitle: "Native, fast, and out of your way.",
-    features: [
-      {
-        title: "One click to everything",
-        description:
-          "Tuck a group of apps and folders behind a single Dock tile, then open them all with one click.",
-      },
-      {
-        title: "Dock Lock",
-        description:
-          "Pin the Dock to one display so it stops hopping between screens on a multi-monitor setup.",
-      },
-      {
-        title: "Custom tile icons",
-        description:
-          "Show a grid of the tile's own apps, or an SF Symbol or emoji on a colour or mono background. On macOS Tahoe and later, tiles follow the Light, Dark, Clear and Tinted icon styles.",
-      },
-    ],
 
     // FAQ
     faq: [
@@ -325,11 +300,6 @@ export const localisedContent = {
           "Your tile configurations are stored in ~/Library/Preferences/com.docktile.configs.json. Back up this file to preserve your tiles.",
       },
     ],
-
-    // Support
-    supportTitle: "Support",
-    supportText: "Have a question or found a bug?",
-    supportLink: "Get in touch",
 
     // Footer
     privacy: "Privacy",
@@ -340,32 +310,7 @@ export const localisedContent = {
     marketing: marketingBase,
     legal: legalBase,
     // Hero
-    tagline: "A native macOS launcher, built for the Dock",
-    description:
-      "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders.",
     downloadButton: "Download for macOS",
-    systemRequirements: "Requires macOS 15 or later on a Mac with Apple silicon",
-
-    // Features
-    featuresTitle: "Made for your Dock",
-    featuresSubtitle: "Native, fast, and out of your way.",
-    features: [
-      {
-        title: "One click to everything",
-        description:
-          "Tuck a group of apps and folders behind a single Dock tile, then open them all with one click.",
-      },
-      {
-        title: "Dock Lock",
-        description:
-          "Pin the Dock to one display so it stops hopping between screens on a multi-monitor setup.",
-      },
-      {
-        title: "Custom tile icons",
-        description:
-          "Show a grid of the tile's own apps, or an SF Symbol or emoji on a colour or mono background. On macOS Tahoe and later, tiles follow the Light, Dark, Clear and Tinted icon styles.",
-      },
-    ],
 
     // FAQ
     faq: [
@@ -465,11 +410,6 @@ export const localisedContent = {
       },
     ],
 
-    // Support
-    supportTitle: "Support",
-    supportText: "Have a question or found a bug?",
-    supportLink: "Get in touch",
-
     // Footer
     privacy: "Privacy",
     terms: "Terms",
@@ -479,32 +419,7 @@ export const localisedContent = {
     marketing: marketingUS,
     legal: legalUS,
     // Hero
-    tagline: "A native macOS launcher, built for the Dock",
-    description:
-      "Create custom app icons for your apps and folders, with one-click access. A smarter take on iOS Home Screen folders.",
     downloadButton: "Download for macOS",
-    systemRequirements: "Requires macOS 15 or later on a Mac with Apple silicon",
-
-    // Features
-    featuresTitle: "Made for your Dock",
-    featuresSubtitle: "Native, fast, and out of your way.",
-    features: [
-      {
-        title: "One click to everything",
-        description:
-          "Tuck a group of apps and folders behind a single Dock tile, then open them all with one click.",
-      },
-      {
-        title: "Dock Lock",
-        description:
-          "Pin the Dock to one display so it stops hopping between screens on a multi-monitor setup.",
-      },
-      {
-        title: "Custom tile icons",
-        description:
-          "Show a grid of the tile's own apps, or an SF Symbol or emoji on a color or mono background. On macOS Tahoe and later, tiles follow the Light, Dark, Clear and Tinted icon styles.",
-      },
-    ],
 
     // FAQ
     faq: [
@@ -603,11 +518,6 @@ export const localisedContent = {
           "Your tile configurations are stored in ~/Library/Preferences/com.docktile.configs.json. Back up this file to preserve your tiles.",
       },
     ],
-
-    // Support
-    supportTitle: "Support",
-    supportText: "Have a question or found a bug?",
-    supportLink: "Get in touch",
 
     // Footer
     privacy: "Privacy",

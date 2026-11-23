@@ -12,8 +12,9 @@ magick input.png -quality 80 output.webp
 # <Image unoptimized> — lossy + the optimizer's q75 re-encode read as pixelated (2026-10-31).
 # Recipe + pixel-diff check: website/.claude/rules/design-system.md "App screenshots…".
 
-# Generate blur placeholder base64 for screenshot carousel
+# Generate a blur placeholder (base64)
 magick input.webp -resize 10x7 -quality 20 webp:- | base64
 ```
 
-Blur placeholders go in `website/components/screenshot.tsx` as `data:image/webp;base64,...` strings.
+Blur placeholders: none in use since the unused screenshot carousel was deleted (2026-11-23). A new
+one goes in the component that renders the image, as a `data:image/webp;base64,...` string.

@@ -44,7 +44,6 @@ npx tsc --noEmit
 - **A rule edited in the same change as a rename or move goes stale.** On 2026-11-23 a rule cited
   two helpers the same diff had merged away (a diff review caught it). Before pushing, grep every
   symbol a changed rule names.
-- Dead code, imported nowhere: `components/{features,screenshot,support,faq,theme-toggle}.tsx`.
 
 ## Rules
 
