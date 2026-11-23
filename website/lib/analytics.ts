@@ -55,6 +55,13 @@ export function trackDownloadClick(location: DownloadLocation) {
   }
 }
 
+/** A Download button on a non-Mac device copies the site link instead (same `location` values). */
+export function trackCopyLinkClick(location: DownloadLocation) {
+  if (typeof window.gtag !== "undefined") {
+    window.gtag("event", "copy_link_click", { event_category: "engagement", location });
+  }
+}
+
 export function trackReleaseNotesClick() {
   trackEvent("release_notes_click", "engagement", "release_notes_link");
 }

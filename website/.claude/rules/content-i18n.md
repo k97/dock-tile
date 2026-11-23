@@ -68,6 +68,14 @@
   a site-only name — the app's toggle is Show in App Switcher, so always explain it). "Free"
   sits beside every Download (`ctaMetaOpenSource` = "Free & open source"). US copy says Trash where
   AU/GB says Bin. Positioning, glossary and words to avoid: `.claude/product-marketing-context.md`.
+- **Download on a device that can't run the app copies the link instead (owner, 2026-11-23)**: ~29%
+  of visitors were Windows, iPhone, Android or Linux and got a DMG they could not open.
+  `DownloadActionButton` reads "Copy link for your Mac" (nav pill: "Copy link") and copies
+  `siteConfig.siteUrl` (no clipboard → shows the address). Decided after mount by the pure
+  `isNonMacDevice(userAgent)` (an iPad in desktop mode says "Macintosh" and stays a Mac; any
+  `bot|crawl|spider` UA is never non-Mac, because Googlebot's smartphone crawler runs JS with an
+  Android UA), so the served HTML and every crawler keep Download. Event `copy_link_click`, same
+  `location` values; from 2026-11-23 `download_click` drops by the non-Mac share (a step, not a fall).
 - "Signed & notarized" claims live only on the legal pages, nowhere else.
 - **Check every product claim against the app source before it ships** (`DockTile/`, read-only).
   On 2026-10-31 three plausible lines were false: "Drag apps in" (the popover only reorders; adding

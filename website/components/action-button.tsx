@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, Check, Download, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Download, Link, Loader2 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
-import { trackDownloadClick, type DownloadLocation } from "@/lib/analytics";
+import { trackCopyLinkClick, trackDownloadClick, type DownloadLocation } from "@/lib/analytics";
+import { useLocale } from "@/components/locale-provider";
 
 /**
  * Signature CTA: pill with a nested circular icon. Two fixed tones —
@@ -53,7 +54,9 @@ export function ActionButton({
 
   const content = (
     <>
-      <span className={dims.text}>{children}</span>
+      <span className={dims.text} aria-live="polite">
+        {children}
+      </span>
       <span
         className={`flex ${dims.circ} items-center justify-center rounded-full transition-colors duration-300 ${circle}`}
       >
@@ -79,7 +82,20 @@ export function ActionButton({
   );
 }
 
-/** Download CTA with the ready → downloading → downloaded state machine. */
+/** A device that can't run a Mac app. An iPad in desktop mode reports "Macintosh" and counts as a
+ *  Mac: hiding Download from a real Mac would be the worse mistake. Crawlers never count, so a
+ *  JS-running one (Googlebot's smartphone crawler says Android) still indexes Download. */
+export function isNonMacDevice(userAgent: string): boolean {
+  return (
+    /Windows|Android|Linux|CrOS|iPhone|iPod/i.test(userAgent) &&
+    !/Macintosh/i.test(userAgent) &&
+    !/bot|crawl|spider/i.test(userAgent)
+  );
+}
+
+/** Download CTA with the ready → downloading → downloaded state machine. On a non-Mac device it
+ *  copies the site link instead (decided after mount, so the server-rendered page and crawlers
+ *  always see Download). */
 export function DownloadActionButton({
   tone = "light",
   size = "md",
@@ -94,12 +110,28 @@ export function DownloadActionButton({
   location: DownloadLocation;
   className?: string;
 }) {
-  const [state, setState] = React.useState<"ready" | "downloading" | "downloaded">(
+  const { content } = useLocale();
+  const m = content.marketing;
+  const [state, setState] = React.useState<"ready" | "downloading" | "downloaded" | "copied" | "manual">(
     "ready",
   );
+  const [nonMac, setNonMac] = React.useState(false);
+  React.useEffect(() => setNonMac(isNonMacDevice(navigator.userAgent)), []);
 
   const handleClick = () => {
     if (state !== "ready") return;
+    if (nonMac) {
+      trackCopyLinkClick(location);
+      // No clipboard (an insecure context, a refused permission): show the address to type instead.
+      const copy = navigator.clipboard?.writeText(siteConfig.siteUrl) ?? Promise.reject();
+      copy
+        .then(
+          () => setState("copied"),
+          () => setState("manual"),
+        )
+        .finally(() => window.setTimeout(() => setState("ready"), 4000));
+      return;
+    }
     trackDownloadClick(location);
     setState("downloading");
     window.location.href = siteConfig.downloadUrl;
@@ -109,11 +141,14 @@ export function DownloadActionButton({
     }, 2000);
   };
 
-  // Every glyph stays mounted and the three cross-fade in place — scale 0.25→1,
+  // Every glyph stays mounted and they cross-fade in place — scale 0.25→1,
   // opacity 0→1, blur 4px→0. Swapping by unmount gives you an enter with no
   // exit; keeping them stacked gives both, with no motion library.
+  const shown =
+    (state === "ready" && nonMac) || state === "manual" ? "link" : state === "copied" ? "downloaded" : state;
   const glyphs = [
     { key: "ready", node: <Download className="h-full w-full" /> },
+    { key: "link", node: <Link className="h-full w-full" /> },
     { key: "downloading", node: <Loader2 className="h-full w-full animate-spin" /> },
     { key: "downloaded", node: <Check className="h-full w-full" /> },
   ] as const;
@@ -123,9 +158,9 @@ export function DownloadActionButton({
       {glyphs.map(({ key, node }) => (
         <span
           key={key}
-          aria-hidden={state !== key}
+          aria-hidden={shown !== key}
           className={`absolute inset-0 flex items-center justify-center transition-[opacity,scale,filter] duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
-            state === key ? "scale-100 opacity-100 blur-none" : "scale-25 opacity-0 blur-xs"
+            shown === key ? "scale-100 opacity-100 blur-none" : "scale-25 opacity-0 blur-xs"
           }`}
         >
           {node}
@@ -133,6 +168,22 @@ export function DownloadActionButton({
       ))}
     </span>
   );
+
+  function buttonLabel() {
+    switch (state) {
+      case "downloading":
+        return "Downloading…";
+      case "downloaded":
+        return "Downloaded";
+      case "copied":
+        return m.copyLinkDone;
+      case "manual":
+        return siteConfig.siteUrl.replace("https://", "");
+      default:
+        if (nonMac) return size === "sm" ? m.copyLinkShort : m.copyLinkButton;
+        return label ?? "Download for macOS";
+    }
+  }
 
   return (
     <ActionButton
@@ -142,11 +193,7 @@ export function DownloadActionButton({
       onClick={handleClick}
       className={className}
     >
-      {state === "downloading"
-        ? "Downloading…"
-        : state === "downloaded"
-          ? "Downloaded"
-          : (label ?? "Download for macOS")}
+      {buttonLabel()}
     </ActionButton>
   );
 }

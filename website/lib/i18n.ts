@@ -90,6 +90,10 @@ const marketingBase = {
   ctaButton: "Download Dock Tile",
   ctaMetaOpenSource: "Free & open source",
   ctaMetaAppleSilicon: "Apple silicon",
+  // Download buttons on a device that can't run the app (Windows, iPhone, Android, Linux)
+  copyLinkButton: "Copy link for your Mac",
+  copyLinkShort: "Copy link", // the nav pill: its width is a WebKit landmine (design-system.md)
+  copyLinkDone: "Link copied",
   // Homepage FAQ (the top questions; the rest live on /faq)
   homeFaqTitleA: "Questions,", // split around the heading's tilted tile
   homeFaqTitleB: "answered.",
