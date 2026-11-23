@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.1] - 2026-11-23
+
 ### Changed
 
-- **menu bar:** Show in Menu Bar is in every tile now, even while the menu bar icon is off; turning it on in a tile turns the menu bar icon on too, and brings back any other tile you had in the menu bar
-- **tiles:** The tile's icon in Tile Detail is always the height of the four settings beside it
+- **menu bar:** Show in Menu Bar is in every tile now, even while the menu bar icon is off; turning it on in a tile turns the menu bar icon on too, and brings back any other tile you had in the menu bar ([4fbb9fd](https://github.com/k97/dock-tile/commit/4fbb9fd))
+- **tiles:** The tile's icon in Tile Detail is always the height of the four settings beside it ([4fbb9fd](https://github.com/k97/dock-tile/commit/4fbb9fd))
 
 ## [2.8.0] - 2026-11-22
 
