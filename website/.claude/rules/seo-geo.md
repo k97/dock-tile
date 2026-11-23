@@ -22,7 +22,9 @@
   `utm_source=docktile.app&utm_medium=referral`, the convention happymachines.company uses);
   GitHub, mailto and JSON-LD URLs never carry it.
 - **Host redirects belong to Vercel, never next.config/middleware** — an app-level host redirect
-  fights the platform's and loops.
+  fights the platform's and loops. `www.docktile.app` is a project domain redirecting to the apex
+  with **308** (2026-11-23; unattached, Vercel answered 307). Check with the discoverability
+  skill's `redirect-trace.sh docktile.app / /faq /appcast.xml`.
 
 ## Metadata pattern (every route)
 
@@ -52,6 +54,23 @@
   FAQPage stays on `/faq` only — Google requires the marked-up content visible on that page.
 - Author/publisher is the **Organization** Happy Machines Company (2026-10-30; was a Person). The
   app's `sameAs` GitHub repo is what disambiguates it from Apple's `NSDockTile` API — keep it.
+  Its `@id` is `https://happymachines.company/#organization`, the studio site's own, so engines
+  join the two graphs (the logo lives there); the blocks here link by `@id` too.
+- **Schema reads the copy the page renders, never a side table (2026-11-23).** `featureList`
+  was built from `content.features`, which only dead code renders, and kept claiming "open them
+  all with one click" for weeks after the page dropped it. It now maps the homepage's marketing
+  keys; anything schema reads must be visible somewhere on the site.
+
+## Reading search data
+
+- GA4 website property **522915118** and Search Console **`sc-domain:docktile.app`** are both
+  readable by `ga4-fetch@dock-tile.iam.gserviceaccount.com` (GA4 Editor since 2026-11-23, so it can
+  register custom dimensions; Search Console restricted user; the Search Console API is enabled on
+  GCP project 465730642539). Token: `gcloud auth print-access-token --account=ga4-fetch@… --scopes=…analytics.readonly,…webmasters.readonly`.
+- What the 2026-11-23 read found: ChatGPT sent more sessions than Google; Google clicks are
+  branded; "what is a Dock tile extension" (a macOS notification, not this app) had ~370
+  impressions and no clicks, hence that FAQ entry. Re-read Search Console before writing an FAQ
+  "from real queries". Full baseline: `reports/Website discoverability audit 2026-11.md` (untracked).
 
 ## Crawlability (critical)
 

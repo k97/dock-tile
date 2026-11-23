@@ -51,7 +51,7 @@ npx tsc --noEmit
 - [Design System & Theming](.claude/rules/design-system.md) — tokens, light/dark model, typography, motion, CSS/tooling gotchas
 - [Hero & Dock Demo](.claude/rules/hero-dock-demo.md) — wallpaper recipe, demo behaviour contract, app-icon assets, tile glyphs
 - [Content, Structure & i18n](.claude/rules/content-i18n.md) — page order, copy rules, locale model, releases page
-- [SEO, GEO & Domain](.claude/rules/seo-geo.md) — docktile.app primary + alias rules, per-page metadata/canonical pattern, JSON-LD, crawlability gotchas
+- [SEO, GEO & Domain](.claude/rules/seo-geo.md) — docktile.app primary + alias rules, per-page metadata/canonical pattern, JSON-LD, crawlability gotchas, reading GA4 + Search Console
 - [Assets, CDN & Dev Port](.claude/rules/assets-cdn.md) — `asset()` local/R2 switch, `NEXT_PUBLIC_IMAGE_SOURCE`, remotePatterns, dev port 3010
 - [Website Assets](../.claude/rules/website-assets.md) (repo root) — favicon + webp generation, blur placeholders
 
@@ -74,4 +74,6 @@ trigger `:hover`: to inspect a hover-only layer, clone its children into a `posi
 overlay at `scale(5)` (page zoom doesn't reach `ScaleToFit` mocks — they rescale themselves). Turbopack hot-reload quirks in dev —
 stale `globals.css` (restart `next dev`), and after HMR a `Reveal` scroll-observer can hold a
 stale DOM node so a whole section sits at opacity 0. Hard-reload before debugging either as a
-code bug.
+code bug. When another session holds the chrome-devtools profile ("browser is already running"),
+the Playwright MCP works, but it writes `.playwright-mcp/` (snapshots, console logs) into the
+repo root: move it out when done.

@@ -278,6 +278,11 @@ re-apply per component unless overriding.
   when both are present — this silently killed `backdrop-filter` on every glass surface once.
   Let the toolchain prefix.
 - Tailwind v4 spellings: `bg-linear-to-b` (not `bg-gradient-to-b`); `gap-*` (not `space-x/y`).
+- **A `grid` gets `grid-cols-1` below its breakpoint, never no template (2026-11-23).** An implicit
+  track sizes to its widest item's min-content: the power-user cards made a 390 px phone scroll
+  14 px sideways, live for weeks. Long unbroken strings (file paths in `<code>`) take
+  `wrap-anywhere`. Check phones by `document.documentElement.scrollWidth === clientWidth` on every
+  route, not by eye.
 - **Squircles**: `.squircle` is a superellipse SVG mask (radius 22.5% of size, exponent ≈ 5)
   because Safari has no `corner-shape` and plain `border-radius` reads rounder than real macOS
   icons. A CSS mask **clips the element's own `box-shadow`** — shadows go on a wrapper via

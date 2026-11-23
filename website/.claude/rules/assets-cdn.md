@@ -25,7 +25,9 @@ root-relative path in the data arrays; wrap it at the render site (`src={asset(a
   skip the optimizer's SVG policy.
 - **Adding/changing an asset**: drop it in `public/assets/`, then upload the file to the R2 bucket
   at the matching key (e.g. `assets/…`) or prod 404s. Kept a filename but changed the bytes? Bump
-  its `?v=N` (R2 caches hard).
+  its `?v=N` (R2 caches hard) **at every reference**: `finder.png` and `finder.png?v=3` are two
+  downloads, and the intro Docks fetched Finder and Settings twice beside the hero's until
+  2026-11-23. List every key a file is used with before bumping one.
 - **One exception: the two hero wallpapers come from this site's own origin** (owner, 2026-11-23),
   as `HERO_BG` / `HERO_BG_DARK` in `lib/assets.ts`, never through `asset()`. They are the
   homepage's LCP image (771 KB), and r2.dev serves them over HTTP/1.1 with no cache lifetime
