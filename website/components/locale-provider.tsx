@@ -8,6 +8,7 @@ import {
   getContent,
   localisedContent,
 } from "@/lib/i18n";
+import { useClientValue } from "@/lib/use-client-value";
 
 type LocaleContextType = {
   locale: Locale;
@@ -20,32 +21,13 @@ const LocaleContext = React.createContext<LocaleContextType | undefined>(
 );
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = React.useState<Locale>(defaultLocale);
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-    // Detect locale from browser on mount
-    const detected = detectLocale();
-    setLocale(detected);
-  }, []);
+  // The browser's locale after hydration (the default before, so server and client match); a
+  // manual pick through setLocale wins over it.
+  const detected = useClientValue(detectLocale, defaultLocale);
+  const [picked, setLocale] = React.useState<Locale | null>(null);
+  const locale = picked ?? detected;
 
   const content = React.useMemo(() => getContent(locale), [locale]);
-
-  // During SSR, use default locale
-  if (!mounted) {
-    return (
-      <LocaleContext.Provider
-        value={{
-          locale: defaultLocale,
-          content: getContent(defaultLocale),
-          setLocale,
-        }}
-      >
-        {children}
-      </LocaleContext.Provider>
-    );
-  }
 
   return (
     <LocaleContext.Provider value={{ locale, content, setLocale }}>

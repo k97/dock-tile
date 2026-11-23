@@ -5,6 +5,7 @@ import { ArrowRight, Check, Download, Link, Loader2 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { trackCopyLinkClick, trackDownloadClick, type DownloadLocation } from "@/lib/analytics";
 import { useLocale } from "@/components/locale-provider";
+import { useClientValue } from "@/lib/use-client-value";
 
 /**
  * Signature CTA: pill with a nested circular icon. Two fixed tones —
@@ -115,8 +116,7 @@ export function DownloadActionButton({
   const [state, setState] = React.useState<"ready" | "downloading" | "downloaded" | "copied" | "manual">(
     "ready",
   );
-  const [nonMac, setNonMac] = React.useState(false);
-  React.useEffect(() => setNonMac(isNonMacDevice(navigator.userAgent)), []);
+  const nonMac = useClientValue(() => isNonMacDevice(navigator.userAgent), false);
 
   const handleClick = () => {
     if (state !== "ready") return;

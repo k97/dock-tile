@@ -8,6 +8,7 @@ import { siteConfig } from "@/lib/config";
 import { asset } from "@/lib/assets";
 import { DownloadActionButton } from "@/components/action-button";
 import { NAV_LINKS, currentFor } from "@/lib/nav";
+import { useHydrated } from "@/lib/use-client-value";
 
 export function Header() {
   const pathname = usePathname();
@@ -15,8 +16,7 @@ export function Header() {
   // Arms the pill's 300ms tone cross-fade only after hydration (CSS
   // `.glass-nav[data-ready]`), so any load-time tone correction snaps into
   // place instead of visibly animating on first paint.
-  const [ready, setReady] = React.useState(false);
-  React.useEffect(() => setReady(true), []);
+  const ready = useHydrated();
   // Set by a logo click on another page; consumed once the homepage renders.
   const logoToHomeRef = React.useRef(false);
   React.useEffect(() => {

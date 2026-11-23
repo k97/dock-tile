@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { asset, HERO_BG, HERO_BG_DARK } from "@/lib/assets";
+import { useClientValue } from "@/lib/use-client-value";
 
 /**
  * Branded load veil — a Dock Tile splash that covers the viewport on the FIRST
@@ -26,21 +27,24 @@ const LIFT_MS = 640; // must match the CSS transition duration below
 
 type Phase = "cover" | "lifting" | "gone";
 
+// Same conditions the CSS skips on. The effect reads the DOM itself (during the hydration pass
+// `skip` is still the server's false), so it never fires a pointless wallpaper decode just to lift
+// an already-hidden veil.
+function shouldSkip() {
+  return (
+    document.documentElement.hasAttribute("data-veil-shown") ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
 export function HeroVeil() {
   const [phase, setPhase] = React.useState<Phase>("cover");
+  const skip = useClientValue(shouldSkip, false);
 
   // Decide when to lift: the earlier of "hero wallpaper decoded" and the cap,
   // never sooner than the min floor.
   React.useEffect(() => {
-    // Same conditions the CSS skips on — re-checked so we don't fire a pointless
-    // wallpaper decode just to lift an already-hidden veil.
-    const skip =
-      document.documentElement.hasAttribute("data-veil-shown") ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (skip) {
-      setPhase("gone");
-      return;
-    }
+    if (shouldSkip()) return;
 
     let lifted = false;
     const startedAt = performance.now();
@@ -88,7 +92,7 @@ export function HeroVeil() {
     return () => window.clearTimeout(t);
   }, [phase]);
 
-  if (phase === "gone") return null;
+  if (skip || phase === "gone") return null;
 
   return (
     <div

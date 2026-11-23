@@ -41,6 +41,11 @@ npx tsc --noEmit
 - **The app's `MacOSFloorGuardTests` reads `lib/i18n.ts`, `lib/schema.ts`, `lib/config.ts` and
   `components/hero.tsx`**: after a copy edit each must still state the floor ("for macOS 15+",
   "macOS 15+", "runs on macOS 15"). Website pushes skip app CI, so a break shows up later.
+- **A browser-only value read after mount goes through `lib/use-client-value.ts`** (`useHydrated`,
+  `useClientValue`, `useMediaQuery`), never `useState` + `setState` in a `useEffect`: since Next
+  16.4 (eslint-plugin-react-hooks 7.1) that is a lint error, and a config-protection hook blocks
+  relaxing the rule (2026-11-23). The helpers return the server value during hydration, so markup
+  still matches.
 - **A rule edited in the same change as a rename or move goes stale.** On 2026-11-23 a rule cited
   two helpers the same diff had merged away (a diff review caught it). Before pushing, grep every
   symbol a changed rule names.

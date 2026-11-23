@@ -145,12 +145,16 @@ const MacOSDock: React.FC<MacOSDockProps> = ({
     [baseIconSize, baseSpacing],
   )
 
-  useEffect(() => {
+  // Reset to resting scales whenever their inputs change, during render (React's "adjusting state
+  // when a prop changes") rather than in an effect.
+  const resetInputs = [apps, calculatePositions, minScale, config] as const
+  const [resetFor, setResetFor] = useState<readonly unknown[]>([])
+  if (resetInputs.some((input, i) => input !== resetFor[i])) {
     const initialScales = apps.map(() => minScale)
-    const initialPositions = calculatePositions(initialScales)
+    setResetFor(resetInputs)
     setCurrentScales(initialScales)
-    setCurrentPositions(initialPositions)
-  }, [apps, calculatePositions, minScale, config])
+    setCurrentPositions(calculatePositions(initialScales))
+  }
 
   /* eslint-disable react-hooks/immutability -- rAF lerp reads/writes the same scale/position state each frame by design */
   const animateToTarget = useCallback(() => {

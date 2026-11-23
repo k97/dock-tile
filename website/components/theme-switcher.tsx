@@ -5,6 +5,7 @@ import { Sun, Monitor, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { trackThemeChange } from "@/lib/analytics";
+import { useHydrated } from "@/lib/use-client-value";
 
 type Theme = "light" | "system" | "dark";
 
@@ -18,8 +19,7 @@ export function ThemeSwitcher() {
   // not — rendering them eagerly is what keeps the old empty-circles placeholder
   // from popping into icons on every load.
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
+  const mounted = useHydrated();
   const active = mounted ? theme : undefined;
 
   const themes: { value: Theme; icon: React.ReactNode; label: string }[] = [

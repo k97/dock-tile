@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMediaQuery } from "@/lib/use-client-value";
 import Image from "next/image";
 import { Settings2 } from "lucide-react";
 import { MacOSDock, type DockApp } from "@/components/ui/mac-os-dock";
@@ -308,7 +309,7 @@ export function DockDemo({ className = "" }: { className?: string }) {
   const [closing, setClosing] = React.useState(false);
   const [launching, setLaunching] = React.useState<string | null>(null);
   const [focusIndex, setFocusIndex] = React.useState(-1);
-  const [reduced, setReduced] = React.useState(false);
+  const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
   const [pos, setPos] = React.useState({
     left: 0,
     arrow: GRID_WIDTH / 2,
@@ -401,11 +402,6 @@ export function DockDemo({ className = "" }: { className?: string }) {
     },
     release: close,
   });
-
-  // Reduced-motion probe.
-  React.useEffect(() => {
-    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
 
   // Outside-click + Escape dismiss. A touch dismiss also re-arms the showcase:
   // unlike a mouse, a finger is never "hovering" the demo afterwards, so
