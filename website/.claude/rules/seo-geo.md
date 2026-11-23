@@ -34,8 +34,14 @@
   og:*; re-adding title/description there makes every subpage inherit the homepage's.
 - Client pages can't export metadata: split into a server `page.tsx` + `*-content.tsx`
   client component (pattern: `app/faq/`).
-- Social card = `app/opengraph-image.jpg` (1200×630) + `.alt.txt`. Regenerate:
-  `magick public/assets/stage/dock-tiles.webp -crop 2048x1078+0+161 +repage -resize 1200x630^ -gravity center -extent 1200x630 -quality 85 app/opengraph-image.jpg`
+- Social card = `app/opengraph-image.jpg` (1200×630) + `.alt.txt`: the live hero (headline, the
+  definition line, the Media tile's open panel over the Dock; owner, 2026-11-23 — the old card said
+  "DockTile" and "Pin · Group · Launch"). Regenerate from a PRODUCTION build (`next start`; dev
+  draws the Next and Agentation badges): a 1200×700 viewport, light theme, the nav pill hidden,
+  wait until the showcase has the Media tile's panel open (it walks the tiles in turn; the demo
+  cursor on the tile is part of the card), then sharp
+  `extract({ left: 16, top: 50, width: 1168, height: 614 }).resize(1200, 630).jpeg({ quality: 85 })`.
+  Update `.alt.txt` with it.
 
 ## Structured data (`lib/schema.ts` + `components/json-ld.tsx`)
 

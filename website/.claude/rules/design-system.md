@@ -242,7 +242,8 @@ re-apply per component unless overriding.
 
 - **Every homepage section heading carries one tilted tile mid-line** — `InlineTile` in
   `components/inline-tile.tsx`, any face as its child (owner 2026-11-09). Down the page (2026-11-22):
-  "Less Dock. ▦ More multitasking." an App Grid of dev apps;
+  "Less Dock. ▦ More multitasking." an App Grid of dev apps (nowrap with "Less Dock.", so the
+  tile ends line one — owner, 2026-11-23);
   "Set up for you. ⚡" an orange bolt — a colour and glyph no hero Dock tile uses (owner: don't
   repeat a Dock tile), nowrap so the tile ends line one; "Pick a look. ▦ Done." an App Grid of
   media apps (nowrap with "Done.", "Pick a look." nbsp-bound so the break falls after "apps.");

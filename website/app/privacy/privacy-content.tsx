@@ -9,7 +9,8 @@ const link =
 const body = "leading-relaxed text-muted-foreground";
 const list = "flex list-disc flex-col gap-2 pl-6 leading-relaxed text-muted-foreground";
 const term = "font-semibold text-foreground";
-const path = "rounded bg-muted px-1.5 py-0.5 text-sm text-foreground";
+// wrap-anywhere: a long path has no spaces, so on a phone it ran ~85 px off screen.
+const path = "rounded bg-muted px-1.5 py-0.5 text-sm text-foreground wrap-anywhere";
 
 // Every statement here was checked against the app source (DockTile/) on
 // 2026-11-09. Re-check after a release that touches analytics, Smart Add,

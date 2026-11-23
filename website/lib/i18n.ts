@@ -48,7 +48,7 @@ const marketingBase = {
   introPoints: [
     { lead: "One tile, many apps", body: "Group apps and folders behind a single Dock icon. Click it and they pop up, ready to open." },
     { lead: "Looks like it belongs", body: "Each tile is a real Mac app with its own icon, so it sits and magnifies like everything else in your Dock." },
-    { lead: "Ready in a minute", body: "Pick a suggested tile or start blank, add your apps, then press Add to Dock." },
+    { lead: "Ready in a minute", body: "Pick a suggested tile or start blank, add your apps, then put it in your Dock." },
   ],
   // The card section's heading (Smart Add sets up; menu bar + Ghost stay out of the way)
   cardsTitleA: "Set up for you.",
@@ -268,7 +268,7 @@ export const localisedContent = {
       {
         question: "How do I create a new tile?",
         answer:
-          'Open Dock Tile, click the "+" button in the sidebar, customise your tile\'s icon and name, add apps, then click "Add to Dock".',
+          'Open Dock Tile, click + in the sidebar and choose a suggested tile or Create New Tile. Name it, add apps, pick its icon, then click Add to put it in your Dock.',
       },
       {
         question: "Can I change a tile's icon after creating it?",
@@ -407,7 +407,7 @@ export const localisedContent = {
       {
         question: "How do I create a new tile?",
         answer:
-          'Open Dock Tile, click the "+" button in the sidebar, customise your tile\'s icon and name, add apps, then click "Add to Dock".',
+          'Open Dock Tile, click + in the sidebar and choose a suggested tile or Create New Tile. Name it, add apps, pick its icon, then click Add to put it in your Dock.',
       },
       {
         question: "Can I change a tile's icon after creating it?",
@@ -546,7 +546,7 @@ export const localisedContent = {
       {
         question: "How do I create a new tile?",
         answer:
-          'Open Dock Tile, click the "+" button in the sidebar, customize your tile\'s icon and name, add apps, then click "Add to Dock".',
+          'Open Dock Tile, click + in the sidebar and choose a suggested tile or Create New Tile. Name it, add apps, pick its icon, then click Add to put it in your Dock.',
       },
       {
         question: "Can I change a tile's icon after creating it?",

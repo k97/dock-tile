@@ -14,6 +14,7 @@ import { FAQ_ANSWER, FAQ_CARD, FAQ_TRIGGER } from "@/components/faq-card";
 // The questions a first-time visitor asks before downloading, by /faq slug.
 // The copy lives once, in `content.faq`.
 const TOP_QUESTIONS = [
+  "how-do-i-group-apps-into-folders-in-the-mac-dock",
   "is-dock-tile-free",
   "what-macos-version-do-i-need",
   "is-it-available-on-the-app-store",

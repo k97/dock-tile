@@ -17,8 +17,9 @@
     Configure… walks to `#customise`.
   - **DockLockStory** — its own dark inset band ("The Dock 🔒 stays put.") again, the page's one
     problem-led chapter.
-  - **HomeFaq** (2026-11-22) — "Questions, ❓ answered.": five questions from `content.faq` picked
-    by slug in `TOP_QUESTIONS` (free, macOS version, App Store, what it changes, uninstall; renaming
+  - **HomeFaq** (2026-11-22) — "Questions, ❓ answered.": six questions from `content.faq` picked
+    by slug in `TOP_QUESTIONS` (group apps into folders — the category query, so one homepage
+    heading names it, 2026-11-23 — then free, macOS version, App Store, what it changes, uninstall; renaming
     one of those questions drops it, with a dev-console warning), then "See all questions" → /faq.
     Card styles are shared with /faq (`components/faq-card.ts`). No FAQPage JSON-LD here —
     that stays on /faq only (seo-geo.md).

@@ -198,7 +198,9 @@ export function PowerUserSection() {
       {/* 3-across only from xl up. Below that the row collapses to one column so
           each card is wide enough to hold its illustration at a FIXED, roomy
           native size (the Smart Add sheet and the menu never reflow per breakpoint). */}
-      <div className="grid gap-6 xl:grid-cols-3">
+      {/* grid-cols-1 (minmax(0, 1fr)): an implicit track grew to a card's min-content and pushed
+          the page 14 px wider than a 390 px phone. */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Reveal className={bentoCard}>
           <div>
             <h3 className="mb-3 text-title-sm text-foreground">{m.smartAddTitle}</h3>
@@ -904,13 +906,13 @@ export function IntroSection() {
     <section id="features" data-nav-section="features" className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-50">
       <Reveal className="mb-12 text-center md:mb-13">
         <h2 className="mx-auto max-w-132 text-section text-foreground">
-          {m.introTitleA}{" "}
           <span className="whitespace-nowrap">
+            {m.introTitleA}{" "}
             <InlineTile tilt="-rotate-6">
               <AppGridFace icons={devApps.map((a) => a.src)} />
-            </InlineTile>{" "}
-            {m.introTitleB}
-          </span>
+            </InlineTile>
+          </span>{" "}
+          {m.introTitleB}
         </h2>
       </Reveal>
 
