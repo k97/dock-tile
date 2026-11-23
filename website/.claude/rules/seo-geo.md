@@ -61,6 +61,15 @@
   all with one click" for weeks after the page dropped it. It now maps the homepage's marketing
   keys; anything schema reads must be visible somewhere on the site.
 
+## Polling production (critical)
+
+- **Poll docktile.app gently: one request per check, 30 s or more apart.** On 2026-11-23 a
+  deploy-wait script fetched the homepage plus ~40 JS chunks every 10 s; Vercel's automatic
+  mitigation then answered EVERY non-browser client with a 403 challenge
+  (`x-vercel-mitigated: challenge`, `retry-after`) for several minutes, crawlers and AI fetchers
+  included, though no firewall rule exists. Browsers and `/appcast.xml` stayed fine. Detect a
+  deploy by one homepage fetch comparing a string you changed, and run Lighthouse once it is live.
+
 ## Reading search data
 
 - GA4 website property **522915118** and Search Console **`sc-domain:docktile.app`** are both
