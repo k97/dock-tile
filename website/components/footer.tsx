@@ -41,7 +41,7 @@ export function Footer() {
         { label: m.footerFeatures, href: "/#features" },
         { label: m.footerWhatsNew, href: "/release-notes" },
         { label: m.footerFaq, href: "/faq" },
-        { label: m.footerDownload, href: siteConfig.downloadUrl, onClick: trackDownloadClick },
+        { label: m.footerDownload, href: siteConfig.downloadUrl, onClick: () => trackDownloadClick("footer") },
       ],
     },
     {

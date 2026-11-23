@@ -29,7 +29,7 @@ export function DownloadSection() {
         </h2>
         <div className="mt-10 flex flex-col items-center gap-5">
           {/* adaptive: dark on the light page, light under the dark theme */}
-          <DownloadActionButton tone="adaptive" size="lg" label={m.ctaButton} />
+          <DownloadActionButton tone="adaptive" location="download_section" size="lg" label={m.ctaButton} />
           {/* Open source (GitHub) · Apple silicon · macOS floor */}
           <DownloadMeta variant="page" />
         </div>

@@ -179,6 +179,7 @@ export function Header() {
             links are the contextual actions there (the hero + final CTA still
             offer Download), and the pill fits the viewport without it. */}
         <DownloadActionButton
+          location="header"
           tone={overDark ? "adaptive" : "light"}
           size="sm"
           label="Download"

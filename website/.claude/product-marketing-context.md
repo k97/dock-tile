@@ -86,4 +86,4 @@ possible (en-AU default, US override).
 Open source (GitHub); six UI languages; frequent releases (dated notes); no testimonials yet.
 
 ## Goals
-**Conversion action:** Download (tracked as `download_click`; no location parameter yet).
+**Conversion action:** Download (tracked as `download_click` with `location`: header / hero / download_section / contact_cta / footer; `contact_cta` covers FAQ, Release Notes and the legal pages, split them by page path).

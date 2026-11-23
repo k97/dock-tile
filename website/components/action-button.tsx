@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ArrowRight, Check, Download, Loader2 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
-import { trackDownloadClick } from "@/lib/analytics";
+import { trackDownloadClick, type DownloadLocation } from "@/lib/analytics";
 
 /**
  * Signature CTA: pill with a nested circular icon. Two fixed tones —
@@ -84,11 +84,14 @@ export function DownloadActionButton({
   tone = "light",
   size = "md",
   label,
+  location,
   className = "",
 }: {
   tone?: "light" | "dark" | "adaptive";
   size?: "sm" | "md" | "lg";
   label?: string;
+  /** Required on purpose: a new Download button that forgets it fails to compile. */
+  location: DownloadLocation;
   className?: string;
 }) {
   const [state, setState] = React.useState<"ready" | "downloading" | "downloaded">(
@@ -97,7 +100,7 @@ export function DownloadActionButton({
 
   const handleClick = () => {
     if (state !== "ready") return;
-    trackDownloadClick();
+    trackDownloadClick(location);
     setState("downloading");
     window.location.href = siteConfig.downloadUrl;
     window.setTimeout(() => {

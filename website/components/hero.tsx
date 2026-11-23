@@ -74,7 +74,7 @@ export function Hero() {
         className="reveal relative z-10 mt-12 flex flex-col items-center gap-5"
         style={{ "--reveal-delay": "440ms" } as React.CSSProperties}
       >
-        <DownloadActionButton tone="light" size="lg" label={content.downloadButton} />
+        <DownloadActionButton tone="light" location="hero" size="lg" label={content.downloadButton} />
         <DownloadMeta />
       </div>
     </section>

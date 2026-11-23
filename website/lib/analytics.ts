@@ -41,8 +41,18 @@ export function trackEvent(
 
 // Specific event tracking functions
 
-export function trackDownloadClick() {
-  trackEvent("download_click", "engagement", "download_button");
+/** Which Download CTA was clicked. GA4 drops `location` from reports unless it is registered as an
+ *  event-scoped custom dimension on property 522915118 (forward-only: register before deploying). */
+export type DownloadLocation = "header" | "hero" | "download_section" | "contact_cta" | "footer";
+
+export function trackDownloadClick(location: DownloadLocation) {
+  if (typeof window.gtag !== "undefined") {
+    window.gtag("event", "download_click", {
+      event_category: "engagement",
+      event_label: "download_button",
+      location,
+    });
+  }
 }
 
 export function trackReleaseNotesClick() {
