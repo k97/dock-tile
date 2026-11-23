@@ -23,6 +23,7 @@ export default function Home() {
       <link
         rel="preload"
         as="image"
+        fetchPriority="high"
         type="image/webp"
         href={asset("/assets/bg/hero-bg.webp")}
         media="(prefers-color-scheme: light)"
@@ -30,6 +31,7 @@ export default function Home() {
       <link
         rel="preload"
         as="image"
+        fetchPriority="high"
         type="image/webp"
         href={asset("/assets/bg/hero-bg-dark.webp")}
         media="(prefers-color-scheme: dark)"

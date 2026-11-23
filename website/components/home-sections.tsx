@@ -83,7 +83,7 @@ function ScaleToFit({ children }: { children: React.ReactNode }) {
 // Order is load-bearing: the `app-switch-sel` keyframes (globals.css) and the
 // name delays in the Ghost card ([0, 4.4, 0, 3.3, 2.2]) index these slots.
 const switcherApps = [
-  { name: "Finder", src: "/assets/app-icons/finder.png", darkSrc: "/assets/app-icons/finder-dark.png?v=4" },
+  { name: "Finder", src: "/assets/app-icons/finder.png?v=3", darkSrc: "/assets/app-icons/finder-dark.png?v=4" },
   { name: "Code", src: "/assets/app-icons/vscode.png" },
   { ghost: true as const },
   { name: "Slack", src: "/assets/app-icons/slack.png" },
@@ -638,10 +638,12 @@ function DockIcon({ name, children }: { name: string; children: React.ReactNode 
 /* Finder / System Settings bookend both Docks, as in the hero; their Dark
    renditions dual-render so the first frame is right in either theme. */
 function DockEnd({ name }: { name: "finder" | "settings" }) {
-  const dark = name === "finder" ? "finder-dark.png?v=4" : "settings-dark.png";
+  // Same ?v= keys as the hero Dock (dock-demo.tsx), or the browser downloads each icon twice.
+  const light = name === "finder" ? "finder.png?v=3" : "settings.png?v=3";
+  const dark = name === "finder" ? "finder-dark.png?v=4" : "settings-dark.png?v=1";
   return (
     <DockIcon name={name === "finder" ? "Finder" : "System Settings"}>
-      <AppIcon src={icon(`${name}.png`)} darkSrc={icon(dark)} size={40} />
+      <AppIcon src={icon(light)} darkSrc={icon(dark)} size={40} />
     </DockIcon>
   );
 }
