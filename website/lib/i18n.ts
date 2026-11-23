@@ -246,6 +246,26 @@ export const localisedContent = {
           "It builds a small app for each tile, edits your Dock and restarts it to apply changes (it asks the first time), and starts your tiles at login unless you switch that off. Dock Lock asks for Accessibility access, only if you turn it on. The Privacy Policy covers each of these.",
       },
       {
+        question: "How do I group apps into folders in the Mac Dock?",
+        answer:
+          "macOS can't put apps in a folder in the Dock the way an iPhone can. Dock Tile adds that: click + and pick a suggested tile or Create New Tile, add the apps (and folders) that belong together, choose an icon, then click Add. The tile sits in your Dock like any app, and clicking it pops its apps up in a grid or a list. Make as many tiles as you need.",
+      },
+      {
+        question: "How is a tile different from a folder in the Dock?",
+        answer:
+          "A folder in the Dock (a stack) sits past the divider and shows the files inside a Finder folder; to hold apps, you'd fill that folder with aliases. A tile sits among your apps and is a small app of its own, with its own icon: a grid of its apps, a symbol or an emoji. It opens its apps in a panel anchored to it. On macOS 26 and later, tiles also follow the Light, Dark, Clear and Tinted icon styles.",
+      },
+      {
+        question: "How do I stop the Dock moving to my other display?",
+        answer:
+          "With more than one display, macOS moves the Dock to whichever screen you push the pointer against at the Dock's edge. Dock Lock, which comes with Dock Tile, keeps it on the display you choose: open Settings → Dock Lock, turn on Lock Dock to one display, allow Accessibility access when macOS asks, then pick a display under Keep Dock on. It remembers a display for each set of screens you use.",
+      },
+      {
+        question: "What is a Dock tile extension?",
+        answer:
+          "It's a macOS feature, not this app. Some apps include a Dock tile plug-in that keeps their Dock icon up to date, and macOS may tell you when one is added. You can see them, and switch them off, in System Settings → General → Login Items & Extensions. Dock Tile, the app on this site, doesn't install one: each of its tiles is a small app of its own.",
+      },
+      {
         question: "How do I create a new tile?",
         answer:
           'Open Dock Tile, click the "+" button in the sidebar, customise your tile\'s icon and name, add apps, then click "Add to Dock".',
@@ -365,6 +385,26 @@ export const localisedContent = {
           "It builds a small app for each tile, edits your Dock and restarts it to apply changes (it asks the first time), and starts your tiles at login unless you switch that off. Dock Lock asks for Accessibility access, only if you turn it on. The Privacy Policy covers each of these.",
       },
       {
+        question: "How do I group apps into folders in the Mac Dock?",
+        answer:
+          "macOS can't put apps in a folder in the Dock the way an iPhone can. Dock Tile adds that: click + and pick a suggested tile or Create New Tile, add the apps (and folders) that belong together, choose an icon, then click Add. The tile sits in your Dock like any app, and clicking it pops its apps up in a grid or a list. Make as many tiles as you need.",
+      },
+      {
+        question: "How is a tile different from a folder in the Dock?",
+        answer:
+          "A folder in the Dock (a stack) sits past the divider and shows the files inside a Finder folder; to hold apps, you'd fill that folder with aliases. A tile sits among your apps and is a small app of its own, with its own icon: a grid of its apps, a symbol or an emoji. It opens its apps in a panel anchored to it. On macOS 26 and later, tiles also follow the Light, Dark, Clear and Tinted icon styles.",
+      },
+      {
+        question: "How do I stop the Dock moving to my other display?",
+        answer:
+          "With more than one display, macOS moves the Dock to whichever screen you push the pointer against at the Dock's edge. Dock Lock, which comes with Dock Tile, keeps it on the display you choose: open Settings → Dock Lock, turn on Lock Dock to one display, allow Accessibility access when macOS asks, then pick a display under Keep Dock on. It remembers a display for each set of screens you use.",
+      },
+      {
+        question: "What is a Dock tile extension?",
+        answer:
+          "It's a macOS feature, not this app. Some apps include a Dock tile plug-in that keeps their Dock icon up to date, and macOS may tell you when one is added. You can see them, and switch them off, in System Settings → General → Login Items & Extensions. Dock Tile, the app on this site, doesn't install one: each of its tiles is a small app of its own.",
+      },
+      {
         question: "How do I create a new tile?",
         answer:
           'Open Dock Tile, click the "+" button in the sidebar, customise your tile\'s icon and name, add apps, then click "Add to Dock".',
@@ -482,6 +522,26 @@ export const localisedContent = {
         question: "What does Dock Tile change on my Mac?",
         answer:
           "It builds a small app for each tile, edits your Dock and restarts it to apply changes (it asks the first time), and starts your tiles at login unless you switch that off. Dock Lock asks for Accessibility access, only if you turn it on. The Privacy Policy covers each of these.",
+      },
+      {
+        question: "How do I group apps into folders in the Mac Dock?",
+        answer:
+          "macOS can't put apps in a folder in the Dock the way an iPhone can. Dock Tile adds that: click + and pick a suggested tile or Create New Tile, add the apps (and folders) that belong together, choose an icon, then click Add. The tile sits in your Dock like any app, and clicking it pops its apps up in a grid or a list. Make as many tiles as you need.",
+      },
+      {
+        question: "How is a tile different from a folder in the Dock?",
+        answer:
+          "A folder in the Dock (a stack) sits past the divider and shows the files inside a Finder folder; to hold apps, you'd fill that folder with aliases. A tile sits among your apps and is a small app of its own, with its own icon: a grid of its apps, a symbol or an emoji. It opens its apps in a panel anchored to it. On macOS 26 and later, tiles also follow the Light, Dark, Clear and Tinted icon styles.",
+      },
+      {
+        question: "How do I stop the Dock moving to my other display?",
+        answer:
+          "With more than one display, macOS moves the Dock to whichever screen you push the pointer against at the Dock's edge. Dock Lock, which comes with Dock Tile, keeps it on the display you choose: open Settings → Dock Lock, turn on Lock Dock to one display, allow Accessibility access when macOS asks, then pick a display under Keep Dock on. It remembers a display for each set of screens you use.",
+      },
+      {
+        question: "What is a Dock tile extension?",
+        answer:
+          "It's a macOS feature, not this app. Some apps include a Dock tile plug-in that keeps their Dock icon up to date, and macOS may tell you when one is added. You can see them, and switch them off, in System Settings → General → Login Items & Extensions. Dock Tile, the app on this site, doesn't install one: each of its tiles is a small app of its own.",
       },
       {
         question: "How do I create a new tile?",

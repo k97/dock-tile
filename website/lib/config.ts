@@ -18,7 +18,7 @@ export const siteConfig = {
   // App Info
   appName: "Dock Tile",
   // One category everywhere: folders for the Dock (not a launcher, not an icon changer).
-  tagline: "iOS-style folders for your Mac's Dock",
+  tagline: "iOS-style app folders for your Mac's Dock",
   description:
     "Put a group of apps behind one Dock icon. Click it and they pop up, like a folder on your iPhone. Free and open source, for macOS 15+ on Apple silicon.",
 

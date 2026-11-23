@@ -4,6 +4,7 @@ import * as React from "react";
 import { Reveal } from "@/components/reveal";
 import { useLocale } from "@/components/locale-provider";
 import { localiseText } from "@/lib/i18n";
+import { siteConfig } from "@/lib/config";
 import type { Release } from "@/lib/releases";
 
 const PAGE_SIZE = 6;
@@ -51,9 +52,10 @@ export function ReleaseTimeline({ releases }: { releases: Release[] }) {
               >
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="rounded-full bg-emerald-400 px-3 py-1 text-[11px] font-bold text-emerald-950">
-                      v{release.version}
-                    </span>
+                    {/* The release's heading, so each version is its own section to crawlers. */}
+                    <h2 className="rounded-full bg-emerald-400 px-3 py-1 text-[11px] font-bold text-emerald-950">
+                      <span className="sr-only">{siteConfig.appName} </span>v{release.version}
+                    </h2>
                     {isLatest && (
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500 dark:text-emerald-400">
                         Latest
