@@ -4,6 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import { useLocale } from "@/components/locale-provider";
 import { asset } from "@/lib/assets";
+import { usePauseOffscreen } from "@/lib/use-pause-offscreen";
 
 /**
  * Features / 01's "take a closer look": the 2.x window screenshot with + hotspots
@@ -88,6 +89,7 @@ export function CloserLook() {
   ];
 
   const [active, setActive] = React.useState(-1);
+  const pauseRef = usePauseOffscreen<HTMLElement>(); // the hotspot pulse loops
   const [wide, setWide] = React.useState(false);
   const [cardAt, setCardAt] = React.useState({ x: 0, y: 0 });
   // The card glides between regions, but its first placement after opening
@@ -196,7 +198,7 @@ export function CloserLook() {
   ) : null;
 
   return (
-    <figure className="mx-auto max-w-300" onKeyDown={onKeyDown}>
+    <figure ref={pauseRef} className="mx-auto max-w-300" onKeyDown={onKeyDown}>
       <div className="relative">
         <div ref={stageRef} className="relative aspect-2269/1725 w-full">
           <div

@@ -1,13 +1,13 @@
-import type { CSSProperties, ReactNode } from "react";
+import { Children, isValidElement, type CSSProperties, type ReactNode } from "react";
 import { ContactCta } from "@/components/contact-cta";
 import { Footer } from "@/components/footer";
-import { Reveal } from "@/components/reveal";
+import { GuideLayout, slugify } from "@/components/guide-layout";
 
 /**
  * Shared treatment for legal pages (Privacy, Terms), mirroring the FAQ page:
- * a centered dark hero band (eyebrow + big headline + optional subtitle),
- * a plain light prose column (same treatment as the home feature sections —
- * no card sheet), then the shared contact CTA and footer.
+ * a centered dark hero band (eyebrow + big headline + optional subtitle), the prose in
+ * GuideLayout (its "On this page" list is built from the LegalHeadings among `children`),
+ * then the shared contact CTA and footer.
  */
 export function LegalShell({
   eyebrow = "Legal",
@@ -22,6 +22,12 @@ export function LegalShell({
   lastUpdated: string;
   children: ReactNode;
 }) {
+  // Every LegalHeading passed straight in becomes a contents entry, so the list can't drift from the page
+  const items = Children.toArray(children).flatMap((c) =>
+    isValidElement<{ children?: ReactNode }>(c) && c.type === LegalHeading && typeof c.props.children === "string"
+      ? [{ id: slugify(c.props.children), title: c.props.children }]
+      : [],
+  );
   return (
     <main className="bg-background">
       {/* Dark hero band — same treatment as the FAQ page header */}
@@ -59,14 +65,10 @@ export function LegalShell({
         </div>
       </section>
 
-      {/* Light content section — plain prose column, like the home feature sections */}
-      <section className="mx-auto max-w-3xl px-6 py-16 md:py-24">
-        <Reveal>
-          <div className="mx-auto flex max-w-[65ch] flex-col gap-6 text-left">
-            {children}
-          </div>
-        </Reveal>
-      </section>
+      {/* Prose never fades in (owner, 2026-11-24) */}
+      <GuideLayout items={items} location="page_sidebar">
+        <div className="flex max-w-[65ch] flex-col gap-6 text-left">{children}</div>
+      </GuideLayout>
 
       <ContactCta
         title="Questions?"
@@ -78,10 +80,10 @@ export function LegalShell({
   );
 }
 
-/** Section heading inside the legal prose. */
+/** Section heading inside the legal prose; a plain-text one gets an anchor id (and a contents entry). */
 export function LegalHeading({ children }: { children: ReactNode }) {
   return (
-    <h2 className="mt-4 text-xl font-bold tracking-tight text-foreground">
+    <h2 id={typeof children === "string" ? slugify(children) : undefined} className="mt-4 scroll-mt-28 text-xl font-bold tracking-tight text-foreground">
       {children}
     </h2>
   );

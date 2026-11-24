@@ -1,5 +1,7 @@
 # Website: a Dock Lock page (`/dock-lock`)
 
+> **Superseded where it differs (2026-11-24):** what shipped is described in `website/.claude/rules/content-i18n.md` (layout, nav, Chinese pages, heading tiles, privacy copy). This plan is the record of the decision, not the current spec.
+
 Owner decision 2026-11-23 ("build the Dock Lock page"), from the discoverability pass's Q7 option B:
 a page that answers "the Mac Dock keeps moving to my other monitor" and offers Dock Lock as the fix.
 

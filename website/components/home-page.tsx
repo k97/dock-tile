@@ -4,16 +4,18 @@ import {
   IntroSection,
   DockLockStory,
   PowerUserSection,
+  PrivacySection,
 } from "@/components/home-sections";
 import { DownloadSection } from "@/components/download-section";
-import { HomeFaq } from "@/components/home-faq";
 import { Footer } from "@/components/footer";
 import { JsonLd } from "@/components/json-ld";
 import { HeroVeil } from "@/components/hero-veil";
 import { HERO_BG, HERO_BG_DARK } from "@/lib/assets";
+import { latestReleaseDate } from "@/lib/latest-release";
 
 /** The homepage, shared by "/" and "/zh-Hans" (the route's locale picks the copy). */
 export function HomePage({ schema }: { schema: Record<string, unknown> }) {
+  const released = latestReleaseDate();
   return (
     <>
       {/* Preload the theme-matched hero wallpaper at top priority so it's
@@ -39,13 +41,13 @@ export function HomePage({ schema }: { schema: Record<string, unknown> }) {
       <HeroVeil />
       <main className="bg-background">
         <JsonLd data={schema} />
-        <Hero />
+        <Hero released={released} />
         <IntroSection />
-        <PowerUserSection />
         <CustomTilesStory />
+        <PowerUserSection />
         <DockLockStory />
-        <HomeFaq />
-        <DownloadSection />
+        <PrivacySection />
+        <DownloadSection released={released} />
         <Footer />
       </main>
     </>

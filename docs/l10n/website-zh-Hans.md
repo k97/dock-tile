@@ -29,7 +29,7 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.tryIt` | Try it — click a tile | 试试看——点一个磁贴 | needs_review |  |
 | `marketing.tilesTitleA` | Pick your apps. Pick a look. | 挑选App，选个外观。 | needs_review |  |
 | `marketing.tilesTitleB` | Done. | 完成。 | needs_review |  |
-| `marketing.tilesBody` | Set up every tile in the Dock Tile companion app. You arrange its apps in the same panel that pops up from the Dock, so what you see is what you get. Then pick its icon: a grid of its own apps, a symbol or an emoji, on colour or a plain background. | 每个磁贴都在Dock Tile配套App中设置。你在程序坞弹出的同一个面板里排列它的App，所见即所得。然后为它选择图标：由它自己的App组成的网格、一个符号或一个表情符号，配上彩色或纯色背景。 | needs_review |  |
+| `marketing.tilesBody` | Arrange a tile's apps in the same panel it opens from the Dock. Then pick its icon: its own apps, a symbol or an emoji, on colour or a plain background. | 在磁贴从程序坞弹出的同一个面板里排列它的App。然后为它选择图标：它自己的App、一个符号或一个表情符号，配上彩色或纯色背景。 | needs_review |  |
 | `marketing.tilesAlt` | Dock Tile editing a tile: its popover in the middle, Customise Tile on the right. | Dock Tile正在编辑一个磁贴：中间是它的弹出面板，右侧是“自定义磁贴”。 | needs_review |  |
 | `marketing.tilesSpotPopover` | In This Tile | 此磁贴中的项目 | needs_review | App string section.inThisTile |
 | `marketing.tilesSpotPopoverBody` | Drag apps into order, or hover to remove one. It's the same popover your tile opens. | 拖动App调整顺序，或将指针悬停在App上将其移除。这就是你的磁贴打开的那个弹出面板。 | needs_review |  |
@@ -43,26 +43,29 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.tilesSpotNext` | Next | 下一个 | needs_review |  |
 | `marketing.tilesSpotClose` | Close | 关闭 | needs_review |  |
 | `marketing.tilesSpotLabelEnd` | . | ： | needs_review | Punctuation after the hotspot card's bold label |
-| `marketing.introTitleA` | Less Dock. | 程序坞更清爽。 | needs_review |  |
-| `marketing.introTitleB` | More multitasking. | 多任务更从容。 | needs_review |  |
+| `marketing.introTitleA` | Fewer icons. | 图标更少。 | needs_review |  |
+| `marketing.introTitleB` | Same apps. | App一个不少。 | needs_review |  |
 | `marketing.introBefore` | Before | 之前 | needs_review |  |
 | `marketing.introAfter` | With Dock Tile | 使用Dock Tile后 | needs_review |  |
-| `marketing.introPoints.0.lead` | One tile, many apps | 一个磁贴，多个App | needs_review |  |
-| `marketing.introPoints.0.body` | Group apps and folders behind a single Dock icon. Click it and they pop up, ready to open. | 将App和文件夹放在同一个程序坞图标后面。点一下，它们就会弹出，随时可以打开。 | needs_review |  |
+| `marketing.introPoints.0.lead` | Not a Finder folder | 不是访达文件夹 | needs_review |  |
+| `marketing.introPoints.0.body` | A Dock folder shows files. A tile is its own app: it sits among your apps and opens them in a panel. | 程序坞中的文件夹显示的是文件。磁贴本身就是一个App：它和你的App放在一起，并在一个面板中打开它们。 | needs_review |  |
 | `marketing.introPoints.1.lead` | Looks like it belongs | 就像原生的一样 | needs_review |  |
 | `marketing.introPoints.1.body` | Each tile is a real Mac app with its own icon, so it sits and magnifies like everything else in your Dock. | 每个磁贴都是一个真正的Mac App，有自己的图标，所以它在程序坞中的样子和放大效果都与其他图标一致。 | needs_review |  |
-| `marketing.introPoints.2.lead` | Ready in a minute | 一分钟就能设置好 | needs_review |  |
-| `marketing.introPoints.2.body` | Pick a suggested tile or start blank, add your apps, then put it in your Dock. | 选择一个推荐的磁贴或从空白开始，添加你的App，然后把它放进程序坞。 | needs_review |  |
+| `marketing.introPoints.2.lead` | Easy to take out | 随时可以移除 | needs_review |  |
+| `marketing.introPoints.2.body` | Switch off Show in Dock and press Remove. The tile leaves your Dock and stays in Dock Tile for later. | 关闭“在程序坞中显示”，然后点按“移除”。磁贴会离开程序坞，并保留在Dock Tile中供以后使用。 | needs_review |  |
 | `marketing.cardsTitleA` | Set up for you. | 为你设置好。 | needs_review |  |
 | `marketing.cardsTitleB` | Out of your way. | 绝不碍事。 | needs_review |  |
-| `marketing.smartAddTitle` | Ready-made tiles from the apps you use. | 用你常用的App生成现成的磁贴。 | needs_review |  |
+| `marketing.smartAddTitle` | Tiles suggested from what you use. | 根据你的使用习惯推荐磁贴。 | needs_review |  |
 | `marketing.smartAddBody` | Click +, and Dock Tile groups the apps you use most into ready-made tiles. Pick one and it opens ready to tweak; nothing reaches your Dock until you add it. | 点按+，Dock Tile会把你最常用的App分组成现成的磁贴。选一个，它会打开供你调整；在你添加之前，任何东西都不会进入程序坞。 | needs_review |  |
 | `marketing.smartAddPrivacy` | Learned on your Mac. Never leaves your device. | 在你的Mac上学习得出，数据绝不离开你的设备。 | needs_review | App string smartAdd.privacyFootnote |
-| `marketing.ghostTitle` | Ghost mode. | Ghost mode（幽灵模式）。 | needs_review | Glossary: Ghost mode stays in Latin letters, the Chinese in brackets on first use |
-| `marketing.ghostBody` | Tiles stay out of the app switcher (Command-Tab) by default, so it lists only the apps you're actually using. | 默认情况下，磁贴不会出现在App切换器（Command-Tab）中，因此那里只列出你真正在使用的App。 | needs_review |  |
+| `marketing.ghostTitle` | Out of Command-Tab. | 不出现在Command-Tab中。 | needs_review | Glossary: Ghost mode stays in Latin letters, the Chinese in brackets on first use |
+| `marketing.ghostBody` | Ghost mode keeps tiles out of the app switcher (Command-Tab), so it lists only the apps you're actually using. | Ghost mode（幽灵模式）让磁贴不出现在App切换器（Command-Tab）中，因此那里只列出你真正在使用的App。 | needs_review |  |
 | `marketing.ghostTip` | Want one in Command-Tab? Switch it on for that tile. | 想让某个磁贴出现在Command-Tab中？为该磁贴打开此选项即可。 | needs_review |  |
 | `marketing.dockLockTitleA` | The Dock | 程序坞 | needs_review | Split around the heading's tilted tile: A 🔒 B |
 | `marketing.dockLockTitleB` | stays put. | 不再乱跑。 | needs_review |  |
+| `marketing.dockLockMockLeft` | Keep the Dock on the left display | 把程序坞固定在左侧显示器上 | needs_review | Accessible name of the animation's left display (a button) |
+| `marketing.dockLockMockRight` | Keep the Dock on the right display | 把程序坞固定在右侧显示器上 | needs_review |  |
+| `marketing.dockLockMockHint` | Click a display to lock the Dock there. | 点按一台显示器，把程序坞锁定在那里。 | needs_review |  |
 | `marketing.dockLockLead` | Dock Lock comes with Dock Tile. | Dock Tile附带“程序坞锁定”。 | needs_review |  |
 | `marketing.dockLockBody` | Pick a screen for the Dock and it stays there, however many displays you use. | 为程序坞选一台显示器，无论你连接几台显示器，它都会留在那里。 | needs_review |  |
 | `marketing.menuBarTitle` | Your tiles, in the menu bar. | 你的磁贴，就在菜单栏中。 | needs_review |  |
@@ -71,12 +74,8 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.menuBarBody` | The tiles in your Dock and their apps, listed in the menu bar, ready even when the Dock is hidden. Turn it off in Settings any time. | 程序坞中的磁贴及其App会列在菜单栏中，即使程序坞隐藏也能随时使用。你可以随时在“设置”中关闭它。 | needs_review |  |
 | `marketing.details.0.lead` | Keyboard friendly | 支持键盘操作 | needs_review |  |
 | `marketing.details.0.body` | Arrow keys move through a tile's apps. Return opens, Esc closes. | 用方向键在磁贴的App之间移动。按Return打开，按Esc关闭。 | needs_review |  |
-| `marketing.details.1.lead` | Folders too | 也支持文件夹 | needs_review |  |
-| `marketing.details.1.body` | Add a folder beside your apps and open it in one click. | 在App旁边添加文件夹，点一下即可打开。 | needs_review |  |
-| `marketing.details.2.lead` | Free and open source | 免费且开源 | needs_review |  |
-| `marketing.details.2.body` | No price and no account. MIT‑licensed, with the code on GitHub. | 无需付费，无需账户。采用MIT许可证，代码在GitHub上。 | needs_review |  |
-| `marketing.details.3.lead` | In your language | 支持你的语言 | needs_review |  |
-| `marketing.details.3.body` | English, 简体中文, 日本語, Deutsch, Русский and Français. | English、简体中文、日本語、Deutsch、Русский和Français。 | needs_review |  |
+| `marketing.details.1.lead` | In your language | 支持你的语言 | needs_review |  |
+| `marketing.details.1.body` | English, 简体中文, 日本語, Deutsch, Русский and Français. | English、简体中文、日本語、Deutsch、Русский和Français。 | needs_review |  |
 | `marketing.featureRequest` | Request a feature | 建议新功能 | needs_review |  |
 | `marketing.featureRequestBody` | Tell us what Dock Tile should do next. | 告诉我们Dock Tile接下来应该做什么。 | needs_review |  |
 | `marketing.bugReport` | Report a bug | 报告错误 | needs_review |  |
@@ -87,12 +86,31 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.ctaMetaOpenSource` | Free & open source | 免费且开源 | needs_review |  |
 | `marketing.ctaMetaAppleSilicon` | Apple silicon | Apple芯片 | needs_review |  |
 | `marketing.ctaMetaMacOS` | macOS 15+ | macOS 15+ | needs_review | the macOS floor; keep the number in step with the app |
+| `marketing.proofVersion` | Version | 版本 | needs_review |  |
+| `marketing.proofUpdated` | Updated | 更新于 | needs_review |  |
+| `marketing.proofNotarized` | Notarized by Apple | 已通过Apple公证 | needs_review |  |
+| `marketing.proofOpenSource` | Free and open source | 免费且开源 | needs_review |  |
 | `marketing.copyLinkButton` | Copy link for your Mac | 为你的Mac拷贝链接 | needs_review |  |
 | `marketing.copyLinkShort` | Copy link | 拷贝链接 | needs_review |  |
 | `marketing.copyLinkDone` | Link copied | 链接已拷贝 | needs_review |  |
-| `marketing.homeFaqTitleA` | Questions, | 常见问题， | needs_review | Split around the heading's tilted tile: A ❓ B; also the /faq header |
+| `marketing.homeFaqTitleA` | Questions, | 常见问题， | needs_review | the /faq header |
 | `marketing.homeFaqTitleB` | answered. | 一一解答。 | needs_review |  |
 | `marketing.homeFaqMore` | See all questions | 查看所有问题 | needs_review |  |
+| `marketing.faqGroups.0` | Getting started | 入门 | needs_review |  |
+| `marketing.faqGroups.1` | Using tiles | 使用磁贴 | needs_review |  |
+| `marketing.faqGroups.2` | Dock Lock and displays | 程序坞锁定与显示器 | needs_review |  |
+| `marketing.faqGroups.3` | Your Mac and removing it | 你的Mac与移除 | needs_review |  |
+| `marketing.privacyTitleA` | Your Mac. | 你的Mac， | needs_review |  |
+| `marketing.privacyTitleB` | Your data. | 你的数据。 | needs_review |  |
+| `marketing.privacyPoints.0.lead` | Never asks who you are | 从不问你是谁 | needs_review |  |
+| `marketing.privacyPoints.0.body` | No account, no sign-up, no email address. | 无需账户、无需注册、无需电子邮件地址。 | needs_review |  |
+| `marketing.privacyPoints.1.lead` | Stays on your Mac | 留在你的Mac上 | needs_review |  |
+| `marketing.privacyPoints.1.body` | Your tiles and Smart Add's suggestions are worked out on your Mac and never leave it. | 你的磁贴，以及根据你常用的App生成的建议，都在你的Mac上完成，绝不会离开它。 | needs_review |  |
+| `marketing.privacyPoints.2.lead` | Anonymous stats you can switch off | 可以关闭的匿名统计 | needs_review |  |
+| `marketing.privacyPoints.2.body` | Anonymous usage stats and crash reports help fix bugs. They're on by default; turn them off in Settings → General. | 匿名使用统计和崩溃报告帮助我们修复错误。它们默认开启；你可以在“设置”→“通用”中关闭。 | needs_review |  |
+| `marketing.privacyPoints.3.lead` | Accessibility only for Dock Lock | 仅“程序坞锁定”需要无障碍访问权限 | needs_review |  |
+| `marketing.privacyPoints.3.body` | macOS asks for Accessibility only if you turn on Dock Lock, which needs it to keep the Dock on one screen. | 只有在你打开“程序坞锁定”时，macOS才会请求无障碍访问权限，它需要该权限才能让程序坞停留在一个屏幕上。 | needs_review |  |
+| `marketing.privacyPolicyLink` | Read the privacy policy | 阅读隐私政策（英文） | needs_review |  |
 | `marketing.downloadTitleA` | Tidy your | 今天就整理 | needs_review | Split around the heading's tilted tile: A ▦ B |
 | `marketing.downloadTitleB` | Dock today. | 你的程序坞。 | needs_review |  |
 | `marketing.footerFeatures` | Features | 功能 | needs_review |  |
@@ -138,14 +156,7 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.dockLockPageTitle` | Keep the Dock on one display. | 让程序坞固定在一台显示器上。 | needs_review |  |
 | `marketing.dockLockPageAnswer` | On a Mac with more than one display, the Dock jumps to whichever screen you push the pointer against. Dock Lock keeps it on the display you choose. | 在连接了多台显示器的Mac上，你把指针推向哪个屏幕，程序坞就会跳到哪个屏幕。“程序坞锁定”会让它停留在你选择的显示器上。 | needs_review |  |
 | `marketing.dockLockPageMetaNoAccount` | No account | 无需账户 | needs_review | Under the /dock-lock hero's Download: 免费且开源 · 无需账户 · macOS 15+ · Apple芯片 |
-| `marketing.dockLockPageBenefits.0.lead` | The Dock stays put | 程序坞固定不动 | needs_review |  |
-| `marketing.dockLockPageBenefits.0.body` | It stays on the display you pick, wherever your pointer goes. | 不论指针移到哪里，它都会停留在你选择的显示器上。 | needs_review |  |
-| `marketing.dockLockPageBenefits.1.lead` | One choice per desk | 每张桌子一个选择 | needs_review |  |
-| `marketing.dockLockPageBenefits.1.body` | It remembers a display for each set of screens and moves the Dock there when you plug in. | 它会为每组屏幕记住一台显示器，并在你接上显示器时把程序坞移过去。 | needs_review |  |
-| `marketing.dockLockPageBenefits.2.lead` | Keep your Spaces | 保留你的空间 | needs_review |  |
-| `marketing.dockLockPageBenefits.2.body` | Unlike the built-in workaround, each display keeps its own Spaces. | 与系统自带的变通办法不同，每台显示器都保留自己的空间。 | needs_review |  |
-| `marketing.dockLockPageBenefits.3.lead` | Bottom, left or right | 底部、左侧或右侧 | needs_review |  |
-| `marketing.dockLockPageBenefits.3.body` | Works wherever your Dock sits. | 无论程序坞在哪一边都能用。 | needs_review |  |
+| `marketing.onThisPage` | On this page | 本页内容 | needs_review |  |
 | `marketing.dockLockPageWhyTitle` | Why the Dock moves | 程序坞为什么会移动 | needs_review |  |
 | `marketing.dockLockPageWhyBody` | When “Displays have separate Spaces” is on in System Settings → Desktop & Dock, each display has its own Spaces, and macOS moves the Dock to whichever display you push the pointer against at the Dock's edge: the bottom, or the side for a Dock on the left or right. While that option is on, macOS has no setting to choose which display keeps the Dock. | 在“系统设置”→“桌面与程序坞”中打开“显示器具有单独空间”时，每台显示器都有自己的空间。你把指针推向哪台显示器的程序坞边缘（底部；程序坞在左侧或右侧时则是侧边），macOS就会把程序坞移到那台显示器上。此选项打开时，macOS没有可以选择由哪台显示器保留程序坞的设置。 | needs_review | “显示器具有单独空间” = the app's settings.dockLock.spacesShared; 桌面与程序坞 = macOS's Desktop & Dock pane, verify |
 | `marketing.dockLockPageStepsTitle` | Fix it with Dock Lock | 用“程序坞锁定”解决 | needs_review |  |
@@ -155,6 +166,32 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.dockLockPageStepsNote` | Dock Lock remembers your choice for each set of connected displays, so your home desk and your office each keep their own. | “程序坞锁定”会为每组已连接的显示器记住你的选择，因此家里和办公室会各自保留自己的设置。 | needs_review |  |
 | `marketing.dockLockPageWithoutTitle` | Without an app | 不用App的办法 | needs_review |  |
 | `marketing.dockLockPageWithoutBody` | Turn off “Displays have separate Spaces” in System Settings → Desktop & Dock, then log out and back in. macOS then keeps the Dock on the main display. The cost: your displays no longer have separate Spaces, and the Dock can only stay on the main display. | 在“系统设置”→“桌面与程序坞”中关闭“显示器具有单独空间”，然后退出登录并重新登录。之后macOS会将程序坞保留在主显示器上。代价是：各台显示器不再有单独的空间，而且程序坞只能停留在主显示器上。 | needs_review |  |
+| `marketing.dockLockPageCompare.builtIn` | Built-in workaround | 系统自带的办法 | needs_review |  |
+| `marketing.dockLockPageCompare.dockLock` | Dock Lock | 程序坞锁定 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.0.label` | Which display keeps the Dock | 哪台显示器保留程序坞 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.0.builtIn` | The main display only | 只能是主显示器 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.0.dockLock` | Any display you pick | 你选择的任意一台 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.1.label` | Separate Spaces on each display | 每台显示器单独的空间 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.1.builtIn` | Turned off | 关闭 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.1.dockLock` | Kept | 保留 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.2.label` | Log out to apply | 需要退出登录才生效 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.2.builtIn` | Yes | 需要 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.2.dockLock` | No | 不需要 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.3.label` | Home and office desks | 家里和办公室的桌子 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.3.builtIn` | Follows the main display | 跟随主显示器 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.3.dockLock` | Remembers a display for each set of screens | 为每组屏幕记住一台显示器 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.4.label` | The cost | 代价 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.4.builtIn` | No separate Spaces, and the Dock only on the main display | 失去单独的空间，程序坞只能在主显示器上 | needs_review |  |
+| `marketing.dockLockPageCompare.rows.4.dockLock` | Accessibility access, and a few pixels reserved at the Dock's edge on your other displays | 需要无障碍访问权限，并在其他显示器的程序坞边缘保留几个像素 | needs_review |  |
+| `marketing.dockLockPane.title` | Dock Lock | 程序坞锁定 | needs_review |  |
+| `marketing.dockLockPane.toggle` | Lock Dock to one display | 将程序坞锁定到一台显示器 | needs_review |  |
+| `marketing.dockLockPane.anchor` | Keep Dock on | 将程序坞固定在 | needs_review |  |
+| `marketing.dockLockPane.display` | Studio Display | Studio Display | needs_review |  |
+| `marketing.dockLockPane.lockedTo` | Dock is locked to Studio Display | 程序坞已锁定到Studio Display | needs_review |  |
+| `marketing.dockLockPane.note` | Each set of connected displays remembers its own choice. | 每组已连接的显示器都会记住各自的选择。 | needs_review |  |
+| `marketing.dockLockPane.primerTitle` | Allow Accessibility Access | 允许无障碍访问 | needs_review |  |
+| `marketing.dockLockPane.notNow` | Not Now | 以后 | needs_review |  |
+| `marketing.dockLockPane.continue` | Continue | 继续 | needs_review |  |
 | `marketing.dockLockPageFaqTitle` | Questions about Dock Lock | 关于“程序坞锁定”的问题 | needs_review |  |
 | `marketing.dockLockPageFaq.0.question` | Can I keep the Dock on one screen without an app? | 不用App能让程序坞停留在一个屏幕上吗？ | needs_review |  |
 | `marketing.dockLockPageFaq.0.answer` | Yes, on the main display only. Turn off “Displays have separate Spaces” in System Settings → Desktop & Dock, then log out and back in, and macOS keeps the Dock on the main display. Your displays then lose their separate Spaces. To keep them, or to keep the Dock on another display, use Dock Lock. | 可以，但只能是主显示器。在“系统设置”→“桌面与程序坞”中关闭“显示器具有单独空间”，然后退出登录并重新登录，macOS就会把程序坞保留在主显示器上。之后各台显示器将不再有单独的空间。若想保留单独的空间，或让程序坞停留在其他显示器上，请使用“程序坞锁定”。 | needs_review |  |
@@ -202,7 +239,7 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `faq.how-do-i-create-a-new-tile.answer` | Open Dock Tile, click + in the sidebar and choose a suggested tile or Create New Tile. Name it, add apps, pick its icon, then click Add to put it in your Dock. | 打开Dock Tile，点按边栏中的+，然后选择一个推荐的磁贴或“新建磁贴”。为它命名、添加App、选择图标，然后点按“添加”将它放进程序坞。 | needs_review |  |
 | `faq.can-i-change-a-tiles-icon-after-creating-it.question` | Can I change a tile's icon after creating it? | 创建磁贴后还能更改它的图标吗？ | needs_review |  |
 | `faq.can-i-change-a-tiles-icon-after-creating-it.answer` | Yes. Select the tile and click its icon to open Customise Tile. Show the tile's own apps as a grid, or choose a symbol or an emoji and its background. If the tile is already in your Dock, click Update to apply the new look. | 可以。选择该磁贴，然后点按它的图标打开“自定义磁贴”。可以将磁贴自己的App显示为网格，也可以选择一个符号或表情符号及其背景。如果磁贴已经在程序坞中，点按“更新”以应用新外观。 | needs_review |  |
-| `faq.why-doesnt-right-click-show-a-context-menu.question` | Why doesn't right-click show a context menu? | 为什么右键点按不显示快捷菜单？ | needs_review |  |
+| `faq.why-doesnt-right-click-show-a-context-menu.question` | Why doesn't right-clicking a tile show a menu? | 为什么右键点按磁贴不显示菜单？ | needs_review |  |
 | `faq.why-doesnt-right-click-show-a-context-menu.answer` | By default, tiles run in Ghost mode (hidden from Command-Tab), which doesn't support context menus. Turn on Show in App Switcher for the tile to get one. | 默认情况下，磁贴以Ghost mode（幽灵模式，不出现在Command-Tab中）运行，这种模式不支持快捷菜单。为该磁贴打开“在App切换器中显示”即可使用快捷菜单。 | needs_review |  |
 | `faq.how-do-i-uninstall-a-tile.question` | How do I uninstall a tile? | 如何卸载一个磁贴？ | needs_review |  |
 | `faq.how-do-i-uninstall-a-tile.answer` | Select the tile, turn off Show in Dock, then click Remove from Dock. The tile stays in Dock Tile for later. To delete it for good, click the trash button. You can also drag the tile out of the Dock like any app. | 选择该磁贴，关闭“在程序坞中显示”，然后点按“移除”。磁贴仍会保留在Dock Tile中，供以后使用。要永久删除它，请点按废纸篓按钮。你也可以像拖移任何App一样，把磁贴拖出程序坞。 | needs_review | The English says 'turn off Show in Dock'; the app's switch (label.showTile) reads Show in Dock / 在程序坞中显示, which the Chinese follows |

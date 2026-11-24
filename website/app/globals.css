@@ -416,6 +416,11 @@
   opacity: 1;
   transform: translateY(0);
 }
+/* A looping mock off screen (lib/use-pause-offscreen.ts): everything inside pauses together */
+[data-offscreen],
+[data-offscreen] * {
+  animation-play-state: paused !important;
+}
 
 /* ---------------------------------------------------------------------------
    Golden Gate aurora — macOS-wallpaper-style gradient motion.
@@ -820,98 +825,110 @@
 }
 
 
-/* Dock Lock demo — the Dock roams between the two screens, then locks
-   onto the anchor. Three synced loops: horizontal travel, a snap-scale on
-   lock, and an open→closed lock-icon cross-fade. */
-/* Centre the pill on each screen via left+calc (pill is w-20 = 80px, so
-   offset half its width). Centring lives here, NOT in a translateX — a
-   base translate would stack with the compositor-run snap transform. */
-@keyframes dock-lock-travel {
-  0% { left: calc(25% - 40px); }
-  10% { left: calc(25% - 40px); }
-  22% { left: calc(75% - 40px); }
-  32% { left: calc(75% - 40px); }
-  44% { left: calc(25% - 40px); }
-  54% { left: calc(25% - 40px); }
-  66% { left: calc(75% - 40px); }
-  100% { left: calc(75% - 40px); }
+/* Dock Lock demo (dock-lock-mock.tsx), one 8 s loop. Beats: the pointer touches the left
+   display's bottom edge (24%) and the Dock slides down off the right display, up onto the left
+   (25–32%); it touches the right edge (50%) and the Dock comes back (50–57%); Dock Lock turns on
+   (60%: padlock closes, the right display lights up); the next touch on the left edge is held
+   short at 158 px (78%) with a nudge of the badge, and the Dock stays. Pointer positions are px
+   in the mock's fixed 560×250 box: screen bottoms at y 168, centres at x 146 and 416. */
+@keyframes dl-pointer {
+  0%, 8% { transform: translate(416px, 80px); }
+  18% { transform: translate(146px, 96px); }
+  24%, 36% { transform: translate(146px, 166px); }
+  44% { transform: translate(416px, 112px); }
+  50%, 58% { transform: translate(416px, 166px); }
+  64% { transform: translate(416px, 100px); }
+  72% { transform: translate(146px, 100px); }
+  78% { transform: translate(146px, 158px); }
+  80% { transform: translate(146px, 154px); }
+  82%, 90% { transform: translate(146px, 158px); }
+  100% { transform: translate(416px, 80px); }
 }
-@keyframes dock-lock-snap {
-  0%,
-  64% {
+@keyframes dl-dock-right {
+  0%, 25% { transform: translateY(0); }
+  28%, 53% { transform: translateY(140%); }
+  57%, 100% { transform: translateY(0); }
+}
+@keyframes dl-dock-left {
+  0%, 28% { transform: translateY(140%); }
+  32%, 50% { transform: translateY(0); }
+  53%, 100% { transform: translateY(140%); }
+}
+@keyframes dl-open-vis {
+  0%, 59% { opacity: 1; }
+  62%, 92% { opacity: 0; }
+  95%, 100% { opacity: 1; }
+}
+@keyframes dl-closed-vis {
+  0%, 59% { opacity: 0; }
+  62%, 92% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+@keyframes dl-badge {
+  0%, 59% {
     transform: scale(1);
+    border-color: rgba(56, 189, 248, 0.5);
+    background-color: rgba(56, 189, 248, 0.18);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
   }
-  68% {
-    transform: scale(1.18);
-  }
-  74%,
-  100% {
+  62%, 77% {
     transform: scale(1);
-  }
-}
-@keyframes dock-lock-open-vis {
-  0%,
-  60% {
-    opacity: 1;
-  }
-  66%,
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes dock-lock-closed-vis {
-  0%,
-  60% {
-    opacity: 0;
-  }
-  66%,
-  100% {
-    opacity: 1;
-  }
-}
-/* Highlight tint tracks the lock state: blue (sky-400) while the Dock roams
-   unlocked, snapping to green (emerald-400) as it locks onto the anchor at
-   ~64% — the same beat as the scale snap and the open→closed padlock swap. */
-@keyframes dock-lock-tint {
-  0%,
-  63% {
-    border-color: rgba(56, 189, 248, 0.6);
-    background-color: rgba(56, 189, 248, 0.22);
-    box-shadow: 0 0 14px rgba(56, 189, 248, 0.45);
-  }
-  70%,
-  100% {
     border-color: rgba(52, 211, 153, 0.6);
-    background-color: rgba(52, 211, 153, 0.25);
+    background-color: rgba(52, 211, 153, 0.22);
     box-shadow: 0 0 14px rgba(52, 211, 153, 0.45);
   }
-}
-@keyframes dock-lock-anchor-tint {
-  0%,
-  63% {
-    border-color: rgba(56, 189, 248, 0.3);
+  80% {
+    transform: scale(1.14);
+    border-color: rgba(52, 211, 153, 0.8);
+    background-color: rgba(52, 211, 153, 0.3);
+    box-shadow: 0 0 20px rgba(52, 211, 153, 0.6);
   }
-  70%,
-  100% {
-    border-color: rgba(52, 211, 153, 0.3);
+  84%, 92% {
+    transform: scale(1);
+    border-color: rgba(52, 211, 153, 0.6);
+    background-color: rgba(52, 211, 153, 0.22);
+    box-shadow: 0 0 14px rgba(52, 211, 153, 0.45);
+  }
+  95%, 100% {
+    transform: scale(1);
+    border-color: rgba(56, 189, 248, 0.5);
+    background-color: rgba(56, 189, 248, 0.18);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
   }
 }
-.dock-lock-pill {
-  animation:
-    dock-lock-travel 6.5s var(--ease-in-out-strong) infinite,
-    dock-lock-snap 6.5s var(--ease-out-strong) infinite,
-    dock-lock-tint 6.5s var(--ease-in-out-strong) infinite;
+@keyframes dl-anchor {
+  0%, 59%, 95%, 100% { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(52, 211, 153, 0); }
+  62%, 92% { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(52, 211, 153, 0.7), 0 0 22px rgba(52, 211, 153, 0.35); }
 }
-.dock-lock-anchor {
-  animation: dock-lock-anchor-tint 6.5s var(--ease-in-out-strong) infinite;
+/* Base styles = the locked resting state, shown as is under reduced motion */
+.dl-pointer {
+  transform: translate(416px, 80px);
+  animation: dl-pointer 8s var(--ease-in-out-strong) infinite;
 }
-.dock-lock-open {
+.dl-dock-right {
+  animation: dl-dock-right 8s var(--ease-in-out-strong) infinite;
+}
+.dl-dock-left {
+  transform: translateY(140%);
+  animation: dl-dock-left 8s var(--ease-in-out-strong) infinite;
+}
+.dl-open {
   opacity: 0;
-  animation: dock-lock-open-vis 6.5s linear infinite;
+  animation: dl-open-vis 8s linear infinite;
 }
-.dock-lock-closed {
+.dl-closed {
   opacity: 1;
-  animation: dock-lock-closed-vis 6.5s linear infinite;
+  animation: dl-closed-vis 8s linear infinite;
+}
+.dl-badge {
+  border-color: rgba(52, 211, 153, 0.6);
+  background-color: rgba(52, 211, 153, 0.22);
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.45);
+  animation: dl-badge 8s var(--ease-in-out-strong) infinite;
+}
+.dl-anchor {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(52, 211, 153, 0.7), 0 0 22px rgba(52, 211, 153, 0.35);
+  animation: dl-anchor 8s var(--ease-in-out-strong) infinite;
 }
 
 /* Ghost Mode — a Cmd+Tab app-switcher mock. The selection highlight tabs
@@ -1029,11 +1046,17 @@
     transform: none;
     transition: none;
   }
-  .dock-lock-pill,
-  .dock-lock-anchor,
-  .dock-lock-open,
-  .dock-lock-closed {
+  .dl-dock-right,
+  .dl-dock-left,
+  .dl-open,
+  .dl-closed,
+  .dl-badge,
+  .dl-anchor {
     animation: none;
+  }
+  .dl-pointer {
+    animation: none;
+    opacity: 0;
   }
   .app-switch-sel,
   .ghost-phase,

@@ -111,8 +111,13 @@ includes the `#hash`, so the old `pathname.startsWith("/#features")` left Featur
 and the footer had no current state at all. Route links use `isActiveRoute` (exact or a `/`
 sub-path); section links (Features) are current on `/` while a `data-nav-section="features"`
 section crosses 40% of the viewport, read by the header's existing scroll sampler (no second
-listener). Tagged: the power-user cards, the custom-tiles story, the Dock Lock band — never the
-hero or the Download section. Current links carry `aria-current` ("page" / "location").
+listener). Tagged: the intro, the custom-tiles story and the power-user cards — never the hero,
+the Dock Lock band (2026-11-24: nav has its own Dock Lock link, to another page, so lighting
+Features there contradicted it), privacy or Download. Current links carry `aria-current` ("page" /
+"location"). Nav links, the logo and every action button show a `focus-visible` 2 px blue outline
+(the browser default read as a faint grey line on the glass pill). The `sm` Download (nav, guide
+sidebar) is sentence case like every other Download, and has no backdrop blur of its own: it sits
+in the glass pill or on a solid card.
 
 **The pill's ends are concentric.** The Download button sits 7px from the pill's edge on every
 side, so the logo's hover pill does too (`px-1.5` on the pill, `pl-1.5` in the logo link → icon
@@ -153,11 +158,11 @@ Back/Forward still restore their position.
   1.2, semibold — owner, 2026-11-18, with Allo), `text-title-sm` (bento title 22 px medium), `text-lead` (every section and card
   body: 18 px / 1.4 / −0.01em, Regular; a bold lead-in is `font-semibold text-foreground`).
   A 16 px body with titles 2 px smaller was tried and reverted the same day (owner, 2026-11-09).
-  **The row of small features** under the power-user cards: FOUR items (Keyboard, Folders, Free
-  and open source — linked to GitHub, it replaced Grid or list on 2026-11-21 — and Languages; the
-  obvious ones were cut: login, updates, revert, missing apps), each a
+  **The row of small features** under the power-user cards: TWO items since 2026-11-24 (Keyboard,
+  Languages; Folders and Free and open source were cut, open source now sits in the line under
+  Download; login, updates, revert, missing apps went earlier), each a
   `text-lead` medium name on its own line + one `text-lead` muted sentence, 36 px icon chip.
-  Eight 18 px bold run-ins read "busy" and "shouty"; with four items and the name on its own
+  Eight 18 px bold run-ins read "busy" and "shouty"; with few items and the name on its own
   line the full size reads fine (owner, 2026-11-09). Copy: titles keep their voice, slogans
   toned down ~15% — a full flattening to plain nouns went "too far".
   Light-theme `--muted-foreground` is body grey #60606C (oklch 0.493 0.019 285.7,
@@ -191,6 +196,13 @@ Back/Forward still restore their position.
   `left` stacked with transform-based centering — never combine the two.)
 - Entry animations: `cubic-bezier(0.16, 1, 0.3, 1)` over 0.8s (the `.reveal` + `--reveal-delay`
   stagger pattern); snappier curves are reserved for interactions (popover, press).
+- **`Reveal` is for headings, visuals and cards, never body text** (owner, 2026-11-24: every
+  paragraph fading in made reading slow and looked templated). Intro points, the small-features row,
+  the privacy points, /faq and Dock Lock page questions and prose render plain.
+- **A looping mock pauses off screen**: `usePauseOffscreen` (`lib/use-pause-offscreen.ts`) puts
+  `data-offscreen` on its root and globals.css pauses every animation inside, so synced loops stay
+  in step. On `DockLockMock`, `AppSwitcherMock` (highlight, names, ghost) and `CloserLook` (hotspot
+  pulse). A new infinite loop gets it too.
 - **Every animation needs a `prefers-reduced-motion` fallback** — a sensible static resting state,
   not just "off".
 - The pre-shadcn Motion-based dock demo is preserved on `feature/dock-motion-build`; don't resurrect it.
@@ -240,17 +252,16 @@ re-apply per component unless overriding.
 
 ## CSS / tooling gotchas (each cost real debugging time)
 
-- **Every homepage section heading carries one tilted tile mid-line** — `InlineTile` in
-  `components/inline-tile.tsx`, any face as its child (owner 2026-11-09). Down the page (2026-11-22):
-  "Less Dock. ▦ More multitasking." an App Grid of dev apps (nowrap with "Less Dock.", so the
-  tile ends line one — owner, 2026-11-23);
-  "Set up for you. ⚡" an orange bolt — a colour and glyph no hero Dock tile uses (owner: don't
-  repeat a Dock tile), nowrap so the tile ends line one; "Pick a look. ▦ Done." an App Grid of
-  media apps (nowrap with "Done.", "Pick a look." nbsp-bound so the break falls after "apps.");
-  "The Dock 🔒 stays put." a green lock; "Tidy your ▦ Dock today." an App Grid of AI apps
-  (`download-section.tsx`); "Questions, ❓ answered." an indigo question mark (`home-faq.tsx`).
-  Tilts alternate down the page (−6°, +6°, −6°, +6°, −6°, +6°). Split the string into A/B keys
-  around the tile.
+- **The tilted heading tile is a signature** — `InlineTile` in `components/inline-tile.tsx`, any
+  face as its child (owner 2026-11-09). On every homepage section heading: "Fewer icons. ▦ Same apps."
+  (dev apps), "Pick your apps. Pick a look. ▦ Done." (media apps), "Set up for you. ⚡ Out of your
+  way.", "The Dock 🔒 stays put.", "Your Mac. 🛡 Your data." (blue, `shield` glyph), "Tidy your ▦ Dock
+  today." (AI apps). A 2026-11-24
+  round cut it to two and the owner put it back the same day (it is the brand's look). Off the
+  homepage, one per page: the Dock Lock page closer and `ContactCta`. Split the string into A/B keys
+  around the tile and join them with `tileGap(locale)`, never a literal `" "`: Chinese takes no space,
+  and the h2's text (the tile is `aria-hidden` and holds no text) is what crawlers index. Keep the tile
+  inside a `whitespace-nowrap` span with the word it must not be parted from.
 - **`InlineTile` lives in `components/inline-tile.tsx`** so the subpages' `ContactCta` can use it
   without pulling `home-sections.tsx` into their bundles (its `TileFace` still comes from
   `dock-demo.tsx`, which does ship there — accepted, 2026-11-22).

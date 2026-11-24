@@ -16,7 +16,7 @@ const marketingBase = {
   tilesTitleA: "Pick your apps. Pick a look.", // nbsp: break after "apps.", never strand "Pick"
   tilesTitleB: "Done.",
   tilesBody:
-    "Set up every tile in the Dock Tile companion app. You arrange its apps in the same panel that pops up from the Dock, so what you see is what you get. Then pick its icon: a grid of its own apps, a symbol or an emoji, on colour or a plain background.",
+    "Arrange a tile's apps in the same panel it opens from the Dock. Then pick its icon: its own apps, a symbol or an emoji, on colour or a plain background.",
   tilesAlt: "Dock Tile editing a tile: its popover in the middle, Customise Tile on the right.",
   // "Take a closer look" hotspots on the screenshot — label + one or two sentences each
   tilesSpotPopover: "In This Tile",
@@ -32,28 +32,33 @@ const marketingBase = {
   tilesSpotClose: "Close",
   tilesSpotLabelEnd: ".", // after the hotspot's bold label, before its sentence
   // What Dock Tile is (first section after the hero), split around the heading's tile
-  introTitleA: "Less Dock.",
-  introTitleB: "More multitasking.",
+  introTitleA: "Fewer icons.",
+  introTitleB: "Same apps.",
   introBefore: "Before",
   introAfter: "With Dock Tile",
   introPoints: [
-    { lead: "One tile, many apps", body: "Group apps and folders behind a single Dock icon. Click it and they pop up, ready to open." },
+    { lead: "Not a Finder folder", body: "A Dock folder shows files. A tile is its own app: it sits among your apps and opens them in a panel." },
     { lead: "Looks like it belongs", body: "Each tile is a real Mac app with its own icon, so it sits and magnifies like everything else in your Dock." },
-    { lead: "Ready in a minute", body: "Pick a suggested tile or start blank, add your apps, then put it in your Dock." },
+    // The Show in Dock switch alone never touches the Dock; Remove (the action button) does
+    { lead: "Easy to take out", body: "Switch off Show in Dock and press Remove. The tile leaves your Dock and stays in Dock Tile for later." },
   ],
   // The card section's heading (Smart Add sets up; menu bar + Ghost stay out of the way)
   cardsTitleA: "Set up for you.",
   cardsTitleB: "Out of your way.",
-  smartAddTitle: "Ready-made tiles from the apps you use.",
+  smartAddTitle: "Tiles suggested from what you use.",
   smartAddBody:
     "Click +, and Dock Tile groups the apps you use most into ready-made tiles. Pick one and it opens ready to tweak; nothing reaches your Dock until you add it.",
   smartAddPrivacy: "Learned on your Mac. Never leaves your device.",
-  ghostTitle: "Ghost mode.",
+  ghostTitle: "Out of Command-Tab.",
   ghostBody:
-    "Tiles stay out of the app switcher (Command-Tab) by default, so it lists only the apps you're actually using.",
+    "Ghost mode keeps tiles out of the app switcher (Command-Tab), so it lists only the apps you're actually using.",
   ghostTip: "Want one in Command-Tab? Switch it on for that tile.",
   dockLockTitleA: "The Dock", // split around the heading's tilted tile
   dockLockTitleB: "stays put.",
+  // The Dock Lock animation's two displays are buttons: these are their accessible names
+  dockLockMockLeft: "Keep the Dock on the left display",
+  dockLockMockRight: "Keep the Dock on the right display",
+  dockLockMockHint: "Click a display to lock the Dock there.",
   // Dock Lock is its own tool that ships with Dock Tile, not a tile feature: the lead says so.
   dockLockLead: "Dock Lock comes with Dock Tile.",
   // A teaser: the how and why live on /dock-lock, which the band links to
@@ -66,8 +71,6 @@ const marketingBase = {
   // The row of small features: a plain name, then one calm sentence.
   details: [
     { lead: "Keyboard friendly", body: "Arrow keys move through a tile's apps. Return opens, Esc closes." },
-    { lead: "Folders too", body: "Add a folder beside your apps and open it in one click." },
-    { lead: "Free and open source", body: "No price and no account. MIT‑licensed, with the code on GitHub." },
     { lead: "In your language", body: "English, 简体中文, 日本語, Deutsch, Русский and Français." },
   ],
   // Feature requests and bug reports (footer + FAQ), both open a GitHub issue
@@ -81,14 +84,33 @@ const marketingBase = {
   ctaMetaOpenSource: "Free & open source",
   ctaMetaAppleSilicon: "Apple silicon",
   ctaMetaMacOS: "macOS 15+", // the floor; MacOSFloorGuardTests reads this file
+  // The homepage's line under Download: shows the app is maintained (version, release date from the
+  // appcast, notarized), then "Free and open source" → GitHub. No star or download counts.
+  proofVersion: "Version",
+  proofUpdated: "Updated",
+  proofNotarized: "Notarized by Apple",
+  proofOpenSource: "Free and open source",
   // Download buttons on a device that can't run the app (Windows, iPhone, Android, Linux)
   copyLinkButton: "Copy link for your Mac",
   copyLinkShort: "Copy link", // the nav pill: its width is a WebKit landmine (design-system.md)
   copyLinkDone: "Link copied",
-  // Homepage FAQ (the top questions; the rest live on /faq)
-  homeFaqTitleA: "Questions,", // split around the heading's tilted tile
+  // /faq's heading (the homepage FAQ section was replaced by the privacy section, 2026-11-24)
+  homeFaqTitleA: "Questions,",
   homeFaqTitleB: "answered.",
   homeFaqMore: "See all questions",
+  // /faq's group headings, in page order (app/faq/faq-content.tsx maps each question to one)
+  faqGroups: ["Getting started", "Using tiles", "Dock Lock and displays", "Your Mac and removing it"],
+  // Homepage privacy section (where the FAQ section was). Analytics is ON by default in the app
+  // (opt-out, General → Share anonymous usage data): say so, never imply opt-in.
+  privacyTitleA: "Your Mac.", // split around the heading's tilted tile
+  privacyTitleB: "Your data.",
+  privacyPoints: [
+    { lead: "Never asks who you are", body: "No account, no sign-up, no email address." },
+    { lead: "Stays on your Mac", body: "Your tiles and Smart Add's suggestions are worked out on your Mac and never leave it." },
+    { lead: "Anonymous stats you can switch off", body: "Anonymous usage stats and crash reports help fix bugs. They're on by default; turn them off in Settings → General." },
+    { lead: "Accessibility only for Dock Lock", body: "macOS asks for Accessibility only if you turn on Dock Lock, which needs it to keep the Dock on one screen." },
+  ],
+  privacyPolicyLink: "Read the privacy policy",
   // Download section (above the footer), split around the heading's tilted tile
   downloadTitleA: "Tidy your", // split around the heading's tilted tile
   downloadTitleB: "Dock today.",
@@ -145,16 +167,7 @@ const marketingBase = {
   dockLockPageAnswer:
     "On a Mac with more than one display, the Dock jumps to whichever screen you push the pointer against. Dock Lock keeps it on the display you choose.",
   dockLockPageMetaNoAccount: "No account", // the proof line under the hero's Download: Free & open source · No account · macOS 15+ · Apple silicon
-  // Four one-liners under the hero (the homepage's small-feature row style)
-  dockLockPageBenefits: [
-    { lead: "The Dock stays put", body: "It stays on the display you pick, wherever your pointer goes." },
-    {
-      lead: "One choice per desk",
-      body: "It remembers a display for each set of screens and moves the Dock there when you plug in.",
-    },
-    { lead: "Keep your Spaces", body: "Unlike the built-in workaround, each display keeps its own Spaces." },
-    { lead: "Bottom, left or right", body: "Works wherever your Dock sits." },
-  ],
+  onThisPage: "On this page", // GuideLayout's sticky contents list (subpages)
   dockLockPageWhyTitle: "Why the Dock moves",
   dockLockPageWhyBody:
     "When “Displays have separate Spaces” is on in System Settings → Desktop & Dock, each display has its own Spaces, and macOS moves the Dock to whichever display you push the pointer against at the Dock's edge: the bottom, or the side for a Dock on the left or right. While that option is on, macOS has no setting to choose which display keeps the Dock.",
@@ -169,6 +182,34 @@ const marketingBase = {
   dockLockPageWithoutTitle: "Without an app",
   dockLockPageWithoutBody:
     "Turn off “Displays have separate Spaces” in System Settings → Desktop & Dock, then log out and back in. macOS then keeps the Dock on the main display. The cost: your displays no longer have separate Spaces, and the Dock can only stay on the main display.",
+  // "Without an app": the built-in workaround beside Dock Lock (took the old four benefits' points)
+  dockLockPageCompare: {
+    builtIn: "Built-in workaround",
+    dockLock: "Dock Lock",
+    rows: [
+      { label: "Which display keeps the Dock", builtIn: "The main display only", dockLock: "Any display you pick" },
+      { label: "Separate Spaces on each display", builtIn: "Turned off", dockLock: "Kept" },
+      { label: "Log out to apply", builtIn: "Yes", dockLock: "No" },
+      { label: "Home and office desks", builtIn: "Follows the main display", dockLock: "Remembers a display for each set of screens" },
+      {
+        label: "The cost",
+        builtIn: "No separate Spaces, and the Dock only on the main display",
+        dockLock: "Accessibility access, and a few pixels reserved at the Dock's edge on your other displays",
+      },
+    ],
+  },
+  // The Settings → Dock Lock pane replica beside the steps: the app's own strings (settings.dockLock.*)
+  dockLockPane: {
+    title: "Dock Lock",
+    toggle: "Lock Dock to one display",
+    anchor: "Keep Dock on",
+    display: "Studio Display",
+    lockedTo: "Dock is locked to Studio Display",
+    note: "Each set of connected displays remembers its own choice.",
+    primerTitle: "Allow Accessibility Access",
+    notNow: "Not Now",
+    continue: "Continue",
+  },
   dockLockPageFaqTitle: "Questions about Dock Lock",
   // This page's own questions (and FAQPage markup), worded apart from /faq's "stop the Dock moving"
   dockLockPageFaq: [
@@ -231,7 +272,7 @@ const marketingBase = {
 const marketingUS = {
   ...marketingBase,
   tilesBody:
-    "Set up every tile in the Dock Tile companion app. You arrange its apps in the same panel that pops up from the Dock, so what you see is what you get. Then pick its icon: a grid of its own apps, a symbol or an emoji, on color or a plain background.",
+    "Arrange a tile's apps in the same panel it opens from the Dock. Then pick its icon: its own apps, a symbol or an emoji, on color or a plain background.",
   tilesAlt: "Dock Tile editing a tile: its popover in the middle, Customize Tile on the right.",
   tilesSpotBackgroundBody: "Color fills the tile. Mono keeps it white in Light Mode and black in Dark Mode.",
 } as const;
@@ -250,7 +291,7 @@ const marketingZh = {
   tilesTitleA: "挑选App，选个外观。",
   tilesTitleB: "完成。",
   tilesBody:
-    "每个磁贴都在Dock Tile配套App中设置。你在程序坞弹出的同一个面板里排列它的App，所见即所得。然后为它选择图标：由它自己的App组成的网格、一个符号或一个表情符号，配上彩色或纯色背景。",
+    "在磁贴从程序坞弹出的同一个面板里排列它的App。然后为它选择图标：它自己的App、一个符号或一个表情符号，配上彩色或纯色背景。",
   tilesAlt: "Dock Tile正在编辑一个磁贴：中间是它的弹出面板，右侧是“自定义磁贴”。",
   tilesSpotPopover: "此磁贴中的项目",
   tilesSpotPopoverBody: "拖动App调整顺序，或将指针悬停在App上将其移除。这就是你的磁贴打开的那个弹出面板。",
@@ -264,26 +305,29 @@ const marketingZh = {
   tilesSpotNext: "下一个",
   tilesSpotClose: "关闭",
   tilesSpotLabelEnd: "：",
-  introTitleA: "程序坞更清爽。",
-  introTitleB: "多任务更从容。",
+  introTitleA: "图标更少。",
+  introTitleB: "App一个不少。",
   introBefore: "之前",
   introAfter: "使用Dock Tile后",
   introPoints: [
-    { lead: "一个磁贴，多个App", body: "将App和文件夹放在同一个程序坞图标后面。点一下，它们就会弹出，随时可以打开。" },
+    { lead: "不是访达文件夹", body: "程序坞中的文件夹显示的是文件。磁贴本身就是一个App：它和你的App放在一起，并在一个面板中打开它们。" },
     { lead: "就像原生的一样", body: "每个磁贴都是一个真正的Mac App，有自己的图标，所以它在程序坞中的样子和放大效果都与其他图标一致。" },
-    { lead: "一分钟就能设置好", body: "选择一个推荐的磁贴或从空白开始，添加你的App，然后把它放进程序坞。" },
+    { lead: "随时可以移除", body: "关闭“在程序坞中显示”，然后点按“移除”。磁贴会离开程序坞，并保留在Dock Tile中供以后使用。" },
   ],
   cardsTitleA: "为你设置好。",
   cardsTitleB: "绝不碍事。",
-  smartAddTitle: "用你常用的App生成现成的磁贴。",
+  smartAddTitle: "根据你的使用习惯推荐磁贴。",
   smartAddBody:
     "点按+，Dock Tile会把你最常用的App分组成现成的磁贴。选一个，它会打开供你调整；在你添加之前，任何东西都不会进入程序坞。",
   smartAddPrivacy: "在你的Mac上学习得出，数据绝不离开你的设备。",
-  ghostTitle: "Ghost mode（幽灵模式）。",
-  ghostBody: "默认情况下，磁贴不会出现在App切换器（Command-Tab）中，因此那里只列出你真正在使用的App。",
+  ghostTitle: "不出现在Command-Tab中。",
+  ghostBody: "Ghost mode（幽灵模式）让磁贴不出现在App切换器（Command-Tab）中，因此那里只列出你真正在使用的App。",
   ghostTip: "想让某个磁贴出现在Command-Tab中？为该磁贴打开此选项即可。",
   dockLockTitleA: "程序坞",
   dockLockTitleB: "不再乱跑。",
+  dockLockMockLeft: "把程序坞固定在左侧显示器上",
+  dockLockMockRight: "把程序坞固定在右侧显示器上",
+  dockLockMockHint: "点按一台显示器，把程序坞锁定在那里。",
   dockLockLead: "Dock Tile附带“程序坞锁定”。",
   dockLockBody: "为程序坞选一台显示器，无论你连接几台显示器，它都会留在那里。",
   menuBarTitle: "你的磁贴，就在菜单栏中。",
@@ -292,8 +336,6 @@ const marketingZh = {
   menuBarBody: "程序坞中的磁贴及其App会列在菜单栏中，即使程序坞隐藏也能随时使用。你可以随时在“设置”中关闭它。",
   details: [
     { lead: "支持键盘操作", body: "用方向键在磁贴的App之间移动。按Return打开，按Esc关闭。" },
-    { lead: "也支持文件夹", body: "在App旁边添加文件夹，点一下即可打开。" },
-    { lead: "免费且开源", body: "无需付费，无需账户。采用MIT许可证，代码在GitHub上。" },
     { lead: "支持你的语言", body: "English、简体中文、日本語、Deutsch、Русский和Français。" },
   ],
   featureRequest: "建议新功能",
@@ -306,12 +348,26 @@ const marketingZh = {
   ctaMetaOpenSource: "免费且开源",
   ctaMetaAppleSilicon: "Apple芯片",
   ctaMetaMacOS: "macOS 15+",
+  proofVersion: "版本",
+  proofUpdated: "更新于",
+  proofNotarized: "已通过Apple公证",
+  proofOpenSource: "免费且开源",
   copyLinkButton: "为你的Mac拷贝链接",
   copyLinkShort: "拷贝链接",
   copyLinkDone: "链接已拷贝",
   homeFaqTitleA: "常见问题，",
   homeFaqTitleB: "一一解答。",
   homeFaqMore: "查看所有问题",
+  faqGroups: ["入门", "使用磁贴", "程序坞锁定与显示器", "你的Mac与移除"],
+  privacyTitleA: "你的Mac，",
+  privacyTitleB: "你的数据。",
+  privacyPoints: [
+    { lead: "从不问你是谁", body: "无需账户、无需注册、无需电子邮件地址。" },
+    { lead: "留在你的Mac上", body: "你的磁贴，以及根据你常用的App生成的建议，都在你的Mac上完成，绝不会离开它。" },
+    { lead: "可以关闭的匿名统计", body: "匿名使用统计和崩溃报告帮助我们修复错误。它们默认开启；你可以在“设置”→“通用”中关闭。" },
+    { lead: "仅“程序坞锁定”需要无障碍访问权限", body: "只有在你打开“程序坞锁定”时，macOS才会请求无障碍访问权限，它需要该权限才能让程序坞停留在一个屏幕上。" },
+  ],
+  privacyPolicyLink: "阅读隐私政策（英文）",
   downloadTitleA: "今天就整理",
   downloadTitleB: "你的程序坞。",
   footerFeatures: "功能",
@@ -358,12 +414,7 @@ const marketingZh = {
   dockLockPageAnswer:
     "在连接了多台显示器的Mac上，你把指针推向哪个屏幕，程序坞就会跳到哪个屏幕。“程序坞锁定”会让它停留在你选择的显示器上。",
   dockLockPageMetaNoAccount: "无需账户",
-  dockLockPageBenefits: [
-    { lead: "程序坞固定不动", body: "不论指针移到哪里，它都会停留在你选择的显示器上。" },
-    { lead: "每张桌子一个选择", body: "它会为每组屏幕记住一台显示器，并在你接上显示器时把程序坞移过去。" },
-    { lead: "保留你的空间", body: "与系统自带的变通办法不同，每台显示器都保留自己的空间。" },
-    { lead: "底部、左侧或右侧", body: "无论程序坞在哪一边都能用。" },
-  ],
+  onThisPage: "本页内容",
   dockLockPageWhyTitle: "程序坞为什么会移动",
   dockLockPageWhyBody:
     "在“系统设置”→“桌面与程序坞”中打开“显示器具有单独空间”时，每台显示器都有自己的空间。你把指针推向哪台显示器的程序坞边缘（底部；程序坞在左侧或右侧时则是侧边），macOS就会把程序坞移到那台显示器上。此选项打开时，macOS没有可以选择由哪台显示器保留程序坞的设置。",
@@ -378,6 +429,32 @@ const marketingZh = {
   dockLockPageWithoutTitle: "不用App的办法",
   dockLockPageWithoutBody:
     "在“系统设置”→“桌面与程序坞”中关闭“显示器具有单独空间”，然后退出登录并重新登录。之后macOS会将程序坞保留在主显示器上。代价是：各台显示器不再有单独的空间，而且程序坞只能停留在主显示器上。",
+  dockLockPageCompare: {
+    builtIn: "系统自带的办法",
+    dockLock: "程序坞锁定",
+    rows: [
+      { label: "哪台显示器保留程序坞", builtIn: "只能是主显示器", dockLock: "你选择的任意一台" },
+      { label: "每台显示器单独的空间", builtIn: "关闭", dockLock: "保留" },
+      { label: "需要退出登录才生效", builtIn: "需要", dockLock: "不需要" },
+      { label: "家里和办公室的桌子", builtIn: "跟随主显示器", dockLock: "为每组屏幕记住一台显示器" },
+      {
+        label: "代价",
+        builtIn: "失去单独的空间，程序坞只能在主显示器上",
+        dockLock: "需要无障碍访问权限，并在其他显示器的程序坞边缘保留几个像素",
+      },
+    ],
+  },
+  dockLockPane: {
+    title: "程序坞锁定",
+    toggle: "将程序坞锁定到一台显示器",
+    anchor: "将程序坞固定在",
+    display: "Studio Display",
+    lockedTo: "程序坞已锁定到Studio Display",
+    note: "每组已连接的显示器都会记住各自的选择。",
+    primerTitle: "允许无障碍访问",
+    notNow: "以后",
+    continue: "继续",
+  },
   dockLockPageFaqTitle: "关于“程序坞锁定”的问题",
   dockLockPageFaq: [
     {
@@ -599,7 +676,7 @@ export const localisedContent = {
       },
       {
         slug: "why-doesnt-right-click-show-a-context-menu",
-        question: "Why doesn't right-click show a context menu?",
+        question: "Why doesn't right-clicking a tile show a menu?",
         answer:
           "By default, tiles run in Ghost mode (hidden from Command-Tab), which doesn't support context menus. Turn on Show in App Switcher for the tile to get one.",
       },
@@ -728,7 +805,7 @@ export const localisedContent = {
       },
       {
         slug: "why-doesnt-right-click-show-a-context-menu",
-        question: "Why doesn't right-click show a context menu?",
+        question: "Why doesn't right-clicking a tile show a menu?",
         answer:
           "By default, tiles run in Ghost mode (hidden from Command-Tab), which doesn't support context menus. Turn on Show in App Switcher for the tile to get one.",
       },
@@ -857,7 +934,7 @@ export const localisedContent = {
       },
       {
         slug: "why-doesnt-right-click-show-a-context-menu",
-        question: "Why doesn't right-click show a context menu?",
+        question: "Why doesn't right-clicking a tile show a menu?",
         answer:
           "By default, tiles run in Ghost mode (hidden from Command-Tab), which doesn't support context menus. Turn on Show in App Switcher for the tile to get one.",
       },
@@ -986,7 +1063,7 @@ export const localisedContent = {
       },
       {
         slug: "why-doesnt-right-click-show-a-context-menu",
-        question: "为什么右键点按不显示快捷菜单？",
+        question: "为什么右键点按磁贴不显示菜单？",
         answer:
           "默认情况下，磁贴以Ghost mode（幽灵模式，不出现在Command-Tab中）运行，这种模式不支持快捷菜单。为该磁贴打开“在App切换器中显示”即可使用快捷菜单。",
       },

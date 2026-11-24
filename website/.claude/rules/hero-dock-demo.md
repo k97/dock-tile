@@ -78,9 +78,18 @@ wrapper owns everything DockTile-specific. Behaviour rules — each was hard-won
 ## Card mocks (`home-sections.tsx`: Smart Add sheet, menu bar, ⌘Tab strip; Dock Lock in `dock-lock-mock.tsx`)
 
 The Dock Lock mock (`components/dock-lock-mock.tsx`, its own file so `/dock-lock` doesn't pull in
-home-sections.tsx; `ScaleToFit` is in `components/scale-to-fit.tsx`) is two displays at a fixed
-330×170 px: the pill's keyframes (`dock-lock-*` in globals.css) place it at 25% / 75% of that box,
-so it only lines up at a fixed width.
+home-sections.tsx; `ScaleToFit` is in `components/scale-to-fit.tsx`; owner, 2026-11-24, "two macOS
+screens, the Dock moving inside them") is two displays on stands at a fixed 560×250 px: one hero
+wallpaper across both, a menu bar, and a Dock of the hero's four tiles that slides down off one display
+and up onto the other, as macOS moves it. One 8 s loop (`dl-*` in globals.css): the pointer touches the
+left display's edge and the Dock jumps there, goes back, Dock Lock turns on (padlock badge and the right
+display light green), and the next touch is held short. The pointer keyframes are px in that box, so
+it only lines up at that size. Base classes are the locked state, shown as is under reduced motion
+(pointer hidden). **Click mode (owner, 2026-11-24):** each display is a `<button>` (`dockLockMockLeft`
+/ `Right` labels, a "Click a display…" hint under the box). The first click stops the loop and takes
+over from wherever it was (`loopState` reads the loop's own clock, so nothing jumps); clicking the
+display without the Dock unlocks the badge, spins, slides the Dock across and locks it there, as
+React state with transitions (no `dl-*` classes from then on). Clicks during a move are ignored.
 
 **Illustrative macOS components never restyle responsively** (explicit owner mandate): they
 render at a fixed natural size and `ScaleToFit` applies one uniform `transform: scale()` — an

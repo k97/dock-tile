@@ -84,7 +84,7 @@ export function Header() {
   // — the pill's height and the Safari min-content maths are untouched, and the
   // pseudo stays inside the link's own width so neighbours never overlap.
   const linkBase =
-    "hit-area rounded-full px-2.5 py-1.5 text-center text-[13px] transition-colors duration-300 md:px-3";
+    "hit-area rounded-full px-2.5 py-1.5 text-center text-[13px] transition-colors duration-300 md:px-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500";
   const linkIdle = overDark
     ? "text-zinc-600 hover:bg-black/5 hover:text-zinc-900 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white"
     : "text-white/80 hover:bg-white/10 hover:text-white";
@@ -133,7 +133,7 @@ export function Header() {
             const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
           }}
-          className={`flex shrink-0 items-center gap-2 rounded-full py-1.5 pl-1.5 pr-2.5 transition-colors duration-300 md:pr-3 ${logoHover}`}
+          className={`flex shrink-0 items-center gap-2 rounded-full py-1.5 pl-1.5 pr-2.5 transition-colors duration-300 md:pr-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${logoHover}`}
         >
           {/* `max-w-none` overrides Tailwind preflight's `img { max-width: 100% }`
               (critical). WebKit counts an <img> with a PERCENTAGE max-width as

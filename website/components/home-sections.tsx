@@ -7,11 +7,13 @@ import {
   ChevronDown,
   ChevronRight,
   EyeOff,
-  FolderOpen,
   Ghost,
-  Github,
   Keyboard,
   Languages,
+  Accessibility,
+  ChartNoAxesColumn,
+  Laptop,
+  UserRoundX,
   PanelTop,
   Settings2,
   Search,
@@ -24,15 +26,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDisplayName, useLocale } from "@/components/locale-provider";
 import { asset, HERO_BG, HERO_BG_DARK } from "@/lib/assets";
-import { siteConfig } from "@/lib/config";
 import { Reveal } from "@/components/reveal";
 import { CloserLook } from "@/components/closer-look";
 import { ICON_CONTENT_RATIO, PopoverShape, TILES, TileFace } from "@/components/dock-demo";
 import { dockDot, dockGlass, dockLift, dockTooltip } from "@/components/ui/mac-os-dock";
-import { InlineTile } from "@/components/inline-tile";
+import { InlineTile, tileGap } from "@/components/inline-tile";
 import { ScaleToFit } from "@/components/scale-to-fit";
 import { DockLockMock } from "@/components/dock-lock-mock";
 import { localePath } from "@/lib/nav";
+import { usePauseOffscreen } from "@/lib/use-pause-offscreen";
 
 // The Smart Add mocks below use the Dock's own `TileFace` (shaded glyph, rim,
 // Dark-style plate + glow) and the Dock's lift shadow, so every designed tile
@@ -58,31 +60,33 @@ const switcherApps = [
 /* ------------------------------------------------------------------ */
 
 export function CustomTilesStory() {
-  const { content } = useLocale();
+  const { locale, content } = useLocale();
   const m = content.marketing;
+  const gap = tileGap(locale);
 
   return (
-    // Follows the light card section: no top padding, its bottom padding is the gap.
+    // Follows the light intro section: no top padding, its bottom padding is the gap.
     // `#customise` is where the hero Dock's Configure… walks to.
     <section id="customise" data-nav-section="features" className="mx-auto max-w-400 scroll-mt-28 px-4 pb-24 sm:px-6 md:px-10 md:pb-50">
       {/* Stacked, Apple-style: the window is a three-pane app, so it needs the
           full content width to read — text centred above, screenshot below. */}
-      <Reveal className="mx-auto mb-12 max-w-180 text-center md:mb-13">
-        <h2 className="mx-auto mb-6 max-w-132 text-section text-foreground">
-          {/* The tile is the result of the picking: an App Grid of its own apps.
-              nowrap keeps it with "Done." so it never ends a line alone. */}
-          {m.tilesTitleA}{" "}
-          <span className="whitespace-nowrap">
-            <InlineTile tilt="-rotate-6">
-              <AppGridFace icons={mediaAppIcons} />
-            </InlineTile>{" "}
-            {m.tilesTitleB}
-          </span>
-        </h2>
-        <p className="mx-auto max-w-150 text-lead text-muted-foreground">
-          {m.tilesBody}
-        </p>
-      </Reveal>
+      <div className="mx-auto mb-12 max-w-180 text-center md:mb-13">
+        {/* Only the heading fades in; body text never does (owner, 2026-11-24) */}
+        <Reveal>
+          <h2 className="mx-auto mb-6 max-w-132 text-section text-foreground">
+            {/* The tile is the result of the picking: an App Grid of its own apps.
+                nowrap keeps it with "Done." so it never ends a line alone. */}
+            {m.tilesTitleA}{gap}
+            <span className="whitespace-nowrap">
+              <InlineTile tilt="-rotate-6">
+                <AppGridFace icons={mediaAppIcons} />
+              </InlineTile>{gap}
+              {m.tilesTitleB}
+            </span>
+          </h2>
+        </Reveal>
+        <p className="mx-auto max-w-150 text-lead text-muted-foreground">{m.tilesBody}</p>
+      </div>
       <Reveal delay={120}>
         {/* The 2.x window with "take a closer look" hotspots — see closer-look.tsx. */}
         <CloserLook />
@@ -100,21 +104,25 @@ export function DockLockStory() {
   const m = content.marketing;
 
   return (
-    // The last band before the Download section, inset like the hero, with a gap below.
-    <section data-nav-tone="dark" data-nav-section="features" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] border border-white/10 bg-zinc-900 md:mx-4 md:mb-4">
+    // The band before the privacy section, inset like the hero, with a gap below.
+    // No data-nav-section: the nav has a "Dock Lock" link (another page), so lighting "Features" here
+    // contradicted the band; nothing is lit instead.
+    <section data-nav-tone="dark" className="relative mx-3 mb-3 overflow-hidden rounded-[2.5rem] border border-white/10 bg-zinc-900 md:mx-4 md:mb-4">
       <div className="grain" />
       <div className="absolute inset-0 bg-linear-to-b from-transparent to-zinc-950/40" />
       <div className="relative mx-auto grid max-w-400 items-center gap-12 px-6 py-24 md:grid-cols-2 md:gap-20 md:px-10 md:py-32">
-        <Reveal>
-          <h2 className="mb-6 max-w-132 text-section text-white">
-            {m.dockLockTitleA}{" "}
-            <span className="whitespace-nowrap">
-              <InlineTile tilt="rotate-6">
-                <TileFace gradient="linear-gradient(to bottom, #52DFA8, #10B981)" darkGlyph="#52DFA8" glyph="lock" shaded />
-              </InlineTile>{" "}
-              {m.dockLockTitleB}
-            </span>
-          </h2>
+        <div>
+          <Reveal>
+            <h2 className="mb-6 max-w-132 text-section text-white">
+              {m.dockLockTitleA}{tileGap(locale)}
+              <span className="whitespace-nowrap">
+                <InlineTile tilt="rotate-6">
+                  <TileFace gradient="linear-gradient(to bottom, #52DFA8, #10B981)" darkGlyph="#52DFA8" glyph="lock" shaded />
+                </InlineTile>{tileGap(locale)}
+                {m.dockLockTitleB}
+              </span>
+            </h2>
+          </Reveal>
           <p className="max-w-lg text-lead text-white/60">
             <b className="font-semibold text-white">{m.dockLockLead}</b> {m.dockLockBody}
           </p>
@@ -126,7 +134,7 @@ export function DockLockStory() {
             {m.dockLockPageLink}
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
-        </Reveal>
+        </div>
         <Reveal delay={120}>
           <DockLockMock dark />
         </Reveal>
@@ -142,22 +150,21 @@ export function DockLockStory() {
 const bentoCard = "mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 md:p-10 xl:max-w-none";
 
 export function PowerUserSection() {
-  const { content } = useLocale();
+  const { locale, content } = useLocale();
   const m = content.marketing;
 
   return (
-    // Follows the light intro section: no top padding, its bottom padding is the gap.
+    // Follows the light Customise section: no top padding, its bottom padding is the gap.
     <section data-nav-section="features" className="mx-auto max-w-400 px-4 pb-24 sm:px-6 md:px-10 md:pb-50">
       <Reveal className="mb-12 text-center md:mb-13">
         <h2 className="mx-auto max-w-132 text-section text-foreground">
-          {/* Orange + bolt: a colour and glyph no hero Dock tile uses. nowrap keeps
-              the tile ending line one, so "Out of your way." stands alone. */}
+          {/* nowrap keeps the tile ending line one, so "Out of your way." stands alone */}
           <span className="whitespace-nowrap">
-            {m.cardsTitleA}{" "}
+            {m.cardsTitleA}{tileGap(locale)}
             <InlineTile tilt="rotate-6">
               <TileFace gradient="linear-gradient(to bottom, #FFB547, #F97316)" darkGlyph="#FFB547" glyph="bolt" shaded />
             </InlineTile>
-          </span>{" "}
+          </span>{tileGap(locale)}
           {m.cardsTitleB}
         </h2>
       </Reveal>
@@ -231,9 +238,10 @@ function Footnote({ icon: Icon, children }: { icon: React.ComponentType<{ classN
    ghosted Dock Tile slot. */
 function AppSwitcherMock() {
   const name = useDisplayName();
+  const ref = usePauseOffscreen<HTMLDivElement>(); // the highlight, names and ghost loop
   return (
     // pt-10 leaves room for the name tooltip that floats above the strip.
-    <div className="relative flex flex-col items-center gap-4 pt-10">
+    <div ref={ref} className="relative flex flex-col items-center gap-4 pt-10">
       {/* Concentric: the 12px slot radius + the 12px `p-3` inset ⇒ a 24px
           (rounded-3xl) shell. */}
       <div className={`relative flex items-center gap-2 rounded-3xl p-3 ${dockGlass}`}>
@@ -303,30 +311,25 @@ function AppSwitcherMock() {
 }
 
 // Paired with `marketing.details` in lib/i18n.ts by position — reorder both together.
-const detailIcons = [Keyboard, FolderOpen, Github, Languages];
+const detailIcons = [Keyboard, Languages];
 
-/* Four short items under the bento: the name on its own line, then one muted
-   sentence, at the section body size (text-lead). Open source links to the repo. */
+/* Two short items under the bento: the name on its own line, then one muted
+   sentence, at the section body size (text-lead). Open source moved to the line
+   under Download (2026-11-24). No fade-in: body text never fades. */
 function SmallFeatures() {
   const { content } = useLocale();
   return (
-    <ul className="mt-14 grid gap-x-8 gap-y-10 px-2 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
+    <ul className="mt-14 grid gap-x-8 gap-y-10 px-2 sm:grid-cols-2 md:mt-16">
       {content.marketing.details.map((d, i) => {
         const Icon = detailIcons[i];
         return (
-          <Reveal as="li" key={d.lead} delay={i * 60} className="flex flex-col">
+          <li key={d.lead} className="flex flex-col">
             <span className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-foreground/6 text-foreground">
               <Icon strokeWidth={1.5} className="h-4.5 w-4.5" />
             </span>
-            {Icon === Github ? (
-              <a href={siteConfig.githubUrl} target="_blank" rel="noopener noreferrer" className="w-fit text-lead font-medium text-foreground underline decoration-foreground/20 underline-offset-4 transition-colors hover:decoration-foreground">
-                {d.lead}
-              </a>
-            ) : (
-              <p className="text-lead font-medium text-foreground">{d.lead}</p>
-            )}
+            <p className="text-lead font-medium text-foreground">{d.lead}</p>
             <p className="mt-1 text-lead text-muted-foreground">{d.body}</p>
-          </Reveal>
+          </li>
         );
       })}
     </ul>
@@ -847,7 +850,7 @@ function BeforeAfterDocks({ before, after }: { before: string; after: string }) 
 }
 
 export function IntroSection() {
-  const { content } = useLocale();
+  const { locale, content } = useLocale();
   const m = content.marketing;
 
   return (
@@ -856,11 +859,11 @@ export function IntroSection() {
       <Reveal className="mb-12 text-center md:mb-13">
         <h2 className="mx-auto max-w-132 text-section text-foreground">
           <span className="whitespace-nowrap">
-            {m.introTitleA}{" "}
+            {m.introTitleA}{tileGap(locale)}
             <InlineTile tilt="-rotate-6">
               <AppGridFace icons={devApps.map((a) => a.src)} />
             </InlineTile>
-          </span>{" "}
+          </span>{tileGap(locale)}
           {m.introTitleB}
         </h2>
       </Reveal>
@@ -889,13 +892,70 @@ export function IntroSection() {
       </Reveal>
 
       <ul className="mx-auto mt-14 grid max-w-300 gap-x-10 gap-y-8 px-2 md:mt-16 md:grid-cols-3">
-        {m.introPoints.map((p, i) => (
-          <Reveal as="li" key={p.lead} delay={i * 60}>
+        {m.introPoints.map((p) => (
+          <li key={p.lead}>
             <p className="text-lead font-medium text-foreground">{p.lead}</p>
             <p className="mt-1 text-lead text-muted-foreground">{p.body}</p>
-          </Reveal>
+          </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Privacy — where the homepage FAQ was (owner, 2026-11-24)            */
+/* ------------------------------------------------------------------ */
+
+// Paired with `privacyPoints` in lib/i18n.ts by position — reorder both together.
+const privacyIcons = [UserRoundX, Laptop, ChartNoAxesColumn, Accessibility];
+
+export function PrivacySection() {
+  const { locale, content } = useLocale();
+  const m = content.marketing;
+  const pill =
+    "pressable group inline-flex h-13 items-center gap-2 rounded-full border border-foreground/15 px-6 text-sm font-semibold text-foreground transition-[background-color,scale] duration-200 hover:bg-foreground/5";
+
+  return (
+    // After the dark Dock Lock band, so it takes its own top padding; the Download section has none.
+    <section className="mx-auto max-w-400 px-4 py-24 sm:px-6 md:px-10 md:py-50">
+      <Reveal className="mb-12 text-center md:mb-13">
+        <h2 className="mx-auto max-w-132 text-section text-foreground">
+          <span className="whitespace-nowrap">
+            {m.privacyTitleA}{tileGap(locale)}
+            <InlineTile tilt="-rotate-6">
+              <TileFace gradient="linear-gradient(to bottom, #6CB4FF, #2563EB)" darkGlyph="#6CB4FF" glyph="shield" shaded />
+            </InlineTile>
+          </span>{tileGap(locale)}
+          {m.privacyTitleB}
+        </h2>
+      </Reveal>
+      {/* The small-feature row's pattern: an icon, a name, then one muted sentence */}
+      <ul className="mx-auto grid max-w-300 grid-cols-1 gap-x-10 gap-y-8 px-2 sm:grid-cols-2">
+        {m.privacyPoints.map((p, i) => {
+          const Icon = privacyIcons[i];
+          return (
+            <li key={p.lead} className="flex flex-col">
+              <span className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-foreground/6 text-foreground">
+                <Icon strokeWidth={1.5} className="h-4.5 w-4.5" />
+              </span>
+              <p className="text-lead font-medium text-foreground">{p.lead}</p>
+              <p className="mt-1 text-lead text-muted-foreground">{p.body}</p>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-12 flex flex-wrap justify-center gap-3">
+        {/* The policy is English-only, on both locales */}
+        <Link href="/privacy" className={pill}>
+          {m.privacyPolicyLink}
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+        </Link>
+        <Link href={localePath(locale, "/faq")} className={pill}>
+          {m.homeFaqMore}
+          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+        </Link>
+      </div>
     </section>
   );
 }

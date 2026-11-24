@@ -50,7 +50,7 @@ export function ActionButton({
     size === "lg"
       ? { pad: "pl-7 pr-2 py-2 gap-4", text: "text-base font-semibold", circ: "h-12 w-12" }
       : size === "sm"
-        ? { pad: "pl-4 pr-1 py-1 gap-2", text: "text-[11px] font-bold uppercase tracking-widest", circ: "h-7 w-7" }
+        ? { pad: "pl-4 pr-1 py-1 gap-2", text: "text-[13px] font-semibold", circ: "h-7 w-7" } // sentence case like every other Download
         : { pad: "pl-6 pr-1.5 py-1.5 gap-3", text: "text-sm font-semibold", circ: "h-10 w-10" };
 
   const content = (
@@ -67,7 +67,9 @@ export function ActionButton({
   );
   // `transition-transform` covers `scale` in Tailwind v4, so one declaration
   // animates both the hover growth and `.pressable:active`'s 0.96 press.
-  const base = `group pressable button-gloss inline-flex items-center rounded-full backdrop-blur-md backdrop-saturate-150 ${dims.pad} ${pill} transition-transform duration-200 ease-(--ease-out-strong) hover:scale-105 ${className}`;
+  // sm sits in the glass nav pill or on a solid card: a blur of its own does nothing there
+  const blur = size === "sm" ? "" : "backdrop-blur-md backdrop-saturate-150";
+  const base = `group pressable button-gloss inline-flex items-center rounded-full ${blur} ${dims.pad} ${pill} transition-transform duration-200 ease-(--ease-out-strong) hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${className}`;
 
   if (href) {
     return (

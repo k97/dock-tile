@@ -64,7 +64,8 @@
   only the Q&As visible on that page and not repeated on another: `/faq`'s "stop the Dock moving"
   stays the one marked-up instance of that question, and the Dock Lock page's are worded
   apart from it. Google shows FAQ rich results only for government and health sites since 2023, so
-  the markup is for AI answer engines, not snippets. The homepage's FAQ section has none.
+  the markup is for AI answer engines, not snippets. The homepage has no FAQ section (a privacy
+  section since 2026-11-24).
 - Author/publisher is the **Organization** Happy Machines Company (2026-10-30; was a Person). The
   app's `sameAs` GitHub repo is what disambiguates it from Apple's `NSDockTile` API — keep it.
   Its `@id` is `https://happymachines.company/#organization`, the studio site's own, so engines

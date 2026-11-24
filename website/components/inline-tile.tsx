@@ -13,3 +13,8 @@ export function InlineTile({ tilt, children }: { tilt: "rotate-6" | "-rotate-6";
     </span>
   );
 }
+
+/** The space either side of a heading tile. None in Chinese, which puts no spaces between words,
+    so the heading's text (what crawlers and screen readers get; the tile is aria-hidden) reads
+    "程序坞不再乱跑。", never "程序坞 不再乱跑。". */
+export const tileGap = (locale: string) => (locale === "zh-Hans" ? "" : " ");

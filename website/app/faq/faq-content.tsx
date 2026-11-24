@@ -10,16 +10,52 @@ import {
 import { ContactCta } from "@/components/contact-cta";
 import { FAQ_ANSWER, FAQ_CARD, FAQ_TRIGGER } from "@/components/faq-card";
 import { Footer } from "@/components/footer";
+import { GuideLayout } from "@/components/guide-layout";
 import { Reveal } from "@/components/reveal";
 import { useLocale } from "@/components/locale-provider";
 import { trackExternalLinkClick, trackFaqOpen } from "@/lib/analytics";
 import { bugReportUrl, featureRequestUrl } from "@/lib/feedback";
 import { ArrowUpRight, Bug, Lightbulb } from "lucide-react";
 
+// The page's groups, in order, by slug; headings are `marketing.faqGroups` by position.
+// Every question must be in one group: a dev warning names any that is not (it would vanish).
+const FAQ_GROUPS = [
+  [
+    "what-macos-version-do-i-need",
+    "is-it-available-on-the-app-store",
+    "is-dock-tile-free",
+    "how-do-i-group-apps-into-folders-in-the-mac-dock",
+    "how-is-a-tile-different-from-a-folder-in-the-dock",
+    "how-do-i-create-a-new-tile",
+    "how-many-tiles-can-i-create",
+  ],
+  [
+    "can-i-change-a-tiles-icon-after-creating-it",
+    "can-i-reorder-apps-within-a-tile",
+    "can-i-add-folders-to-a-tile",
+    "whats-the-difference-between-grid-and-list-layout",
+    "why-doesnt-right-click-show-a-context-menu",
+    "do-tiles-sync-across-macs",
+    "how-do-i-back-up-my-tiles",
+  ],
+  ["how-do-i-stop-the-dock-moving-to-my-other-display", "what-is-a-dock-tile-extension"],
+  ["what-does-dock-tile-change-on-my-mac", "how-do-i-uninstall-a-tile", "how-do-i-uninstall-dock-tile"],
+];
+// Anchors for the group headings (the "On this page" list), by position; English on both locales
+const FAQ_GROUP_IDS = ["getting-started", "using-tiles", "dock-lock-and-displays", "your-mac-and-removing-it"];
+
 export function FaqContent() {
   const { content } = useLocale();
   const m = content.marketing;
   const [openItem, setOpenItem] = React.useState<string | undefined>(undefined);
+  const groups = FAQ_GROUPS.map((slugs) =>
+    slugs.map((slug) => content.faq.find((f) => f.slug === slug)).filter((f) => f !== undefined),
+  );
+  if (process.env.NODE_ENV === "development") {
+    const grouped = new Set(FAQ_GROUPS.flat());
+    const missing = content.faq.filter((f) => !grouped.has(f.slug)).map((f) => f.slug);
+    if (missing.length) console.warn("FAQ: not in any group, so not shown:", missing);
+  }
 
   // Handle initial hash on mount and hash changes
   React.useEffect(() => {
@@ -95,8 +131,16 @@ export function FaqContent() {
         </div>
       </section>
 
-      {/* Light accordion section */}
-      <section className="mx-auto max-w-3xl px-4 py-16 md:px-6 md:py-24">
+      {/* The questions in GuideLayout: its "On this page" list is the groups + Help shape */}
+      <GuideLayout
+        location="page_sidebar"
+        items={[
+          ...FAQ_GROUP_IDS.map((id, g) => ({ id, title: m.faqGroups[g] })),
+          { id: "help-shape", title: m.feedbackTitle },
+        ]}
+      >
+        {/* One accordion, so one question is open at a time across groups; the group
+            headings sit between its items. No fade-in: body text never fades. */}
         <Accordion
           type="single"
           collapsible
@@ -104,35 +148,26 @@ export function FaqContent() {
           value={openItem}
           onValueChange={handleValueChange}
         >
-          {/* Each card reveals on its own short delay rather than the whole
-              list fading up as one slab. Capped at 300ms so a long FAQ never
-              leaves the last cards waiting. */}
-          {content.faq.map((item, i) => {
-            const slug = item.slug;
-            return (
-              <Reveal key={slug} delay={Math.min(i * 60, 300)}>
-                <AccordionItem
-                  value={slug}
-                  id={slug}
-                  className={FAQ_CARD}
-                >
-                  <AccordionTrigger className={FAQ_TRIGGER}>
-                    {item.question}
-                  </AccordionTrigger>
-                  <AccordionContent className={FAQ_ANSWER}>
-                    {item.answer}
-                  </AccordionContent>
+          {groups.map((items, g) => (
+            <React.Fragment key={m.faqGroups[g]}>
+              <h2 id={FAQ_GROUP_IDS[g]} className={`scroll-mt-28 text-lg font-semibold tracking-[-0.02em] text-foreground ${g === 0 ? "mb-1" : "mt-10 mb-1"}`}>
+                {m.faqGroups[g]}
+              </h2>
+              {items.map((item) => (
+                <AccordionItem key={item.slug} value={item.slug} id={item.slug} className={FAQ_CARD}>
+                  <AccordionTrigger className={FAQ_TRIGGER}>{item.question}</AccordionTrigger>
+                  <AccordionContent className={FAQ_ANSWER}>{item.answer}</AccordionContent>
                 </AccordionItem>
-              </Reveal>
-            );
-          })}
+              ))}
+            </React.Fragment>
+          ))}
         </Accordion>
 
         {/* Reached the end without an answer: ask for it, or report what broke.
             Same card surface as the questions above, so it reads as their
             continuation rather than an ad. */}
         <Reveal className="mt-16">
-          <h2 className="mb-4 text-lg font-semibold tracking-[-0.02em] text-foreground">{m.feedbackTitle}</h2>
+          <h2 id="help-shape" className="mb-4 scroll-mt-28 text-lg font-semibold tracking-[-0.02em] text-foreground">{m.feedbackTitle}</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               { href: featureRequestUrl, Icon: Lightbulb, title: m.featureRequest, body: m.featureRequestBody },
@@ -164,9 +199,10 @@ export function FaqContent() {
               </a>
             ))}
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">{m.feedbackNote}</p>
         </Reveal>
-      </section>
+        {/* Body text never fades in */}
+        <p className="mt-4 text-sm text-muted-foreground">{m.feedbackNote}</p>
+      </GuideLayout>
 
       {/* Contact CTA, styled like the homepage's Download section */}
       <ContactCta

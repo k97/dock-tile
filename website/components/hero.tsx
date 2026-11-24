@@ -9,7 +9,7 @@ import { trackReleaseNotesClick } from "@/lib/analytics";
 import { DockDemo } from "@/components/dock-demo";
 import { DownloadActionButton } from "@/components/action-button";
 
-export function Hero() {
+export function Hero({ released }: { released?: string }) {
   const { content } = useLocale();
   const m = content.marketing;
 
@@ -75,51 +75,64 @@ export function Hero() {
         style={{ "--reveal-delay": "440ms" } as React.CSSProperties}
       >
         <DownloadActionButton tone="light" location="hero" size="lg" label={content.downloadButton} />
-        <DownloadMeta />
+        <DownloadMeta released={released} />
       </div>
     </section>
   );
 }
 
-/* The line under a Download button, shared by the hero and the Download section;
-   it lives here because MacOSFloorGuardTests reads this file for "macOS 15+".
-   Hero: version (→ release notes) · Free & open source (→ GitHub) · Apple silicon · macOS floor.
-   `page`: the same without the version (owner), in theme-aware tones on the page background. */
-export function DownloadMeta({ variant = "hero" }: { variant?: "hero" | "page" }) {
-  const { content } = useLocale();
+/* The lines under a Download button, shared by the hero and the Download section;
+   they live here because MacOSFloorGuardTests reads this file for "macOS 15+".
+   Proof that the app is maintained: Version · Updated <date> (→ What's new) · Notarized by Apple ·
+   Free and open source (→ GitHub); then the requirements, quieter. `released` is the newest
+   release's ISO date (lib/latest-release.ts, read at build); without it the date is left out.
+   `page`: theme-aware tones on the page background. */
+export function DownloadMeta({ variant = "hero", released }: { variant?: "hero" | "page"; released?: string }) {
+  const { locale, content } = useLocale();
+  const m = content.marketing;
   const page = variant === "page";
   const dot = <span className={`h-1 w-1 rounded-full ${page ? "bg-foreground/20" : "bg-white/20"}`} />;
+  const link = `hit-area underline underline-offset-4 transition-colors ${
+    page ? "decoration-foreground/20 hover:text-foreground" : "decoration-white/20 hover:text-white"
+  }`;
+  // UTC: the appcast date is UTC, so a visitor west of it never sees the day before
+  const date = released
+    ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(released))
+    : undefined;
+  // The Chinese copy puts no space between Chinese and Latin words (the app's style)
+  const sp = locale === "zh-Hans" ? "" : " ";
+  // wraps (centred) on the narrowest phones
+  const row = "flex flex-wrap items-center justify-center gap-x-3 gap-y-1";
   return (
-    <p
-      // wraps (centred) on the narrowest phones: 4 items are ~326 px, a 360 px phone has ~304
-      className={`flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs font-medium ${
-        page ? "text-muted-foreground" : "text-white/40"
-      }`}
-    >
-      {!page && (
-        <>
-          <Link
-            href="/release-notes"
-            onClick={trackReleaseNotesClick}
-            className="hit-area underline decoration-white/20 underline-offset-4 transition-colors hover:text-white"
-          >
-            v{siteConfig.latestVersion}
-          </Link>
-          {dot}
-        </>
-      )}
-      <a
-        href={siteConfig.githubUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`hit-area transition-colors ${page ? "hover:text-foreground" : "hover:text-white"}`}
-      >
-        {content.marketing.ctaMetaOpenSource}
-      </a>
-      {dot}
-      <span>{content.marketing.ctaMetaAppleSilicon}</span>
-      {dot}
-      <span>macOS 15+</span>
-    </p>
+    <div className={`flex flex-col items-center gap-2.5 text-xs font-medium ${page ? "text-muted-foreground" : "text-white/40"}`}>
+      <p className={row}>
+        <span>
+          {m.proofVersion}
+          {sp}
+          {siteConfig.latestVersion}
+        </span>
+        {date && (
+          <>
+            {dot}
+            <Link href="/release-notes" onClick={trackReleaseNotesClick} className={link}>
+              {m.proofUpdated}
+              {sp}
+              {date}
+            </Link>
+          </>
+        )}
+        {dot}
+        <span>{m.proofNotarized}</span>
+        {dot}
+        <a href={siteConfig.githubUrl} target="_blank" rel="noopener noreferrer" className={link}>
+          {m.proofOpenSource}
+        </a>
+      </p>
+      <p className={row}>
+        <span>{m.ctaMetaAppleSilicon}</span>
+        {dot}
+        <span>macOS 15+</span>
+      </p>
+    </div>
   );
 }
