@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import {
+  ArrowRight,
   BatteryFull,
   ChevronDown,
   ChevronRight,
@@ -11,8 +12,6 @@ import {
   Github,
   Keyboard,
   Languages,
-  Lock,
-  LockOpen,
   PanelTop,
   Settings2,
   Search,
@@ -22,6 +21,7 @@ import {
   Wifi,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useDisplayName, useLocale } from "@/components/locale-provider";
 import { asset, HERO_BG, HERO_BG_DARK } from "@/lib/assets";
 import { siteConfig } from "@/lib/config";
@@ -30,46 +30,9 @@ import { CloserLook } from "@/components/closer-look";
 import { ICON_CONTENT_RATIO, PopoverShape, TILES, TileFace } from "@/components/dock-demo";
 import { dockDot, dockGlass, dockLift, dockTooltip } from "@/components/ui/mac-os-dock";
 import { InlineTile } from "@/components/inline-tile";
-
-/* Uniform scale-to-fit: children render at their fixed natural size; the
-   whole block is zoomed (transform scale, aspect ratio locked — like a
-   miniature screenshot) to the width on offer, capped at 1:1. The
-   illustration itself never restyles or reflows across viewports. */
-function ScaleToFit({ children }: { children: React.ReactNode }) {
-  const outerRef = React.useRef<HTMLDivElement>(null);
-  const innerRef = React.useRef<HTMLDivElement>(null);
-  const [fit, setFit] = React.useState<{ scale: number; height: number; left: number } | null>(null);
-
-  React.useLayoutEffect(() => {
-    const outer = outerRef.current;
-    const inner = innerRef.current;
-    if (!outer || !inner) return;
-    const measure = () => {
-      const scale = Math.min(1, outer.clientWidth / inner.offsetWidth);
-      setFit({
-        scale,
-        height: Math.round(inner.offsetHeight * scale),
-        left: Math.max(0, (outer.clientWidth - inner.offsetWidth * scale) / 2),
-      });
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(outer);
-    return () => ro.disconnect();
-  }, []);
-
-  return (
-    <div ref={outerRef} className="relative w-full" style={{ height: fit?.height }}>
-      <div
-        ref={innerRef}
-        className={`absolute top-0 w-max ${fit ? "" : "invisible"}`}
-        style={fit ? { left: fit.left, transform: `scale(${fit.scale})`, transformOrigin: "top left" } : undefined}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
+import { ScaleToFit } from "@/components/scale-to-fit";
+import { DockLockMock } from "@/components/dock-lock-mock";
+import { localePath } from "@/lib/nav";
 
 // The Smart Add mocks below use the Dock's own `TileFace` (shaded glyph, rim,
 // Dark-style plate + glow) and the Dock's lift shadow, so every designed tile
@@ -133,7 +96,7 @@ export function CustomTilesStory() {
 /* ------------------------------------------------------------------ */
 
 export function DockLockStory() {
-  const { content } = useLocale();
+  const { locale, content } = useLocale();
   const m = content.marketing;
 
   return (
@@ -155,10 +118,14 @@ export function DockLockStory() {
           <p className="max-w-lg text-lead text-white/60">
             <b className="font-semibold text-white">{m.dockLockLead}</b> {m.dockLockBody}
           </p>
-          <div className="mt-8 flex items-center gap-3">
-            <Lock className="h-5 w-5 shrink-0 text-emerald-400" />
-            <p className="text-[13px] font-medium text-white/80">{m.dockLockTip}</p>
-          </div>
+          {/* The Dock Lock page, in this page's language */}
+          <Link
+            href={localePath(locale, "/dock-lock")}
+            className="pressable group mt-10 inline-flex h-13 items-center gap-2 rounded-full border border-white/15 px-6 text-sm font-semibold text-white transition-[background-color,scale] duration-200 hover:bg-white/10"
+          >
+            {m.dockLockPageLink}
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Link>
         </Reveal>
         <Reveal delay={120}>
           <DockLockMock dark />
@@ -461,32 +428,6 @@ function MenuBarMock() {
         </div>
       </div>
     </ScaleToFit>
-  );
-}
-
-/* Dock Lock: two displays; the Dock (pill) roams between them (blue,
-   unlocked), then locks onto the anchor and turns green. Fixed 330×170 px
-   so the pill's 25% / 75% keyframe positions land on each screen's centre.
-   Base classes are the locked resting state (reduced motion). */
-function DockLockMock({ dark = false }: { dark?: boolean }) {
-  return (
-    // `dark`: on the always-dark Dock Lock band, a near-black well instead of the muted one.
-    <div className={dark ? "rounded-2xl border border-white/5 bg-zinc-950 p-8" : "rounded-2xl bg-muted p-5"}>
-      <ScaleToFit>
-        <div className="relative grid h-42.5 w-82.5 grid-cols-2 items-center">
-          <div className="px-3">
-            <div className="h-32 rounded-lg border border-white/10 bg-zinc-900" />
-          </div>
-          <div className="px-3">
-            <div className="dock-lock-anchor h-32 rounded-lg border border-emerald-400/30 bg-zinc-900" />
-          </div>
-          <span className="dock-lock-pill absolute bottom-9.25 left-[calc(75%-40px)] flex h-6 w-20 items-center justify-center rounded-full border border-emerald-400/60 bg-emerald-400/25 shadow-[0_0_14px_rgba(52,211,153,0.45)]">
-            <LockOpen className="dock-lock-open h-3.5 w-3.5 text-sky-300" />
-            <Lock className="dock-lock-closed absolute h-3.5 w-3.5 text-emerald-300" />
-          </span>
-        </div>
-      </ScaleToFit>
-    </div>
   );
 }
 

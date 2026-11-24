@@ -1,7 +1,8 @@
 # Dock Tile website — 简体中文 (zh-Hans)
 
-The Chinese test of the homepage and the FAQ (`/zh-Hans`, `/zh-Hans/faq`; plan:
-docs/superpowers/plans/2026-11-23-website-zh-hans-test.md). Machine-first, like the app's
+The Chinese test of the homepage, the FAQ and the Dock Lock page (`/zh-Hans`, `/zh-Hans/faq`,
+`/zh-Hans/dock-lock`; plans: docs/superpowers/plans/2026-11-23-website-zh-hans-test.md and
+2026-11-23-website-dock-lock-page.md). Machine-first, like the app's
 zh-Hans: every row is `needs_review` until a native speaker checks it.
 
 - **Source of truth is `website/lib/i18n.ts`** (the `zh-Hans` entry, `namesZh`, `zhPageMeta`).
@@ -63,8 +64,7 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.dockLockTitleA` | The Dock | 程序坞 | needs_review | Split around the heading's tilted tile: A 🔒 B |
 | `marketing.dockLockTitleB` | stays put. | 不再乱跑。 | needs_review |  |
 | `marketing.dockLockLead` | Dock Lock comes with Dock Tile. | Dock Tile附带“程序坞锁定”。 | needs_review |  |
-| `marketing.dockLockBody` | It's a separate tool for Macs with more than one display that stops the Dock jumping between screens. Choose a display for each set of screens you use, and the Dock stays on it. Turn it on in Settings › Dock Lock. | 这是一个独立的工具，适用于连接了多台显示器的Mac，可防止程序坞在屏幕之间跳动。为你使用的每组屏幕选择一台显示器，程序坞就会停留在那里。在“设置”中的“程序坞锁定”里打开它。 | needs_review |  |
-| `marketing.dockLockTip` | Remembers a display for each desk you work at. | 为你的每张办公桌记住一台显示器。 | needs_review |  |
+| `marketing.dockLockBody` | Pick a screen for the Dock and it stays there, however many displays you use. | 为程序坞选一台显示器，无论你连接几台显示器，它都会留在那里。 | needs_review |  |
 | `marketing.menuBarTitle` | Your tiles, in the menu bar. | 你的磁贴，就在菜单栏中。 | needs_review |  |
 | `marketing.menuBarLead` | On from the first launch. | 首次启动即开启。 | needs_review |  |
 | `marketing.menuBarIntro` | A menu bar shortcut comes with Dock Tile. | Dock Tile附带菜单栏快捷方式。 | needs_review |  |
@@ -86,6 +86,7 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.ctaButton` | Download Dock Tile | 下载Dock Tile | needs_review |  |
 | `marketing.ctaMetaOpenSource` | Free & open source | 免费且开源 | needs_review |  |
 | `marketing.ctaMetaAppleSilicon` | Apple silicon | Apple芯片 | needs_review |  |
+| `marketing.ctaMetaMacOS` | macOS 15+ | macOS 15+ | needs_review | the macOS floor; keep the number in step with the app |
 | `marketing.copyLinkButton` | Copy link for your Mac | 为你的Mac拷贝链接 | needs_review |  |
 | `marketing.copyLinkShort` | Copy link | 拷贝链接 | needs_review |  |
 | `marketing.copyLinkDone` | Link copied | 链接已拷贝 | needs_review |  |
@@ -131,6 +132,53 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `marketing.mockMostUsed` | Most used this week | 本周最常用 | needs_review | App string smartAdd.reason.mostUsed |
 | `marketing.mockFiveApps` | 5 apps | 5个App | needs_review |  |
 | `marketing.mockThreeApps` | 3 apps | 3个App | needs_review |  |
+| `marketing.dockLockPageLink` | How Dock Lock works | 了解“程序坞锁定”如何工作 | needs_review | The homepage Dock Lock band's link to /zh-Hans/dock-lock |
+| `marketing.footerDockLock` | Dock Lock | 程序坞锁定 | needs_review | Footer link; 程序坞锁定 = the app's settings.dockLock |
+| `marketing.dockLockPageEyebrow` | Dock Lock | 程序坞锁定 | needs_review |  |
+| `marketing.dockLockPageTitle` | Keep the Dock on one display. | 让程序坞固定在一台显示器上。 | needs_review |  |
+| `marketing.dockLockPageAnswer` | On a Mac with more than one display, the Dock jumps to whichever screen you push the pointer against. Dock Lock keeps it on the display you choose. | 在连接了多台显示器的Mac上，你把指针推向哪个屏幕，程序坞就会跳到哪个屏幕。“程序坞锁定”会让它停留在你选择的显示器上。 | needs_review |  |
+| `marketing.dockLockPageMetaNoAccount` | No account | 无需账户 | needs_review | Under the /dock-lock hero's Download: 免费且开源 · 无需账户 · macOS 15+ · Apple芯片 |
+| `marketing.dockLockPageBenefits.0.lead` | The Dock stays put | 程序坞固定不动 | needs_review |  |
+| `marketing.dockLockPageBenefits.0.body` | It stays on the display you pick, wherever your pointer goes. | 不论指针移到哪里，它都会停留在你选择的显示器上。 | needs_review |  |
+| `marketing.dockLockPageBenefits.1.lead` | One choice per desk | 每张桌子一个选择 | needs_review |  |
+| `marketing.dockLockPageBenefits.1.body` | It remembers a display for each set of screens and moves the Dock there when you plug in. | 它会为每组屏幕记住一台显示器，并在你接上显示器时把程序坞移过去。 | needs_review |  |
+| `marketing.dockLockPageBenefits.2.lead` | Keep your Spaces | 保留你的空间 | needs_review |  |
+| `marketing.dockLockPageBenefits.2.body` | Unlike the built-in workaround, each display keeps its own Spaces. | 与系统自带的变通办法不同，每台显示器都保留自己的空间。 | needs_review |  |
+| `marketing.dockLockPageBenefits.3.lead` | Bottom, left or right | 底部、左侧或右侧 | needs_review |  |
+| `marketing.dockLockPageBenefits.3.body` | Works wherever your Dock sits. | 无论程序坞在哪一边都能用。 | needs_review |  |
+| `marketing.dockLockPageWhyTitle` | Why the Dock moves | 程序坞为什么会移动 | needs_review |  |
+| `marketing.dockLockPageWhyBody` | When “Displays have separate Spaces” is on in System Settings → Desktop & Dock, each display has its own Spaces, and macOS moves the Dock to whichever display you push the pointer against at the Dock's edge: the bottom, or the side for a Dock on the left or right. While that option is on, macOS has no setting to choose which display keeps the Dock. | 在“系统设置”→“桌面与程序坞”中打开“显示器具有单独空间”时，每台显示器都有自己的空间。你把指针推向哪台显示器的程序坞边缘（底部；程序坞在左侧或右侧时则是侧边），macOS就会把程序坞移到那台显示器上。此选项打开时，macOS没有可以选择由哪台显示器保留程序坞的设置。 | needs_review | “显示器具有单独空间” = the app's settings.dockLock.spacesShared; 桌面与程序坞 = macOS's Desktop & Dock pane, verify |
+| `marketing.dockLockPageStepsTitle` | Fix it with Dock Lock | 用“程序坞锁定”解决 | needs_review |  |
+| `marketing.dockLockPageSteps.0` | Open Dock Tile, go to Settings → Dock Lock and turn on Lock Dock to one display. | 打开Dock Tile，前往“设置”→“程序坞锁定”，然后打开“将程序坞锁定到一台显示器”。 | needs_review | UI terms from the app catalog: settings.dockLock.toggle |
+| `marketing.dockLockPageSteps.1` | Allow Accessibility access. Dock Tile explains why first, then macOS asks you to turn Dock Tile on in System Settings. | 允许无障碍访问。Dock Tile会先说明原因，然后macOS会请你在“系统设置”中打开Dock Tile。 | needs_review |  |
+| `marketing.dockLockPageSteps.2` | Pick a display under Keep Dock on. The Dock moves there and stays. | 在“将程序坞固定在”中选择一台显示器。程序坞会移到那里并停留在那里。 | needs_review | 将程序坞固定在 = settings.dockLock.anchor |
+| `marketing.dockLockPageStepsNote` | Dock Lock remembers your choice for each set of connected displays, so your home desk and your office each keep their own. | “程序坞锁定”会为每组已连接的显示器记住你的选择，因此家里和办公室会各自保留自己的设置。 | needs_review |  |
+| `marketing.dockLockPageWithoutTitle` | Without an app | 不用App的办法 | needs_review |  |
+| `marketing.dockLockPageWithoutBody` | Turn off “Displays have separate Spaces” in System Settings → Desktop & Dock, then log out and back in. macOS then keeps the Dock on the main display. The cost: your displays no longer have separate Spaces, and the Dock can only stay on the main display. | 在“系统设置”→“桌面与程序坞”中关闭“显示器具有单独空间”，然后退出登录并重新登录。之后macOS会将程序坞保留在主显示器上。代价是：各台显示器不再有单独的空间，而且程序坞只能停留在主显示器上。 | needs_review |  |
+| `marketing.dockLockPageFaqTitle` | Questions about Dock Lock | 关于“程序坞锁定”的问题 | needs_review |  |
+| `marketing.dockLockPageFaq.0.question` | Can I keep the Dock on one screen without an app? | 不用App能让程序坞停留在一个屏幕上吗？ | needs_review |  |
+| `marketing.dockLockPageFaq.0.answer` | Yes, on the main display only. Turn off “Displays have separate Spaces” in System Settings → Desktop & Dock, then log out and back in, and macOS keeps the Dock on the main display. Your displays then lose their separate Spaces. To keep them, or to keep the Dock on another display, use Dock Lock. | 可以，但只能是主显示器。在“系统设置”→“桌面与程序坞”中关闭“显示器具有单独空间”，然后退出登录并重新登录，macOS就会把程序坞保留在主显示器上。之后各台显示器将不再有单独的空间。若想保留单独的空间，或让程序坞停留在其他显示器上，请使用“程序坞锁定”。 | needs_review |  |
+| `marketing.dockLockPageFaq.1.question` | Why does Dock Lock need Accessibility access? | 为什么“程序坞锁定”需要无障碍访问权限？ | needs_review |  |
+| `marketing.dockLockPageFaq.1.answer` | Dock Lock watches pointer movement near the Dock's edge on your other displays and holds the pointer back there, so macOS never moves the Dock to them. macOS lets an app do that only with Accessibility access. Dock Lock reads only pointer movement, not keystrokes, and asks for access only when you turn it on. | “程序坞锁定”会留意指针在其他显示器程序坞边缘附近的移动，并在那里挡住指针，这样macOS就不会把程序坞移到那些显示器上。macOS只允许拥有无障碍访问权限的App这样做。“程序坞锁定”只读取指针移动，不读取按键，并且只在你打开它时才请求此权限。 | needs_review | 无障碍 = GLOSSARY Accessibility |
+| `marketing.dockLockPageFaq.2.question` | What happens when I plug in another display? | 接上另一台显示器时会怎样？ | needs_review |  |
+| `marketing.dockLockPageFaq.2.answer` | Once the displays settle, Dock Lock moves the Dock to the display you chose for that set of screens. For a set of screens you haven't set up yet, it leaves the Dock where macOS puts it until you pick a display in Settings → Dock Lock. | 显示器稳定下来后，“程序坞锁定”会把程序坞移到你为这组屏幕选择的显示器上。对于还没设置过的一组屏幕，它会让程序坞留在macOS放置的位置，直到你在“设置”→“程序坞锁定”中选择一台显示器。 | needs_review |  |
+| `marketing.dockLockPageFaq.3.question` | Can my pointer still move between displays? | 指针还能在显示器之间移动吗？ | needs_review |  |
+| `marketing.dockLockPageFaq.3.answer` | Yes. Dock Lock holds back only a strip a few pixels deep at the Dock's edge on your other displays, so the pointer crosses between screens as usual. | 可以。“程序坞锁定”只会挡住其他显示器程序坞边缘几个像素宽的一条区域，指针仍能照常在屏幕之间移动。 | needs_review |  |
+| `marketing.dockLockPageFaq.4.question` | Does it work with a Dock on the left or right? | 程序坞在左侧或右侧时也能用吗？ | needs_review |  |
+| `marketing.dockLockPageFaq.4.answer` | Yes. Dock Lock works with the Dock at the bottom, left or right of the screen, and keeps it on the display you choose either way. | 可以。无论程序坞位于屏幕底部、左侧还是右侧，“程序坞锁定”都能使用，并会让它停留在你选择的显示器上。 | needs_review |  |
+| `marketing.dockLockPageFaq.5.question` | Does it work with “Displays have separate Spaces” off? | 关闭“显示器具有单独空间”时还能用吗？ | needs_review |  |
+| `marketing.dockLockPageFaq.5.answer` | Only for the main display. With that option off, macOS keeps the Dock on the main display, so Dock Lock can't move it to another one. To keep the Dock on a display that isn't the main one, turn the option on in System Settings → Desktop & Dock, then log out and back in. | 只能用于主显示器。关闭此选项时，macOS会将程序坞保留在主显示器上，因此“程序坞锁定”无法把它移到其他显示器。若要让程序坞停留在非主显示器上，请在“系统设置”→“桌面与程序坞”中打开此选项，然后退出登录并重新登录。 | needs_review | From settings.dockLock.spacesShared |
+| `marketing.dockLockPageFaq.6.question` | Why can't it move the Dock to one of my displays? | 为什么它无法把程序坞移到我的某台显示器上？ | needs_review |  |
+| `marketing.dockLockPageFaq.6.answer` | When another display covers that display's whole Dock edge, such as two equal displays stacked, macOS won't put the Dock there. Shift one display in System Settings → Displays so part of the edge is free, or pick another display. | 如果另一台显示器贴住了那台显示器放置程序坞的整条边（例如两台尺寸相同的显示器上下叠放），macOS就不会把程序坞放到那里。请在“系统设置”→“显示器”中移动一台显示器，让这条边空出一部分，或选择其他显示器。 | needs_review | From settings.dockLock.edgeCovered |
+| `marketing.dockLockPageFaq.7.question` | Do I need to use tiles? | 必须使用磁贴吗？ | needs_review |  |
+| `marketing.dockLockPageFaq.7.answer` | No. Dock Lock works on its own, without any tiles. The lock holds while Dock Tile is running, so Dock Tile keeps running when you close its window. With a single display, Dock Lock does nothing: the Dock stays where macOS puts it. | 不需要。“程序坞锁定”可以单独使用，无需任何磁贴。锁定在Dock Tile运行时有效，因此关闭Dock Tile的窗口后它会继续运行。只有一台显示器时，“程序坞锁定”不起作用：程序坞会停留在macOS放置的位置。 | needs_review |  |
+| `marketing.dockLockPageFaq.8.question` | How do I turn it off? | 如何关闭它？ | needs_review |  |
+| `marketing.dockLockPageFaq.8.answer` | In Dock Tile, go to Settings → Dock Lock and turn off Lock Dock to one display. To turn it off for just the current set of screens, pick Default (follow macOS) under Keep Dock on. | 在Dock Tile中前往“设置”→“程序坞锁定”，然后关闭“将程序坞锁定到一台显示器”。若只想对当前这组屏幕关闭，请在“将程序坞固定在”中选择“默认（跟随macOS）”。 | needs_review | = settings.dockLock.toggle / .anchor / .defaultDisplay |
+| `marketing.dockLockPageFaq.9.question` | Is Dock Lock free? | “程序坞锁定”免费吗？ | needs_review |  |
+| `marketing.dockLockPageFaq.9.answer` | Yes. Dock Lock comes with Dock Tile, which is free and open source, with no account. Turn it on in Settings → Dock Lock. | 是的。“程序坞锁定”随Dock Tile附带，而Dock Tile免费且开源，无需账户。在“设置”→“程序坞锁定”中打开它即可。 | needs_review |  |
+| `marketing.dockLockPageClosingA` | Pin your | 今天就固定 | needs_review | Split around the heading's tilted tile: A 🔒 B |
+| `marketing.dockLockPageClosingB` | Dock today. | 你的程序坞。 | needs_review |  |
+| `marketing.dockLockPageClosingNote` | Free, open source, no account. Turn it off any time and the Dock goes back to how macOS does it. | 免费、开源，无需账户。随时可以关闭，关闭后程序坞会恢复macOS原本的行为。 | needs_review | Under the closing Download |
 | `downloadButton` | Download for macOS | 下载macOS版 | needs_review |  |
 | `privacy` | Privacy | 隐私 | needs_review |  |
 | `terms` | Terms | 条款 | needs_review |  |
@@ -190,3 +238,5 @@ zh-Hans: every row is `needs_review` until a native speaker checks it.
 | `meta.homeDescription` | Put a group of apps behind one Dock icon. Click it and they pop up, like a folder on your iPhone. Free and open source, for macOS 15+ on Apple silicon. | 将一组App放进一个程序坞图标。点一下，它们就会弹出来，就像iPhone上的文件夹。免费且开源，适用于macOS 15及更高版本，需搭载Apple芯片。 | needs_review | English: siteConfig.description; also the JSON-LD description on /zh-Hans; not drift-checked. macOS 15 checked by hand |
 | `meta.faqTitle` | Frequently Asked Questions - Dock Tile | 常见问题 - Dock Tile | needs_review | English: app/faq/page.tsx; not drift-checked |
 | `meta.faqDescription` | Answers to common Dock Tile questions — macOS version requirements, creating and customising tiles, Ghost Mode, backups, and Grid vs List layouts. | Dock Tile常见问题解答：macOS版本要求、创建和自定义磁贴、Ghost mode、备份，以及网格与列表布局。 | needs_review | English: app/faq/page.tsx; not drift-checked |
+| `meta.dockLockTitle` | Stop the Mac Dock jumping to your other monitor | 让Mac程序坞不再跳到另一台显示器上 | needs_review | English: app/dock-lock/page.tsx; not drift-checked |
+| `meta.dockLockDescription` | With more than one display, the Mac Dock jumps to the screen you push the pointer against. Dock Lock, free with Dock Tile, keeps it on the display you choose. | 在连接了多台显示器的Mac上，程序坞会跳到你用指针推向的那个屏幕。“程序坞锁定”随免费的Dock Tile附带，会让程序坞停留在你选择的显示器上。 | needs_review | English: app/dock-lock/page.tsx; not drift-checked |

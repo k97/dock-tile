@@ -173,7 +173,7 @@ Back/Forward still restore their position.
 - **The homepage has NO eyebrows, hero included** (owner, 2026-11-09: "its not of any use" —
   the "Features / 01"-style labels went, then the hero's requirements line, which the
   `DownloadMeta` line under the Download button already states; don't re-add one). Eyebrows
-  survive only on the dark subpage headers (FAQ, Release Notes, Privacy, Terms). Their style: written case, `text-[14px] font-semibold
+  survive only on the dark subpage headers (FAQ, Release Notes, Privacy, Terms, Dock Lock). Their style: written case, `text-[14px] font-semibold
   tracking-[0.01em] text-white/75` — the tracked all-caps version "screams AI touch", 0.2em
   tracking read "too scattered" in lower case, and 12px was too small. Tracked caps
   (`uppercase tracking-[0.2em]`) remain only on small badges and labels inside components

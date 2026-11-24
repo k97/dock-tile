@@ -14,7 +14,7 @@ const root = new URL("..", import.meta.url);
 const sheetPath = new URL("../docs/l10n/website-zh-Hans.md", root);
 const { localisedContent, zhPageMeta } = await import(new URL("lib/i18n.ts", root));
 
-/** Every string a locale shows on / and /faq, by a stable key (legal pages stay English). */
+/** Every string a locale shows on /, /faq and /dock-lock, by a stable key (legal pages stay English). */
 function flatten(content) {
   const out = new Map();
   const walk = (prefix, value) => {

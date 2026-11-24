@@ -22,16 +22,37 @@
     heading names it, 2026-11-23 — then free, macOS version, App Store, what it changes, uninstall; renaming
     one of those questions drops it, with a dev-console warning), then "See all questions" → /faq.
     Card styles are shared with /faq (`components/faq-card.ts`). No FAQPage JSON-LD here —
-    that stays on /faq only (seo-geo.md).
+    only the FAQ and Dock Lock pages carry it (seo-geo.md).
   - **DownloadSection** — "Tidy your ▦ Dock today." + Download + `DownloadMeta variant="page"`,
     on the page background (no wallpaper).
+  - **DockLockStory → `/dock-lock`** (owner, 2026-11-23): the band's "How Dock Lock works →" pill
+    links to the Dock Lock page in the page's language (`localePath`). The band is a TEASER (owner,
+    2026-11-24, "it felt like it was repeating"): title, one-line lead + body, the link, the mock.
+    The how (Settings path, per-desk memory) lives only on the page; don't add it back here.
   - Cut on 2026-11-21, in git history: "More than a tile in your Dock" (the interactive tile
     customiser + menu bar big cards — it repeated the features section), the "Built for the
     power user" heading, the closing band's wallpaper and its closing Dock, and an `/option-2`
     preview (problem-led cards). The standalone `/features` route was deliberately deleted —
     nav "Features" scrolls to `/#features`. Don't recreate the page.
-- Nav order: **Features · Privacy · FAQ** + Download (Download is `md`+ only — see
-  design-system.md "Adaptive nav").
+- **The Dock Lock page** (`/dock-lock` + `/zh-Hans/dock-lock`, `components/dock-lock-page.tsx`; owner,
+  2026-11-23, plan `docs/superpowers/plans/2026-11-23-website-dock-lock-page.md`): answers "the Mac
+  Dock keeps moving to my other monitor". A CENTRED dark header like the other subpages (eyebrow,
+  h1 "Keep the Dock on one display.", the one-line answer, Download `location: "dock_lock_page"` +
+  the proof line "Free & open source · No account · macOS 15+ · Apple silicon"), never the homepage
+  band's split text + animation layout (2026-11-24: the two read as one section twice), then a row
+  of four benefits (`dockLockPageBenefits`, the homepage's small-feature row style), then a prose
+  column — Why the Dock moves (with the light `DockLockMock` under it), three steps, Without an app —
+  then its own ten questions (accordion; the old
+  "Good to know" facts, incl. Dock Lock's costs, live in their answers — 2026-11-23 landing-page
+  pass), "Pin your 🔒 Dock today." + Download + the risk-reversal line (`dockLockPageClosingNote`),
+  footer. Every claim is the app's own
+  (`settings.dockLock.*`, dock-lock.md); macOS behaviour only as the app's messages state it. In the nav
+  pill, the homepage band and the footer. Keep/drop at the 2027-03-01 review (Search Console
+  impressions for Dock-moving queries); dropping it takes it out of the nav too.
+- Nav order: **Features · Dock Lock · FAQ** + Download (Download is `md`+ only — see
+  design-system.md "Adaptive nav"). Dock Lock replaced Privacy on 2026-11-24 (owner: Privacy was
+  filler; it stays in the footer's Company column). The pill fits at 320 / 360 / 390 px in both
+  languages (Chromium, 14 px a side at 360 in English); not re-measured in WebKit.
 - **The hero has no eyebrow** (owner, 2026-11-09): its requirements live in the line under the
   Download button. That line is `DownloadMeta` (in `hero.tsx`, which MacOSFloorGuardTests reads
   for "macOS 15+"): hero = "v2.7.2 · Free & open source · Apple silicon · macOS 15+"; the Download
@@ -39,7 +60,7 @@
 - **Footer (owner, 2026-11-21, the studio's own footer layout)** — on every page, inside a
   signature-dark inset band like the Dock Lock band (2026-11-22; the theme switcher is white-on-dark): the studio mark +
   "Happy Machines Company" + "Products for the everyday." (the studio site's own line), then three
-  columns — **Dock Tile** (Features · What's new · FAQ · Download), **Resources** (GitHub ·
+  columns — **Dock Tile** (Features · Dock Lock · What's new · FAQ · Download), **Resources** (GitHub ·
   Request a feature · Report a bug · Contact), **Company** (About · Spades Audio · Privacy ·
   Terms) — then "© YYYY, Made with 🧡 for macOS" (lucide `Heart`, orange fill, accessible name
   "love") + the theme switcher. External links carry ↗ (+ "opens in a new tab" for screen
@@ -107,8 +128,8 @@
 - `en-AU` (default) / `en-GB` / `en-US`. SSR always renders AU; `locale-provider.tsx` reads
   `navigator.language` after mount and swaps to US content when the browser says so.
   **No Next.js locale routing, on purpose** — with one exception below.
-- **Simplified Chinese test (owner, 2026-11-23, issue #43 option B):** `/zh-Hans` and
-  `/zh-Hans/faq` only, decided by the ROUTE (`localeForPath`; `LocaleProvider` is route-aware, so the
+- **Simplified Chinese test (owner, 2026-11-23, issue #43 option B):** `/zh-Hans`,
+  `/zh-Hans/faq` and `/zh-Hans/dock-lock` only (`ZH_PAGES` in `lib/nav.ts`), decided by the ROUTE (`localeForPath`; `LocaleProvider` is route-aware, so the
   server renders Chinese), never by the browser (`detectLocale` never returns zh-Hans). Other pages
   stay English. Plan, baseline and keep/drop rule: docs/superpowers/plans/2026-11-23-website-zh-hans-test.md;
   reviews scheduled 2026-12-07 and 2027-03-01.

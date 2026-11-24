@@ -75,10 +75,12 @@ wrapper owns everything DockTile-specific. Behaviour rules — each was hard-won
 - Reopening during the 200ms close animation is safe: the close timer lives in `closeTimerRef`
   and `open()` cancels it (a stale timeout used to shut the new popover the moment it appeared).
 
-## Card mocks (`home-sections.tsx`: Smart Add sheet, menu bar, ⌘Tab strip, Dock Lock)
+## Card mocks (`home-sections.tsx`: Smart Add sheet, menu bar, ⌘Tab strip; Dock Lock in `dock-lock-mock.tsx`)
 
-The Dock Lock mock is two displays at a fixed 330×170 px: the pill's keyframes (`dock-lock-*` in
-globals.css) place it at 25% / 75% of that box, so it only lines up at a fixed width.
+The Dock Lock mock (`components/dock-lock-mock.tsx`, its own file so `/dock-lock` doesn't pull in
+home-sections.tsx; `ScaleToFit` is in `components/scale-to-fit.tsx`) is two displays at a fixed
+330×170 px: the pill's keyframes (`dock-lock-*` in globals.css) place it at 25% / 75% of that box,
+so it only lines up at a fixed width.
 
 **Illustrative macOS components never restyle responsively** (explicit owner mandate): they
 render at a fixed natural size and `ScaleToFit` applies one uniform `transform: scale()` — an

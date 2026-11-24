@@ -163,7 +163,7 @@ export function Header() {
 
         {/* The three links stay inline at every width — on mobile they ARE the
             nav's content, since Download drops out (below). */}
-        {navLinks(locale, { features: m.footerFeatures, privacy: content.privacy, faq: m.footerFaq }).map((link) => {
+        {navLinks(locale, { features: m.footerFeatures, dockLock: m.footerDockLock, faq: m.footerFaq }).map((link) => {
           const current = currentFor(link, pathname, activeSection);
           return (
             <Link

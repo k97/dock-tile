@@ -1,4 +1,4 @@
-// Localisation for US, UK, AU English, plus a Simplified Chinese test of / and /faq
+// Localisation for US, UK, AU English, plus a Simplified Chinese test of /, /faq and /dock-lock
 // (served at /zh-Hans; machine-first, review sheet docs/l10n/website-zh-Hans.md).
 // Default fallback: AU English
 
@@ -56,9 +56,8 @@ const marketingBase = {
   dockLockTitleB: "stays put.",
   // Dock Lock is its own tool that ships with Dock Tile, not a tile feature: the lead says so.
   dockLockLead: "Dock Lock comes with Dock Tile.",
-  dockLockBody:
-    "It's a separate tool for Macs with more than one display that stops the Dock jumping between screens. Choose a display for each set of screens you use, and the Dock stays on it. Turn it on in Settings\u00A0›\u00A0Dock\u00A0Lock.",
-  dockLockTip: "Remembers a display for each desk you work at.",
+  // A teaser: the how and why live on /dock-lock, which the band links to
+  dockLockBody: "Pick a screen for the Dock and it stays there, however many displays you use.",
   menuBarTitle: "Your tiles, in the menu bar.",
   menuBarLead: "On from the first launch.",
   menuBarIntro: "A menu bar shortcut comes with Dock Tile.", // bold lead-in, like Dock Lock's
@@ -81,6 +80,7 @@ const marketingBase = {
   ctaButton: "Download Dock Tile",
   ctaMetaOpenSource: "Free & open source",
   ctaMetaAppleSilicon: "Apple silicon",
+  ctaMetaMacOS: "macOS 15+", // the floor; MacOSFloorGuardTests reads this file
   // Download buttons on a device that can't run the app (Windows, iPhone, Android, Linux)
   copyLinkButton: "Copy link for your Mac",
   copyLinkShort: "Copy link", // the nav pill: its width is a WebKit landmine (design-system.md)
@@ -135,6 +135,97 @@ const marketingBase = {
   mockMostUsed: "Most used this week",
   mockFiveApps: "5 apps",
   mockThreeApps: "3 apps",
+  // The homepage Dock Lock band's link to /dock-lock, and the footer's
+  dockLockPageLink: "How Dock Lock works",
+  footerDockLock: "Dock Lock",
+  // /dock-lock: answers "the Dock keeps moving to my other monitor". Every claim is the app's own
+  // (AppStrings settings.dockLock.*, .claude/rules/dock-lock.md); macOS behaviour only as the app states it.
+  dockLockPageEyebrow: "Dock Lock",
+  dockLockPageTitle: "Keep the Dock on one display.",
+  dockLockPageAnswer:
+    "On a Mac with more than one display, the Dock jumps to whichever screen you push the pointer against. Dock Lock keeps it on the display you choose.",
+  dockLockPageMetaNoAccount: "No account", // the proof line under the hero's Download: Free & open source · No account · macOS 15+ · Apple silicon
+  // Four one-liners under the hero (the homepage's small-feature row style)
+  dockLockPageBenefits: [
+    { lead: "The Dock stays put", body: "It stays on the display you pick, wherever your pointer goes." },
+    {
+      lead: "One choice per desk",
+      body: "It remembers a display for each set of screens and moves the Dock there when you plug in.",
+    },
+    { lead: "Keep your Spaces", body: "Unlike the built-in workaround, each display keeps its own Spaces." },
+    { lead: "Bottom, left or right", body: "Works wherever your Dock sits." },
+  ],
+  dockLockPageWhyTitle: "Why the Dock moves",
+  dockLockPageWhyBody:
+    "When “Displays have separate Spaces” is on in System Settings → Desktop & Dock, each display has its own Spaces, and macOS moves the Dock to whichever display you push the pointer against at the Dock's edge: the bottom, or the side for a Dock on the left or right. While that option is on, macOS has no setting to choose which display keeps the Dock.",
+  dockLockPageStepsTitle: "Fix it with Dock Lock",
+  dockLockPageSteps: [
+    "Open Dock Tile, go to Settings → Dock Lock and turn on Lock Dock to one display.",
+    "Allow Accessibility access. Dock Tile explains why first, then macOS asks you to turn Dock Tile on in System Settings.",
+    "Pick a display under Keep Dock on. The Dock moves there and stays.",
+  ],
+  dockLockPageStepsNote:
+    "Dock Lock remembers your choice for each set of connected displays, so your home desk and your office each keep their own.",
+  dockLockPageWithoutTitle: "Without an app",
+  dockLockPageWithoutBody:
+    "Turn off “Displays have separate Spaces” in System Settings → Desktop & Dock, then log out and back in. macOS then keeps the Dock on the main display. The cost: your displays no longer have separate Spaces, and the Dock can only stay on the main display.",
+  dockLockPageFaqTitle: "Questions about Dock Lock",
+  // This page's own questions (and FAQPage markup), worded apart from /faq's "stop the Dock moving"
+  dockLockPageFaq: [
+    {
+      question: "Can I keep the Dock on one screen without an app?",
+      answer:
+        "Yes, on the main display only. Turn off “Displays have separate Spaces” in System Settings → Desktop & Dock, then log out and back in, and macOS keeps the Dock on the main display. Your displays then lose their separate Spaces. To keep them, or to keep the Dock on another display, use Dock Lock.",
+    },
+    {
+      question: "Why does Dock Lock need Accessibility access?",
+      answer:
+        "Dock Lock watches pointer movement near the Dock's edge on your other displays and holds the pointer back there, so macOS never moves the Dock to them. macOS lets an app do that only with Accessibility access. Dock Lock reads only pointer movement, not keystrokes, and asks for access only when you turn it on.",
+    },
+    {
+      question: "What happens when I plug in another display?",
+      answer:
+        "Once the displays settle, Dock Lock moves the Dock to the display you chose for that set of screens. For a set of screens you haven't set up yet, it leaves the Dock where macOS puts it until you pick a display in Settings → Dock Lock.",
+    },
+    {
+      question: "Can my pointer still move between displays?",
+      answer:
+        "Yes. Dock Lock holds back only a strip a few pixels deep at the Dock's edge on your other displays, so the pointer crosses between screens as usual.",
+    },
+    {
+      question: "Does it work with a Dock on the left or right?",
+      answer:
+        "Yes. Dock Lock works with the Dock at the bottom, left or right of the screen, and keeps it on the display you choose either way.",
+    },
+    {
+      question: "Does it work with “Displays have separate Spaces” off?",
+      answer:
+        "Only for the main display. With that option off, macOS keeps the Dock on the main display, so Dock Lock can't move it to another one. To keep the Dock on a display that isn't the main one, turn the option on in System Settings → Desktop & Dock, then log out and back in.",
+    },
+    {
+      question: "Why can't it move the Dock to one of my displays?",
+      answer:
+        "When another display covers that display's whole Dock edge, such as two equal displays stacked, macOS won't put the Dock there. Shift one display in System Settings → Displays so part of the edge is free, or pick another display.",
+    },
+    {
+      question: "Do I need to use tiles?",
+      answer:
+        "No. Dock Lock works on its own, without any tiles. The lock holds while Dock Tile is running, so Dock Tile keeps running when you close its window. With a single display, Dock Lock does nothing: the Dock stays where macOS puts it.",
+    },
+    {
+      question: "How do I turn it off?",
+      answer:
+        "In Dock Tile, go to Settings → Dock Lock and turn off Lock Dock to one display. To turn it off for just the current set of screens, pick Default (follow macOS) under Keep Dock on.",
+    },
+    {
+      question: "Is Dock Lock free?",
+      answer:
+        "Yes. Dock Lock comes with Dock Tile, which is free and open source, with no account. Turn it on in Settings → Dock Lock.",
+    },
+  ],
+  dockLockPageClosingA: "Pin your", // split around the heading's tilted tile
+  dockLockPageClosingB: "Dock today.",
+  dockLockPageClosingNote: "Free, open source, no account. Turn it off any time and the Dock goes back to how macOS does it.",
 } as const;
 
 const marketingUS = {
@@ -194,9 +285,7 @@ const marketingZh = {
   dockLockTitleA: "程序坞",
   dockLockTitleB: "不再乱跑。",
   dockLockLead: "Dock Tile附带“程序坞锁定”。",
-  dockLockBody:
-    "这是一个独立的工具，适用于连接了多台显示器的Mac，可防止程序坞在屏幕之间跳动。为你使用的每组屏幕选择一台显示器，程序坞就会停留在那里。在“设置”中的“程序坞锁定”里打开它。",
-  dockLockTip: "为你的每张办公桌记住一台显示器。",
+  dockLockBody: "为程序坞选一台显示器，无论你连接几台显示器，它都会留在那里。",
   menuBarTitle: "你的磁贴，就在菜单栏中。",
   menuBarLead: "首次启动即开启。",
   menuBarIntro: "Dock Tile附带菜单栏快捷方式。",
@@ -216,6 +305,7 @@ const marketingZh = {
   ctaButton: "下载Dock Tile",
   ctaMetaOpenSource: "免费且开源",
   ctaMetaAppleSilicon: "Apple芯片",
+  ctaMetaMacOS: "macOS 15+",
   copyLinkButton: "为你的Mac拷贝链接",
   copyLinkShort: "拷贝链接",
   copyLinkDone: "链接已拷贝",
@@ -261,6 +351,89 @@ const marketingZh = {
   mockMostUsed: "本周最常用",
   mockFiveApps: "5个App",
   mockThreeApps: "3个App",
+  dockLockPageLink: "了解“程序坞锁定”如何工作",
+  footerDockLock: "程序坞锁定",
+  dockLockPageEyebrow: "程序坞锁定",
+  dockLockPageTitle: "让程序坞固定在一台显示器上。",
+  dockLockPageAnswer:
+    "在连接了多台显示器的Mac上，你把指针推向哪个屏幕，程序坞就会跳到哪个屏幕。“程序坞锁定”会让它停留在你选择的显示器上。",
+  dockLockPageMetaNoAccount: "无需账户",
+  dockLockPageBenefits: [
+    { lead: "程序坞固定不动", body: "不论指针移到哪里，它都会停留在你选择的显示器上。" },
+    { lead: "每张桌子一个选择", body: "它会为每组屏幕记住一台显示器，并在你接上显示器时把程序坞移过去。" },
+    { lead: "保留你的空间", body: "与系统自带的变通办法不同，每台显示器都保留自己的空间。" },
+    { lead: "底部、左侧或右侧", body: "无论程序坞在哪一边都能用。" },
+  ],
+  dockLockPageWhyTitle: "程序坞为什么会移动",
+  dockLockPageWhyBody:
+    "在“系统设置”→“桌面与程序坞”中打开“显示器具有单独空间”时，每台显示器都有自己的空间。你把指针推向哪台显示器的程序坞边缘（底部；程序坞在左侧或右侧时则是侧边），macOS就会把程序坞移到那台显示器上。此选项打开时，macOS没有可以选择由哪台显示器保留程序坞的设置。",
+  dockLockPageStepsTitle: "用“程序坞锁定”解决",
+  dockLockPageSteps: [
+    "打开Dock Tile，前往“设置”→“程序坞锁定”，然后打开“将程序坞锁定到一台显示器”。",
+    "允许无障碍访问。Dock Tile会先说明原因，然后macOS会请你在“系统设置”中打开Dock Tile。",
+    "在“将程序坞固定在”中选择一台显示器。程序坞会移到那里并停留在那里。",
+  ],
+  dockLockPageStepsNote:
+    "“程序坞锁定”会为每组已连接的显示器记住你的选择，因此家里和办公室会各自保留自己的设置。",
+  dockLockPageWithoutTitle: "不用App的办法",
+  dockLockPageWithoutBody:
+    "在“系统设置”→“桌面与程序坞”中关闭“显示器具有单独空间”，然后退出登录并重新登录。之后macOS会将程序坞保留在主显示器上。代价是：各台显示器不再有单独的空间，而且程序坞只能停留在主显示器上。",
+  dockLockPageFaqTitle: "关于“程序坞锁定”的问题",
+  dockLockPageFaq: [
+    {
+      question: "不用App能让程序坞停留在一个屏幕上吗？",
+      answer:
+        "可以，但只能是主显示器。在“系统设置”→“桌面与程序坞”中关闭“显示器具有单独空间”，然后退出登录并重新登录，macOS就会把程序坞保留在主显示器上。之后各台显示器将不再有单独的空间。若想保留单独的空间，或让程序坞停留在其他显示器上，请使用“程序坞锁定”。",
+    },
+    {
+      question: "为什么“程序坞锁定”需要无障碍访问权限？",
+      answer:
+        "“程序坞锁定”会留意指针在其他显示器程序坞边缘附近的移动，并在那里挡住指针，这样macOS就不会把程序坞移到那些显示器上。macOS只允许拥有无障碍访问权限的App这样做。“程序坞锁定”只读取指针移动，不读取按键，并且只在你打开它时才请求此权限。",
+    },
+    {
+      question: "接上另一台显示器时会怎样？",
+      answer:
+        "显示器稳定下来后，“程序坞锁定”会把程序坞移到你为这组屏幕选择的显示器上。对于还没设置过的一组屏幕，它会让程序坞留在macOS放置的位置，直到你在“设置”→“程序坞锁定”中选择一台显示器。",
+    },
+    {
+      question: "指针还能在显示器之间移动吗？",
+      answer:
+        "可以。“程序坞锁定”只会挡住其他显示器程序坞边缘几个像素宽的一条区域，指针仍能照常在屏幕之间移动。",
+    },
+    {
+      question: "程序坞在左侧或右侧时也能用吗？",
+      answer:
+        "可以。无论程序坞位于屏幕底部、左侧还是右侧，“程序坞锁定”都能使用，并会让它停留在你选择的显示器上。",
+    },
+    {
+      question: "关闭“显示器具有单独空间”时还能用吗？",
+      answer:
+        "只能用于主显示器。关闭此选项时，macOS会将程序坞保留在主显示器上，因此“程序坞锁定”无法把它移到其他显示器。若要让程序坞停留在非主显示器上，请在“系统设置”→“桌面与程序坞”中打开此选项，然后退出登录并重新登录。",
+    },
+    {
+      question: "为什么它无法把程序坞移到我的某台显示器上？",
+      answer:
+        "如果另一台显示器贴住了那台显示器放置程序坞的整条边（例如两台尺寸相同的显示器上下叠放），macOS就不会把程序坞放到那里。请在“系统设置”→“显示器”中移动一台显示器，让这条边空出一部分，或选择其他显示器。",
+    },
+    {
+      question: "必须使用磁贴吗？",
+      answer:
+        "不需要。“程序坞锁定”可以单独使用，无需任何磁贴。锁定在Dock Tile运行时有效，因此关闭Dock Tile的窗口后它会继续运行。只有一台显示器时，“程序坞锁定”不起作用：程序坞会停留在macOS放置的位置。",
+    },
+    {
+      question: "如何关闭它？",
+      answer:
+        "在Dock Tile中前往“设置”→“程序坞锁定”，然后关闭“将程序坞锁定到一台显示器”。若只想对当前这组屏幕关闭，请在“将程序坞固定在”中选择“默认（跟随macOS）”。",
+    },
+    {
+      question: "“程序坞锁定”免费吗？",
+      answer:
+        "是的。“程序坞锁定”随Dock Tile附带，而Dock Tile免费且开源，无需账户。在“设置”→“程序坞锁定”中打开它即可。",
+    },
+  ],
+  dockLockPageClosingA: "今天就固定",
+  dockLockPageClosingB: "你的程序坞。",
+  dockLockPageClosingNote: "免费、开源，无需账户。随时可以关闭，关闭后程序坞会恢复macOS原本的行为。",
 } as const satisfies Record<keyof typeof marketingBase, unknown>;
 
 // Names shown in the mocks, keyed by the English the data arrays use (comparisons stay English).
@@ -874,7 +1047,7 @@ export const localisedContent = {
 } as const;
 
 // The Chinese pages' <title>, meta description and JSON-LD description. Their English
-// counterparts are siteConfig (title, description) and app/faq/page.tsx.
+// counterparts are siteConfig (title, description), app/faq/page.tsx and app/dock-lock/page.tsx.
 export const zhPageMeta = {
   homeTitle: "Dock Tile - 为Mac程序坞带来iOS风格的App文件夹",
   homeDescription:
@@ -882,6 +1055,9 @@ export const zhPageMeta = {
   faqTitle: "常见问题 - Dock Tile",
   faqDescription:
     "Dock Tile常见问题解答：macOS版本要求、创建和自定义磁贴、Ghost mode、备份，以及网格与列表布局。",
+  dockLockTitle: "让Mac程序坞不再跳到另一台显示器上",
+  dockLockDescription:
+    "在连接了多台显示器的Mac上，程序坞会跳到你用指针推向的那个屏幕。“程序坞锁定”随免费的Dock Tile附带，会让程序坞停留在你选择的显示器上。",
 } as const;
 
 // Helper to get content for a locale with fallback to AU

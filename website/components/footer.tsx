@@ -9,7 +9,7 @@ import { HmcMark } from "@/components/hmc-mark";
 import { siteConfig } from "@/lib/config";
 import { trackContactClick, trackDownloadClick, trackExternalLinkClick } from "@/lib/analytics";
 import { withReferral } from "@/lib/referral";
-import { isActiveRoute, localeForPath, localePath } from "@/lib/nav";
+import { isActiveRoute, localeForPath, localePath, otherLanguagePath } from "@/lib/nav";
 import { bugReportUrl, featureRequestUrl } from "@/lib/feedback";
 
 const STUDIO_URL = withReferral(siteConfig.authorUrl);
@@ -32,10 +32,9 @@ export function Footer() {
   const { locale, content } = useLocale();
   const m = content.marketing;
   const pathname = usePathname();
-  // The other language's version of this page: its FAQ for an FAQ, else its home.
+  // The other language's version of this page (its FAQ for an FAQ, …), else its home.
   const zh = localeForPath(pathname) === "zh-Hans";
-  const onFaq = pathname === localePath(locale, "/faq");
-  const languageHref = localePath(zh ? "en-AU" : "zh-Hans", onFaq ? "/faq" : "/");
+  const languageHref = otherLanguagePath(pathname);
   const currentYear = new Date().getFullYear();
 
   const columns: { title: string; links: FooterLink[] }[] = [
@@ -43,6 +42,7 @@ export function Footer() {
       title: siteConfig.appName,
       links: [
         { label: m.footerFeatures, href: localePath(locale, "/#features") },
+        { label: m.footerDockLock, href: localePath(locale, "/dock-lock") },
         { label: m.footerWhatsNew, href: "/release-notes" },
         { label: m.footerFaq, href: localePath(locale, "/faq") },
         { label: m.footerDownload, href: siteConfig.downloadUrl, onClick: () => trackDownloadClick("footer") },

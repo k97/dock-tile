@@ -73,6 +73,10 @@ export const softwareApplicationSchemaZh = {
 
 export const faqPageSchemaZh = { ...faqSchema(zh.faq), inLanguage: "zh-Hans" };
 
+// /dock-lock and /zh-Hans/dock-lock: only the questions those pages show.
+export const dockLockFaqSchema = faqSchema(m.dockLockPageFaq);
+export const dockLockFaqSchemaZh = { ...faqSchema(zh.marketing.dockLockPageFaq), inLanguage: "zh-Hans" };
+
 // The homepage's own copy, so the schema can't claim what the page doesn't.
 function featureList(m: (typeof localisedContent)[keyof typeof localisedContent]["marketing"]) {
   return [

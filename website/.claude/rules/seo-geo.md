@@ -47,17 +47,24 @@
 
 ## Structured data (`lib/schema.ts` + `components/json-ld.tsx`)
 
-- WebSite (root layout) · SoftwareApplication (homepage) · FAQPage (`/faq`, all Q&As).
+- WebSite (root layout) · SoftwareApplication (homepage) · FAQPage (`/faq`, all Q&As; `/dock-lock`,
+  its own visible Q&As only, `dockLockFaqSchema`). No second SoftwareApplication anywhere: the
+  Dock Lock page carries only its FAQPage.
   The Chinese test pages (content-i18n.md) carry their own: a Chinese SoftwareApplication
   (`…/zh-Hans#app`, `inLanguage`, `sameAs` the English `…/#app`) on `/zh-Hans`, a Chinese FAQPage on
-  `/zh-Hans/faq` only. `/`, `/faq`, `/zh-Hans`, `/zh-Hans/faq` each set `alternates.languages`
+  `/zh-Hans/faq` and on `/zh-Hans/dock-lock` (its own). `/`, `/faq`, `/dock-lock` and their
+  `/zh-Hans` twins each set `alternates.languages`
   (en, zh-Hans, x-default → English) through `languageAlternates()` in `lib/nav.ts`; keep them
-  reciprocal, and add a new Chinese route to the sitemap.
+  reciprocal, and add a new Chinese route to the sitemap and to `ZH_PAGES` (the footer's language
+  link maps a page to its twin through it).
   Every field wires to siteConfig / en-AU i18n (the `/zh-Hans` nodes to the zh content) — never hardcode; `softwareVersion` and
   `downloadUrl` track the CI-written config automatically.
 - **No `aggregateRating`** without verifiable on-page review data (rich-results penalty).
-  FAQPage stays on the FAQ pages only (`/faq`, `/zh-Hans/faq`) — Google requires the marked-up
-  content visible on that page.
+  FAQPage goes on the FAQ pages and the Dock Lock pages only (owner, 2026-11-23), each marking up
+  only the Q&As visible on that page and not repeated on another: `/faq`'s "stop the Dock moving"
+  stays the one marked-up instance of that question, and the Dock Lock page's are worded
+  apart from it. Google shows FAQ rich results only for government and health sites since 2023, so
+  the markup is for AI answer engines, not snippets. The homepage's FAQ section has none.
 - Author/publisher is the **Organization** Happy Machines Company (2026-10-30; was a Person). The
   app's `sameAs` GitHub repo is what disambiguates it from Apple's `NSDockTile` API — keep it.
   Its `@id` is `https://happymachines.company/#organization`, the studio site's own, so engines

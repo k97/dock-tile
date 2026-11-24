@@ -13,7 +13,7 @@ export type NavLink = {
   section?: string;
 };
 
-/** The Chinese test (/zh-Hans and /zh-Hans/faq) is the only locale with its own routes. */
+/** The Chinese test (/zh-Hans, /zh-Hans/faq, /zh-Hans/dock-lock) is the only locale with its own routes. */
 const ZH_PREFIX = "/zh-Hans";
 
 /** The route's own locale, or null where the browser decides (every English page). */
@@ -21,23 +21,34 @@ export function localeForPath(pathname: string): Locale | null {
   return isActiveRoute(pathname, ZH_PREFIX) ? "zh-Hans" : null;
 }
 
-/** A homepage or FAQ path in a locale: "/faq" → "/zh-Hans/faq", "/#features" → "/zh-Hans#features".
- *  Only "/" and "/faq" have Chinese pages; pass anything else unchanged. */
+/** A page's path in a locale: "/faq" → "/zh-Hans/faq", "/#features" → "/zh-Hans#features".
+ *  Only the pages in ZH_PAGES (and "/") have Chinese versions; pass anything else unchanged. */
 export function localePath(locale: Locale, path: string): string {
   if (locale !== "zh-Hans") return path;
   return path === "/" ? ZH_PREFIX : ZH_PREFIX + (path.startsWith("/#") ? path.slice(1) : path);
 }
 
-/** hreflang alternates for a page that exists in both languages ("/" or "/faq"). */
+/** The pages besides "/" that exist in both languages. */
+const ZH_PAGES = ["/faq", "/dock-lock"];
+
+/** The same page in the other language: a page with a Chinese version maps to it, anything else to
+ *  that language's home (the footer's language link). */
+export function otherLanguagePath(pathname: string): string {
+  const zh = localeForPath(pathname) === "zh-Hans";
+  const english = zh ? pathname.slice(ZH_PREFIX.length) || "/" : pathname;
+  return localePath(zh ? "en-AU" : "zh-Hans", ZH_PAGES.includes(english) ? english : "/");
+}
+
+/** hreflang alternates for a page that exists in both languages ("/" or one of ZH_PAGES). */
 export function languageAlternates(path: string) {
   return { en: path, "zh-Hans": localePath("zh-Hans", path), "x-default": path };
 }
 
 /** The nav pill's links, in the page's language and pointing at its pages. */
-export function navLinks(locale: Locale, labels: { features: string; privacy: string; faq: string }): NavLink[] {
+export function navLinks(locale: Locale, labels: { features: string; dockLock: string; faq: string }): NavLink[] {
   return [
     { label: labels.features, href: localePath(locale, "/#features"), section: "features" },
-    { label: labels.privacy, href: "/privacy" },
+    { label: labels.dockLock, href: localePath(locale, "/dock-lock") },
     { label: labels.faq, href: localePath(locale, "/faq") },
   ];
 }
