@@ -1,0 +1,10374 @@
+{
+ "request": {
+  "dateRanges": [
+   {
+    "startDate": "2026-08-01",
+    "endDate": "2026-11-21"
+   }
+  ],
+  "dimensions": [
+   {
+    "name": "date"
+   },
+   {
+    "name": "eventName"
+   }
+  ],
+  "metrics": [
+   {
+    "name": "eventCount"
+   },
+   {
+    "name": "totalUsers"
+   }
+  ],
+  "dimensionFilter": {
+   "filter": {
+    "fieldName": "eventName",
+    "inListFilter": {
+     "values": [
+      "first_open",
+      "tile_created",
+      "tile_added_to_dock",
+      "app_launched",
+      "app_update",
+      "popover_opened",
+      "app_remove"
+     ]
+    }
+   }
+  },
+  "orderBys": [
+   {
+    "dimension": {
+     "dimensionName": "date"
+    }
+   }
+  ],
+  "limit": 10000
+ },
+ "response": {
+  "dimensionHeaders": [
+   {
+    "name": "date"
+   },
+   {
+    "name": "eventName"
+   }
+  ],
+  "metricHeaders": [
+   {
+    "name": "eventCount",
+    "type": "TYPE_INTEGER"
+   },
+   {
+    "name": "totalUsers",
+    "type": "TYPE_INTEGER"
+   }
+  ],
+  "rows": [
+   {
+    "dimensionValues": [
+     {
+      "value": "20260801"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260801"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260802"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260802"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260802"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260802"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260802"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260803"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "32"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260803"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "24"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260803"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260803"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260803"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260804"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260804"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260804"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260805"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "57"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260805"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "27"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260805"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260805"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260805"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260806"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260806"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260806"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260806"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260807"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "69"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260807"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "40"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260807"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260807"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260807"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260808"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260808"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260808"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260809"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "34"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260809"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "26"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260809"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260809"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260809"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260810"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "22"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260810"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "13"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260811"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "59"
+     },
+     {
+      "value": "10"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260811"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "22"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260811"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260811"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260811"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260812"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "27"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260812"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260812"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260812"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260812"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260813"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "24"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260813"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260813"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260814"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "48"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260814"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "22"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260814"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260814"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260814"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260815"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "17"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260815"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260815"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260815"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260815"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260816"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260816"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260816"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260816"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260816"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260817"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260817"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260817"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260818"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "25"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260818"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "18"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260818"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260818"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260818"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260819"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "35"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260819"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "19"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260819"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260819"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260819"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260820"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "135"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260820"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "61"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260820"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260820"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260820"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260821"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "54"
+     },
+     {
+      "value": "9"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260821"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "21"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260821"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260821"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260821"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260822"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "29"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260822"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260822"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260822"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260822"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260823"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "94"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260823"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "47"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260823"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260823"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260823"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260824"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "245"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260824"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "125"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260824"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "20"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260824"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "20"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260824"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "9"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260825"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "201"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260825"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "65"
+     },
+     {
+      "value": "10"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260825"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260825"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260825"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260826"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "153"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260826"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "108"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260826"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "21"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260826"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "19"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260826"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260827"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "131"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260827"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "52"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260827"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260827"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260827"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260828"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "85"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260828"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "61"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260828"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260828"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260829"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "96"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260829"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "35"
+     },
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260829"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260829"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260829"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260830"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "121"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260830"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "80"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260830"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260830"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260830"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260830"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260831"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "146"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260831"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "37"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260831"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260831"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260831"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260901"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "208"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260901"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "130"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260901"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "15"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260901"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260901"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260901"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260902"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "280"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260902"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "160"
+     },
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260902"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "22"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260902"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260902"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260903"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "93"
+     },
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260903"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "24"
+     },
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260903"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260904"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "143"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260904"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "71"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260904"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260904"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260904"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260905"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "79"
+     },
+     {
+      "value": "10"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260905"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "53"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260905"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260905"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260905"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260906"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "171"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260906"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "48"
+     },
+     {
+      "value": "9"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260906"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260906"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260906"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260906"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260907"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "134"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260907"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "64"
+     },
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260907"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260907"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260907"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260907"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260908"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "188"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260908"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "144"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260908"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "15"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260908"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "15"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260908"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260908"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260909"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "226"
+     },
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260909"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "171"
+     },
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260909"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260909"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260909"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260909"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260910"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "174"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260910"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "67"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260910"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260910"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260910"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260910"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260911"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "170"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260911"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "106"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260911"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260911"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260911"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260911"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260912"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "150"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260912"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "54"
+     },
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260912"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260912"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260912"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260913"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "79"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260913"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "40"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260913"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260913"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260913"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260914"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "189"
+     },
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260914"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "132"
+     },
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260914"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260914"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260914"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260914"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260915"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "413"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260915"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "131"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260915"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260915"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260915"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260916"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "186"
+     },
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260916"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "120"
+     },
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260916"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260916"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260916"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260917"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "162"
+     },
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260917"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "80"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260917"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260917"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260917"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260917"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260918"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "123"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260918"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "75"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260918"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260918"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260918"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260919"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "171"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260919"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "81"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260919"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260919"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260919"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260919"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260920"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "101"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260920"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "53"
+     },
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260920"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260920"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260920"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260920"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260921"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "179"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260921"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "144"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260921"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260921"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260921"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260921"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260922"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "127"
+     },
+     {
+      "value": "23"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260922"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "114"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260922"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260922"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260922"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260922"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260923"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "114"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260923"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "105"
+     },
+     {
+      "value": "23"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260923"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260923"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260923"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260923"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260924"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "138"
+     },
+     {
+      "value": "27"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260924"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "63"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260924"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260924"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260924"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260924"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260925"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "121"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260925"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "45"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260925"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260925"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260925"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260926"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "88"
+     },
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260926"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "82"
+     },
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260926"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260926"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260926"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260927"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "94"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260927"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "63"
+     },
+     {
+      "value": "9"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260927"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260927"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260927"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260928"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "148"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260928"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "101"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260928"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260928"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260928"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260928"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260929"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "176"
+     },
+     {
+      "value": "29"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260929"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "123"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260929"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260929"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260929"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260930"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "94"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260930"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "40"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260930"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260930"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260930"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20260930"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261001"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "112"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261001"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "83"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261001"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261001"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261001"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261002"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "87"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261002"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "83"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261002"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261002"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261002"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261003"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "68"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261003"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "61"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261003"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261003"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261003"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261004"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "65"
+     },
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261004"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "49"
+     },
+     {
+      "value": "9"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261004"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261004"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261004"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261005"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "69"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261005"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "64"
+     },
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261005"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261005"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261006"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "137"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261006"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "85"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261006"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261007"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "89"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261007"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "74"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261007"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261007"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261007"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261007"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261008"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "196"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261008"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "84"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261008"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261008"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261008"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261008"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261009"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "116"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261009"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "66"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261009"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261010"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "175"
+     },
+     {
+      "value": "23"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261010"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "78"
+     },
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261010"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261010"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261010"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261010"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261011"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "113"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261011"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "104"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261011"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261011"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261011"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261012"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "90"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261012"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "69"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261012"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261013"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "88"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261013"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "69"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261013"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261013"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261014"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "168"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261014"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "158"
+     },
+     {
+      "value": "23"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261014"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "16"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261014"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "13"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261014"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261014"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261015"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "102"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261015"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "76"
+     },
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261015"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261015"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261015"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261015"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261016"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "98"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261016"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "86"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261016"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261017"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "61"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261017"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "46"
+     },
+     {
+      "value": "10"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261017"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261017"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261018"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "86"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261018"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "74"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261018"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261018"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261019"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "94"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261019"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "69"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261019"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261019"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261020"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "138"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261020"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "121"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261020"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261020"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261020"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261020"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261021"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "163"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261021"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "84"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261021"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261021"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261021"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261022"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "209"
+     },
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261022"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "201"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261022"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "9"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261022"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261022"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261022"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261023"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "182"
+     },
+     {
+      "value": "34"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261023"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "165"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261023"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     },
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261023"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261023"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261023"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261024"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "270"
+     },
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261024"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "227"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261024"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "17"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261024"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "16"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261024"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261024"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261025"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "221"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261025"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "178"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261025"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261025"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261025"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261025"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261026"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "138"
+     },
+     {
+      "value": "27"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261026"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "67"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261026"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261026"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261026"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261026"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261027"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "171"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261027"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "142"
+     },
+     {
+      "value": "33"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261027"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261027"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261027"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261027"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261028"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "224"
+     },
+     {
+      "value": "25"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261028"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "106"
+     },
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261028"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "15"
+     },
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261028"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261028"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261028"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261029"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "169"
+     },
+     {
+      "value": "31"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261029"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "109"
+     },
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261029"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261029"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261029"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261029"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261030"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "154"
+     },
+     {
+      "value": "27"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261030"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "98"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261030"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261030"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261030"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261031"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "191"
+     },
+     {
+      "value": "27"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261031"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "76"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261031"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261031"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261031"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261031"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261101"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "141"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261101"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "91"
+     },
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261101"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261101"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261101"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261101"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261102"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "121"
+     },
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261102"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "114"
+     },
+     {
+      "value": "23"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261102"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261102"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261102"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261102"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261103"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "209"
+     },
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261103"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "128"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261103"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261103"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261103"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261103"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261104"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "108"
+     },
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261104"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "50"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261104"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261104"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261105"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "222"
+     },
+     {
+      "value": "31"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261105"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "143"
+     },
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261105"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261105"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "13"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261105"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261106"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "133"
+     },
+     {
+      "value": "28"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261106"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "130"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261106"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261106"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261106"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261107"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "183"
+     },
+     {
+      "value": "31"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261107"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "121"
+     },
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261107"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261107"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261107"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261107"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261108"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "209"
+     },
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261108"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "156"
+     },
+     {
+      "value": "22"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261108"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261108"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261108"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261108"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261109"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "236"
+     },
+     {
+      "value": "27"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261109"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "198"
+     },
+     {
+      "value": "32"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261109"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261109"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261109"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261109"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261110"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "254"
+     },
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261110"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "137"
+     },
+     {
+      "value": "30"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261110"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261110"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261110"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261110"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261111"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "313"
+     },
+     {
+      "value": "33"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261111"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "224"
+     },
+     {
+      "value": "29"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261111"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261111"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261111"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261111"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261112"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "179"
+     },
+     {
+      "value": "27"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261112"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "97"
+     },
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261112"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261112"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261113"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "105"
+     },
+     {
+      "value": "23"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261113"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "105"
+     },
+     {
+      "value": "25"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261113"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "22"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261113"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261113"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261113"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261114"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "119"
+     },
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261114"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "115"
+     },
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261115"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "139"
+     },
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261115"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "83"
+     },
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261115"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261115"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261115"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261116"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "170"
+     },
+     {
+      "value": "25"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261116"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "144"
+     },
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261116"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "15"
+     },
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261116"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261116"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261116"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261117"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "185"
+     },
+     {
+      "value": "31"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261117"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "143"
+     },
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261117"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     },
+     {
+      "value": "7"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261117"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261117"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261117"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261118"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "154"
+     },
+     {
+      "value": "29"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261118"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "88"
+     },
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261118"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261118"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261119"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "273"
+     },
+     {
+      "value": "32"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261119"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "179"
+     },
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261119"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261119"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261119"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "7"
+     },
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261119"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261120"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "155"
+     },
+     {
+      "value": "28"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261120"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "125"
+     },
+     {
+      "value": "25"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261120"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261120"
+     },
+     {
+      "value": "app_update"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261120"
+     },
+     {
+      "value": "tile_created"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261120"
+     },
+     {
+      "value": "tile_added_to_dock"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     },
+     {
+      "value": "1"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261121"
+     },
+     {
+      "value": "popover_opened"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "100"
+     },
+     {
+      "value": "23"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261121"
+     },
+     {
+      "value": "app_launched"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "40"
+     },
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "20261121"
+     },
+     {
+      "value": "first_open"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     },
+     {
+      "value": "4"
+     }
+    ]
+   }
+  ],
+  "rowCount": 572,
+  "metadata": {
+   "currencyCode": "USD",
+   "timeZone": "Australia/Melbourne"
+  },
+  "kind": "analyticsData#runReport"
+ }
+}

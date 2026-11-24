@@ -1,0 +1,77 @@
+{
+ "daily_role": {
+  "dateRanges": [{"startDate": "2026-08-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "date"}, {"name": "customUser:app_role"}],
+  "metrics": [{"name": "activeUsers"}, {"name": "newUsers"}, {"name": "sessions"}],
+  "orderBys": [{"dimension": {"dimensionName": "date"}}]
+ },
+ "daily_all": {
+  "dateRanges": [{"startDate": "2026-06-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "date"}],
+  "metrics": [{"name": "activeUsers"}, {"name": "newUsers"}, {"name": "sessions"}],
+  "orderBys": [{"dimension": {"dimensionName": "date"}}]
+ },
+ "daily_events": {
+  "dateRanges": [{"startDate": "2026-08-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "date"}, {"name": "eventName"}],
+  "metrics": [{"name": "eventCount"}, {"name": "totalUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "eventName", "inListFilter": {"values": ["first_open", "tile_created", "tile_added_to_dock", "app_launched", "app_update", "popover_opened", "app_remove"]}}},
+  "orderBys": [{"dimension": {"dimensionName": "date"}}]
+ },
+ "weekly_role_newret": {
+  "dateRanges": [{"startDate": "2026-08-03", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "isoYearIsoWeek"}, {"name": "customUser:app_role"}, {"name": "newVsReturning"}],
+  "metrics": [{"name": "activeUsers"}],
+  "orderBys": [{"dimension": {"dimensionName": "isoYearIsoWeek"}}]
+ },
+ "weekly_main_users": {
+  "dateRanges": [{"startDate": "2026-08-03", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "isoYearIsoWeek"}],
+  "metrics": [{"name": "activeUsers"}, {"name": "newUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "main"}}},
+  "orderBys": [{"dimension": {"dimensionName": "isoYearIsoWeek"}}]
+ },
+ "weekly_all_users": {
+  "dateRanges": [{"startDate": "2026-06-15", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "isoYearIsoWeek"}],
+  "metrics": [{"name": "activeUsers"}, {"name": "newUsers"}, {"name": "sessions"}],
+  "orderBys": [{"dimension": {"dimensionName": "isoYearIsoWeek"}}]
+ },
+ "weekly_events": {
+  "dateRanges": [{"startDate": "2026-08-03", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "isoYearIsoWeek"}, {"name": "eventName"}],
+  "metrics": [{"name": "eventCount"}, {"name": "totalUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "eventName", "inListFilter": {"values": ["first_open", "tile_created", "tile_added_to_dock", "app_launched", "app_update", "popover_opened", "app_remove", "session_start"]}}},
+  "orderBys": [{"dimension": {"dimensionName": "isoYearIsoWeek"}}]
+ },
+ "weekly_version_main": {
+  "dateRanges": [{"startDate": "2026-09-28", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "isoYearIsoWeek"}, {"name": "appVersion"}],
+  "metrics": [{"name": "activeUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "main"}}},
+  "orderBys": [{"dimension": {"dimensionName": "isoYearIsoWeek"}}]
+ },
+ "firstopen_country_periods": {
+  "dateRanges": [{"startDate": "2026-10-03", "endDate": "2026-10-30", "name": "A_oct03_30"}, {"startDate": "2026-10-31", "endDate": "2026-11-21", "name": "B_oct31_nov21"}],
+  "dimensions": [{"name": "country"}],
+  "metrics": [{"name": "newUsers"}, {"name": "activeUsers"}],
+  "orderBys": [{"metric": {"metricName": "newUsers"}, "desc": true}]
+ },
+ "language_periods_main": {
+  "dateRanges": [{"startDate": "2026-10-03", "endDate": "2026-10-30", "name": "A"}, {"startDate": "2026-10-31", "endDate": "2026-11-21", "name": "B"}],
+  "dimensions": [{"name": "language"}],
+  "metrics": [{"name": "activeUsers"}, {"name": "newUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "main"}}},
+  "orderBys": [{"metric": {"metricName": "activeUsers"}, "desc": true}]
+ },
+ "firstopen_source": {
+  "dateRanges": [{"startDate": "2026-08-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "firstUserSource"}, {"name": "firstUserMedium"}],
+  "metrics": [{"name": "newUsers"}]
+ },
+ "lastyear": {
+  "dateRanges": [{"startDate": "2025-08-01", "endDate": "2025-11-21"}],
+  "dimensions": [{"name": "month"}],
+  "metrics": [{"name": "activeUsers"}]
+ }
+}

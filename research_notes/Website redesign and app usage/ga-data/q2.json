@@ -1,0 +1,54 @@
+{
+ "install_date_main": {
+  "dateRanges": [{"startDate": "2026-09-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "firstSessionDate"}],
+  "metrics": [{"name": "totalUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "main"}}},
+  "orderBys": [{"dimension": {"dimensionName": "firstSessionDate"}}]
+ },
+ "install_date_helper": {
+  "dateRanges": [{"startDate": "2026-09-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "firstSessionDate"}],
+  "metrics": [{"name": "totalUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "helper"}}},
+  "orderBys": [{"dimension": {"dimensionName": "firstSessionDate"}}]
+ },
+ "main_new_daily": {
+  "dateRanges": [{"startDate": "2026-09-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "date"}, {"name": "newVsReturning"}],
+  "metrics": [{"name": "activeUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "main"}}},
+  "orderBys": [{"dimension": {"dimensionName": "date"}}]
+ },
+ "main_country_install": {
+  "dateRanges": [{"startDate": "2026-09-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "firstSessionDate"}, {"name": "country"}],
+  "metrics": [{"name": "totalUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "main"}}}
+ },
+ "main_installs_version": {
+  "dateRanges": [{"startDate": "2026-10-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "firstSessionDate"}, {"name": "appVersion"}],
+  "metrics": [{"name": "totalUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "main"}}}
+ },
+ "main_active_daily_dau": {
+  "dateRanges": [{"startDate": "2026-09-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "date"}],
+  "metrics": [{"name": "activeUsers"}, {"name": "active7DayUsers"}, {"name": "active28DayUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "customUser:app_role", "stringFilter": {"value": "main"}}},
+  "orderBys": [{"dimension": {"dimensionName": "date"}}]
+ },
+ "all_active_7_28": {
+  "dateRanges": [{"startDate": "2026-09-01", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "date"}],
+  "metrics": [{"name": "activeUsers"}, {"name": "active7DayUsers"}, {"name": "active28DayUsers"}],
+  "orderBys": [{"dimension": {"dimensionName": "date"}}]
+ },
+ "update_events_version": {
+  "dateRanges": [{"startDate": "2026-10-25", "endDate": "2026-11-21"}],
+  "dimensions": [{"name": "eventName"}, {"name": "customEvent:result"}],
+  "metrics": [{"name": "eventCount"}, {"name": "totalUsers"}],
+  "dimensionFilter": {"filter": {"fieldName": "eventName", "inListFilter": {"values": ["update_check", "update_choice", "update_installing", "app_update"]}}}
+ }
+}

@@ -93,7 +93,7 @@
 - What the 2026-11-23 read found: ChatGPT sent more sessions than Google; Google clicks are
   branded; "what is a Dock tile extension" (a macOS notification, not this app) had ~370
   impressions and no clicks, hence that FAQ entry. Re-read Search Console before writing an FAQ
-  "from real queries". Full baseline: `reports/Website discoverability audit 2026-11.md` (untracked).
+  "from real queries". Full baseline: `reports/Website discoverability audit 2026-11.md`; raw GA exports in `research_notes/` (both public since 2026-11-24, owner).
 
 ## Crawlability (critical)
 

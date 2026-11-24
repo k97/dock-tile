@@ -1,0 +1,7 @@
+eventName	customEvent:result	eventCount	totalUsers
+update_check	none	115	63
+app_update	(not set)	103	31
+update_check	found	74	33
+update_check	error	40	24
+update_installing	(not set)	11	9
+update_choice	(not set)	8	6

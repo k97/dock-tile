@@ -109,9 +109,6 @@ __pycache__/
 
 # User feedback (emails, screenshots, reply drafts) — personal data, never committed to this public repo
 docs/feedback/
-# Research write-ups and raw analytics exports (GA4 / Search Console numbers) — private, local only
-reports/
-research_notes/
 
 # graphify knowledge-graph output (local analysis, regenerated on demand)
 graphify-out/

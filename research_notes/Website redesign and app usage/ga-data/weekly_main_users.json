@@ -1,0 +1,244 @@
+{
+ "request": {
+  "dateRanges": [
+   {
+    "startDate": "2026-08-03",
+    "endDate": "2026-11-21"
+   }
+  ],
+  "dimensions": [
+   {
+    "name": "isoYearIsoWeek"
+   }
+  ],
+  "metrics": [
+   {
+    "name": "activeUsers"
+   },
+   {
+    "name": "newUsers"
+   }
+  ],
+  "dimensionFilter": {
+   "filter": {
+    "fieldName": "customUser:app_role",
+    "stringFilter": {
+     "value": "main"
+    }
+   }
+  },
+  "orderBys": [
+   {
+    "dimension": {
+     "dimensionName": "isoYearIsoWeek"
+    }
+   }
+  ],
+  "limit": 10000
+ },
+ "response": {
+  "dimensionHeaders": [
+   {
+    "name": "isoYearIsoWeek"
+   }
+  ],
+  "metricHeaders": [
+   {
+    "name": "activeUsers",
+    "type": "TYPE_INTEGER"
+   },
+   {
+    "name": "newUsers",
+    "type": "TYPE_INTEGER"
+   }
+  ],
+  "rows": [
+   {
+    "dimensionValues": [
+     {
+      "value": "202636"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "20"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202637"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "30"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202638"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "27"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202639"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "28"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202640"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "25"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202641"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "25"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202642"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "19"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202643"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "31"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202644"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "33"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202645"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "34"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202646"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "26"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "27"
+     },
+     {
+      "value": "0"
+     }
+    ]
+   }
+  ],
+  "rowCount": 12,
+  "metadata": {
+   "currencyCode": "USD",
+   "timeZone": "Australia/Melbourne"
+  },
+  "kind": "analyticsData#runReport"
+ }
+}

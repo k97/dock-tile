@@ -1,0 +1,176 @@
+{
+ "request": {
+  "dateRanges": [
+   {
+    "startDate": "2026-10-25",
+    "endDate": "2026-11-21"
+   }
+  ],
+  "dimensions": [
+   {
+    "name": "eventName"
+   },
+   {
+    "name": "customEvent:result"
+   }
+  ],
+  "metrics": [
+   {
+    "name": "eventCount"
+   },
+   {
+    "name": "totalUsers"
+   }
+  ],
+  "dimensionFilter": {
+   "filter": {
+    "fieldName": "eventName",
+    "inListFilter": {
+     "values": [
+      "update_check",
+      "update_choice",
+      "update_installing",
+      "app_update"
+     ]
+    }
+   }
+  },
+  "limit": 10000
+ },
+ "response": {
+  "dimensionHeaders": [
+   {
+    "name": "eventName"
+   },
+   {
+    "name": "customEvent:result"
+   }
+  ],
+  "metricHeaders": [
+   {
+    "name": "eventCount",
+    "type": "TYPE_INTEGER"
+   },
+   {
+    "name": "totalUsers",
+    "type": "TYPE_INTEGER"
+   }
+  ],
+  "rows": [
+   {
+    "dimensionValues": [
+     {
+      "value": "update_check"
+     },
+     {
+      "value": "none"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "115"
+     },
+     {
+      "value": "63"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "app_update"
+     },
+     {
+      "value": "(not set)"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "103"
+     },
+     {
+      "value": "31"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "update_check"
+     },
+     {
+      "value": "found"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "74"
+     },
+     {
+      "value": "33"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "update_check"
+     },
+     {
+      "value": "error"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "40"
+     },
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "update_installing"
+     },
+     {
+      "value": "(not set)"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     },
+     {
+      "value": "9"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "update_choice"
+     },
+     {
+      "value": "(not set)"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     },
+     {
+      "value": "6"
+     }
+    ]
+   }
+  ],
+  "rowCount": 6,
+  "metadata": {
+   "currencyCode": "USD",
+   "timeZone": "Australia/Melbourne"
+  },
+  "kind": "analyticsData#runReport"
+ }
+}

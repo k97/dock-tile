@@ -1,0 +1,39 @@
+{
+ "request": {
+  "dateRanges": [
+   {
+    "startDate": "2025-08-01",
+    "endDate": "2025-11-21"
+   }
+  ],
+  "dimensions": [
+   {
+    "name": "month"
+   }
+  ],
+  "metrics": [
+   {
+    "name": "activeUsers"
+   }
+  ],
+  "limit": 10000
+ },
+ "response": {
+  "dimensionHeaders": [
+   {
+    "name": "month"
+   }
+  ],
+  "metricHeaders": [
+   {
+    "name": "activeUsers",
+    "type": "TYPE_INTEGER"
+   }
+  ],
+  "metadata": {
+   "currencyCode": "USD",
+   "timeZone": "Australia/Melbourne"
+  },
+  "kind": "analyticsData#runReport"
+ }
+}

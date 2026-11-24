@@ -1,0 +1,83 @@
+isoYearIsoWeek	customUser:app_role	newVsReturning	activeUsers
+202632	(not set)	new	15
+202632	(not set)	returning	10
+202633	(not set)	returning	12
+202633	(not set)	new	8
+202634	(not set)	new	20
+202634	(not set)	returning	17
+202635	(not set)	new	34
+202635	(not set)	returning	29
+202636	helper	returning	25
+202636	(not set)	returning	21
+202636	main	returning	14
+202636	(not set)	new	13
+202636	helper	new	12
+202636	main	new	10
+202637	helper	returning	32
+202637	(not set)	new	23
+202637	main	new	21
+202637	helper	new	19
+202637	main	returning	14
+202637	(not set)	returning	5
+202638	helper	returning	33
+202638	(not set)	new	18
+202638	main	returning	16
+202638	helper	new	15
+202638	main	new	13
+202638	(not set)	returning	3
+202639	helper	returning	37
+202639	main	returning	20
+202639	(not set)	new	17
+202639	helper	new	13
+202639	main	new	12
+202639	(not set)	returning	3
+202640	helper	returning	41
+202640	(not set)	new	20
+202640	main	new	14
+202640	main	returning	14
+202640	helper	new	11
+202640	(not set)	returning	3
+202641	helper	returning	38
+202641	(not set)	new	17
+202641	main	new	16
+202641	main	returning	13
+202641	helper	new	12
+202641	(not set)	returning	2
+202642	helper	returning	38
+202642	(not set)	new	17
+202642	main	returning	15
+202642	helper	new	9
+202642	(not set)	returning	6
+202642	main	new	6
+202643	helper	returning	47
+202643	(not set)	new	26
+202643	main	returning	24
+202643	main	new	16
+202643	helper	new	14
+202643	(not set)	returning	5
+202644	helper	returning	62
+202644	(not set)	new	41
+202644	helper	new	28
+202644	main	new	20
+202644	main	returning	19
+202644	(not set)	returning	4
+202645	helper	returning	63
+202645	(not set)	new	41
+202645	helper	new	27
+202645	main	returning	24
+202645	main	new	18
+202645	(not set)	returning	6
+202646	helper	returning	54
+202646	main	returning	21
+202646	(not set)	new	16
+202646	helper	new	11
+202646	main	new	10
+202646	(not set)	returning	8
+202647	helper	returning	58
+202647	main	returning	19
+202647	helper	new	18
+202647	(not set)	new	17
+202647	main	new	13
+202647	(not set)	returning	5
+202647		new	3
+202647		returning	1

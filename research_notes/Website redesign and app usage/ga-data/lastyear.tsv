@@ -1,0 +1,1 @@
+{"dimensionHeaders": [{"name": "month"}], "metricHeaders": [{"name": "activeUsers", "type": "TYPE_INTEGER"}], "metadata": {"currencyCode": "USD", "timeZone": "Australia/Melbourne"}, "kind": "analyticsData#runReport"}

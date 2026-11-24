@@ -1,0 +1,1537 @@
+{
+ "request": {
+  "dateRanges": [
+   {
+    "startDate": "2026-08-03",
+    "endDate": "2026-11-21"
+   }
+  ],
+  "dimensions": [
+   {
+    "name": "isoYearIsoWeek"
+   },
+   {
+    "name": "customUser:app_role"
+   },
+   {
+    "name": "newVsReturning"
+   }
+  ],
+  "metrics": [
+   {
+    "name": "activeUsers"
+   }
+  ],
+  "orderBys": [
+   {
+    "dimension": {
+     "dimensionName": "isoYearIsoWeek"
+    }
+   }
+  ],
+  "limit": 10000
+ },
+ "response": {
+  "dimensionHeaders": [
+   {
+    "name": "isoYearIsoWeek"
+   },
+   {
+    "name": "customUser:app_role"
+   },
+   {
+    "name": "newVsReturning"
+   }
+  ],
+  "metricHeaders": [
+   {
+    "name": "activeUsers",
+    "type": "TYPE_INTEGER"
+   }
+  ],
+  "rows": [
+   {
+    "dimensionValues": [
+     {
+      "value": "202632"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202632"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202633"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202633"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202634"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202634"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202635"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "34"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202635"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "29"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202636"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "25"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202636"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202636"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202636"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202636"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202636"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202637"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "32"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202637"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "23"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202637"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202637"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202637"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202637"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202638"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "33"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202638"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202638"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202638"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202638"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202638"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202639"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "37"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202639"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202639"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202639"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202639"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202639"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202640"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "41"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202640"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202640"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202640"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202640"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202640"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202641"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "38"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202641"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202641"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202641"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202641"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "12"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202641"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "2"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202642"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "38"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202642"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202642"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "15"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202642"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "9"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202642"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202642"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202643"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "47"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202643"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "26"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202643"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202643"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202643"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "14"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202643"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202644"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "62"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202644"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "41"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202644"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "28"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202644"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "20"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202644"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202644"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "4"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202645"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "63"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202645"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "41"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202645"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "27"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202645"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "24"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202645"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202645"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "6"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202646"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "54"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202646"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "21"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202646"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "16"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202646"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "11"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202646"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "10"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202646"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "8"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "58"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "19"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     },
+     {
+      "value": "helper"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "18"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "17"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     },
+     {
+      "value": "main"
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "13"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     },
+     {
+      "value": "(not set)"
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "5"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     },
+     {
+      "value": ""
+     },
+     {
+      "value": "new"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "3"
+     }
+    ]
+   },
+   {
+    "dimensionValues": [
+     {
+      "value": "202647"
+     },
+     {
+      "value": ""
+     },
+     {
+      "value": "returning"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "1"
+     }
+    ]
+   }
+  ],
+  "rowCount": 82,
+  "metadata": {
+   "currencyCode": "USD",
+   "timeZone": "Australia/Melbourne"
+  },
+  "kind": "analyticsData#runReport"
+ }
+}

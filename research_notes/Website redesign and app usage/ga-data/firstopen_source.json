@@ -1,0 +1,63 @@
+{
+ "request": {
+  "dateRanges": [
+   {
+    "startDate": "2026-08-01",
+    "endDate": "2026-11-21"
+   }
+  ],
+  "dimensions": [
+   {
+    "name": "firstUserSource"
+   },
+   {
+    "name": "firstUserMedium"
+   }
+  ],
+  "metrics": [
+   {
+    "name": "newUsers"
+   }
+  ],
+  "limit": 10000
+ },
+ "response": {
+  "dimensionHeaders": [
+   {
+    "name": "firstUserSource"
+   },
+   {
+    "name": "firstUserMedium"
+   }
+  ],
+  "metricHeaders": [
+   {
+    "name": "newUsers",
+    "type": "TYPE_INTEGER"
+   }
+  ],
+  "rows": [
+   {
+    "dimensionValues": [
+     {
+      "value": "(direct)"
+     },
+     {
+      "value": "(none)"
+     }
+    ],
+    "metricValues": [
+     {
+      "value": "460"
+     }
+    ]
+   }
+  ],
+  "rowCount": 1,
+  "metadata": {
+   "currencyCode": "USD",
+   "timeZone": "Australia/Melbourne"
+  },
+  "kind": "analyticsData#runReport"
+ }
+}
