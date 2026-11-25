@@ -43,10 +43,11 @@ function useActiveSection(ids: readonly string[]) {
 }
 
 /**
- * The subpages' reading layout (owner, 2026-11-24, first on /dock-lock): from lg up, a sticky
- * "On this page" list that follows the scroll beside the content (no Download card: the nav pill
- * already carries it, owner 2026-11-25); below lg the content simply follows the header. Each item's `id` must be on a heading in `children`
- * that carries `scroll-mt-28` (the nav pill covers the top of the viewport).
+ * The subpages' reading layout (owner, 2026-11-24, first on /dock-lock): from lg up, the content
+ * with a sticky "On this page" list that follows the scroll on its right (owner, 2026-11-25), and
+ * no Download card (the nav pill carries it); below lg the content simply follows the header.
+ * Each item's `id` must be on a heading in `children` that carries `scroll-mt-28` (the nav pill
+ * covers the top of the viewport).
  */
 export function GuideLayout({ items, children }: { items: readonly GuideItem[]; children: React.ReactNode }) {
   const { content } = useLocale();
@@ -54,8 +55,8 @@ export function GuideLayout({ items, children }: { items: readonly GuideItem[]; 
   const active = useActiveSection(items.map((i) => i.id));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:px-10 md:py-24 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-16">
-      <aside className="hidden lg:block">
+    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:px-10 md:py-24 lg:grid lg:grid-cols-[minmax(0,1fr)_12rem] lg:gap-16">
+      <aside className="hidden lg:order-last lg:block">
         <div className="sticky top-28">
           <nav aria-label={m.onThisPage}>
             <p className="mb-3 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">{m.onThisPage}</p>

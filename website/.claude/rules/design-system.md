@@ -36,9 +36,10 @@ Mac inspector selecting in emerald reads as fake (owner, 2026-11-09, the customi
   gap). Re-measure after moving sections — the swap that put two light sections together left a
   160px gap. The same holds after a subpage's prose column (it ends in its own `md:py-24`): the
   `ContactCta` takes only `md:pt-12`, or ~300 px of blank page opens above it (2026-11-22).
-- The power-user bento is 3-across only from `xl`; below that the cards stack in a centred
-  `max-w-md` column — a narrow 3-col card can't hold the fixed-size mocks
-  (see hero-dock-demo.md "Card mocks").
+- The power-user bento is 3-across from the `bento` breakpoint (`--breakpoint-bento`, 71.25rem =
+  1140 px, in `globals.css`; a `min-[1140px]:` variant lost to `md:p-10` in the CSS order), with `p-6`
+  cards until `xl` restores `p-10`; below it the cards stack in a centred `max-w-md` column — a
+  narrower card shrinks the fixed-size mocks under ~0.55× (0.56 at 1140; see hero-dock-demo.md "Card mocks").
 - Neutral chrome uses the shadcn tokens (`bg-background`, `bg-card`, `text-muted-foreground`,
   `border-border`), never literal `bg-white`/`bg-zinc-*`. The tokens are pinned to the exact
   Tailwind zinc oklch values, so the light theme is pixel-identical to the pre-token design.

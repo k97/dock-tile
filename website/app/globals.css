@@ -4,6 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* 1140 px: where the homepage bento row goes three across (a rem value, so it sorts between md and xl). */
+  --breakpoint-bento: 71.25rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   /* All text in Allo; Inter stands in until it loads. */

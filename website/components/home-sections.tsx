@@ -147,7 +147,7 @@ export function DockLockStory() {
 /* Set up for you — Smart Add + Menu bar + Ghost, one bento         */
 /* ------------------------------------------------------------------ */
 
-const bentoCard = "mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 md:p-10 xl:max-w-none";
+const bentoCard = "mx-auto w-full max-w-md flex flex-col justify-between gap-8 rounded-3xl border border-border bg-card p-6 md:p-10 bento:max-w-none bento:p-6 xl:p-10";
 
 export function PowerUserSection() {
   const { locale, content } = useLocale();
@@ -169,12 +169,10 @@ export function PowerUserSection() {
         </h2>
       </Reveal>
 
-      {/* 3-across only from xl up. Below that the row collapses to one column so
-          each card is wide enough to hold its illustration at a FIXED, roomy
-          native size (the Smart Add sheet and the menu never reflow per breakpoint). */}
+      {/* 3-across from 1140 px (`bento`); below that one column, so each mock keeps ~0.55x or more (measured 0.56 at 1140). */}
       {/* grid-cols-1 (minmax(0, 1fr)): an implicit track grew to a card's min-content and pushed
           the page 14 px wider than a 390 px phone. */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 bento:grid-cols-3">
         <Reveal className={bentoCard}>
           <div>
             <h3 className="mb-3 text-title-sm text-foreground">{m.smartAddTitle}</h3>
@@ -189,7 +187,7 @@ export function PowerUserSection() {
         {/* The dark card sits in the middle, between the two light ones (owner, 2026-11-22):
             the menu bar card since the swap; Ghost mode moved right. Charcoal gradient,
             not flat zinc-900, so it reads as its own card. */}
-        <Reveal delay={80} className="relative mx-auto flex w-full max-w-md flex-col justify-between gap-8 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-b from-zinc-800 to-zinc-900 p-6 text-white md:p-10 xl:max-w-none">
+        <Reveal delay={80} className="relative mx-auto flex w-full max-w-md flex-col justify-between gap-8 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-b from-zinc-800 to-zinc-900 p-6 text-white md:p-10 bento:max-w-none bento:p-6 xl:p-10">
           <div className="grain" />
           <div className="relative">
             <h3 className="mb-3 text-title-sm">{m.menuBarTitle}</h3>
@@ -240,7 +238,9 @@ function AppSwitcherMock() {
   const name = useDisplayName();
   const ref = usePauseOffscreen<HTMLDivElement>(); // the highlight, names and ghost loop
   return (
-    // pt-10 leaves room for the name tooltip that floats above the strip.
+    // ScaleToFit like the other card mocks: the strip is 296 px, wider than a squeezed card.
+    <ScaleToFit>
+    {/* pt-10 leaves room for the name tooltip that floats above the strip. */}
     <div ref={ref} className="relative flex flex-col items-center gap-4 pt-10">
       {/* Concentric: the 12px slot radius + the 12px `p-3` inset ⇒ a 24px
           (rounded-3xl) shell. */}
@@ -307,6 +307,7 @@ function AppSwitcherMock() {
         <kbd className="rounded-md border border-border bg-background px-2 py-0.5 text-[11px] font-semibold">⇥</kbd>
       </div>
     </div>
+    </ScaleToFit>
   );
 }
 
