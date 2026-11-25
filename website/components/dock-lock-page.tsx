@@ -130,7 +130,7 @@ function DockLockPaneMock() {
  * /dock-lock and /zh-Hans/dock-lock (the route's locale picks the copy): the page that answers
  * "the Dock keeps moving to my other monitor" and offers Dock Lock. Laid out as a guide, not as
  * homepage sections (owner, 2026-11-24): the teal header (Download), then a sticky "On this page"
- * list with a Download card beside four sections (Why the Dock moves with the clickable displays,
+ * list beside four sections (Why the Dock moves with the clickable displays,
  * Fix it with the Settings pane and its numbered steps, Without an app as a comparison table, the
  * questions), then a teal closing strip.
  */
@@ -186,7 +186,7 @@ export function DockLockPage({ schema }: { schema: Record<string, unknown> }) {
         </div>
       </section>
 
-      <GuideLayout items={items} location="dock_lock_page">
+      <GuideLayout items={items}>
           <section id="why" className={section}>
             {/* Prose never fades in (owner, 2026-11-24); the animation does */}
             <h2 className={blockTitle}>{m.dockLockPageWhyTitle}</h2>

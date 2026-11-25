@@ -115,9 +115,9 @@ listener). Tagged: the intro, the custom-tiles story and the power-user cards â€
 the Dock Lock band (2026-11-24: nav has its own Dock Lock link, to another page, so lighting
 Features there contradicted it), privacy or Download. Current links carry `aria-current` ("page" /
 "location"). Nav links, the logo and every action button show a `focus-visible` 2 px blue outline
-(the browser default read as a faint grey line on the glass pill). The `sm` Download (nav, guide
-sidebar) is sentence case like every other Download, and has no backdrop blur of its own: it sits
-in the glass pill or on a solid card.
+(the browser default read as a faint grey line on the glass pill). The `sm` Download (the nav) is
+sentence case like every other Download, and has no backdrop blur of its own: it sits in the glass
+pill.
 
 **The pill's ends are concentric.** The Download button sits 7px from the pill's edge on every
 side, so the logo's hover pill does too (`px-1.5` on the pill, `pl-1.5` in the logo link â†’ icon

@@ -48,7 +48,7 @@
   own; preloaded, it is the page's largest paint) (eyebrow, h1 "Keep the Dock on one display.", the
   one-line answer, Download `location: "dock_lock_page"` + the proof line "Free & open source · No
   account · macOS 15+ · Apple silicon"), never the homepage band's split text + animation layout. Then,
-  from lg up, a sticky "On this page" list (follows the scroll) and a small Download card beside four
+  from lg up, a sticky "On this page" list (follows the scroll) beside four
   sections: Why the Dock moves (the clickable `DockLockMock`), Fix it with Dock Lock (a replica of the
   app's Settings → Dock Lock pane and its Accessibility primer, labels from `dockLockPane` = the app's
   `settings.dockLock.*` strings, pins ①②③ matching the numbered steps), Without an app (a real
@@ -61,9 +61,9 @@
   impressions for Dock-moving queries); dropping it takes it out of the nav too.
 - **Subpages read as guides: `GuideLayout`** (`components/guide-layout.tsx`; owner, 2026-11-24, from
   the Dock Lock page): from lg up, a sticky "On this page" list (`marketing.onThisPage`) that follows
-  the scroll (a scroll listener: an IntersectionObserver missed jumps) and a Dock Tile Download card
-  (`location: "page_sidebar"`, `dock_lock_page` on /dock-lock); below lg the content follows the
-  header. Used by /dock-lock, /faq (the four groups + Help shape, anchors in `FAQ_GROUP_IDS`, English
+  the scroll (a scroll listener: an IntersectionObserver missed jumps); below lg the content follows
+  the header. No Download card beside it (owner, 2026-11-25: the floating nav already has Download).
+  Used by /dock-lock, /faq (the four groups + Help shape, anchors in `FAQ_GROUP_IDS`, English
   on both locales) and Privacy / Terms through `LegalShell`, whose list is built from the
   `LegalHeading`s passed straight in (a plain-text heading gets a slug id), so it can't drift. Every
   entry's heading carries `scroll-mt-28`. Not on /release-notes (a timeline, not sections).

@@ -66,7 +66,7 @@ export function LegalShell({
       </section>
 
       {/* Prose never fades in (owner, 2026-11-24) */}
-      <GuideLayout items={items} location="page_sidebar">
+      <GuideLayout items={items}>
         <div className="flex max-w-[65ch] flex-col gap-6 text-left">{children}</div>
       </GuideLayout>
 

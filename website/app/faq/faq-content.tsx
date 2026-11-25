@@ -133,7 +133,6 @@ export function FaqContent() {
 
       {/* The questions in GuideLayout: its "On this page" list is the groups + Help shape */}
       <GuideLayout
-        location="page_sidebar"
         items={[
           ...FAQ_GROUP_IDS.map((id, g) => ({ id, title: m.faqGroups[g] })),
           { id: "help-shape", title: m.feedbackTitle },
