@@ -72,6 +72,7 @@
 		AADIP001 /* DeclarativeIconPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADIP002 /* DeclarativeIconPipeline.swift */; };
 		AAUDK01 /* UserDefaultsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUDK02 /* UserDefaultsKeys.swift */; };
 		AAUPC001 /* UpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAUPC002 /* UpdateController.swift */; };
+		50484F475000000000000001 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 50484F475000000000000002 /* PostHog */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -222,6 +223,7 @@
 				AASPK001 /* Sparkle in Frameworks */,
 				AAFB020 /* FirebaseAnalytics in Frameworks */,
 				AAFB021 /* FirebaseCrashlytics in Frameworks */,
+				50484F475000000000000001 /* PostHog in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -502,6 +504,7 @@
 				AASPK002 /* Sparkle */,
 				AAFB010 /* FirebaseAnalytics */,
 				AAFB011 /* FirebaseCrashlytics */,
+				50484F475000000000000002 /* PostHog */,
 			);
 			productName = DockTile;
 			productReference = AA0009 /* Dock Tile Dev.app */;
@@ -547,6 +550,7 @@
 			packageReferences = (
 				AASPK003 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				AAFB003 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				50484F475000000000000003 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AA0010 /* Products */;
@@ -1031,6 +1035,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		50484F475000000000000003 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.59.3;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1048,6 +1060,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AASPK003 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		50484F475000000000000002 /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 50484F475000000000000003 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

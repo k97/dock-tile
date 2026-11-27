@@ -21,6 +21,7 @@ import Foundation
 import FirebaseCore
 import FirebaseAnalytics
 import FirebaseCrashlytics
+import PostHog
 
 /// Firebase event names. Raw values must be Firebase-safe: snake_case, <= 40 chars,
 /// and must not use a reserved prefix (`firebase_`, `google_`, `ga_`). These are log-like
@@ -68,6 +69,9 @@ final class AnalyticsService {
     /// Whether data is actually being collected right now.
     private(set) var collectionEnabled = false
 
+    /// True once the shared PostHog client is configured for this process.
+    private var isPostHogConfigured = false
+
     /// Helpers only: the `consentDidChange` observer, kept for the process's lifetime.
     private var consentObserver: NSObjectProtocol?
 
@@ -107,10 +111,11 @@ final class AnalyticsService {
 
     // MARK: - Lifecycle
 
-    /// Configure Firebase and apply the current collection state. Safe to call once per process
-    /// launch from `main.swift` (both main and helper branches). No-ops gracefully if the
-    /// GoogleService-Info.plist is not bundled (e.g. during early development).
+    /// Configure analytics clients once per process launch from `main.swift` (both main and helper
+    /// branches). Firebase remains optional when its plist is not bundled.
     func configure() {
+        configurePostHog()
+
         // Our own flag, not `FirebaseApp.app()`: asking Firebase before configure logs I-COR000003.
         guard !isConfigured else { return } // already configured
 
@@ -145,6 +150,55 @@ final class AnalyticsService {
         }
     }
 
+    /// No-ops when the build carries no token or host (every local/Debug build), like Firebase
+    /// without its plist. Never trap here: `main.swift` calls this before anything else, so a
+    /// trap killed the dev app, its helpers and the test host at launch.
+    private func configurePostHog() {
+        guard !isPostHogConfigured,
+              let projectToken = Bundle.main.object(forInfoDictionaryKey: "PostHogProjectToken") as? String,
+              !projectToken.isEmpty, !projectToken.hasPrefix("$("),
+              let host = Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String,
+              !host.isEmpty, !host.hasPrefix("$(") else { return }
+
+        let config = PostHogConfig(projectToken: projectToken, host: host)
+        config.personProfiles = .never
+        // Crashlytics owns crash reporting: two crash reporters both claim the same signal and
+        // Mach exception handlers, and one can swallow the other's report.
+        config.errorTrackingConfig.autoCapture = false
+        // Only the allowlisted product events below; no Application Opened/Backgrounded per helper.
+        config.captureApplicationLifecycleEvents = false
+        // Start opted out unless consent holds: setup() runs before applyCollectionState().
+        config.optOut = !Self.shouldCollect(isRelease: environmentAllowsCollection, consentGranted: consentGranted)
+        config.getAnonymousId = Self.alwaysReturning(sharedAnonymousId())
+        config.logs.serviceName = "docktile-macos"
+        config.logs.environment = AppEnvironment.current
+        config.logs.serviceVersion = AppEnvironment.appVersion
+        PostHogSDK.shared.setup(config)
+        isPostHogConfigured = true
+        applyCollectionState()
+        capturePostHogLog("log_capture_configured", attributes: ["app_role": AppEnvironment.appRole])
+    }
+
+    /// One anonymous ID for the main app and every tile. Each helper has its own bundle ID, and
+    /// PostHog stores its ID per bundle, so without this every tile counted as a separate user.
+    /// The SDK asks only while its own storage holds no ID, i.e. once per process bundle.
+    private func sharedAnonymousId() -> UUID {
+        CFPreferencesAppSynchronize(UserDefaultsKeys.sharedSuiteName as CFString)
+        if let id = sharedDefaults?.string(forKey: UserDefaultsKeys.postHogAnonymousId).flatMap(UUID.init(uuidString:)) {
+            return id
+        }
+        // shortcut: two processes that both start before any has written the ID (and in the same
+        // instant) keep separate IDs; the main app normally starts first after an update. Add a
+        // lock if PostHog's user count runs well above GA4's.
+        let id = UUID()
+        sharedDefaults?.set(id.uuidString, forKey: UserDefaultsKeys.postHogAnonymousId)
+        return id
+    }
+
+    /// Built outside the main actor: the SDK may call it from its storage lock on any thread,
+    /// and a closure formed in this `@MainActor` class would carry a main-actor check.
+    nonisolated private static func alwaysReturning(_ id: UUID) -> (UUID) -> UUID { { _ in id } }
+
     /// Persist a new consent value, apply it live, and tell running helpers to re-apply it.
     func setConsent(_ enabled: Bool) {
         sharedDefaults?.set(enabled, forKey: UserDefaultsKeys.analyticsEnabled)
@@ -158,6 +212,15 @@ final class AnalyticsService {
     private func applyCollectionState() {
         let enabled = Self.shouldCollect(isRelease: environmentAllowsCollection, consentGranted: consentGranted)
         collectionEnabled = enabled
+
+        if isPostHogConfigured {
+            if enabled {
+                PostHogSDK.shared.optIn()
+            } else {
+                PostHogSDK.shared.optOut()
+            }
+        }
+
         guard isConfigured else { return }
         Analytics.setAnalyticsCollectionEnabled(enabled)
         Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(enabled)
@@ -166,11 +229,37 @@ final class AnalyticsService {
 
     // MARK: - Events
 
-    /// Log an analytics event. Firebase itself no-ops when collection is disabled, so callers
-    /// don't need to guard.
+    /// Logs a completed product action to the configured analytics clients. PostHog events remain
+    /// anonymous because DockTile has no account identity; all properties are non-identifying.
     func log(_ event: AnalyticsEvent, _ parameters: [String: Any] = [:]) {
-        guard isConfigured else { return }
-        Analytics.logEvent(event.rawValue, parameters: parameters.isEmpty ? nil : parameters)
+        if isConfigured {
+            Analytics.logEvent(event.rawValue, parameters: parameters.isEmpty ? nil : parameters)
+        }
+
+        guard isPostHogConfigured, collectionEnabled, shouldCaptureWithPostHog(event) else { return }
+        PostHogSDK.shared.capture(event.rawValue, properties: parameters.isEmpty ? nil : parameters)
+        capturePostHogLog("product_action_captured", attributes: ["analytics_event": event.rawValue])
+    }
+
+    /// Dedicated PostHog logger. Existing `print`, `Logger`, and `DiagnosticsLog` output remains
+    /// local; only purpose-built operational lines supplied here are exported.
+    private func capturePostHogLog(_ message: String, attributes: [String: Any]) {
+        guard isPostHogConfigured, collectionEnabled else { return }
+        PostHogSDK.shared.logger?.info(message, attributes: attributes)
+    }
+
+    /// Keep PostHog focused on user-initiated actions and their outcomes, rather than lifecycle
+    /// and maintenance noise. The existing call sites provide the real-action timing.
+    private func shouldCaptureWithPostHog(_ event: AnalyticsEvent) -> Bool {
+        switch event {
+        case .tileCreated, .tileAddedToDock, .tileUpdated, .tileRemoved, .tileHidden, .tileReverted,
+             .popoverOpened, .appLaunchedFromTile, .popoverItemAction, .configureGearTapped,
+             .settingChanged, .relocationMoveStarted, .relocationMoveSucceeded, .relocationMoveFailed,
+             .translationHelpTapped, .updateCheck, .updateChoice, .updateInstalling:
+            return true
+        default:
+            return false
+        }
     }
 
     // MARK: - Crashlytics

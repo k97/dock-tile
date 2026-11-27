@@ -94,7 +94,8 @@ export function PrivacyContent() {
         <li>
           Usage analytics record which features are used (for example, a tile being added, how
           many apps it has, or which layout it uses) along with a random install identifier, your
-          Mac model, macOS version, app version and approximate region.
+          Mac model, macOS version, app version and approximate region. Some of the same feature
+          events, with short technical log lines, also go to PostHog for product analytics.
         </li>
         <li>
           Crash reports contain technical details of the error. Occasionally an error includes a
@@ -161,6 +162,10 @@ export function PrivacyContent() {
         <li>
           <strong className={term}>Google Firebase</strong> (Analytics and Crashlytics) - the
           app&apos;s optional analytics and crash reports.
+        </li>
+        <li>
+          <strong className={term}>PostHog</strong> (US) - the app&apos;s optional product
+          analytics, covered by the same toggle.
         </li>
         <li>
           <strong className={term}>Google Analytics</strong> - this website&apos;s visit counts.
