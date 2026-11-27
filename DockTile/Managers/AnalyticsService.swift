@@ -21,6 +21,7 @@ import Foundation
 import FirebaseCore
 import FirebaseAnalytics
 import FirebaseCrashlytics
+import PostHog
 
 /// Firebase event names. Raw values must be Firebase-safe: snake_case, <= 40 chars,
 /// and must not use a reserved prefix (`firebase_`, `google_`, `ga_`). These are log-like
@@ -68,6 +69,9 @@ final class AnalyticsService {
     /// Whether data is actually being collected right now.
     private(set) var collectionEnabled = false
 
+    /// True once the shared PostHog client is configured for this process.
+    private var isPostHogConfigured = false
+
     /// Helpers only: the `consentDidChange` observer, kept for the process's lifetime.
     private var consentObserver: NSObjectProtocol?
 
@@ -107,10 +111,11 @@ final class AnalyticsService {
 
     // MARK: - Lifecycle
 
-    /// Configure Firebase and apply the current collection state. Safe to call once per process
-    /// launch from `main.swift` (both main and helper branches). No-ops gracefully if the
-    /// GoogleService-Info.plist is not bundled (e.g. during early development).
+    /// Configure analytics clients once per process launch from `main.swift` (both main and helper
+    /// branches). Firebase remains optional when its plist is not bundled.
     func configure() {
+        configurePostHog()
+
         // Our own flag, not `FirebaseApp.app()`: asking Firebase before configure logs I-COR000003.
         guard !isConfigured else { return } // already configured
 
@@ -145,6 +150,41 @@ final class AnalyticsService {
         }
     }
 
+    private func configurePostHog() {
+        guard !isPostHogConfigured else { return }
+
+        guard let projectToken = Bundle.main.object(forInfoDictionaryKey: "PostHogProjectToken") as? String,
+              !projectToken.isEmpty,
+              !projectToken.hasPrefix("$(") else {
+            reportMissingPostHogConfiguration("POSTHOG_PROJECT_TOKEN")
+            return
+        }
+
+        guard let host = Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String,
+              !host.isEmpty,
+              !host.hasPrefix("$(") else {
+            reportMissingPostHogConfiguration("POSTHOG_HOST")
+            return
+        }
+
+        let config = PostHogConfig(projectToken: projectToken, host: host)
+        config.personProfiles = .never
+        config.errorTrackingConfig.autoCapture = true
+        config.logs.serviceName = "docktile-macos"
+        config.logs.environment = AppEnvironment.current
+        config.logs.serviceVersion = AppEnvironment.appVersion
+        PostHogSDK.shared.setup(config)
+        isPostHogConfigured = true
+        applyCollectionState()
+        capturePostHogLog("log_capture_configured", attributes: ["app_role": AppEnvironment.appRole])
+    }
+
+    private func reportMissingPostHogConfiguration(_ variable: String) {
+        #if DEBUG
+        assertionFailure("\(variable) variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once \(variable) is configured")
+        #endif
+    }
+
     /// Persist a new consent value, apply it live, and tell running helpers to re-apply it.
     func setConsent(_ enabled: Bool) {
         sharedDefaults?.set(enabled, forKey: UserDefaultsKeys.analyticsEnabled)
@@ -158,6 +198,15 @@ final class AnalyticsService {
     private func applyCollectionState() {
         let enabled = Self.shouldCollect(isRelease: environmentAllowsCollection, consentGranted: consentGranted)
         collectionEnabled = enabled
+
+        if isPostHogConfigured {
+            if enabled {
+                PostHogSDK.shared.optIn()
+            } else {
+                PostHogSDK.shared.optOut()
+            }
+        }
+
         guard isConfigured else { return }
         Analytics.setAnalyticsCollectionEnabled(enabled)
         Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(enabled)
@@ -166,11 +215,37 @@ final class AnalyticsService {
 
     // MARK: - Events
 
-    /// Log an analytics event. Firebase itself no-ops when collection is disabled, so callers
-    /// don't need to guard.
+    /// Logs a completed product action to the configured analytics clients. PostHog events remain
+    /// anonymous because DockTile has no account identity; all properties are non-identifying.
     func log(_ event: AnalyticsEvent, _ parameters: [String: Any] = [:]) {
-        guard isConfigured else { return }
-        Analytics.logEvent(event.rawValue, parameters: parameters.isEmpty ? nil : parameters)
+        if isConfigured {
+            Analytics.logEvent(event.rawValue, parameters: parameters.isEmpty ? nil : parameters)
+        }
+
+        guard isPostHogConfigured, collectionEnabled, shouldCaptureWithPostHog(event) else { return }
+        PostHogSDK.shared.capture(event.rawValue, properties: parameters.isEmpty ? nil : parameters)
+        capturePostHogLog("product_action_captured", attributes: ["analytics_event": event.rawValue])
+    }
+
+    /// Dedicated PostHog logger. Existing `print`, `Logger`, and `DiagnosticsLog` output remains
+    /// local; only purpose-built operational lines supplied here are exported.
+    private func capturePostHogLog(_ message: String, attributes: [String: Any]) {
+        guard isPostHogConfigured, collectionEnabled else { return }
+        PostHogSDK.shared.logger?.info(message, attributes: attributes)
+    }
+
+    /// Keep PostHog focused on user-initiated actions and their outcomes, rather than lifecycle
+    /// and maintenance noise. The existing call sites provide the real-action timing.
+    private func shouldCaptureWithPostHog(_ event: AnalyticsEvent) -> Bool {
+        switch event {
+        case .tileCreated, .tileAddedToDock, .tileUpdated, .tileRemoved, .tileHidden, .tileReverted,
+             .popoverOpened, .appLaunchedFromTile, .popoverItemAction, .configureGearTapped,
+             .settingChanged, .relocationMoveStarted, .relocationMoveSucceeded, .relocationMoveFailed,
+             .translationHelpTapped, .updateCheck, .updateChoice, .updateInstalling:
+            return true
+        default:
+            return false
+        }
     }
 
     // MARK: - Crashlytics

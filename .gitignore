@@ -1,3 +1,6 @@
+# Local environment configuration
+.env
+
 # Build output
 build/
 DerivedData/
@@ -112,3 +115,4 @@ docs/feedback/
 
 # graphify knowledge-graph output (local analysis, regenerated on demand)
 graphify-out/
+.env
