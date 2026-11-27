@@ -243,16 +243,7 @@ jobs:
         run: ./Scripts/build-compiler.sh
 
       - name: Build Release
-        env:
-          # Repo variables, not secrets: a PostHog project token is a public client key.
-          POSTHOG_PROJECT_TOKEN: ${{ vars.POSTHOG_PROJECT_TOKEN }}
-          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
         run: |
-          # Without these the build succeeds and the shipped app silently sends nothing to PostHog.
-          if [ -z "$POSTHOG_PROJECT_TOKEN" ] || [ -z "$POSTHOG_HOST" ]; then
-            echo "::error::Repo variables POSTHOG_PROJECT_TOKEN and POSTHOG_HOST must be set"
-            exit 1
-          fi
           xcodebuild \
             -project $PROJECT \
             -scheme $SCHEME \
@@ -262,8 +253,6 @@ jobs:
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application: ${{ secrets.APPLE_DEVELOPER_NAME }} (${{ secrets.APPLE_TEAM_ID }})" \
-            POSTHOG_PROJECT_TOKEN="$POSTHOG_PROJECT_TOKEN" \
-            POSTHOG_HOST="$POSTHOG_HOST" \
             build
 
       - name: Sign app bundle

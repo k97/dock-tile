@@ -37,10 +37,6 @@
 	<string>$(DOCKTILE_ENVIRONMENT)</string>
 	<key>DTFeedbackEmail</key>
 	<string>hello@happymachines.company</string>
-	<key>PostHogProjectToken</key>
-	<string>$(POSTHOG_PROJECT_TOKEN)</string>
-	<key>PostHogHost</key>
-	<string>$(POSTHOG_HOST)</string>
 	<key>DTHelperPrefix</key>
 	<string>$(DOCKTILE_HELPER_PREFIX)</string>
 	<key>DTPrefsFilename</key>

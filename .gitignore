@@ -1,6 +1,3 @@
-# Local environment configuration
-.env
-
 # Build output
 build/
 DerivedData/
