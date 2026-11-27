@@ -73,6 +73,10 @@ enum UserDefaultsKeys {
     /// bundles run under their own bundle IDs and must read the same value as the main app.
     static let analyticsEnabled = "analyticsEnabled"
 
+    /// PostHog anonymous ID shared by the main app and every helper (SHARED suite), so one Mac
+    /// counts as one user, not one per tile. A random UUID, never derived from the Mac or user.
+    static let postHogAnonymousId = "postHogAnonymousId"
+
     // Popover Appearance — per-layout defaults for every tile's Dock popover. Grid and List are
     // stored INDEPENDENTLY (a grid tile reads the grid keys, a list tile the list keys), all in the
     // SHARED suite so HELPER bundles (which render the popover) read the same values as the main app.

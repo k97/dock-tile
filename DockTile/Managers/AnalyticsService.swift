@@ -169,6 +169,7 @@ final class AnalyticsService {
         config.captureApplicationLifecycleEvents = false
         // Start opted out unless consent holds: setup() runs before applyCollectionState().
         config.optOut = !Self.shouldCollect(isRelease: environmentAllowsCollection, consentGranted: consentGranted)
+        config.getAnonymousId = Self.alwaysReturning(sharedAnonymousId())
         config.logs.serviceName = "docktile-macos"
         config.logs.environment = AppEnvironment.current
         config.logs.serviceVersion = AppEnvironment.appVersion
@@ -177,6 +178,26 @@ final class AnalyticsService {
         applyCollectionState()
         capturePostHogLog("log_capture_configured", attributes: ["app_role": AppEnvironment.appRole])
     }
+
+    /// One anonymous ID for the main app and every tile. Each helper has its own bundle ID, and
+    /// PostHog stores its ID per bundle, so without this every tile counted as a separate user.
+    /// The SDK asks only while its own storage holds no ID, i.e. once per process bundle.
+    private func sharedAnonymousId() -> UUID {
+        CFPreferencesAppSynchronize(UserDefaultsKeys.sharedSuiteName as CFString)
+        if let id = sharedDefaults?.string(forKey: UserDefaultsKeys.postHogAnonymousId).flatMap(UUID.init(uuidString:)) {
+            return id
+        }
+        // shortcut: two processes that both start before any has written the ID (and in the same
+        // instant) keep separate IDs; the main app normally starts first after an update. Add a
+        // lock if PostHog's user count runs well above GA4's.
+        let id = UUID()
+        sharedDefaults?.set(id.uuidString, forKey: UserDefaultsKeys.postHogAnonymousId)
+        return id
+    }
+
+    /// Built outside the main actor: the SDK may call it from its storage lock on any thread,
+    /// and a closure formed in this `@MainActor` class would carry a main-actor check.
+    nonisolated private static func alwaysReturning(_ id: UUID) -> (UUID) -> UUID { { _ in id } }
 
     /// Persist a new consent value, apply it live, and tell running helpers to re-apply it.
     func setConsent(_ enabled: Bool) {
