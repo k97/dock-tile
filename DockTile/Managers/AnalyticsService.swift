@@ -150,26 +150,25 @@ final class AnalyticsService {
         }
     }
 
+    /// No-ops when the build carries no token or host (every local/Debug build), like Firebase
+    /// without its plist. Never trap here: `main.swift` calls this before anything else, so a
+    /// trap killed the dev app, its helpers and the test host at launch.
     private func configurePostHog() {
-        guard !isPostHogConfigured else { return }
-
-        guard let projectToken = Bundle.main.object(forInfoDictionaryKey: "PostHogProjectToken") as? String,
-              !projectToken.isEmpty,
-              !projectToken.hasPrefix("$(") else {
-            reportMissingPostHogConfiguration("POSTHOG_PROJECT_TOKEN")
-            return
-        }
-
-        guard let host = Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String,
-              !host.isEmpty,
-              !host.hasPrefix("$(") else {
-            reportMissingPostHogConfiguration("POSTHOG_HOST")
-            return
-        }
+        guard !isPostHogConfigured,
+              let projectToken = Bundle.main.object(forInfoDictionaryKey: "PostHogProjectToken") as? String,
+              !projectToken.isEmpty, !projectToken.hasPrefix("$("),
+              let host = Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String,
+              !host.isEmpty, !host.hasPrefix("$(") else { return }
 
         let config = PostHogConfig(projectToken: projectToken, host: host)
         config.personProfiles = .never
-        config.errorTrackingConfig.autoCapture = true
+        // Crashlytics owns crash reporting: two crash reporters both claim the same signal and
+        // Mach exception handlers, and one can swallow the other's report.
+        config.errorTrackingConfig.autoCapture = false
+        // Only the allowlisted product events below; no Application Opened/Backgrounded per helper.
+        config.captureApplicationLifecycleEvents = false
+        // Start opted out unless consent holds: setup() runs before applyCollectionState().
+        config.optOut = !Self.shouldCollect(isRelease: environmentAllowsCollection, consentGranted: consentGranted)
         config.logs.serviceName = "docktile-macos"
         config.logs.environment = AppEnvironment.current
         config.logs.serviceVersion = AppEnvironment.appVersion
@@ -177,12 +176,6 @@ final class AnalyticsService {
         isPostHogConfigured = true
         applyCollectionState()
         capturePostHogLog("log_capture_configured", attributes: ["app_role": AppEnvironment.appRole])
-    }
-
-    private func reportMissingPostHogConfiguration(_ variable: String) {
-        #if DEBUG
-        assertionFailure("\(variable) variable required by PostHog is missing or un-configured, this causes events to be silently missed. This error stops appearing once \(variable) is configured")
-        #endif
     }
 
     /// Persist a new consent value, apply it live, and tell running helpers to re-apply it.
